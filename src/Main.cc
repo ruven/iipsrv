@@ -151,6 +151,7 @@ int main( int argc, char *argv[] )
 	      << date << endl
 	      << "IIPImage Server. Version " << version << endl
 	      << "*** Ruven Pillay <ruven@users.sourceforge.net> ***" << endl << endl
+	      << "*** Denis Pitzalis <denis_pitzalis@users.sourceforge.net> ***" << endl << endl
 	      << "Verbosity level set to " << loglevel << endl;
     }
 
