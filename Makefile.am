@@ -1,0 +1,4 @@
+AUTOMAKE_OPTIONS = dist-bzip2
+SUBDIRS = fcgi src
+
+EXTRA_DIST = TODO COPYING.FCGI doc

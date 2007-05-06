@@ -1,0 +1,195 @@
+
+
+Internet Imaging Protocol Server with Additional 3D Capability
+--------------------------------------------------------------
+
+
+ABOUT:
+-----
+This is an FCGI server module to handle 3D image sequences as well as 2D images
+via an extended Internet Imaging Protocol (IIP). For the 3D handling, you
+will need the java acohir viewer.
+
+
+
+FEATURES:
+--------
+* Handles the main subset of the IIP specification
+* Dynamic decoder module capability
+* Caching capability for high performance
+* Dynamic JPEG compression
+* Fast dynamic generation of full or regions of JPEG images at any resolution
+* Automatic CIELAB->sRGB colour space conversion
+* 3D panoramic views
+* Dynamic hillshading of 3D surface topologies
+
+
+
+DOCUMENTATION:
+-------------
+Detailed class descriptions (generated using doxygen) are available in the
+doc subdirectory
+
+
+
+LICENCE:
+-------
+iipsrv is released under the Gnu Public License (GPL) See the copyright notice
+COPYING in this directory for licensing details or go to http://www.gnu.org for
+more details.
+
+This distribution includes version 2.4.0 of the FCGI development libraries.
+See COPYING.FCGI for licensing information for these libraries.
+
+
+
+REQUIREMENTS:
+------------
+Requirements: libtiff and the IJG JPEG libraries. Plus, of course, an
+fcgi-enabled web server. The server has been successfully tested on the
+following servers:
+Apache (http://httpd.apache.org),
+Lighttpd (http://www.lighttpd.net)
+MyServer (http://www.myserverproject.net)
+Example server configurations are shown below.
+
+
+
+BUILDING:
+-------- 
+The standard autoconf build process should work fine. If you want to allow
+dynamic loading of 3rd party image decoders, use the configure option
+--enable-modules. There is a version of the FCGI development library included
+in this distribution. The configure script will use this bundled version
+unless it detects one already installed. Alternatively, you may specify the
+path using --with-fcgi-incl=<path> and --with-fcgi-lib=<path>.
+
+eg.
+./configure --enable-modules
+make
+
+
+
+INSTALLATION:
+------------
+Simply copy the executable called iipsrv.fcgi in the src subdirectory into
+the web server fcgi directory. If one does not exist, simply create one, called,
+for example, fcgi-bin. The web server will need to be configured to use this
+executable.
+
+
+
+CONFIGURATION:
+-------------
+There are several startup variables that can be passed to the server.
+They are all optional.
+
+LOGFILE: the server will log its output to the file specified, if it can.
+
+VERBOSITY: 0 means no logging, 1 is minimal logging, 2 lots of debugging stuff,
+3 even more debugging stuff and 4 a very large amount indeed ;-)
+
+MAX_IMAGE_CACHE_SIZE: Max image cache size to be held in RAM in MB. This is
+a cache of the compressed JPEG image tiles requested by the client.
+The default is 10MB.
+
+FILENAME_PATTERN: Pattern the follows the name stem for a sequence.
+eg: "_pyr_" for FZ1_pyr_000_090.tif. The default is "_pyr_". This is only
+relevent to 3D image sequences.
+
+JPEG_QUALITY: The default JPEG quality factor for compression when the
+client does not specify one . The value should be between 1 (highest level of
+compression) and 100 (highest image quality). The default is 75.
+
+MAX_CVT: The maximum WID or HEI allowable for CVT commands. The default
+is 5000.
+
+DECODER_MODULES: Comma separated list of modules for loading external formats.
+
+
+
+IMAGE PATHS:
+-----------
+The images paths given to the server via the FIF variable must be
+absolute paths on the server machine (eg. FIF=/images/test.tif) 
+and not paths relative to the web server document root location.
+Images do not, therefore, need to be directly accessible by the
+client via the web server. Make sure the server process owner is
+able to access and read the images!
+
+
+
+EXAMPLE SERVER CONFIGURATIONS:
+-----------------------------
+
+Apache:
+------
+httpd.conf example extract:
+
+--------------------------------------------------------------------
+# Create a directory for the iipsrv binary
+ScriptAlias /fcgi-bin/ "/usr/local/httpd/fcgi-bin/"
+
+# Set the options on that directory
+<Directory "/usr/local/httpd/fcgi-bin">
+   AllowOverride None
+   Options None
+   Order allow,deny
+   Allow from all
+</Directory>
+
+# Set the module handler
+AddHandler fastcgi-script fcg fcgi fpl
+
+# Initialise some variables for the FCGI server
+FastCgiServer /usr/local/httpd/fcgi-bin/iipsrv.fcgi \
+-initial-env LOGFILE=/tmp/iipsrv.log \
+-initial-env VERBOSITY=2 \
+-initial-env MAX_IMAGE_CACHE_SIZE=10 \
+-initial-env FILENAME_PATTERN=_pyr_ \
+-initial-env JPEG_QUALITY=50 \
+-initial-env MAX_CVT=3000
+--------------------------------------------------------------------
+
+
+Lighttpd:
+--------
+lighttpd.conf example extract:
+
+--------------------------------------------------------------------
+fastcgi.server = ( "/fcgi-bin/iipsrv.fcgi" =>
+  (( "host" => "127.0.0.1",
+     "port" => 9000,
+     "check-local" => "disable",
+     "min-procs" => 1,
+     "max-procs" => 1,
+     "bin-path" => "/var/www/localhost/fcgi-bin/iipsrv.fcgi",
+     "bin-environment" => (
+        "LOGFILE" => "/tmp/iipsrv.log",
+        "VERBOSITY" => "5",
+        "MAX_IMAGE_CACHE_SIZE" => "10",
+        "FILENAME_PATTERN" => "_pyr_",
+        "JPEG_QUALITY" => "50",
+        "MAX_CVT" => "3000"
+      )
+  ))
+)
+--------------------------------------------------------------------
+
+
+MyServer:
+--------
+Simply run the MyServer configuration and in the MIME section, choose the .fcgi extension
+and select:
+
+--------------------------------------------------------------------
+MIME Type: application octet-stream
+Action: Execute self contained FastCGI
+Manager: NONE 
+--------------------------------------------------------------------
+
+
+
+
+--------------------------------------------------------------------------
+(c) 2000-2006 Ruven Pillay <ruven@users.sf.net>

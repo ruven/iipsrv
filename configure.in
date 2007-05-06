@@ -1,0 +1,228 @@
+dnl Process this file with autoconf to produce a configure script.
+
+
+AC_INIT
+AM_INIT_AUTOMAKE(iipsrv,0.9.7)
+dnl AM_INIT_AUTOMAKE(IIPImageTest,1.0)
+
+
+AC_PREFIX_DEFAULT( `pwd` )
+
+
+dnl Checks for programs.
+AC_PROG_CC
+AC_PROG_CPP
+AC_PROG_CXX
+AC_PROG_INSTALL
+AC_PROG_LIBTOOL
+
+
+dnl Checks for header files.
+AC_CHECK_HEADERS(glob.h)
+AC_CHECK_HEADERS(time.h)
+AC_CHECK_HEADERS(sys/time.h)
+AC_CHECK_HEADERS(math.h)
+AC_CHECK_LIB(m, pow)
+
+dnl For our windows build
+AC_CHECK_HEADERS(windows.h)
+
+
+# we want largefile support, if possible
+AC_SYS_LARGEFILE
+
+
+dnl	************************************************************ 
+
+
+dnl Check for compile options.
+dnl AC_ARG_ENABLE(debug,
+dnl     [  --enable-debug          compile with debugging on],
+dnl     , )
+dnl AC_DEFINE(DEBUG))
+
+
+dnl	************************************************************ 
+
+
+dnl 	Check for a user specified location for libjpeg
+
+dnl AC_ARG_WITH(libjpeg-incl,
+dnl   [  --with-libjpeg-incl=DIR     location of the jpeg library include files],
+dnl   jpeg_incl=-I$withval)
+
+dnl AC_ARG_WITH(libjpeg-lib,
+dnl   [  --with-libjpeg-lib=DIR     location of the jpeg library files],
+dnl   jpeg_lib=-L$withval)
+
+dnl AC_CHECK_LIB(jpeg, jpeg_destroy_decompress,
+dnl   LIBJPEG_INCL=$jpeg_incl; LIBJPEG_LIB="$jpeg_lib -ljpeg",
+dnl   AC_MSG_ERROR(unable to find libjpeg),
+dnl   $jpeg_lib)
+
+FIND_JPEG(,[AC_MSG_ERROR([libjpeg not found])])
+
+
+dnl	************************************************************ 
+
+dnl	Check for a standard libz
+
+AC_CHECK_LIB(z, gzopen)
+
+dnl	************************************************************ 
+
+
+dnl 	Check for user specified location for libtiff
+
+dnl AC_ARG_WITH(libtiff-incl,
+dnl   [  --with-libtiff-incl=DIR     location of the tiff library include files],
+dnl   tiff_incl=-I$withval)
+
+dnl AC_ARG_WITH(libtiff-lib,
+dnl   [  --with-libtiff-lib=DIR     location of the tiff library files],
+dnl   tiff_lib=-L$withval)
+
+dnl AC_CHECK_LIB(tiff, TIFFReadScanline,
+dnl   LIBTIFF_INCL=$tiff_incl; LIBTIFF_LIB="$tiff_lib -ltiff -ljpeg -lm",
+dnl   AC_MSG_ERROR(unable to find libtiff),
+dnl   $tiff_lib -ljpeg -lm)
+
+
+FIND_TIFF(,[AC_MSG_ERROR([libtiff not found])])
+
+
+dnl     ************************************************************
+
+dnl     Check for little cms library
+
+AC_CHECK_HEADERS(lcms/lcms.h, AC_CHECK_LIB(lcms, cmsOpenProfileFromMem, LIBS="${LIBS} -llcms";AC_DEFINE(LCMS) ) )
+
+
+
+dnl	************************************************************ 
+
+dnl 	Check for user specified locations for fast cgi library
+
+
+AC_ARG_WITH( fcgi-incl,
+   [  --with-fcgi-incl=DIR          location of the fcgi include files],
+   fcgi_include_path=$withval)
+
+AC_ARG_WITH( fcgi-lib,
+   [  --with-fcgi-lib=DIR           location of the fcgi libraries],
+   fcgi_lib_path=$withval)
+
+AC_CHECK_LIB( fcgi, FCGI_Accept, 
+		AC_MSG_WARN(found fcgi);
+			LIBFCGI_INCLUDES="-I$fcgi_include_path";
+			LIBFCGI_LDFLAGS="-L$fcgi-lib_path";
+			LIBFCGI_LIBS="-lfcgi",
+		AC_MSG_WARN(unable to find user version of libfcgi ... no problem - will use the bundled version instead);
+			LIBFCGI_INCLUDES="-I../fcgi/include -I../fcgi";
+			LIBFCGI_LIBS="../fcgi/libfcgi/libfcgi.a" )
+
+AC_SUBST(LIBFCGI_INCLUDES)
+AC_SUBST(LIBFCGI_LDFLAGS)
+AC_SUBST(LIBFCGI_LIBS)
+
+
+dnl	************************************************************ 
+
+
+dnl Check for libdl for dynamic library loading
+
+AC_ARG_ENABLE(modules,
+    [  --enable-modules       enable dynamic module loading] )
+
+if test "$enable_modules" = "yes"; then
+
+	modules=true
+	AC_CHECK_HEADERS(dlfcn.h)
+	AC_CHECK_LIB(dl, dlopen, \
+		DL_LIBS="-ldl"; AC_DEFINE(ENABLE_DL), \
+		AC_MSG_ERROR(unable to find libdl) )
+
+else
+	modules=false
+	AC_MSG_WARN( optional dynamic module loading not enabled)
+
+fi
+
+AM_CONDITIONAL( ENABLE_MODULES, test x$modules = xtrue )
+AC_SUBST(DL_LIBS)
+
+
+dnl	************************************************************
+
+
+
+
+INCLUDES="$INCLUDES -I."
+AC_SUBST(INCLUDES)
+
+AC_SUBST(LIBS)
+
+
+
+dnl	************************************************************
+dnl     FCGI library configure
+dnl	************************************************************
+
+
+AC_LANG([C++])
+
+dnl autoconf defaults CXX to 'g++', so its unclear whether it exists/works
+AC_MSG_CHECKING([whether $CXX works])
+AC_TRY_COMPILE([#include <iostream>], 
+               [std::cout << "ok";], 
+               [AC_MSG_RESULT(yes)
+                LIBFCGIXX=libfcgi++.la
+                ECHO_CPP=echo-cpp${EXEEXT}
+                AC_MSG_CHECKING([whether cin has a streambuf assignment operator])
+                AC_TRY_COMPILE([#include <iostream>], 
+                               [cin = static_cast<streambuf *>(0);], 
+                               [AC_MSG_RESULT(yes)
+                                AC_DEFINE([HAVE_IOSTREAM_WITHASSIGN_STREAMBUF],  [1], 
+                                          [Define if cin/cout/cerr has a streambuf assignment operator])],
+                               [AC_MSG_RESULT(no)]) 
+                AC_MSG_CHECKING([whether char_type is defined in the context of streambuf])
+                AC_TRY_COMPILE([#include <iostream>],
+                               [class fcgi_streambuf : public std::streambuf { char_type ct; }],
+                               [AC_MSG_RESULT(yes)
+                                AC_DEFINE([HAVE_STREAMBUF_CHAR_TYPE], [1], 
+                                          [Define if char_type is defined in the context of streambuf])],
+                               [AC_MSG_RESULT(no)])],
+               [AC_MSG_RESULT(no)])
+AC_SUBST(LIBFCGIXX)
+AC_SUBST(ECHO_CPP)
+
+AC_LANG([C])
+
+AC_CHECK_LIB([nsl],       [gethostbyname])
+AC_CHECK_LIB([socket],    [socket]) 
+
+
+ACX_PTHREAD([THREADED=threaded${EXEEXT}])
+AC_SUBST([THREADED])
+
+
+FCGI_COMMON_CHECKS
+
+AC_REPLACE_FUNCS([strerror])
+
+AC_C_INLINE
+
+SYSTEM=unix
+AC_SUBST([SYSTEM])
+
+AC_PROG_CC_WARNINGS
+
+
+
+AC_PROG_MAKE_SET
+AC_OUTPUT(Makefile \
+	src/Makefile \
+	fcgi/Makefile \
+	fcgi/include/Makefile \
+	fcgi/libfcgi/Makefile)
+

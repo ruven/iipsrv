@@ -1,0 +1,16 @@
+1) Proper tile caching ... DONE
+2) Multiprocess capabilty using either:
+	- threads
+	- multiple instances using shared memory to share a cache
+3) Fix the TIL command ... DONE
+4) Make the server work with the Java Advanced Imaging IIP client
+   implementation.
+5) Perhaps separate the query parsing from the execution. ie: parse
+   the query first, then perform the tasks to allow more flexible
+   commands to be handled ... DONE
+6) Implement more of the IIP spec.
+7) Maybe rewrite as an Apache module?
+8) ICC profile integration via lcms library.
+9) JPEG source image support.
+10) JPEG2000 source image support.
+11) Refactor the code to use a factory function object method ... DONE

@@ -1,0 +1,528 @@
+07/11/2006:
+	- Fixed the standalone mode, which is now activated by launching with
+	  --standalone with an argument giving the socket port or path. For example,
+	  localhost:8000 or /tmp/iipsrv.sock.
+
+
+31/10/2006:
+	- Added hillshading Task class and function for simulated raking light
+	  visualization using 3D surface normal data. This is used via the SHD
+	  command in association with CVT, which takes 2 arguments: the horizontal
+	  light source angle in degrees and the vertical angle from the horizontal
+	  plane.
+
+
+26/09/2006:
+	- Cleaned up the hash_map and pool_allocator stuff a little to use typedefs
+	  instead of #ifdefs.
+	- Added the legacy JTLS command class for panoramic views.
+
+
+22/09/2006:
+	- Added an FCGI stand-alone mode usable with lighttpd's spawn-fcgi command.
+	- Also changed the IIPImage cache to use a hash_map and pool_alloc memory.
+
+
+19/09/2006:
+	- If we are using appropriate versions of g++, we now use the high
+	  performance pool_alloc memory allocators for our cache containers.
+	  Also, instead of a std::map, we use the hash_map extension which
+	  offers better performance. Otherwise we default to std::map.
+	- Fixed problem in TileManager where uncompressed tiles in the cache
+	  were not being cropped when converted to JPEG. The IIPImage tile_width
+	  and tile_height fields now hold the base tile size and not the current
+	  tile size.
+
+
+18/092006:
+	- Added a "Last-Modified" and "ETag" header to the CVT HTTP response
+	  to prevent double requests from being made by web browsers.
+	- Fixed bug in CVT where the tile size was being incorrectly set from
+	  the IIPImage object and not the tile itself, which was a problem
+	  when getting tiles from the cache.
+
+
+15/09/2006:
+	- Changed the Cache keys to be simple strings rather than custom
+	  objects. This has solved one of the crashing problems when tiles
+	  are deleted from the cache.
+
+
+29/08/2006:
+	- Added Writer class to shield the command implentations from any
+	  FCGI specific functions.
+
+
+28/08/2006:
+	- *Major* refactoring of the code. Each command is now called via its own
+	  Task class (command pattern), with no processing done in Main.cc.
+	  OBJ commands are in OBJ.cc and each output command (eg TIL,CVT etc)
+	  now have their own classes.
+	- The xangle and yangle variables are now in the View class, which
+	  was previously named the ImageTransform class.
+
+
+25/08/2006:
+	- Cleaned up the option variable parsing in Main.cc. It is now mostly
+	  done via an Environment class, which checks for defaults etc.
+
+
+16/08/2006:
+	- Moved QLT limit checking from Main into JPEG class. Also now check
+	  for empty strings.
+
+
+08/08/2006:
+	- Changed the contrast adjustment code to limit the result to a max of
+	  255.0 as this was creating problems with the windows build.
+
+
+07/03/2006: Version 0.9.6 release.
+
+
+13/02/2006:
+	- Fixed another problem on Mac OS X in TPTImage.cc. The number of
+	  channels and bits per sample were giving strange values, so a
+	  temporary uint16 variable is now used and cast from. It now works
+	  perfectly on Mac :-)
+
+
+09/02/2006:
+	- Changed the start_t and start_u types in Timer.h to long for
+	  compatibility with Solaris and Mac OS X.
+	- Some code cleanups in the IIPResponse class.
+
+
+23/01/2006:
+	- Added an extra timer for tile insertion - this is the slowest
+	  cache operation. We should look to put this in a separate
+	  thread at some point!
+
+
+18/01/2006:
+	- Added support for ptif suffix images. These are in fact just
+	  pyramidal TIFF images.
+
+
+11/01/2006:
+	- More fixes to the TileManager class. Cache can now handle
+	  multiple compression types for the same tile simultaneously.
+
+
+24/12/2005:
+	- Major rewrite of the TileManager class. Now much more concise.
+
+
+21/10/2005:
+	- Added a check in JPEGCompressor for the number of channels.
+	  JPEG can handle only image with either 1 or 3 channels.
+
+
+13/10/2005:
+	- Added a TileManager class to act as a higher level access to
+	  the tile cache. It checks whether a JPEG compressed tile
+	  already exists and if not decodes one from the source image.
+	  It also crops any edge tiles to the correct size (required
+	  for the new Vips TIFF format).
+
+
+12/10/2005:
+	- Fixed a JTL problem with the new tiled TIFF format. The edge
+	  tiles are now cropped before being sent out.
+	- Reworked JTL to just forward the request to JTLS rather than
+	  duplicating the code there.
+
+
+09/06/2005:
+	- Changed IIPImage.cc to use glob conditionally if glob has been
+	  detected. This is needed for mingw compilation.
+
+
+01/04/2005:
+	- Completed an LRU tile cache with the ability to set the max
+	  cache size via the configuration variable MAX_IMAGE_CACHE_SIZE,
+	  specified in MB.
+
+
+22/03/2005:
+	- Added new Timer class to handle timing data to debug tile
+	  access, command and total request times.
+
+
+06/01/2005:
+	- Found problem in the CVT code when dealing with image sequences
+	  of different numbers of channels. We have to reload the channel
+	  information.
+
+
+15/12/2004:
+	- CVT now works with the new standard compliant TIFF tile format
+	  as used by vips-7.10 and later.
+
+
+10/12/2004:
+	- CVT now works with 16 bit TIFF. The compression type reported
+	  by TIL also switches from JPEG with 8 bit images to none with
+	  16 bit.
+
+
+08/12/2004:
+	- Added CNT contrast command support. Also added check to
+	  TPTImage openImage() for whether our image is in fact
+	  tiled or not, which can cause the server to crash.
+
+
+07/12/2004:
+	- Added 16 bit support. Changes to RawTile - the data is now
+	  a generic (void*) and there are now fields for channels per
+	  sample and bits per channel. Changes also to TPTImage.cc,
+	  Main.cc and JPEGCompressor.cc.
+
+
+01/09/2004:
+	- Changed the LAB2sRGB code to allow a/b values from
+	  +-127 as per the TIFF spec instead +-100.
+	- Also fixed a problem caused by signed/unsigned comparisons
+	  in ImageTransform with requests for CVT sizes smaller than
+	  the tile size.
+
+
+26/08/2004:
+	- Added largefile support by simply adding a configure
+	  directive that will add the appropriate defines.
+
+
+05/07/2004:
+	- Fixed problem in JPEGCompressor.cc concerning the value of
+	  a structure that we try to read after de-allocating memory.
+	  Only seems to be a problem with MSVC++ compiler. (Thanks to
+	  Chris Tuijn for spotting this).
+
+
+11/05/2004: Version 0.9.5 release.
+
+
+04/05/2004:
+	- Moved the colorspace check from TPTImage::getTile to
+	  TPTImage::openImage so that a Colorspace request will always
+	  have an associated colour space and not just after getTile
+	  has been called. We assume for now that all the tiles of an
+	  image are all of the same colour space.
+
+
+21/05/2004:
+	- Removed no-cache pragma from CVT header. Also modified
+	  max_CVT variable to limit the effective size and not the
+	  total image size. ie a small RGN of a massive image can
+	  still be sent OK. The resolution calculations have been
+	  moved into ImageTransform and is now performed at the last
+	  moment in the CVT section.
+
+
+16/05/2004:
+	- Added MAX_CVT environment variable to limit width and height
+	  requests of CVT commands. The default is set to 5000 pixels.
+
+
+02/04/2004:
+	- Added SDS command support. This can be used for specifying
+	  subimages or the horizontal/vertical angle in 3D sequence
+	  images and will eventually replace the use of JTLS by the
+	  client. Current usage is SDS=h,v where h and v are the
+	  horizontal and vertical sequence angles.
+
+
+01/04/2004:
+        - Fixed length given by the error response. We now count both
+          the code and the argument.
+ 
+ 
+30/03/2004:
+        - Fixed TIL to only send the MIME type once before the tile
+          sequence.
+        - Added better error handling. The IIPResponse is now set
+          whenever we have a problem in Main.cc. Plus the catch
+          clause now checks for an error in IIPResponse and sends
+          this if available rather than the advertising banner.
+ 
+ 
+29/03/2004:
+        - Changed the vertical and horizontal views syntax back to
+          old style.
+        - Fixed problem with the number of CRLF's after the MIME type:
+          Apache complains if there are not 2 sets of CRLF.
+        - Changed the IIPImage metadata map to use the string class
+          rather than char* - seems to fix a freeze problem.
+ 
+
+06/03/2004:
+	- More fixes to RGN code. Moved the verification logic into
+	  the ImageTransform class itself rather than having it in
+	  Main.cc. Also fixed a crash resulting from the use of
+	  inlining - a gcc bug perhaps? Anyway, now perfectly stable.
+
+
+05/03/2004:
+	- Some minor fixes to the RGN code to prevent crashes from
+	  images of less than 8 pixels in size.
+
+
+04/03/2004:
+	- Finished implementation of RGN CVT modifier. Can now specify
+	  a region to CVT rather than always having the whole image.
+	- Updated embedded XHTML advertising page.
+	- Some doxygen-related cleanups and documenting.
+
+
+03/03/2004:
+	- Changed Horizontal-views and Vertical-views return syntax to
+	  return the number of views also (request by Denis):
+	  Vertical-views/<number views>:view1 view2 ...
+	  eg. Vertical-views/3:0 90 180.
+
+
+02/03/2004:
+	- Added automatic colour spaces conversion for CIELAB images
+	  to sRGB in CVT mode.
+
+
+14/12/2003:
+	- Added Content-disposition headers to the JTL,JTLS and CVT output.
+
+
+10/11/2003:
+	- Added missing std:: prefixes to a few STL variables in IIPImage.h
+	  and IIPResponse.h.
+	- Fixed the TIL command to return only the tiles within the
+	  rectangle defined by the specified range rather than all of them.
+
+
+25/10/2003:
+	- Fixed missing value in error message for non decodable tiles
+	  in TPTImage.cc and erroneous extra CRLF in the Colorspace
+	  reply.
+
+
+22/10/2003:
+	- Changed the IIPImage class to give the horizontal and
+	  vertical angles a default value of 0,90 for non-sequence
+	  images.
+
+
+11/10/2003:
+	- Removed the new allocator in getFileName() in IIPImage.cc to
+	  a statically allocated buffer of size 1024.
+
+
+04/10/2003:
+	- Generalised the metadata handling in Main to cope with any
+	  available metadata.
+	- Changed the way Basic-info and Summary-info work to simply
+	  add more objects to the request string rather than try to
+	  handle it themselves. Nicely eliminates duplicate handler code
+	  without introducing classes or external functions for each obj.
+	- Also fixed the server capability return code to follow the IIP
+	  spec properly.
+
+
+03/10/2003:
+	- Added tracking of image data to the IIPResponse class. In this
+	  way, we can print an error if we have an uncomplete command
+	  syntax. eg. a WID without a CVT. We should now never not have
+	  some sort of response from the server.
+	- Also added Author, Subject etc metadata handling to IIPImage
+	  and the necessary handlers to IIPResponse.
+
+
+15/09/2003:
+	- Added doxygen compatible comments to the header files. The
+	  generated documentation is in the doc subdirectory.
+	- Changed sprintf to snprintf in Main.cc for the vertical-views
+	  handler; snprintf is already used everywhere else.
+	- Added IIPResponse class to handle message passing back to the
+	  client from OBJ requests. This allows for better error and
+	  mime header handling and eliminates having to use FCGX_Fprintf.
+	- Added SIGHUP handling to the other signals handled - we simply
+	  exit and allow mod_fastcgi to restart us.
+	- Added support for IIP-opt-comm and IIP-opt-obj requests.
+	- Removed the deprecated Max-sequence and Vertical-views object
+	  handlers.
+
+
+12/09/2003: Version 0.9.4 release.
+	- Added content-type heading to error returns.
+	- Added default catch() clause to the end of the main try block.
+
+
+11/09/2003:
+	- Added Base64 URL decoding for the image path argument supplied
+	  to the FIF command.
+	- Cleanups to eliminate most GCC -Wall warnings.
+
+
+10/09/2003:
+	- Changed tolower to ::tolower to fix compilation problem using
+	  GCC 3x.
+	- Logging cleanup.
+
+
+08/09/2003:
+	- Major cleanup up the JPEGCompressor class.
+	- Added bits per pixel to the IIPImage copy constructors.
+	- Used the new JPEG buffer-buffer functions to add support for the
+	  CVT command (limited to JPEG output only).
+
+
+07/09/2003:
+	- Modified the JPEGCompressor class to allow stream-based buffer
+	  to buffer encoding via 3 new functions (init, compressstrip and
+	  finish).
+
+
+03/09/2003:
+	- Fixed bug in TPTImage.cc. Added TIFFGetField commands for tile_width
+	  and tile_height so that they get reset to the correct value even if
+	  we loop through the end of a row.
+	- Added a bits per pixel field to the IIPImage class.
+
+
+02/09/2003:
+	- Fixed mis-placed jpeg_set_defaults in JPEGCompressor.cc.
+	  Was being called after some individual values were set. This only
+	  seemed affected the dct_method. Should compress faster now.
+
+
+28/08/2003:
+	- Added WID and HEI command support.
+
+
+25/08/2003:
+	- Autoconf cleanups. Now properly detect for JPEG and TIFF.
+
+
+24/08/2003:
+	- Improvements to the configure script. Can now completely disable
+	  the dynamic module loading code from even compiling.
+	- The FCGI development library is now included in the distribution
+	  for convenience and is integrated into the top-level configure
+	  system. It is only used if it is not found on the computer.
+
+
+22/08/2003:
+	- Added extra variable to track the current vertical position as
+	  well as the horizontal. Fixes bug when switching between vertical
+	  angles on sequence zero.	
+	- XHTMLified the advertising banner :-)
+
+
+22/03/2003: Version 0.9.3 release.
+	- Reworked and cleaned up the TIL compression type and subtype data
+	  stream prefix with reference to the FlashPix specification.
+
+
+21/03/2003:
+	- All commands are converted to lower case to handle the java JAI
+	  IIP implementation which does not properly follow the spec.
+	- Also fixed typo in the Colorspace OBJ reply.
+
+
+15/03/2003:
+	- Modifications to the JPEGCompressor constructor to take only the
+	  Q factor. Plus the environment variable JPEG_QUALITY can
+	  set the default Q factor.
+	- Plus added an #undef HAVE_STDLIB_H to JPEGCompressor.h which was
+	  interfering with libjpeg. No compiler warnings now even
+	  with -pendantic set :-)
+
+
+13/03/2003:
+	- Added extended colour space handling. The TIFF image now has its
+	  colourspace extracted and a ColourSpace enum type now exists.
+	  Greyscale, RGB and CIELAB are now handled, though the latter is not
+	  in the official IIP spec.
+
+
+10/03/2003:
+	- Changed RawTile copy constructor to use memcpy instead of looping
+	  through an array: Big speed improvement :-)
+
+
+08/03/2003:
+	- Added USR1 and TERM signal handling to main loop: We now have some
+	  stats printed in the logfile on shutdown.
+	- Modified IIPImage to accept a filename pattern variable, so that
+	  the "_pyr_" image sequence pattern can be user modified.
+	- Plus started work on a new tile cache system, but seems very slow,
+	  so will mothball it till after the forthcoming release.
+
+
+10/11/2002: 
+	- Changes to some header files etc to make it compatible with gcc 3.2:
+	  Mainly STL string specifiers, plus replacement of slist type
+	  with std::list.
+
+
+24/03/2002
+        - Changed error handling to follow IIP return code specification
+          for unsupported objects and commands. Should do this for
+	  each individual exception also.
+        - Added runtime configuration variable for max image cache size.
+
+
+18/03/2002: Version 0.9.2 release.
+	- Changes to JPEGCompressor.cc: Fixed bug when encoding very small
+	  tiles. Sometimes the JPEG data is larger than the original
+	  so we need to allocate some extra memory just in case.
+	- Also fixed the iip_empty_output_buffer( j_compress_ptr cinfo )
+	  function. Now properly empties the buffer and returns TRUE.	
+	- The Compress() routine now passes the entire image buffer array
+	  into jpeg_write_scanlines rather than doing it row by
+	  row. The row array is dynamically allocated and deleted
+	  at the end.
+	- Added proper copy constructor to RawTile class to properly copy
+	  data without leaving dangling pointers.
+
+
+09/08/2001:
+	- Added time stamp.
+	- Some minor changes to the JPEG wrapper - a couple of ints
+	  changed to size_t's and a conditional added just before
+	  the memcopy code.
+
+
+07/07/2001: Version 0.9.1 release.
+	- Added field for number of bands in Rawtile.h, so that we can now
+	  view 1-band black and white as well as 3-band colour images
+	- Added missing JTL command handler for single non-sequential images
+	  This does the same as JTLS command, but supplies 0 for sequence
+	  and angle.
+
+
+05/03/2001: Version 0.9 release.
+	- Bug fixes: moving IIPImage objects in the cache was resulting
+	  in lost information.
+	- DSOImage memory bug. Modules should handle their own cleanup
+	  in close_image, which is now called by the ~DSOImage
+
+
+04/03/2001:
+	- Changed ModuleLoader to a DSOImage derived class of IIPImage.
+	- Use a STL map of image type to module path keywords instead
+	  of trying to store caches of DSOImages.
+	- Clean up and rationalisation of IIPImage class and derived
+	  classes.
+
+
+01/03/2001:
+	- Added tokenizer class.
+	- Now checks for variables passed to fcgi at start up time
+	  via --initial-env directive within Apache.
+	- Added basic ModuleLoader class for loading external image decoders.
+	- Fixes so that it no longer crashes even with null input query etc.
+	- Removed ifdef DEBUG stuff.
+
+
+27/02/2001:
+	- Added Tile-size directive and related IIPImage::getTileWidth() etc.
+	- Allowing for various tile sizes to be used :)
+	- Improved logfile reporting.

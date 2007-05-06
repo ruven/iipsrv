@@ -1,0 +1,3 @@
+View.o View.o: View.cc View.h
+
+View.h:
