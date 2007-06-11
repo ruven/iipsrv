@@ -2206,7 +2206,7 @@ fi
 
 # Define the identity of the package.
  PACKAGE=iipsrv
- VERSION=0.9.7
+ VERSION=0.9.8
 
 
 cat >>confdefs.h <<_ACEOF

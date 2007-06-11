@@ -165,12 +165,12 @@ void CVT::run( Session* session, std::string argument ){
     session->jpeg->InitCompression( complete_image, src_tile_height );
 
 #ifndef DEBUG
-    session->out->printf( // 			  "Pragma: no-cache\r\n"
+    session->out->printf("Cache-Control: max-age=86400\r\n"
 			 "Last-Modified: Mon, 1 Jan 2000 00:00:00 GMT\r\n"
 			 "ETag: \"CVT\"\r\n"
- 			 "Content-type: image/jpeg\r\n"
-			 "Content-disposition: inline;filename=\"cvt.jpg\""
-			 "\r\n\r\n" );
+ 			 "Content-Type: image/jpeg\r\n"
+			 "Content-Disposition: inline;filename=\"cvt.jpg\"\r\n"
+			 "\r\n" );
 #endif
 
     // Send the JPEG header to the client

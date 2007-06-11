@@ -63,13 +63,25 @@ void JTL::run( Session* session, std::string argument ){
   }
 
 
+char date[256];
+#ifdef HAVE_TIME_H	
+  time_t current_time = time( NULL ) + 604800;
+  strftime( date, 255, "%a, %d %b %Y %H:%M:%S GMT", gmtime(&current_time) );
+#else
+  strncpy( date, "today", 255 );
+#endif
+
+
+
 #ifndef DEBUG
   char buf[1024];
-  snprintf( buf, 1024, "Pragma: no-cache\r\n"
-	    "Content-length: %d\r\n"
-	    "Content-type: image/jpeg\r\n"
-	    "Content-disposition: inline;filename=\"jtl.jpg\""
-	    "\r\n\r\n", len );
+  snprintf( buf, 1024, "Content-Type: image/jpeg\r\n"
+            "Content-Length: %d\r\n"
+	    "Cache-Control: max-age=604800\r\n"
+	    //	    "Expires: %s\r\n"
+	    "Last-Modified: Sat, 01 Jan 2000 00:00:00 GMT\r\n"
+	    "Etag: jtl\r\n"
+	    "\r\n", len, date );
 
   session->out->printf( (const char*) buf );
 #endif
