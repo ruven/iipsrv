@@ -1,3 +1,13 @@
+12/06/2007:
+	- Updated URL decoding function in FIF.cc to C++ style and avoid a potential
+	  buffer overflow.
+	- Changed Task::run arguments to be const std::string& instead of just std::string.
+
+
+08/06/2007:
+	- Changed JTL headers to enable HTTP 1.1 compatible cache control.
+
+
 13/12/2006: Version 0.9.7 Released
 
 

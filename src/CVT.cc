@@ -1,7 +1,7 @@
 /*
     IIP CVT Command Handler Class Member Function
 
-    Copyright (C) 2006 Ruven Pillay.
+    Copyright (C) 2006-2007 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -28,7 +28,7 @@ using namespace std;
 
 
 
-void CVT::run( Session* session, std::string argument ){
+void CVT::run( Session* session, const std::string& a ){
 
   Timer tile_timer;
   this->session = session;
@@ -43,6 +43,7 @@ void CVT::run( Session* session, std::string argument ){
 
 
   // Put the argument into lower case
+  string argument = a;
   transform( argument.begin(), argument.end(), argument.begin(), ::tolower );
 
 

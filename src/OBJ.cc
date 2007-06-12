@@ -1,7 +1,7 @@
 /*
     IIP OJB Command Handler Class Member Functions
 
-    Copyright (C) 2006 Ruven Pillay.
+    Copyright (C) 2006-2007 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -28,7 +28,7 @@ using namespace std;
 
 
 
-void OBJ::run( Session* s, std::string a )
+void OBJ::run( Session* s, const std::string& a )
 {
 
   argument = a;

@@ -1,7 +1,7 @@
 /*
     IIP Command Handler Member Functions
 
-    Copyright (C) 2006 Ruven Pillay.
+    Copyright (C) 2006-2007 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -29,11 +29,12 @@ using namespace std;
 
 
 
-Task* Task::factory( string type ){
+Task* Task::factory( const string& t ){
 
   // Convert the command string to lower case to handle incorrect
   // viewer implementations
 
+  string type = t;
   transform( type.begin(), type.end(), type.begin(), ::tolower );
 
   if( type == "obj" ) return new OBJ;
@@ -64,7 +65,7 @@ void Task::checkImage(){
 
 
 
-void QLT::run( Session* session, std::string argument ){
+void QLT::run( Session* session, const std::string& argument ){
 
   if( argument.length() ){
 
@@ -84,7 +85,7 @@ void QLT::run( Session* session, std::string argument ){
 }
 
 
-void SDS::run( Session* session, std::string argument ){
+void SDS::run( Session* session, const std::string& argument ){
 
   if( session->loglevel >= 3 ) *(session->logfile) << "SDS handler reached" << endl;
 
@@ -92,12 +93,11 @@ void SDS::run( Session* session, std::string argument ){
   int delimitter = argument.find( "," );
   string tmp = argument.substr( 0, delimitter );
   session->view->xangle = atoi( tmp.c_str() );
-  argument = argument.substr( delimitter + 1, argument.length() );
+  string arg2 = argument.substr( delimitter + 1, argument.length() );
 
-  delimitter = argument.find( "," );
-  tmp = argument.substr( 0, delimitter );
+  delimitter = arg2.find( "," );
+  tmp = arg2.substr( 0, delimitter );
   session->view->yangle = atoi( tmp.c_str() );
-  argument = argument.substr( delimitter + 1, argument.length() );
 
   if( session->loglevel >= 2 ) *(session->logfile) << "SDS :: set to " << session->view->xangle << ", "
 						   << session->view->yangle << endl;
@@ -105,7 +105,7 @@ void SDS::run( Session* session, std::string argument ){
 }
 
 
-void CNT::run( Session* session, std::string argument ){
+void CNT::run( Session* session, const std::string& argument ){
 
   float contrast = atof( argument.c_str() );
 
@@ -116,7 +116,7 @@ void CNT::run( Session* session, std::string argument ){
 }
 
 
-void WID::run( Session* session, std::string argument ){
+void WID::run( Session* session, const std::string& argument ){
 
   int requested_width = atoi( argument.c_str() );
 
@@ -128,7 +128,7 @@ void WID::run( Session* session, std::string argument ){
 }
 
 
-void HEI::run( Session* session, std::string argument ){
+void HEI::run( Session* session, const std::string& argument ){
 
   int requested_height = atoi( argument.c_str() );
 
@@ -140,7 +140,7 @@ void HEI::run( Session* session, std::string argument ){
 }
 
 
-void RGN::run( Session* session, std::string argument ){
+void RGN::run( Session* session, const std::string& argument ){
 
   Tokenizer izer( argument, "," );
   int i = 0;
@@ -174,7 +174,7 @@ void RGN::run( Session* session, std::string argument ){
 }
 
 
-void JTLS::run( Session* session, std::string argument ){
+void JTLS::run( Session* session, const std::string& argument ){
 
   /* The argument is comma separated into 4:
      1) xangle
@@ -205,15 +205,16 @@ void JTLS::run( Session* session, std::string argument ){
     session->view->yangle = values[3];
     char tmp[128];
     snprintf( tmp, 56, "%d,%d", values[1], values[2] );
+    string str = tmp;
     JTL jtl;
-    jtl.run( session, tmp );
+    jtl.run( session, str );
   }
-    
+
 
 }
 
 
-void SHD::run( Session* session, std::string argument ){
+void SHD::run( Session* session, const std::string& argument ){
 
   /* The argument is comma separated into the 3D angles of incidence of the
      light source in degrees for the angle in the horizontal plane from 12 o'clock

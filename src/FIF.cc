@@ -1,15 +1,50 @@
+/*
+    IIP FIF Command Handler Class Member Function
+
+    Copyright (C) 2006-2007 Ruven Pillay.
+
+    This program is free software; you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation; either version 2 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program; if not, write to the Free Software
+    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+*/
+
+
 #include "Task.h"
 #include "Environment.h"
 
 #include "TPTImage.h"
 #include "Cache.h"
 
+#include <stdexcept>
+#include <memory>
+#include <vector>
+#include <iterator> 	// for distance
+#include <cctype> 	// for toupper, isxdigit
 
 using namespace std;
 
 
 
-void FIF::run( Session* session, std::string argument ){
+static char hexToChar( char first, char second){
+  int digit;
+  digit = (first >= 'A' ? ((first & 0xDF) - 'A') + 10 : (first - '0'));
+  digit *= 16;
+  digit += (second >= 'A' ? ((second & 0xDF) - 'A') + 10 : (second - '0'));
+  return static_cast<char>(digit);
+}
+
+
+void FIF::run( Session* session, const std::string& src ){
 
   if( session->loglevel >= 3 ) *(session->logfile) << "FIF handler reached" << endl;
 
@@ -17,52 +52,41 @@ void FIF::run( Session* session, std::string argument ){
   if( session->loglevel >= 2 ) command_timer.start();
 
 
-  // The argument is a path, which may contain spaces or other characters
-  // that will be MIME encoded into a suitable format for the URL.
-  // So, first decode this path (following code modified from CommonC++ library)
+  // The argument is a URL path, which may contain spaces or other characters
+  // encoded URL form.
+  // So, first decode this path (implementation taken from GNU cgicc: http://www.cgicc.org)
 
-  const char* source = argument.c_str();
+  std::string argument;
+  std::string::const_iterator iter;
+  char c;
 
-  char destination[ 256 ];  // Hopefully we won't get any paths longer than 256 chars!
-  char *dest = destination;
-  char* ret = dest;
-  char hex[3];
-
-  while( *source ){
-    switch( *source ){
-
+  for(iter = src.begin(); iter != src.end(); ++iter) {
+    switch(*iter) {
     case '+':
-      *(dest++) = ' ';
+      argument.append(1, ' ');
       break;
-
     case '%':
-      // NOTE: wrong input can finish with "...%" giving
-      // buffer overflow, cut string here
-      if(source[1]){
-	hex[0] = source[1];
-	++source;
-	if(source[1]){
-	  hex[1] = source[1];
-	  ++source;
+	// Don't assume well-formed input
+	if(std::distance(iter, src.end()) >= 2
+	   && std::isxdigit(*(iter + 1)) && std::isxdigit(*(iter + 2))) {
+	    c = *++iter;
+	    argument.append(1, hexToChar(c, *++iter));
 	}
-	else
-	  hex[1] = 0;
-      }
-      else hex[0] = hex[1] = 0;
-
-      hex[2] = 0;
-      *(dest++) = (char) strtol(hex, NULL, 16);
-      break;
-
+	// Just pass the % through untouched
+	else {
+	    argument.append(1, '%');
+	}
+	break;
+    
     default:
-      *(dest++) = *source;
-
+      argument.append(1, *iter);
+      break;
     }
-    ++source;
   }
 
-  *dest = 0;
-  argument = string( ret );
+  if( session->loglevel >= 5 ){
+    *(session->logfile) << "FIF :: URL decoding: " << src << " => " << argument << endl;
+  }
 
 
   IIPImage test;
@@ -85,7 +109,7 @@ void FIF::run( Session* session, std::string argument ){
       test.Initialise();
 
       (*session->imageCache)[argument] = test;
-      if( session->loglevel >= 1 ) *(session->logfile) << "Image cache initialisation" << endl;
+      if( session->loglevel >= 1 ) *(session->logfile) << "FIF :: Image cache initialisation" << endl;
     }
 
     else{
@@ -93,14 +117,14 @@ void FIF::run( Session* session, std::string argument ){
       if( session->imageCache->find(argument) != session->imageCache->end() ){
 	test = (*session->imageCache)[ argument ];
 	if( session->loglevel >= 2 ){
-	  *(session->logfile) << "Image cache hit. Number of elements: " << session->imageCache->size() << endl;
+	  *(session->logfile) << "FIF :: Image cache hit. Number of elements: " << session->imageCache->size() << endl;
 	}
       }
       else{
 	test = IIPImage( argument );
 	test.setFileNamePattern( filename_pattern );
 	test.Initialise();
-	if( session->loglevel >= 2 ) *(session->logfile) << "Image cache miss" << endl;
+	if( session->loglevel >= 2 ) *(session->logfile) << "FIF :: Image cache miss" << endl;
 	if( session->imageCache->size() >= 100 ) session->imageCache->erase( session->imageCache->end() );
 	(*session->imageCache)[argument] = test;
       }

@@ -1,7 +1,7 @@
 /*
     IIP Generic Task Class
 
-    Copyright (C) 2006 Ruven Pillay.
+    Copyright (C) 2006-2007 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -117,11 +117,11 @@ class Task {
   virtual ~Task() {;};   
 
   /// Main public function
-  virtual void run( Session* session, std::string argument ) {;};
+  virtual void run( Session* session, const std::string& argument ) {;};
 
   /// Factory function
   /** @param type command type */
-  static Task* factory( std::string type );
+  static Task* factory( const std::string& type );
 
 
   /// Check image
@@ -137,7 +137,7 @@ class OBJ : public Task {
 
  public:
 
-  void run( Session* session, std::string argument );
+  void run( Session* session, const std::string& argument );
 
   void iip();
   void iip_server();
@@ -155,91 +155,91 @@ class OBJ : public Task {
 /// JPEG Quality Command
 class QLT : public Task {
  public:
-  void run( Session* session, std::string argument );
+  void run( Session* session, const std::string& argument );
 };
 
 
 /// SDS Command
 class SDS : public Task {
  public:
-  void run( Session* session, std::string argument );
+  void run( Session* session, const std::string& argument );
 };
 
 
 /// Contrast Command
 class CNT : public Task {
  public:
-  void run( Session* session, std::string argument );
+  void run( Session* session, const std::string& argument );
 };
 
 
 /// CVT Width Command
 class WID : public Task {
  public:
-  void run( Session* session, std::string argument );
+  void run( Session* session, const std::string& argument );
 };
 
 
 /// CVT Height Command
 class HEI : public Task {
  public:
-  void run( Session* session, std::string argument );
+  void run( Session* session, const std::string& argument );
 };
 
 
 /// CVT Region Command
 class RGN : public Task {
  public:
-  void run( Session* session, std::string argument );
+  void run( Session* session, const std::string& argument );
 };
 
 
 /// FIF Command
 class FIF : public Task {
  public:
-  void run( Session* session, std::string argument );
+  void run( Session* session, const std::string& argument );
 };
 
 
 /// JPEG Tile Command
 class JTL : public Task {
  public:
-  void run( Session* session, std::string argument );
+  void run( Session* session, const std::string& argument );
 };
 
 
 /// JPEG Tile Sequence Command
 class JTLS : public Task {
  public:
-  void run( Session* session, std::string argument );
+  void run( Session* session, const std::string& argument );
 };
 
 
 /// Tile Command
 class TIL : public Task {
  public:
-  void run( Session* session, std::string argument );
+  void run( Session* session, const std::string& argument );
 };
 
 
 /// CVT Command
 class CVT : public Task {
  public:
-  void run( Session* session, std::string argument );
+  void run( Session* session, const std::string& argument );
 };
 
 
 /// ICC Profile Command
 class ICC : public Task {
  public:
-  void run( Session* session, std::string argument );
+  void run( Session* session, const std::string& argument );
 };
 
 
 /// Shading Command
 class SHD : public Task {
  public:
-  void run( Session* session, std::string argument );
+  void run( Session* session, const std::string& argument );
 };
 
 

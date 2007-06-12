@@ -1,7 +1,7 @@
 /*
     IIP JTLS Command Handler Class Member Function
 
-    Copyright (C) 2006 Ruven Pillay.
+    Copyright (C) 2006-2007 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -24,7 +24,7 @@ using namespace std;
 
 
 
-void JTL::run( Session* session, std::string argument ){
+void JTL::run( Session* session, const std::string& argument ){
 
   /* The argument should consist of 2 comma separated values:
      1) resolution
@@ -63,25 +63,15 @@ void JTL::run( Session* session, std::string argument ){
   }
 
 
-char date[256];
-#ifdef HAVE_TIME_H	
-  time_t current_time = time( NULL ) + 604800;
-  strftime( date, 255, "%a, %d %b %Y %H:%M:%S GMT", gmtime(&current_time) );
-#else
-  strncpy( date, "today", 255 );
-#endif
-
-
 
 #ifndef DEBUG
   char buf[1024];
   snprintf( buf, 1024, "Content-Type: image/jpeg\r\n"
             "Content-Length: %d\r\n"
 	    "Cache-Control: max-age=604800\r\n"
-	    //	    "Expires: %s\r\n"
 	    "Last-Modified: Sat, 01 Jan 2000 00:00:00 GMT\r\n"
 	    "Etag: jtl\r\n"
-	    "\r\n", len, date );
+	    "\r\n", len );
 
   session->out->printf( (const char*) buf );
 #endif

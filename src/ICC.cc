@@ -1,7 +1,7 @@
 /*
     IIP ICC Command Handler
 
-    Copyright (C) 2006 Ruven Pillay.
+    Copyright (C) 2006-2007 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -32,7 +32,7 @@
 using namespace std;
 
 
-void ICC::run( Session* session, std::string argument ){
+void ICC::run( Session* session, const std::string& argument ){
 
   unsigned char icc_profile[1024];
 
@@ -73,7 +73,7 @@ void ICC::run( Session* session, std::string argument ){
 #else
 
 
-void ICC::run( Session* session, std::string argument ){ ; };
+void ICC::run( Session* session, const std::string& argument ){ ; }
 
 
 #endif

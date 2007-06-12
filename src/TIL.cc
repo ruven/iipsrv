@@ -1,7 +1,7 @@
 /*
     IIP TIL Command Handler Class Member Function
 
-    Copyright (C) 2006 Ruven Pillay.
+    Copyright (C) 2006-2007 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -25,7 +25,7 @@ using namespace std;
 
 
 
-void TIL::run( Session* session, std::string argument ){
+void TIL::run( Session* session, const std::string& a ){
 
   int resolution, start_tile, end_tile;
   this->session = session;
@@ -41,6 +41,7 @@ void TIL::run( Session* session, std::string argument ){
 
   /* Parse the argument list of the form 'resolution,range'
    */
+  string argument = a;
   int delimitter = argument.find( "," );
   string tmp = argument.substr( 0, delimitter );
   resolution = atoi( tmp.c_str() );
