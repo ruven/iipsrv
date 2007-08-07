@@ -114,7 +114,11 @@ void TIL::run( Session* session, const std::string& a ){
   /* Only send our MIME type once
    */
   if( (endx >= startx) && (endy >= starty) ){
-    session->out->printf( "Content-type: application/vnd.netfpx\r\n\r\n" );
+    session->out->printf( "Content-type: application/vnd.netfpx\r\n"
+			  "Cache-Control: max-age=604800\r\n"
+			  "Last-Modified: Sat, 01 Jan 2000 00:00:00 GMT\r\n"
+			  "Etag: jtl\r\n"
+			  "\r\n" );
   }
 
 

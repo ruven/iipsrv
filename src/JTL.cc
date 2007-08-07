@@ -19,6 +19,7 @@
 */
 
 #include "Task.h"
+#include "ColourTransforms.h"
 
 using namespace std;
 
@@ -49,9 +50,17 @@ void JTL::run( Session* session, const std::string& argument ){
   tile = atoi( argument.substr( delimitter + 1, argument.length() ).c_str() );
 
 
+
   TileManager tilemanager( session->tileCache, *session->image, session->jpeg, session->logfile, session->loglevel );
+
+  CompressionType ct;
+  if( (*session->image)->getColourSpace() == CIELAB ) ct = UNCOMPRESSED;
+  else if( (*session->image)->getNumBitsPerPixel() == 16 ) ct = UNCOMPRESSED;
+  else if( session->view->getContrast() != 1.0 ) ct = UNCOMPRESSED;
+  else ct = JPEG;
+
   RawTile rawtile = tilemanager.getTile( resolution, tile, session->view->xangle,
-					 session->view->yangle, JPEG );
+					 session->view->yangle, ct );
 
   int len = rawtile.dataLength;
 
@@ -63,17 +72,76 @@ void JTL::run( Session* session, const std::string& argument ){
   }
 
 
+  float contrast = session->view->getContrast();
+  unsigned int w = (*session->image)->getTileWidth();
+  //  unsigned int h = (*session->image)->getTileHeight();
+
+  unsigned char* buf = new unsigned char[ rawtile.width*rawtile.height*rawtile.channels ];
+  unsigned char* ptr = (unsigned char*) rawtile.data;
+
+
+  // Convert CIELAB to sRGB
+  if( (*session->image)->getColourSpace() == CIELAB ){
+    if( session->loglevel >= 4 ) *(session->logfile) << "JTL :: Converting from CIELAB->sRGB" << endl;
+    for( unsigned int j=0; j<rawtile.height; j++ ){
+      for( unsigned int i=0; i<rawtile.width*rawtile.channels; i+=rawtile.channels ){
+	iip_LAB2sRGB( &ptr[j*w*rawtile.channels + i], &buf[j*rawtile.width*rawtile.channels + i] );
+      }
+    }
+    delete[] ptr;
+    rawtile.data = buf;
+    rawtile.localData = 1;
+  }
+
+  // Handle 16bit images or contrast adjustments
+  else if( (rawtile.bpc==16) || (contrast !=1.0) ){
+
+    // Normalise 16bit images to 8bit for JPEG
+    if( rawtile.bpc == 16 ) contrast = contrast / 256.0;
+
+    float v;
+    if( session->loglevel >= 4 ) *(session->logfile) << "JTL :: Applying contrast scaling of " << contrast << endl;
+    for( unsigned int j=0; j<rawtile.height; j++ ){
+      for( unsigned int i=0; i<rawtile.width*rawtile.channels; i++ ){
+
+	if( rawtile.bpc == 16 ){
+	  unsigned short* sptr = (unsigned short*) rawtile.data;
+	  v = sptr[j*w*rawtile.channels + i];
+	}
+	else{
+	  unsigned char* sptr = (unsigned char*) rawtile.data;
+	  v = sptr[j*w*rawtile.channels + i];
+	}
+
+	v = v * contrast;
+	if( v > 255.0 ) v = 255.0;
+	if( v < 0.0 ) v = 0.0;
+	buf[j*rawtile.width*rawtile.channels + i] = (unsigned char) v;
+      }
+    }
+    delete[] ptr;
+    rawtile.data = buf;
+    rawtile.localData = 1;
+  }
+
+
+  // Compress to JPEG
+  if( ct == UNCOMPRESSED ){
+    if( session->loglevel >= 4 ) *(session->logfile) << "JTL :: Compressing UNCOMPRESSED to JPEG" << endl;
+    len = session->jpeg->Compress( rawtile );
+  }
+
 
 #ifndef DEBUG
-  char buf[1024];
-  snprintf( buf, 1024, "Content-Type: image/jpeg\r\n"
+  char str[1024];
+  snprintf( str, 1024, "Content-Type: image/jpeg\r\n"
             "Content-Length: %d\r\n"
 	    "Cache-Control: max-age=604800\r\n"
 	    "Last-Modified: Sat, 01 Jan 2000 00:00:00 GMT\r\n"
 	    "Etag: jtl\r\n"
 	    "\r\n", len );
 
-  session->out->printf( (const char*) buf );
+  session->out->printf( (const char*) str );
 #endif
 
 
@@ -82,6 +150,7 @@ void JTL::run( Session* session, const std::string& argument ){
       *(session->logfile) << "JTL :: Error writing jpeg tile" << endl;
     }
   }
+
 
   session->out->printf( "\r\n" );
 

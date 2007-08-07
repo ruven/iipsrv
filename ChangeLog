@@ -1,3 +1,8 @@
+07/08/2007:
+	- Added CIELAB conversion and contrast handling to JTL so that it can handle
+	  16 bit images.
+
+
 12/06/2007:
 	- Updated URL decoding function in FIF.cc to C++ style and avoid a potential
 	  buffer overflow.

@@ -21,21 +21,16 @@
 
 #include "Task.h"
 #include "Environment.h"
-
 #include "TPTImage.h"
-#include "Cache.h"
 
-#include <stdexcept>
-#include <memory>
-#include <vector>
-#include <iterator> 	// for distance
-#include <cctype> 	// for toupper, isxdigit
+
 
 using namespace std;
 
 
 
-static char hexToChar( char first, char second){
+// Internal utility function
+static char hexToChar( char first, char second ){
   int digit;
   digit = (first >= 'A' ? ((first & 0xDF) - 'A') + 10 : (first - '0'));
   digit *= 16;
@@ -44,7 +39,8 @@ static char hexToChar( char first, char second){
 }
 
 
-void FIF::run( Session* session, const std::string& src ){
+
+void FIF::run( Session* session, const string& src ){
 
   if( session->loglevel >= 3 ) *(session->logfile) << "FIF handler reached" << endl;
 
@@ -56,30 +52,30 @@ void FIF::run( Session* session, const std::string& src ){
   // encoded URL form.
   // So, first decode this path (implementation taken from GNU cgicc: http://www.cgicc.org)
 
-  std::string argument;
-  std::string::const_iterator iter;
+  string argument;
+  string::const_iterator iter;
   char c;
 
   for(iter = src.begin(); iter != src.end(); ++iter) {
     switch(*iter) {
     case '+':
-      argument.append(1, ' ');
+      argument.append(1,' ');
       break;
     case '%':
-	// Don't assume well-formed input
-	if(std::distance(iter, src.end()) >= 2
-	   && std::isxdigit(*(iter + 1)) && std::isxdigit(*(iter + 2))) {
-	    c = *++iter;
-	    argument.append(1, hexToChar(c, *++iter));
-	}
-	// Just pass the % through untouched
-	else {
-	    argument.append(1, '%');
-	}
-	break;
+      // Don't assume well-formed input
+      if( std::distance(iter, src.end()) >= 2 &&
+	  std::isxdigit(*(iter + 1)) && std::isxdigit(*(iter + 2)) ){
+	c = *++iter;
+	argument.append(1,hexToChar(c,*++iter));
+      }
+      // Just pass the % through untouched
+      else {
+	argument.append(1,'%');
+      }
+      break;
     
     default:
-      argument.append(1, *iter);
+      argument.append(1,*iter);
       break;
     }
   }
@@ -144,7 +140,7 @@ void FIF::run( Session* session, const std::string& src ){
     }
     else throw string( "Unsupported image type: " + imtype );
 
-    /*
+    /* Disable module loading for now!
     else{
 
 #ifdef ENABLE_DL
@@ -166,7 +162,8 @@ void FIF::run( Session* session, const std::string& src ){
 	  (*session->image)->Load( (*mod_it).second );
 
 	  if( session->loglevel >= 2 ){
-	    *(session->logfile) << imtype << " image requested ... using handler "
+	    *(session->logfile) << "FIF :: Image type: '" << imtype
+	                        << "' requested ... using handler "
 				<< (*session->image)->getDescription() << endl;
 	  }
 	}
@@ -179,15 +176,15 @@ void FIF::run( Session* session, const std::string& src ){
 
 
     if( session->loglevel >= 3 ){
-      *(session->logfile) << "FIF :: created image" << endl;
+      *(session->logfile) << "FIF :: Created image" << endl;
     }
 
 
     (*session->image)->openImage();
 
     if( session->loglevel >= 2 ){
-      *(session->logfile) << "image width is " << (*session->image)->getImageWidth()
-			  << " and height is " << (*session->image)->getImageHeight() << endl;
+      *(session->logfile) << "FIF :: Image dimensions are " << (*session->image)->getImageWidth()
+			  << " x " << (*session->image)->getImageHeight() << endl;
     }
 
 
@@ -204,7 +201,7 @@ void FIF::run( Session* session, const std::string& src ){
   session->view->yangle = 90;
 
 	  
-  if( session->loglevel >= 3 ){
+  if( session->loglevel >= 2 ){
     *(session->logfile)	<< "FIF :: Total command time " << command_timer.getTime() << " microseconds" << endl;
   }
 

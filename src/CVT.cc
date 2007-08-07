@@ -18,8 +18,6 @@
     Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
-
-
 #include "Task.h"
 #include "ColourTransforms.h"
 
@@ -293,11 +291,11 @@ void CVT::run( Session* session, const std::string& a ){
 	    }
 	  }
 	  // If we have a 16 bit image, multiply by the contrast adjustment if it exists
-	  // and clip to 8 bits
+	  // and scale to 8 bits.
 	  else if( rawtile.bpc == 16 ){
 	    unsigned short* sptr = (unsigned short*) rawtile.data;
 	    for( n=0; n<dst_tile_width*channels; n++ ){
-	      float v = (float)sptr[inx+n] * session->view->getContrast();
+	      float v = (float)sptr[inx+n] * (session->view->getContrast() / 256.0);
 	      if( v > 255.0 ) v = 255.0;
 	      buf[buffer_index + n] = (unsigned char) v;
 	    }
