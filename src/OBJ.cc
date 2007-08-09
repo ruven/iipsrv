@@ -55,7 +55,7 @@ void OBJ::run( Session* s, const std::string& a )
   // IIP optional commands
   else if( argument == "iip-opt-comm" ) session->response->addResponse( "IIP-opt-comm:CVT CNT QLT JTL JTLS WID HEI RGN SHD" );
   // IIP optional objects
-  else if( argument == "iip-opt-obj" ) session->response->addResponse( "IIP-opt-obj:Horizontal-views Vertical-views Tile-size" );
+  else if( argument == "iip-opt-obj" ) session->response->addResponse( "IIP-opt-obj:Horizontal-views Vertical-views Tile-size Bits-per-channel" );
   // Resolution-number
   else if( argument == "resolution-number" ) resolution_number();
   // Max-size
