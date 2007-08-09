@@ -62,6 +62,8 @@ void OBJ::run( Session* s, const std::string& a )
   else if( argument == "max-size" ) max_size();
   // Tile-size
   else if( argument == "tile-size" ) tile_size();
+  // Bits per pixel
+  else if( argument == "bits-per-channel" ) bits_per_channel();
   // Vertical-views
   else if( argument == "vertical-views" ) vertical_views();
   // Horizontal-views
@@ -162,6 +164,18 @@ void OBJ::tile_size(){
     *(session->logfile) << "OBJ :: Tile-size is " << x << " " << y << endl;
   }
   session->response->addResponse( "Tile-size", x, y );
+}
+
+
+void OBJ::bits_per_channel(){
+
+  checkImage();
+  int bpp = (*session->image)->getNumBitsPerPixel();
+  if( session->loglevel >= 2 ){
+    *(session->logfile) << "OBJ :: Bits-per-channel handler returning " << bpp << endl;
+  }
+  session->response->addResponse( "Bits-per-channel", bpp );
+
 }
 
 

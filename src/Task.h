@@ -145,6 +145,7 @@ class OBJ : public Task {
   void resolution_number();
   void colorspace( std::string arg );
   void tile_size();
+  void bits_per_channel();
   void horizontal_views();
   void vertical_views();
   void metadata( std::string field );

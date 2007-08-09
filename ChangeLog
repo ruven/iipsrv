@@ -1,3 +1,8 @@
+09/08/2007:
+	- Added a Bits-per-channel OBJ request so that viewers can determine whether
+	  to perform contrast adjustment server-side or client-side.
+
+
 07/08/2007:
 	- Added CIELAB conversion and contrast handling to JTL so that it can handle
 	  16 bit images.

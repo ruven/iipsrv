@@ -80,7 +80,7 @@ void JTL::run( Session* session, const std::string& argument ){
   unsigned char* ptr = (unsigned char*) rawtile.data;
 
 
-  // Convert CIELAB to sRGB
+  // Convert CIELAB to sRGB, performing tile cropping if necessary
   if( (*session->image)->getColourSpace() == CIELAB ){
     if( session->loglevel >= 4 ) *(session->logfile) << "JTL :: Converting from CIELAB->sRGB" << endl;
     for( unsigned int j=0; j<rawtile.height; j++ ){
