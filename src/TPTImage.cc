@@ -114,6 +114,10 @@ void TPTImage::loadImageInfo( int seq, int ang ) throw(string)
   else if( colour == 1 ) colourspace = GREYSCALE;
   else colourspace = sRGB;
 
+  // Watch out for colourmapped images. There are stored as 1 sample per pixel, but
+  // are decoded to 3 channels by libtiff. We declare them as sRGB
+  if( colour == 3 ) channels = 3;
+
 }
 
 
