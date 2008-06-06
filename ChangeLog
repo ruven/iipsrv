@@ -1,3 +1,16 @@
+06/06/2008:
+	- Modifed the way the image dimensions are stored in the IIPImage class.
+	  Rather than simply storing the max size, a vector of available dimensions
+	  is saved making it easier to get the size for a given resolution.
+
+
+05/06/2008:
+	- Added Zoomify support via the Zoomify=/path.tif request. Works with both
+	  the official flash client and the Zoomify patched OpenLayers javascript
+	  client. Work carried out thanks to R&D grant DC08P02OUK006 - Old Maps
+	  Online (www.oldmapsonline.org) from Ministry of Culture of the Czech Republic.
+
+
 09/08/2007:
 	- Added a Bits-per-channel OBJ request so that viewers can determine whether
 	  to perform contrast adjustment server-side or client-side.

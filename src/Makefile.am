@@ -40,6 +40,7 @@ iipsrv_fcgi_SOURCES = \
 			TIL.cc \
 			ICC.cc \
 			CVT.cc \
+			Zoomify.cc \
 			DSOImage.h \
 			DSOImage.cc
 
@@ -74,6 +75,7 @@ iipsrv_fcgi_SOURCES = \
 			JTL.cc \
 			TIL.cc \
 			ICC.cc \
-			CVT.cc
+			CVT.cc \
+			Zoomify.cc
 
 endif

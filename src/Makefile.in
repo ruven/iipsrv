@@ -58,6 +58,7 @@ CYGPATH_W = @CYGPATH_W@
 DEFS = @DEFS@
 DEPDIR = @DEPDIR@
 DL_LIBS = @DL_LIBS@
+DSYMUTIL = @DSYMUTIL@
 ECHO = @ECHO@
 ECHO_C = @ECHO_C@
 ECHO_CPP = @ECHO_CPP@
@@ -89,6 +90,7 @@ LIBTOOL = @LIBTOOL@
 LN_S = @LN_S@
 LTLIBOBJS = @LTLIBOBJS@
 MAKEINFO = @MAKEINFO@
+NMEDIT = @NMEDIT@
 OBJEXT = @OBJEXT@
 PACKAGE = @PACKAGE@
 PACKAGE_BUGREPORT = @PACKAGE_BUGREPORT@
@@ -101,6 +103,7 @@ PTHREAD_CC = @PTHREAD_CC@
 PTHREAD_CFLAGS = @PTHREAD_CFLAGS@
 PTHREAD_LIBS = @PTHREAD_LIBS@
 RANLIB = @RANLIB@
+SED = @SED@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
 STRIP = @STRIP@
@@ -187,6 +190,7 @@ AM_LDFLAGS = @LIBFCGI_LDFLAGS@
 @ENABLE_MODULES_TRUE@			TIL.cc \
 @ENABLE_MODULES_TRUE@			ICC.cc \
 @ENABLE_MODULES_TRUE@			CVT.cc \
+@ENABLE_MODULES_TRUE@			Zoomify.cc \
 @ENABLE_MODULES_TRUE@			DSOImage.h \
 @ENABLE_MODULES_TRUE@			DSOImage.cc
 
@@ -220,7 +224,8 @@ AM_LDFLAGS = @LIBFCGI_LDFLAGS@
 @ENABLE_MODULES_FALSE@			JTL.cc \
 @ENABLE_MODULES_FALSE@			TIL.cc \
 @ENABLE_MODULES_FALSE@			ICC.cc \
-@ENABLE_MODULES_FALSE@			CVT.cc
+@ENABLE_MODULES_FALSE@			CVT.cc \
+@ENABLE_MODULES_FALSE@			Zoomify.cc
 
 subdir = src
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
@@ -234,7 +239,7 @@ am__iipsrv_fcgi_SOURCES_DIST = Main.cc IIPImage.h IIPImage.cc TPTImage.h \
 	Timer.h Cache.h TileManager.h TileManager.cc Tokenizer.h \
 	IIPResponse.h IIPResponse.cc View.h View.cc ColourTransforms.h \
 	ColourTransforms.cc Environment.h Writer.h Task.h Task.cc \
-	OBJ.cc FIF.cc JTL.cc TIL.cc ICC.cc CVT.cc DSOImage.h \
+	OBJ.cc FIF.cc JTL.cc TIL.cc ICC.cc CVT.cc Zoomify.cc DSOImage.h \
 	DSOImage.cc
 @ENABLE_MODULES_TRUE@am_iipsrv_fcgi_OBJECTS = Main.$(OBJEXT) \
 @ENABLE_MODULES_TRUE@	IIPImage.$(OBJEXT) TPTImage.$(OBJEXT) \
@@ -244,7 +249,7 @@ am__iipsrv_fcgi_SOURCES_DIST = Main.cc IIPImage.h IIPImage.cc TPTImage.h \
 @ENABLE_MODULES_TRUE@	ColourTransforms.$(OBJEXT) Task.$(OBJEXT) \
 @ENABLE_MODULES_TRUE@	OBJ.$(OBJEXT) FIF.$(OBJEXT) JTL.$(OBJEXT) \
 @ENABLE_MODULES_TRUE@	TIL.$(OBJEXT) ICC.$(OBJEXT) CVT.$(OBJEXT) \
-@ENABLE_MODULES_TRUE@	DSOImage.$(OBJEXT)
+@ENABLE_MODULES_TRUE@	Zoomify.$(OBJEXT) DSOImage.$(OBJEXT)
 @ENABLE_MODULES_FALSE@am_iipsrv_fcgi_OBJECTS = Main.$(OBJEXT) \
 @ENABLE_MODULES_FALSE@	IIPImage.$(OBJEXT) TPTImage.$(OBJEXT) \
 @ENABLE_MODULES_FALSE@	JPEGCompressor.$(OBJEXT) \
@@ -252,7 +257,8 @@ am__iipsrv_fcgi_SOURCES_DIST = Main.cc IIPImage.h IIPImage.cc TPTImage.h \
 @ENABLE_MODULES_FALSE@	IIPResponse.$(OBJEXT) View.$(OBJEXT) \
 @ENABLE_MODULES_FALSE@	ColourTransforms.$(OBJEXT) Task.$(OBJEXT) \
 @ENABLE_MODULES_FALSE@	OBJ.$(OBJEXT) FIF.$(OBJEXT) JTL.$(OBJEXT) \
-@ENABLE_MODULES_FALSE@	TIL.$(OBJEXT) ICC.$(OBJEXT) CVT.$(OBJEXT)
+@ENABLE_MODULES_FALSE@	TIL.$(OBJEXT) ICC.$(OBJEXT) CVT.$(OBJEXT) \
+@ENABLE_MODULES_FALSE@	Zoomify.$(OBJEXT)
 iipsrv_fcgi_OBJECTS = $(am_iipsrv_fcgi_OBJECTS)
 iipsrv_fcgi_LDADD = $(LDADD)
 iipsrv_fcgi_DEPENDENCIES =
@@ -270,7 +276,7 @@ am__depfiles_maybe = depfiles
 @AMDEP_TRUE@	./$(DEPDIR)/Main.Po ./$(DEPDIR)/OBJ.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/TIL.Po ./$(DEPDIR)/TPTImage.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/Task.Po ./$(DEPDIR)/TileManager.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/View.Po
+@AMDEP_TRUE@	./$(DEPDIR)/View.Po ./$(DEPDIR)/Zoomify.Po
 CXXCOMPILE = $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) \
 	$(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS)
 LTCXXCOMPILE = $(LIBTOOL) --mode=compile $(CXX) $(DEFS) \
@@ -332,6 +338,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Task.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/TileManager.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/View.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Zoomify.Po@am__quote@
 
 .cc.o:
 @am__fastdepCXX_TRUE@	if $(CXXCOMPILE) -MT $@ -MD -MP -MF "$(DEPDIR)/$*.Tpo" \

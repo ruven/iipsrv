@@ -1,7 +1,7 @@
 /*
     IIP FIF Command Handler Class Member Function
 
-    Copyright (C) 2006-2007 Ruven Pillay.
+    Copyright (C) 2006-2008 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -186,7 +186,6 @@ void FIF::run( Session* session, const string& src ){
       *(session->logfile) << "FIF :: Image dimensions are " << (*session->image)->getImageWidth()
 			  << " x " << (*session->image)->getImageHeight() << endl;
     }
-
 
   }
   catch( const string& error ){

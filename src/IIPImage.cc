@@ -3,7 +3,7 @@
 
 /*  IIP fcgi server module
 
-    Copyright (C) 2000-2003 Ruven Pillay.
+    Copyright (C) 2000-2008 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -38,8 +38,6 @@ using namespace std;
 IIPImage::IIPImage()
 {
   isFile = false;
-  image_width = 0;
-  image_height = 0;
   bpp = 0;
   channels = 0;
   isSet = false;
@@ -53,8 +51,6 @@ IIPImage::IIPImage ( const string& p )
 {
   imagePath = p;
   isFile = false;
-  image_width = 0;
-  image_height = 0;
   bpp = 0;
   channels = 0;
   isSet = false;
@@ -73,8 +69,8 @@ IIPImage::IIPImage( const IIPImage& image )
   fileNamePattern = image.fileNamePattern;
   horizontalAnglesList = image.horizontalAnglesList;
   verticalAnglesList = image.verticalAnglesList;
-  image_width = image.image_width;
-  image_height = image.image_height;
+  image_widths = image.image_widths;
+  image_heights = image.image_heights;
   bpp = image.bpp;
   channels = image.channels;
   isSet = image.isSet;
@@ -93,8 +89,8 @@ const IIPImage& IIPImage::operator = ( const IIPImage& image )
   fileNamePattern = image.fileNamePattern;
   horizontalAnglesList = image.horizontalAnglesList;
   verticalAnglesList = image.verticalAnglesList;
-  image_width = image.image_width;
-  image_height = image.image_height;
+  image_widths = image.image_widths;
+  image_heights = image.image_heights;
   bpp = image.bpp;
   channels = image.channels;
   isSet = image.isSet;

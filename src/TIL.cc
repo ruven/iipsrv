@@ -1,7 +1,7 @@
 /*
     IIP TIL Command Handler Class Member Function
 
-    Copyright (C) 2006-2007 Ruven Pillay.
+    Copyright (C) 2006-2008 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -67,17 +67,12 @@ void TIL::run( Session* session, const std::string& a ){
    */
 
   // Calculate the number of tiles at the requested resolution
-  unsigned int im_width = (*session->image)->getImageWidth();
-  unsigned int im_height = (*session->image)->getImageHeight();
   int num_res = (*session->image)->getNumResolutions();
-
   int requested_res = resolution;
 
-  // Calculate the image width and height for this resolution
-  for( int i=0; i < (num_res - requested_res - 1); i++){
-    im_width = (int) im_width / 2;
-    im_height = (int) im_height / 2;
-  }
+  // Get the image width and height for this resolution
+  unsigned int im_width = (*session->image)->getImageWidth(num_res-requested_res-1);
+  unsigned int im_height = (*session->image)->getImageHeight(num_res-requested_res-1);
 
   unsigned int tile_width = (*session->image)->getTileWidth();
   unsigned int tile_height = (*session->image)->getTileHeight();

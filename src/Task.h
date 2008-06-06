@@ -244,5 +244,12 @@ class SHD : public Task {
 };
 
 
+/// Zoomify Request Command
+class Zoomify : public Task {
+ public:
+  void run( Session* session, const std::string& argument );
+};
+
+
 
 #endif

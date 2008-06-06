@@ -2,7 +2,7 @@
 
 /*  IIP fcgi server module
 
-    Copyright (C) 2000-2006 Ruven Pillay.
+    Copyright (C) 2000-2008 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -70,13 +70,14 @@ class IIPImage {
 
 
 
- protected: 
+  //protected: 
+ public:
 
   /// Return the image type e.g. tif
   std::string type;
 
   /// The image pixel dimensions
-  unsigned int image_width, image_height;
+  std::vector<int> image_widths, image_heights;
 
   /// The base tile pixel dimensions
   unsigned int tile_width, tile_height;
@@ -154,13 +155,18 @@ class IIPImage {
   /// Return the number of channels for this image
   unsigned int getNumChannels() { return channels; };
 
-  /// Return the image width in pixels
-  unsigned int getImageWidth() { return image_width; };
+  /// Return the image width in pixels for a given resolution
+  /** \param n resolution number (0 is default and full size image)
+   */
+  unsigned int getImageWidth( int n=0) { return image_widths[n]; };
 
-  /// Return the image height in pixels
-  unsigned int getImageHeight() { return image_height; };
+  /// Return the image height in pixels for a given resolution
+  /** \param n resolution number (0 is default and full size image)
+   */
+  unsigned int getImageHeight( int n=0 ) { return image_heights[n]; };
 
-  /// Return the base tile height in pixels
+  /// Return the base tile height in pixels for a given resolution
+
   unsigned int getTileHeight() { return tile_height; };
 
   /// Return the base tile width in pixels

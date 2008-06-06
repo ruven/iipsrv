@@ -2,7 +2,7 @@
 
 /*  IIP Server: Tiled Pyramidal TIFF handler
 
-    Copyright (C) 2000-2006 Ruven Pillay.
+    Copyright (C) 2000-2008 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -21,7 +21,7 @@
 
 
 #include "TPTImage.h"
-
+#include <iostream>
 
 using namespace std;
 
@@ -71,6 +71,7 @@ void TPTImage::loadImageInfo( int seq, int ang ) throw(string)
   tdir_t current_dir;
   int count;
   uint16 colour, samplesperpixel, bitspersample;
+  unsigned int w, h;
   string filename;
 
   // If we are currently working on a different sequence number, then
@@ -91,8 +92,8 @@ void TPTImage::loadImageInfo( int seq, int ang ) throw(string)
   // Get the tile and image sizes
   TIFFGetField( tiff, TIFFTAG_TILEWIDTH, &tile_width );
   TIFFGetField( tiff, TIFFTAG_TILELENGTH, &tile_height );
-  TIFFGetField( tiff, TIFFTAG_IMAGEWIDTH, &image_width );
-  TIFFGetField( tiff, TIFFTAG_IMAGELENGTH, &image_height );
+  TIFFGetField( tiff, TIFFTAG_IMAGEWIDTH, &w );
+  TIFFGetField( tiff, TIFFTAG_IMAGELENGTH, &h );
   TIFFGetField( tiff, TIFFTAG_SAMPLESPERPIXEL, &samplesperpixel );
   TIFFGetField( tiff, TIFFTAG_BITSPERSAMPLE, &bitspersample );
   TIFFGetField( tiff, TIFFTAG_PHOTOMETRIC, &colour );
@@ -104,10 +105,21 @@ void TPTImage::loadImageInfo( int seq, int ang ) throw(string)
   // Check for the no. of resolutions in the pyramidal image
   current_dir = TIFFCurrentDirectory( tiff );
   TIFFSetDirectory( tiff, 0 );
-  for( count = 1; TIFFReadDirectory( tiff ); count++ );
+
+  // Store the list of image dimensions available
+  image_widths.push_back( w );
+  image_heights.push_back( h );
+
+  for( count = 0; TIFFReadDirectory( tiff ); count++ ){
+    TIFFGetField( tiff, TIFFTAG_IMAGEWIDTH, &w );
+    TIFFGetField( tiff, TIFFTAG_IMAGELENGTH, &h );
+    image_widths.push_back( w );
+    image_heights.push_back( h );
+  }
+  // Reset the TIFF directory
   TIFFSetDirectory( tiff, current_dir );
 
-  numResolutions = count;
+  numResolutions = count+1;
 
   // Assign the colourspace variable
   if( colour == 8 ) colourspace = CIELAB;
@@ -197,7 +209,9 @@ RawTile TPTImage::getTile( int seq, int ang, unsigned int res, unsigned int tile
 
 
   // Get the size of this tile, the current image,
-  //  the number of samples and the colourspace
+  //  the number of samples and the colourspace.
+  // TIFFTAG_TILEWIDTH give us the values for the resolution,
+  //  not for the tile itself
 
   TIFFGetField( tiff, TIFFTAG_TILEWIDTH, &tw );
   TIFFGetField( tiff, TIFFTAG_TILELENGTH, &th );
@@ -225,8 +239,8 @@ RawTile TPTImage::getTile( int seq, int ang, unsigned int res, unsigned int tile
   if( ( tile % ntlx == ntlx - 1 ) && ( rem_x != 0 ) ) {
     tw = rem_x;
   }
-  
-  
+
+
   // Alter the tile size if it's in the bottom row
    
   if( ( tile / ntlx == ntly - 1 ) && rem_y != 0 ) {

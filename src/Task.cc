@@ -51,6 +51,7 @@ Task* Task::factory( const string& t ){
   else if( type == "icc" ) return new ICC;
   else if( type == "cvt" ) return new CVT;
   else if( type == "shd" ) return new SHD;
+  else if( type == "zoomify" ) return new Zoomify;
   else return NULL;
 
 }
