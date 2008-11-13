@@ -20,6 +20,7 @@
 
 #include "IIPResponse.h"
 #include <cstdio>
+#include <cstring>
 // #include <iconv.h>
 
 

@@ -25,6 +25,7 @@
 
 #include <cstring>
 #include <string>
+#include <cstdlib>
 
 
 /// Colour spaces - GREYSCALE, sRGB and CIELAB
