@@ -111,9 +111,10 @@ class RawTile{
 
   /// Destructor to free the data array if is has previously be allocated locally
   ~RawTile() {
-    if( data && localData )
+    if( data && localData ){
       if(bpc==16) delete[] (unsigned short*) data;
       else delete[] (unsigned char*) data;
+    }
   }
 
 
