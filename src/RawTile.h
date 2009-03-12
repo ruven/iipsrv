@@ -2,7 +2,7 @@
 
 /*  IIP Image Server
 
-    Copyright (C) 2000-2005 Ruven Pillay.
+    Copyright (C) 2000-2009 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -111,7 +111,9 @@ class RawTile{
 
   /// Destructor to free the data array if is has previously be allocated locally
   ~RawTile() {
-    if( data && localData ) free( data );
+    if( data && localData )
+      if(bpc==16) delete[] (unsigned short*) data;
+      else delete[] (unsigned char*) data;
   }
 
 
@@ -131,7 +133,8 @@ class RawTile{
     quality = tile.quality;
     filename = tile.filename;
 
-    data = malloc( dataLength );
+    if( bpc == 16 ) data = new unsigned short[dataLength/2];
+    else data = new unsigned char[dataLength];
 
     if( data && (dataLength > 0) && tile.data ){
       memcpy( data, tile.data, dataLength );
@@ -156,7 +159,8 @@ class RawTile{
     quality = tile.quality;
     filename = tile.filename;
 
-    data = malloc( dataLength );
+    if( bpc == 16 ) data = new unsigned short[dataLength/2];
+    else data = new unsigned char[dataLength];
 
     if( data && (dataLength > 0) && tile.data ){
       memcpy( data, tile.data, dataLength );

@@ -1,15 +1,14 @@
-
-
-Internet Imaging Protocol Server with Additional 3D Capability
---------------------------------------------------------------
+-------------------------------------------
+IIPImage - Internet Imaging Protocol Server
+-------------------------------------------
 
 
 ABOUT:
 -----
-This is an FCGI server module to handle 3D image sequences as well as 2D images
-via an extended Internet Imaging Protocol (IIP). For the 3D handling, you
-will need the java acohir viewer.
-
+This is a high performance  FCGI server module for high resolution image
+streaming. It implements the main part of the IIP protocol specification
+with extensions for multispectral imaging, 3D panoramic sequences and 3D
+surface topologies.
 
 
 FEATURES:
@@ -19,8 +18,9 @@ FEATURES:
 * Caching capability for high performance
 * Dynamic JPEG compression
 * Fast dynamic generation of full or regions of JPEG images at any resolution
+* 16 bit images handled
 * Automatic CIELAB->sRGB colour space conversion
-* 3D panoramic views
+* 3D panoramic views (requires java client)
 * Dynamic hillshading of 3D surface topologies
 
 
@@ -37,6 +37,10 @@ LICENCE:
 iipsrv is released under the Gnu Public License (GPL) See the copyright notice
 COPYING in this directory for licensing details or go to http://www.gnu.org for
 more details.
+
+If you use IIPImage on a public site and remove the IIP link logo from the 
+client, you must provide a link on your site back to the IIPImage site - 
+http://iipimage.sf.net
 
 This distribution includes version 2.4.0 of the FCGI development libraries.
 See COPYING.FCGI for licensing information for these libraries.
@@ -65,7 +69,7 @@ unless it detects one already installed. Alternatively, you may specify the
 path using --with-fcgi-incl=<path> and --with-fcgi-lib=<path>.
 
 eg.
-./configure --enable-modules
+./configure
 make
 
 
@@ -122,8 +126,8 @@ able to access and read the images!
 EXAMPLE SERVER CONFIGURATIONS:
 -----------------------------
 
-Apache:
-------
+Apache and mod_fastcgi:
+----------------------
 httpd.conf example extract:
 
 --------------------------------------------------------------------
@@ -150,6 +154,47 @@ FastCgiServer /usr/local/httpd/fcgi-bin/iipsrv.fcgi \
 -initial-env JPEG_QUALITY=50 \
 -initial-env MAX_CVT=3000
 --------------------------------------------------------------------
+
+
+
+Apache and mod_fcgid:
+--------------------
+
+mod_fcgid is a binary compatible replacement for mod_fastcgi. It works in the 
+same way, but is configured differently. Load the module like this:
+
+LoadModule fcgid_module /path/to/apachemodules/mod_fcgid.so
+
+Here is an example configuration. Note that mod_fcgid does not have a 
+FastCgiServer directive and there is no need to explicitly start the server:
+
+# Create a directory for the iipsrv binary
+ScriptAlias /fcgi-bin/ "/var/www/localhost/fcgi-bin/"
+
+# Set the options on that directory
+<Directory "/var/www/localhost/fcgi-bin/">
+   AllowOverride None
+   Options None
+   Order allow,deny
+   Allow from all
+
+   # Set the module handler
+   AddHandler fcgid-script .fcgi
+</Directory>
+
+# Set our environment variables for the IIP server
+DefaultInitEnv VERBOSITY "5"
+DefaultInitEnv LOGFILE "/tmp/iipsrv.log"
+DefaultInitEnv MAX_IMAGE_CACHE_SIZE "10"
+DefaultInitEnv JPEG_QUALITY "50"
+DefaultInitEnv MAX_CVT "3000"
+
+# Define the idle timeout as unlimited and the number of
+# processes we want
+IdleTimeout -1
+DefaultMaxClassProcessCount 1
+-------------------------------------------------------------------
+
 
 
 Lighttpd:
@@ -189,7 +234,7 @@ Manager: NONE
 --------------------------------------------------------------------
 
 
-
-
---------------------------------------------------------------------------
-(c) 2000-2006 Ruven Pillay <ruven@users.sf.net>
+---------------------------------------------------------------------------
+Please refer to the project site http://iipimage.sf.net for further details
+---------------------------------------------------------------------------
+(c) 2000-2009 Ruven Pillay <ruven@users.sf.net>

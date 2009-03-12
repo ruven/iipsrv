@@ -14,3 +14,6 @@
 9) JPEG source image support.
 10) JPEG2000 source image support.
 11) Refactor the code to use a factory function object method ... DONE
+12) Empty cache facility
+13) Don't just use file extension to determine type
+14) Add fcgid conf to README!! ... DONE

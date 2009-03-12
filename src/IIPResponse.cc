@@ -1,7 +1,7 @@
 /*
     IIP Response Handler Class
 
-    Copyright (C) 2003-2006 Ruven Pillay.
+    Copyright (C) 2003-2009 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -69,7 +69,7 @@ void IIPResponse::addResponse( string arg, const char* a ){
      properly :-(
   */
   char tmp[64];
-  snprintf( tmp, 64, "/%d:%s", strlen( a ), a );
+  snprintf( tmp, 64, "/%d:%s", (int) strlen(a), a );
   responseBody.append( arg );
   responseBody.append( tmp );
   responseBody.append( eof );
@@ -100,7 +100,7 @@ void IIPResponse::addResponse( const char* c, int a, int b ){
 void IIPResponse::setError( const string& code, const string& arg ){
 
   char tmp[32];
-  snprintf( tmp, 32, "Error/%d:%s %s", code.length() + arg.length() + 1, code.c_str(), arg.c_str() );
+  snprintf( tmp, 32, "Error/%ld:%s %s", code.length() + arg.length() + 1, code.c_str(), arg.c_str() );
   error += tmp + eof;
 }
 

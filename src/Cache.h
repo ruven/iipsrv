@@ -2,7 +2,7 @@
 
 /*  IIP Image Server
 
-    Copyright (C) 2005-2006 Ruven Pillay.
+    Copyright (C) 2005-2009 Ruven Pillay.
     Based on an LRU cache by Patrick Audley <http://blackcat.ca/lifeline/query.php/tag=LRU_CACHE>
     Copyright (C) 2004 by Patrick Audley
 
@@ -133,7 +133,9 @@ class Cache {
    */
   void _remove( const TileMap::iterator &miter ) {
     // Reduce our current size counter
-    currentSize -= ( (miter->second->second).dataLength + tileSize );
+    currentSize -= ( (miter->second->second).dataLength +
+		     (miter->second->second).filename.length()*sizeof(char) +
+		     tileSize );
     tileList.erase( miter->second );
     tileMap.erase( miter );
   }
@@ -191,11 +193,11 @@ class Cache {
     tileMap[ key ] = liter;
 
     // Update our total current size variable
-    currentSize += (r.dataLength*r.bpc/8 + r.filename.length()*sizeof(char) + tileSize);
+    currentSize += (r.dataLength + r.filename.length()*sizeof(char) + tileSize);
 
     // Check to see if we need to remove an element due to exceeding max_size
     while( currentSize > maxSize ) {
-      // Remove the last element.
+      // Remove the last element
       liter = tileList.end();
       --liter;
       this->_remove( liter->first );

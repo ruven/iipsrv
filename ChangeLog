@@ -1,3 +1,12 @@
+11/03/2009:
+	- Several changes to JTL.cc and Cache.h to eliminate a memory leak. Also
+	  replaced malloc/free in Rawtile with new/delete.
+
+
+04/03/2009:
+	- Minor changes to IIPResponse.cc to elimate type warnings.
+
+
 06/06/2008:
 	- Modifed the way the image dimensions are stored in the IIPImage class.
 	  Rather than simply storing the max size, a vector of available dimensions
