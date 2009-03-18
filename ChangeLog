@@ -1,3 +1,9 @@
+18/03/2009:
+	- Added modification timestamps to the IIPImage and Rawtile classes.
+	  The TileManager now checks whether the tile is fresh and reloads it
+	  if necessary.
+
+
 11/03/2009:
 	- Several changes to JTL.cc and Cache.h to eliminate a memory leak. Also
 	  replaced malloc/free in Rawtile with new/delete.

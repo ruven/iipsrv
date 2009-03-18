@@ -73,7 +73,6 @@ void JTL::run( Session* session, const std::string& argument ){
 
 
   float contrast = session->view->getContrast();
-  *(session->logfile) << "CONTRAST :::: " << contrast << endl;
   unsigned int w = (*session->image)->getTileWidth();
   //  unsigned int h = (*session->image)->getTileHeight();
 
@@ -94,7 +93,6 @@ void JTL::run( Session* session, const std::string& argument ){
     // Delete our old tile data and set it to our new buffer
     delete[] ptr;
     rawtile.data = buf;
-    rawtile.localData = 1;
   }
 
   // Handle 16bit images or contrast adjustments
@@ -134,7 +132,6 @@ void JTL::run( Session* session, const std::string& argument ){
     else delete[] (unsigned char*) rawtile.data;
     rawtile.data = buf;
     rawtile.bpc = 8;
-    rawtile.localData = 1;
   }
 
 

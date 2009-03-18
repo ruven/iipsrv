@@ -181,8 +181,15 @@ class Cache {
     // Touch the key, if it exists
     TileMap::iterator miter = this->_touch( key );
 
-    // If this index already exists, do nothing
-    if( miter != tileMap.end() ) return;
+    // Check whether this tile exists in our cache
+    if( miter != tileMap.end() ){
+      // Check the timestamp and delete if necessary
+      if( miter->second->second.timestamp < r.timestamp ){
+	this->_remove( miter );
+      }
+      // If this index already exists and it is up to date, do nothing
+      else return;
+    }
 
     // Store the key if it doesn't already exist in our cache
     // Ok, do the actual insert at the head of the list

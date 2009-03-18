@@ -2,7 +2,7 @@
 
 /*  IIP fcgi server module
 
-    Copyright (C) 2000-2008 Ruven Pillay.
+    Copyright (C) 2000-2009 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -70,8 +70,8 @@ class IIPImage {
 
 
 
-  //protected: 
- public:
+  // protected: 
+  public:
 
   /// Return the image type e.g. tif
   std::string type;
@@ -103,6 +103,8 @@ class IIPImage {
   /// STL map to hold string metadata
   std::map <const std::string, std::string> metadata;
 
+  /// Image modification timestamp
+  time_t timestamp;
 
 
  public:
@@ -135,16 +137,19 @@ class IIPImage {
   /** \param x horizontal sequence angle
       \param y vertical sequence angle
    */
-  std::string getFileName( int x, int y );
+  const std::string getFileName( int x, int y );
 
   /// Get the image type
-  std::string getImageType() { return type; };
+  const std::string& getImageType() { return type; };
+
+  /// Get the image timestamp
+  void updateTimestamp( const std::string& );
 
   /// Check whether this object has been initialised
   bool set() { return isSet; };
 
   /// Set the file name pattern used in image sequences
-  void setFileNamePattern( std::string pattern ) { fileNamePattern = pattern; };
+  void setFileNamePattern( const std::string& pattern ) { fileNamePattern = pattern; };
 
   /// Return the number of available resolutions in the image
   int getNumResolutions() { return numResolutions; };
@@ -177,7 +182,7 @@ class IIPImage {
 
   /// Return image metadata
   /** \param index metadata field name */
-  std::string getMetadata( const std::string index ) {
+  std::string getMetadata( const std::string& index ) {
     return metadata[index];
   };
 

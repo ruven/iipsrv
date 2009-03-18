@@ -3,7 +3,7 @@
 
 /*  IIP fcgi server module
 
-    Copyright (C) 2000-2008 Ruven Pillay.
+    Copyright (C) 2000-2009 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -27,6 +27,12 @@
 #include <glob.h>
 #endif
 
+#ifdef HAVE_TIME_H
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
+#endif
+
 #include <cstdio>
 #include <fstream>
 
@@ -43,6 +49,7 @@ IIPImage::IIPImage()
   isSet = false;
   currentX = 0;
   currentY = 90;
+  timestamp = 0;
 }
 
 
@@ -56,6 +63,7 @@ IIPImage::IIPImage ( const string& p )
   isSet = false;
   currentX = 0;
   currentY = 90;
+  timestamp = 0;
 }
 
 
@@ -77,6 +85,7 @@ IIPImage::IIPImage( const IIPImage& image )
   currentX = image.currentX;
   currentY = image.currentY;
   metadata = image.metadata;
+  timestamp = image.timestamp;
 }
 
 
@@ -97,6 +106,7 @@ const IIPImage& IIPImage::operator = ( const IIPImage& image )
   currentX = image.currentX;
   currentY = image.currentY;
   metadata = image.metadata;
+  timestamp = image.timestamp;
   return *this;
 }  
 
@@ -117,6 +127,7 @@ void IIPImage::testImageType()
     // ie is regular file
     int dot = imagePath.find_last_of( "." );
     type = imagePath.substr( dot + 1, imagePath.length() );
+    updateTimestamp( imagePath );
   }
   else{
 
@@ -147,6 +158,8 @@ void IIPImage::testImageType()
 
     type = tmp.substr( dot + 1, len );
 
+    updateTimestamp( tmp );
+
 #else
     string message = imagePath + string( " is not a file and no glob support enabled" );
     throw message;
@@ -156,6 +169,17 @@ void IIPImage::testImageType()
 
 }
 
+
+void IIPImage::updateTimestamp( const string& path )
+{
+#ifdef HAVE_TIME_H
+    // Get a modification time for our image
+    struct stat sb;
+    stat( path.c_str(), &sb );
+    return sb.st_mtime;
+#endif
+    return 0;
+}
 
 
 void IIPImage::measureVerticalAngles()
@@ -228,7 +252,6 @@ void IIPImage::measureHorizontalAngles()
 
 #endif
 
-
 }
 
 
@@ -268,7 +291,7 @@ list <int> IIPImage::getHorizontalViewsList()
 
 
 
-string IIPImage::getFileName( int seq, int ang )
+const string IIPImage::getFileName( int seq, int ang )
 {
   char name[1024];
   string suffix;

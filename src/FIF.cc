@@ -1,7 +1,7 @@
 /*
     IIP FIF Command Handler Class Member Function
 
-    Copyright (C) 2006-2008 Ruven Pillay.
+    Copyright (C) 2006-2009 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -134,7 +134,7 @@ void FIF::run( Session* session, const string& src ){
 
     string imtype = test.getImageType();
 
-    if( imtype == "tif" || imtype == "ptif" ){
+    if( imtype=="tif" || imtype=="tiff" || imtype=="ptif" || imtype=="dat" ){
       if( session->loglevel >= 2 ) *(session->logfile) << "FIF :: TIFF image requested" << endl;
       *session->image = new TPTImage( test );
     }
@@ -185,6 +185,9 @@ void FIF::run( Session* session, const string& src ){
     if( session->loglevel >= 2 ){
       *(session->logfile) << "FIF :: Image dimensions are " << (*session->image)->getImageWidth()
 			  << " x " << (*session->image)->getImageHeight() << endl;
+#ifdef HAVE_TIME_H
+      *(session->logfile) << "FIF :: Image timestamp: " << ctime( &(*session->image)->timestamp );
+#endif
     }
 
   }

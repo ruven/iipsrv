@@ -4,7 +4,7 @@
 
 /*  IIP Server: Tile Cache Handler
 
-    Copyright (C) 2005-2006 Ruven Pillay.
+    Copyright (C) 2005-2009 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -188,8 +188,16 @@ RawTile TileManager::getTile( int resolution, int tile, int xangle, int yangle, 
 
 
   // If we haven't been able to get a tile, get a raw one
-  if( !rawtile ){
+  if( !rawtile || (rawtile && (rawtile->timestamp < image->timestamp)) ){
+
+    if( rawtile && (rawtile->timestamp < image->timestamp) ){
+      if( loglevel >= 3 ) *logfile << "TileManager :: Tile has old timestamp "
+			           << rawtile->timestamp << " - " << image->timestamp
+                                   << " ... updating" << endl;
+    }
+
     RawTile newtile = this->getNewTile( resolution, tile, xangle, yangle, c );
+
     if( loglevel >= 2 ) *logfile << "TileManager :: Total Tile Access Time: "
 				 << tile_timer.getTime() << " microseconds" << endl;
     return newtile;

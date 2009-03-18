@@ -1,7 +1,7 @@
 /*
     IIP CVT Command Handler Class Member Function
 
-    Copyright (C) 2006-2007 Ruven Pillay.
+    Copyright (C) 2006-2009 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -158,6 +158,7 @@ void CVT::run( Session* session, const std::string& a ){
     RawTile complete_image( 0, 0, 0, 0, view_width, view_height, o_channels, 8 );
     complete_image.dataLength = view_width * view_height * o_channels;
     complete_image.data = buf;
+    complete_image.memoryManaged = 0; // We will handle memory ourselves
 
 
     // Initialise our JPEG compression object
@@ -365,7 +366,6 @@ void CVT::run( Session* session, const std::string& a ){
     delete[] buf;
 
   } // End of if( argument == "jpeg" )
-
 
 
   // Total CVT response time

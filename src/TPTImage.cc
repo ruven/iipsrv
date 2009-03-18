@@ -2,7 +2,7 @@
 
 /*  IIP Server: Tiled Pyramidal TIFF handler
 
-    Copyright (C) 2000-2008 Ruven Pillay.
+    Copyright (C) 2000-2009 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -37,6 +37,10 @@ void TPTImage::openImage() throw (string)
   }
 
   string filename = getFileName( currentX, currentY );
+
+  // Check if our image has been modified
+  updateTimestamp(filename);
+
 
   // Try to open and allocate a buffer
   if( ( tiff = TIFFOpen( filename.c_str(), "r" ) ) == NULL ){
@@ -266,7 +270,8 @@ RawTile TPTImage::getTile( int seq, int ang, unsigned int res, unsigned int tile
   rawtile.data = tile_buf;
   rawtile.dataLength = length;
   rawtile.filename = getImagePath();
-
+  rawtile.timestamp = timestamp;
+  rawtile.memoryManaged = 0;
 
   return( rawtile );
 

@@ -27,6 +27,9 @@
 #include <string>
 #include <cstdlib>
 
+#ifndef HAVE_TIME_H
+typedef unsigned long int time_t;
+#endif
 
 /// Colour spaces - GREYSCALE, sRGB and CIELAB
 enum ColourSpaces { GREYSCALE, sRGB, CIELAB };
@@ -63,6 +66,9 @@ class RawTile{
   /// Name of the file from which this tile comes
   std::string filename;
 
+  /// Tile timestamp
+  time_t timestamp;
+
 
  public:
 
@@ -73,7 +79,7 @@ class RawTile{
   /// This tracks whether we have allocated memory locally for data
   /// or whether it is simply a pointer
   /** This is used in the destructor to make sure we deallocate correctly */
-  int localData;
+  int memoryManaged;
 
   /// The size of the data pointed to by data
   int dataLength;
@@ -105,13 +111,14 @@ class RawTile{
 	   int w = 0, int h = 0, int c = 0, int b = 0 ) {
     width = w; height = h; bpc = b; dataLength = 0; data = NULL;
     tileNum = tn; resolution = res; hSequence = hs ; vSequence = vs;
-    localData = 0; channels = c; compressionType = UNCOMPRESSED; quality = 0;
+    memoryManaged = 1; channels = c; compressionType = UNCOMPRESSED; quality = 0;
+    timestamp = 0;
   };
 
 
   /// Destructor to free the data array if is has previously be allocated locally
   ~RawTile() {
-    if( data && localData ){
+    if( data && memoryManaged ){
       if(bpc==16) delete[] (unsigned short*) data;
       else delete[] (unsigned char*) data;
     }
@@ -133,13 +140,14 @@ class RawTile{
     compressionType = tile.compressionType;
     quality = tile.quality;
     filename = tile.filename;
+    timestamp = tile.timestamp;
 
     if( bpc == 16 ) data = new unsigned short[dataLength/2];
     else data = new unsigned char[dataLength];
 
     if( data && (dataLength > 0) && tile.data ){
       memcpy( data, tile.data, dataLength );
-      localData = 1;
+      memoryManaged = 1;
     }
   }
 
@@ -159,13 +167,14 @@ class RawTile{
     compressionType = tile.compressionType;
     quality = tile.quality;
     filename = tile.filename;
+    timestamp = tile.timestamp;
 
     if( bpc == 16 ) data = new unsigned short[dataLength/2];
     else data = new unsigned char[dataLength];
 
     if( data && (dataLength > 0) && tile.data ){
       memcpy( data, tile.data, dataLength );
-      localData = 1;
+      memoryManaged = 1;
     }
 
     return *this;

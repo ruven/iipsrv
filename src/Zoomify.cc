@@ -168,7 +168,6 @@ void Zoomify::run( Session* session, const std::string& argument ){
     }
     delete[] ptr;
     rawtile.data = buf;
-    rawtile.localData = 1;
   }
 
   // Handle 16bit images or contrast adjustments
@@ -199,7 +198,6 @@ void Zoomify::run( Session* session, const std::string& argument ){
     }
     delete[] ptr;
     rawtile.data = buf;
-    rawtile.localData = 1;
   }
 
 
