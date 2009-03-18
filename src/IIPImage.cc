@@ -176,9 +176,8 @@ void IIPImage::updateTimestamp( const string& path )
     // Get a modification time for our image
     struct stat sb;
     stat( path.c_str(), &sb );
-    return sb.st_mtime;
+    timestamp = sb.st_mtime;
 #endif
-    return 0;
 }
 
 
