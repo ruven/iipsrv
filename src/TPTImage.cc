@@ -22,6 +22,8 @@
 
 #include "TPTImage.h"
 #include <iostream>
+#include <sstream>
+
 
 using namespace std;
 
@@ -205,10 +207,9 @@ RawTile TPTImage::getTile( int seq, int ang, unsigned int res, unsigned int tile
   // Check that a valid tile number was given
   
   if( tile >= TIFFNumberOfTiles( tiff ) ) {
-    char tile_no[64];
-    snprintf( tile_no, 64, "%d", tile );
-    string tile_n = string( tile_no );
-    throw string( "Asked for non-existant tile: " + tile_n );
+    ostringstream tile_no;
+    tile_no << "Asked for non-existant tile: " << tile;
+    throw tile_no.str();
   } 
 
 
@@ -272,6 +273,7 @@ RawTile TPTImage::getTile( int seq, int ang, unsigned int res, unsigned int tile
   rawtile.filename = getImagePath();
   rawtile.timestamp = timestamp;
   rawtile.memoryManaged = 0;
+  rawtile.padded = true;
 
   return( rawtile );
 

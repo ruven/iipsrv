@@ -75,8 +75,9 @@ void CVT::run( Session* session, const std::string& a ){
 
 
     int requested_res = session->view->getResolution();
-    im_width = session->view->getImageWidth();
-    im_height = session->view->getImageHeight();
+    im_width = (*session->image)->image_widths[num_res-requested_res-1];
+    im_height = (*session->image)->image_heights[num_res-requested_res-1];
+
 
     if( session->loglevel >= 3 ){
       *(session->logfile) << "CVT :: image set to " << im_width << " x " << im_height
@@ -202,7 +203,7 @@ void CVT::run( Session* session, const std::string& a ){
 	RawTile rawtile = tilemanager.getTile( requested_res, (i*ntlx) + j, session->view->xangle, session->view->yangle, UNCOMPRESSED );
 
 	if( session->loglevel >= 2 ){
-	  *(session->logfile) << "CVT :: Tile access time " << tile_timer.getTime() << " microseconds" << endl;
+	  *(session->logfile) << "CVT :: Tile access time " << tile_timer.getTime() << " microseconds for tile " << (i*ntlx) + j << " at resolution " << requested_res << endl;
 	}
 
 
@@ -270,6 +271,10 @@ void CVT::run( Session* session, const std::string& a ){
 
 	// Copy our tile data into the appropriate part of the strip memory
 	// one whole tile width at a time
+	if( !rawtile.padded ){
+	  if( session->loglevel >= 4 ) *(session->logfile) << "CVT :: unpadded tile" << endl;
+	  basic_tile_width = rawtile.width;
+	}
 	for( unsigned int k=0; k<dst_tile_height; k++ ){
 
 	  buffer_index = (current_width*channels) + (k*view_width*channels);
@@ -310,7 +315,7 @@ void CVT::run( Session* session, const std::string& a ){
 	    }
 	  }
 	  else{
-	    memcpy( &buf[buffer_index],	&ptr[inx], dst_tile_width*channels );
+	    memcpy( &buf[buffer_index], &ptr[inx], dst_tile_width*channels );
 	  }
 	}
 

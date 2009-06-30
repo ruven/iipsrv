@@ -96,6 +96,9 @@ class RawTile{
   /// The number of bits per channel for this tile
   int bpc;
 
+  /// Padded
+  bool padded;
+
 
   /// Main constructor
   /** \param tn tile number
@@ -112,7 +115,7 @@ class RawTile{
     width = w; height = h; bpc = b; dataLength = 0; data = NULL;
     tileNum = tn; resolution = res; hSequence = hs ; vSequence = vs;
     memoryManaged = 1; channels = c; compressionType = UNCOMPRESSED; quality = 0;
-    timestamp = 0;
+    timestamp = 0; padded = 0;
   };
 
 
@@ -141,6 +144,7 @@ class RawTile{
     quality = tile.quality;
     filename = tile.filename;
     timestamp = tile.timestamp;
+    padded = tile.padded;
 
     if( bpc == 16 ) data = new unsigned short[dataLength/2];
     else data = new unsigned char[dataLength];
@@ -168,6 +172,7 @@ class RawTile{
     quality = tile.quality;
     filename = tile.filename;
     timestamp = tile.timestamp;
+    padded = tile.padded;
 
     if( bpc == 16 ) data = new unsigned short[dataLength/2];
     else data = new unsigned char[dataLength];

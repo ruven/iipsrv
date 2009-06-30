@@ -5,7 +5,7 @@
     * (www.oldmapsonline.org) from Ministry of Culture of the Czech Republic      *
 
 
-    Copyright (C) 2008 Ruven Pillay.
+    Copyright (C) 2008-2009 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -69,6 +69,24 @@ void Zoomify::run( Session* session, const std::string& argument ){
   unsigned int numResolutions = (*session->image)->getNumResolutions();
 
 
+  // Zoomify does not accept arbitrary numbers of resolutions. The lowest
+  // level must be the largest size that can fit within a single tile, so
+  // we must discard any smaller than this
+  unsigned int n;
+  for( n=0; n<numResolutions; n++ ){
+    if( (*session->image)->image_widths[n] < tw && (*session->image)->image_heights[n] < tw ){
+      break;
+    }
+  }
+
+  unsigned int discard = numResolutions - n - 1;
+
+  if( session->loglevel >= 2 ){
+    if( discard > 0 ){
+      *(session->logfile) << "Zoomify :: Discarding " << discard << " resolutions that are too small for Zoomify" << endl;
+    }
+  }
+
   // Zoomify clients have 2 phases, the initialization phase where they request
   // an XML file containing image data and the tile requests themselves.
   // These 2 phases are handled separately
@@ -80,7 +98,7 @@ void Zoomify::run( Session* session, const std::string& argument ){
 
     *(session->logfile) << "total resolutions: " << numResolutions << ", image width: " << width << ", image height: " << height << endl;
 
-    int ntiles = (int) ceil((double)width / 256) * (int) ceil((double)height/256);
+    int ntiles = (int) ceil( (double)width/tw ) * (int) ceil( (double)height/tw );
 
     char str[1024];
     snprintf( str, 1024, "Content-Type: application/xml\r\n"
@@ -106,6 +124,9 @@ void Zoomify::run( Session* session, const std::string& argument ){
   if( izer.hasMoreTokens() ) resolution = atoi( izer.nextToken().c_str() );
   if( izer.hasMoreTokens() ) x = atoi( izer.nextToken().c_str() );
   if( izer.hasMoreTokens() ) y = atoi( izer.nextToken().c_str() );
+
+  // Bump up to take account of any levels too small for Zoomify
+  resolution += discard;
 
   if( session->loglevel >= 2 ){
     *(session->logfile) << "Zoomify :: Tile request for resolution: "

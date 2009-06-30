@@ -55,7 +55,7 @@ RawTile TileManager::getNewTile( int resolution, int tile, int xangle, int yangl
 
   /* We need to crop our edge tiles if they are not the full tile size
    */
-  if( ((ttt.width != image->getTileWidth()) || (ttt.height != image->getTileHeight())) && (c == JPEG) ){
+  if( ((ttt.width != image->getTileWidth()) || (ttt.height != image->getTileHeight())) && (c == JPEG) && ttt.padded ){
     this->crop( &ttt );
   }
 
@@ -232,7 +232,7 @@ RawTile TileManager::getTile( int resolution, int tile, int xangle, int yangle, 
     if( rawtile->bpc == 8 ){
 
       // Crop if this is an edge tile
-      if( (ttt.width != image->getTileWidth()) || (ttt.height != image->getTileHeight()) ){
+      if( ( (ttt.width != image->getTileWidth()) || (ttt.height != image->getTileHeight()) ) && ttt.padded ){
 	this->crop( &ttt );
       }
 

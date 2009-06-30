@@ -1,3 +1,15 @@
+22/06/2009:
+	- Changes to Zoomify.cc to take into account the fact that Zoomify expects
+	  a fixed number of resolution levels.
+
+
+15/04/2009:
+	- Added a flag for padded tiles into RawTile.h. TIFF's are padded out
+	  to the tile size, but other formats may not be. Changes to TPTImage,
+	  TileManager and CVT to handle this.
+	- Also changed the RawTile flag for memory managed tiles.
+
+
 18/03/2009:
 	- Added modification timestamps to the IIPImage and Rawtile classes.
 	  The TileManager now checks whether the tile is fresh and reloads it
