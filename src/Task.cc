@@ -52,6 +52,7 @@ Task* Task::factory( const string& t ){
   else if( type == "cvt" ) return new CVT;
   else if( type == "shd" ) return new SHD;
   else if( type == "zoomify" ) return new Zoomify;
+  else if( type == "lyr" ) return new LYR;
   else return NULL;
 
 }
@@ -108,7 +109,7 @@ void SDS::run( Session* session, const std::string& argument ){
 
 void CNT::run( Session* session, const std::string& argument ){
 
-  float contrast = atof( argument.c_str() );
+  float contrast = (float) atof( argument.c_str() );
 
   if( session->loglevel >= 2 ) *(session->logfile) << "CNT handler reached" << endl;
   if( session->loglevel >= 3 ) *(session->logfile) << "CNT :: requested contrast adjustment is " << contrast << endl;
@@ -247,3 +248,28 @@ void SHD::run( Session* session, const std::string& argument ){
   if( session->loglevel >= 3 ) *(session->logfile) << "SHD :: requested shade incidence angle is "
 						   << values[0] << "," << values[1]  << endl;
 }
+
+
+void LYR::run( Session* session, const std::string& argument ){
+
+  if( argument.length() ){
+
+    int layer = atoi( argument.c_str() );
+
+    if( session->loglevel >= 2 ) *(session->logfile) << "LYR handler reached" << endl;
+    if( session->loglevel >= 3 ) *(session->logfile) << "LYR :: requested layer is " << layer << endl;
+
+
+    // Check the value is realistic
+    if( layer < 1 || layer > 256 ){
+      if( session->loglevel >= 2 ){
+        *(session->logfile) << "LYR :: Number of quality layers " << argument
+                            << " out of bounds. Must be 1-256" << endl;
+      }
+    }
+
+    session->view->setLayers( layer );
+  }
+
+}
+

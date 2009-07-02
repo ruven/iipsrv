@@ -1,7 +1,7 @@
 /*
     IIP FCGI server module - Main loop.
 
-    Copyright (C) 2000-2006 Ruven Pillay
+    Copyright (C) 2000-2009 Ruven Pillay
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -208,11 +208,16 @@ int main( int argc, char *argv[] )
   int max_CVT = Environment::getMaxCVT();
 
 
+  // Get the default number of quality layers to decode
+  int layers = Environment::getLayers();
+
+
   if( loglevel >= 1 ){
     logfile << "Setting maximum image cache size to " << max_image_cache_size << "MB" << endl;
     logfile << "Setting 3D file sequence name pattern to " << filename_pattern << endl;
     logfile << "Setting default JPEG quality to " << jpeg_quality << endl;
     logfile << "Setting maximum CVT size to " << max_CVT << endl;
+    logfile << "Setting default decoded quality layers (for supported file formats) to " << layers << endl;
   }
 
 
@@ -333,6 +338,7 @@ int main( int argc, char *argv[] )
       view.setMaxSize( max_CVT );
       if( loglevel >= 2 ) logfile << "CVT maximum viewport size set to " << max_CVT << endl;
     }
+    view.setLayers( layers );
 
 
     // Create an IIPResponse object - we use this for the OBJ requests.

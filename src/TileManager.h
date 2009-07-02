@@ -59,10 +59,11 @@ class TileManager{
    *  @param tile tile number
    *  @param xangle horizontal sequence number
    *  @param yangle vertical sequence number
+   *  @param number of quality layers within image to decode
    *  @param c CompressionType
    *  @return RawTile
    */
-  RawTile getNewTile( int resolution, int tile, int xangle, int yangle, CompressionType c );
+  RawTile getNewTile( int resolution, int tile, int xangle, int yangle, int layers, CompressionType c );
 
 
   /// Crop a tile to remove padding
@@ -101,10 +102,11 @@ class TileManager{
    *  @param tile tile number
    *  @param xangle horizontal sequence number
    *  @param yangle vertical sequence number
+   *  @param number of quality layers within image to decode
    *  @param c CompressionType
    *  @return RawTile
    */
-  RawTile getTile( int resolution, int tile, int xangle, int yangle, CompressionType c );
+  RawTile getTile( int resolution, int tile, int xangle, int yangle, int layers, CompressionType c );
 
 
 };

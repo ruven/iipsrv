@@ -60,7 +60,7 @@ void JTL::run( Session* session, const std::string& argument ){
   else ct = JPEG;
 
   RawTile rawtile = tilemanager.getTile( resolution, tile, session->view->xangle,
-					 session->view->yangle, ct );
+					 session->view->yangle, session->view->layers, ct );
 
   int len = rawtile.dataLength;
 

@@ -1,7 +1,7 @@
 /*
     Image View Parameters
 
-    Copyright (C) 2003-2004 Ruven Pillay.
+    Copyright (C) 2003-2009 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -42,7 +42,6 @@ class View{
   unsigned int requested_height;              /// Height requested by HEI command
   float contrast;                             /// Contrast adjustment requested by CNT command
 
-
   /// Internal function to calculate the resolution associated with a width
   ///  or height request. This also takes into account maximum size limits.
   /** \param m maximum size
@@ -57,7 +56,7 @@ class View{
   int yangle;                                  /// Vertical View
   bool shaded;                                 /// Whether to use shading view
   int shade[3];                                /// Shading incident light angles (x,y,z)
-
+  int layers;			               /// Number of quality layers
 
   /// Constructor
   View() {
@@ -68,6 +67,7 @@ class View{
     contrast = 1.0;
     xangle = 0; yangle = 90;
     shaded = false; shade[0] = 0; shade[1] = 0; shade[2] = 0;
+    layers = 1;
   };
 
 
@@ -127,6 +127,11 @@ class View{
   void setImageSize( unsigned int w, unsigned int h ){ width = w; height = h; };
 
 
+  /// Set the number of quality layers to decode
+  /** \param l Number of layers to decode */
+  void setLayers( int l ){ layers = l; };
+
+
   /// Return the contrast adjustment
   float getContrast(){ return contrast; };
 
@@ -148,6 +153,8 @@ class View{
   /// Return the pixel height of the viewport
   unsigned int getViewHeight();
 
+  /// Return the number of layers to decode
+  unsigned int getLayers(){ return layers; };
 
   /// Indicate whether the viewport has been set
   bool viewPortSet();

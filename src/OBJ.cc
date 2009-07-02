@@ -1,7 +1,7 @@
 /*
     IIP OJB Command Handler Class Member Functions
 
-    Copyright (C) 2006-2007 Ruven Pillay.
+    Copyright (C) 2006-2009 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -220,7 +220,7 @@ void OBJ::colorspace( std::string arg ){
      WARNING: LAB support is an extension and is not in the
      IIP protocol standard (as of version 1.05)
   */
-  char *planes = "3 0 1 2";
+  const char *planes = "3 0 1 2";
   int calibrated = 0;
   int colourspace;
   if( (*session->image)->getColourSpace() == CIELAB ){

@@ -200,7 +200,8 @@ void CVT::run( Session* session, const std::string& a ){
 
 	// Get an uncompressed tile from our TileManager
 	TileManager tilemanager( session->tileCache, *session->image, session->jpeg, session->logfile, session->loglevel );
-	RawTile rawtile = tilemanager.getTile( requested_res, (i*ntlx) + j, session->view->xangle, session->view->yangle, UNCOMPRESSED );
+	RawTile rawtile = tilemanager.getTile( requested_res, (i*ntlx) + j, session->view->xangle, session->view->yangle,
+					       session->view->layers, UNCOMPRESSED );
 
 	if( session->loglevel >= 2 ){
 	  *(session->logfile) << "CVT :: Tile access time " << tile_timer.getTime() << " microseconds for tile " << (i*ntlx) + j << " at resolution " << requested_res << endl;

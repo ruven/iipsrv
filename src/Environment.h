@@ -1,7 +1,7 @@
 /*
     IIP Environment Variable Class
 
-    Copyright (C) 2006 Ruven Pillay.
+    Copyright (C) 2006-2009 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -30,6 +30,7 @@
 #define FILENAME_PATTERN "_pyr_"
 #define JPEG_QUALITY 75
 #define MAX_CVT 5000
+#define LAYERS 1
 
 #include <string>
 
@@ -107,6 +108,15 @@ class Environment {
     return max_CVT;
   }
 
+
+  static int getLayers(){
+    char* envpara = getenv( "LAYERS" );
+    int layers;
+    if( envpara ) layers = atoi( envpara );
+    else layers = LAYERS;
+
+    return layers;
+  }
 
 };
 

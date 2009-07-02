@@ -96,7 +96,8 @@ void Zoomify::run( Session* session, const std::string& argument ){
       *(session->logfile) << "Zoomify :: ImageProperties.xml request" << endl;
 
 
-    *(session->logfile) << "total resolutions: " << numResolutions << ", image width: " << width << ", image height: " << height << endl;
+    *(session->logfile) << "Zoomify :: Total resolutions: " << numResolutions << ", image width: " << width
+			<< ", image height: " << height << endl;
 
     int ntiles = (int) ceil( (double)width/tw ) * (int) ceil( (double)height/tw );
 
@@ -129,8 +130,8 @@ void Zoomify::run( Session* session, const std::string& argument ){
   resolution += discard;
 
   if( session->loglevel >= 2 ){
-    *(session->logfile) << "Zoomify :: Tile request for resolution: "
-			<< resolution << ", x: " << x << ", y: " << y << endl;
+    *(session->logfile) << "Zoomify :: Tile request for resolution:"
+			<< resolution << " at x:" << x << ", y:" << y << endl;
   }
 
 
@@ -160,7 +161,7 @@ void Zoomify::run( Session* session, const std::string& argument ){
 
 
   RawTile rawtile = tilemanager.getTile( resolution, tile, session->view->xangle,
-					 session->view->yangle, ct );
+					 session->view->yangle, session->view->layers, ct );
 
   int len = rawtile.dataLength;
 

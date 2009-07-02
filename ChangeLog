@@ -1,3 +1,13 @@
+01/07/2009:
+	- Added quality layer parameter to images for future use with file formats
+	  such as JPEG2000 that support this. This allows the decoding of several
+	  quality layers via the LYR command. Modifications to the RawTile API
+	  as well as IIPImage::getTile resulting in a series of changes to
+	  CVT.cc, JTL.CC, TIL.cc, TPTImage.cc, View.h, Main.cc and Environment.h.
+	  New startup configuration "LAYERS" to set the default number of layers.
+	  Default is 1 otherwise.
+
+
 22/06/2009:
 	- Changes to Zoomify.cc to take into account the fact that Zoomify expects
 	  a fixed number of resolution levels.

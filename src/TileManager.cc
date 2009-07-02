@@ -30,7 +30,7 @@ using namespace std;
 
 
 
-RawTile TileManager::getNewTile( int resolution, int tile, int xangle, int yangle, CompressionType c ){
+RawTile TileManager::getNewTile( int resolution, int tile, int xangle, int yangle, int layers, CompressionType c ){
 
   if( loglevel >= 2 ) *logfile << "TileManager :: Cache Miss for resolution: " << resolution << ", tile: " << tile << endl
 			       << "TileManager :: Cache Size: " << tileCache->getNumElements()
@@ -41,7 +41,7 @@ RawTile TileManager::getNewTile( int resolution, int tile, int xangle, int yangl
   int len = 0;
 
   // Get our raw tile
-  ttt = image->getTile( xangle, yangle, resolution, tile );
+  ttt = image->getTile( xangle, yangle, resolution, layers, tile );
 
   if( c == UNCOMPRESSED ){
     // Add to our tile cache
@@ -138,7 +138,7 @@ void TileManager::crop( RawTile *ttt ){
 
 
 
-RawTile TileManager::getTile( int resolution, int tile, int xangle, int yangle, CompressionType c ){
+RawTile TileManager::getTile( int resolution, int tile, int xangle, int yangle, int layers, CompressionType c ){
 
   RawTile* rawtile = NULL;
   string tileCompression;
@@ -196,7 +196,7 @@ RawTile TileManager::getTile( int resolution, int tile, int xangle, int yangle, 
                                    << " ... updating" << endl;
     }
 
-    RawTile newtile = this->getNewTile( resolution, tile, xangle, yangle, c );
+    RawTile newtile = this->getNewTile( resolution, tile, xangle, yangle, layers, c );
 
     if( loglevel >= 2 ) *logfile << "TileManager :: Total Tile Access Time: "
 				 << tile_timer.getTime() << " microseconds" << endl;

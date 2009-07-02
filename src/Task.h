@@ -251,5 +251,10 @@ class Zoomify : public Task {
 };
 
 
+/// Quality Layers Command
+class LYR : public Task {
+ public:
+  void run( Session* session, const std::string& argument );
+};
 
 #endif

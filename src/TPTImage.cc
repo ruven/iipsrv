@@ -152,7 +152,7 @@ void TPTImage::closeImage()
 }
 
 
-RawTile TPTImage::getTile( int seq, int ang, unsigned int res, unsigned int tile ) throw (string)
+RawTile TPTImage::getTile( int seq, int ang, unsigned int res, int layers, unsigned int tile ) throw (string)
 {
   uint32 im_width, im_height, tw, th, ntlx, ntly;
   uint32 rem_x, rem_y;

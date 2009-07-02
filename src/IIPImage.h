@@ -70,14 +70,14 @@ class IIPImage {
 
 
 
-  // protected: 
+  //protected: 
   public:
 
   /// Return the image type e.g. tif
   std::string type;
 
   /// The image pixel dimensions
-  std::vector<int> image_widths, image_heights;
+  std::vector<unsigned int> image_widths, image_heights;
 
   /// The base tile pixel dimensions
   unsigned int tile_width, tile_height;
@@ -210,15 +210,28 @@ class IIPImage {
   virtual void closeImage() {;};
 
 
-  /// Return a tile for a given angle and resolution
+  /// Return an individual tile for a given angle and resolution
   /** Return a RawTile object: Overloaded by child class.
       \param h horizontal angle
       \param v vertical angle
       \param r resolution
+      \param l quality layers
       \param t tile number
    */
-  virtual RawTile getTile( int h, int v, unsigned int r, unsigned int t ) { return RawTile(); };
+  virtual RawTile getTile( int h, int v, unsigned int r, int l, unsigned int t ) { return RawTile(); };
 
+
+  /// Return a region for a given angle and resolution
+  /** Return a RawTile object: Overloaded by child class.
+      \param ha horizontal angle
+      \param va vertical angle
+      \param r resolution
+      \param x
+      \param y
+      \param w
+      \param h
+  */
+  virtual RawTile getRegion( int ha, int va, unsigned int r, unsigned int t, int x, int y, int w, int h ) { return RawTile(); };
 
   /// Assignment operator
   const IIPImage& operator = ( const IIPImage& );
