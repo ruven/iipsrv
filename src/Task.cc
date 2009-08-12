@@ -135,7 +135,7 @@ void HEI::run( Session* session, const std::string& argument ){
   int requested_height = atoi( argument.c_str() );
 
   if( session->loglevel >= 2 ) *(session->logfile) << "HEI handler reached" << endl;
-  if( session->loglevel >= 3 ) *(session->logfile) << "HEI :: requested width is " << requested_height << endl;
+  if( session->loglevel >= 3 ) *(session->logfile) << "HEI :: requested height is " << requested_height << endl;
 
   session->view->setRequestHeight( requested_height );
 

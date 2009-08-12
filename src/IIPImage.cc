@@ -56,14 +56,8 @@ IIPImage::IIPImage()
 
 IIPImage::IIPImage ( const string& p )
 {
+  IIPImage::IIPImage();
   imagePath = p;
-  isFile = false;
-  bpp = 0;
-  channels = 0;
-  isSet = false;
-  currentX = 0;
-  currentY = 90;
-  timestamp = 0;
 }
 
 

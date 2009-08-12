@@ -86,10 +86,31 @@ class View{
   void setMaxResolutions( unsigned int r ){ max_resolutions = r; };
 
 
+  /// Get the size of the requested width
+  unsigned int getRequestWidth()
+  {
+    if( requested_width == 0 && requested_height > 0 ){
+      requested_width = static_cast<unsigned int>( width * requested_height / height );
+    }
+    if( requested_width > width ) requested_width = width;
+    return requested_width;
+  };
+
+
   /// Set the size of the requested width
   /** \param w requested image width */
   void setRequestWidth( unsigned int w ){ requested_width = w; };
 
+
+  /// Get the size of the requested height
+  unsigned int getRequestHeight()
+  { 
+    if( requested_height == 0 && requested_width > 0 ){
+      requested_height = static_cast<unsigned int>( height * requested_width / width );
+    }
+    if( requested_height > height ) requested_height = height;
+    return requested_height;
+  };
 
   /// Set the size of the requested height
   /** \param h requested image height */

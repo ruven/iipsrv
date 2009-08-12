@@ -20,6 +20,7 @@
 
 #include "Task.h"
 #include "ColourTransforms.h"
+#include <cmath>
 
 
 using namespace std;
@@ -80,7 +81,7 @@ void CVT::run( Session* session, const std::string& a ){
 
 
     if( session->loglevel >= 3 ){
-      *(session->logfile) << "CVT :: image set to " << im_width << " x " << im_height
+      *(session->logfile) << "CVT :: image set to " << im_width << "x" << im_height
 			  << " using resolution " << requested_res << endl;
     }
 
@@ -94,6 +95,7 @@ void CVT::run( Session* session, const std::string& a ){
 
     // The basic tile size ie. not the current tile
     unsigned int basic_tile_width = src_tile_width;
+    // unsigned int basic_tile_height = src_tile_height;
 
     unsigned int rem_x = im_width % src_tile_width;
     unsigned int rem_y = im_height % src_tile_height;
@@ -131,7 +133,7 @@ void CVT::run( Session* session, const std::string& a ){
 	*(session->logfile) << "CVT :: view port is set: image: " << im_width << "x" << im_height
 			    << ". View Port: " << view_left << "," << view_top
 			    << "," << view_width << "," << view_height << endl
-			    << "CVT :: Pixel Offsets: " << startx << "," << starty << ","
+			    << "CVT :: Tile Start: " << startx << "," << starty << ","
 			    << xoffset << "," << yoffset << endl
 			    << "CVT :: End Tiles: " << endx << "," << endy << endl;
 		
@@ -149,15 +151,30 @@ void CVT::run( Session* session, const std::string& a ){
     }
 
 
-    // Allocate memory for a strip (tile height x image width)
+    // Allocate memory for a strip only (tile height x image width)
     unsigned int o_channels = channels;
     if( session->view->shaded ) o_channels = 1;
     unsigned char* buf = new unsigned char[view_width * src_tile_height * o_channels];
 
-
     // Create a RawTile for the entire image
-    RawTile complete_image( 0, 0, 0, 0, view_width, view_height, o_channels, 8 );
-    complete_image.dataLength = view_width * view_height * o_channels;
+    unsigned int requested_width = session->view->getRequestWidth();
+    //unsigned int requested_height = session->view->getRequestHeight();
+
+    // Calculate the scaling required to get the requested size
+    float scale = static_cast<float>(requested_width) / static_cast<float>(im_width);
+
+    // Calculate our resampled width and height
+    unsigned int resampled_width = floor(view_width * scale);
+    unsigned int resampled_height = floor(view_height * scale);
+
+    if( session->loglevel >= 3 ){
+      *(session->logfile) << "CVT :: Requested region size is " << resampled_width << "x" << resampled_height
+			  << ". Nearest pyramid region size is " << view_width << "x" << view_height << endl;
+    }
+
+    // Create our rawtile object and initialize with our size, channels etc.
+    RawTile complete_image( 0, 0, 0, 0, resampled_width, resampled_height, o_channels, 8 );
+    complete_image.dataLength = resampled_width * resampled_height * o_channels;
     complete_image.data = buf;
     complete_image.memoryManaged = 0; // We will handle memory ourselves
 
@@ -166,13 +183,30 @@ void CVT::run( Session* session, const std::string& a ){
     session->jpeg->InitCompression( complete_image, src_tile_height );
 
 #ifndef DEBUG
-    session->out->printf("Cache-Control: max-age=86400\r\n"
+
+    // Define our separator depending on the OS
+#ifdef WIN32
+    const string separator = "\\";
+#else
+    const string separator = "/";
+#endif
+
+    // Get our image file name and strip of the directory path and any suffix
+    string filename = (*session->image)->getImagePath();
+    int pos = filename.rfind(separator)+1;
+    string basename = filename.substr( pos, filename.rfind(".")-pos );
+
+    char str[1024];
+    snprintf( str, 1024, "Cache-Control: max-age=86400\r\n"
 			 "Last-Modified: Mon, 1 Jan 2000 00:00:00 GMT\r\n"
 			 "ETag: \"CVT\"\r\n"
  			 "Content-Type: image/jpeg\r\n"
-			 "Content-Disposition: inline;filename=\"cvt.jpg\"\r\n"
-			 "\r\n" );
+			 "Content-Disposition: inline;filename=\"%s.jpg\"\r\n"
+	                 "\r\n", basename.c_str() );
+
+    session->out->printf( (const char*) str );
 #endif
+
 
     // Send the JPEG header to the client
     len = session->jpeg->getHeaderSize();
@@ -182,6 +216,8 @@ void CVT::run( Session* session, const std::string& a ){
       }
     }
 
+    // Keep track of the current height in order to correct for any errors due to resample rounding
+    int current_height = 0;
 
     // Decode the image strip by strip and dynamically compress with JPEG
 
@@ -204,7 +240,8 @@ void CVT::run( Session* session, const std::string& a ){
 					       session->view->layers, UNCOMPRESSED );
 
 	if( session->loglevel >= 2 ){
-	  *(session->logfile) << "CVT :: Tile access time " << tile_timer.getTime() << " microseconds for tile " << (i*ntlx) + j << " at resolution " << requested_res << endl;
+	  *(session->logfile) << "CVT :: Tile access time " << tile_timer.getTime() << " microseconds for tile "
+			      << (i*ntlx) + j << " at resolution " << requested_res << endl;
 	}
 
 
@@ -324,9 +361,38 @@ void CVT::run( Session* session, const std::string& a ){
 
       }
 
+      // OK, we have a strip, now do a nearest neighbour downsamlping to the desired pixel size
+      // if our requested size is not the same as our resolution size
+      unsigned int resampled_tile_height = dst_tile_height;
+
+      if( resampled_width < view_width ){
+
+	resampled_tile_height = floor(dst_tile_height*scale);
+	if( session->loglevel >= 5 ){
+	  *(session->logfile) << "CVT :: resampled strip height " << resampled_tile_height << endl;
+	  *(session->logfile) << "CVT :: Performing resampling with scale " << scale << endl;
+	}
+
+	for( unsigned int jj=0; jj<resampled_tile_height; jj++ ){
+	  for( unsigned int ii=0; ii<resampled_width; ii++ ){
+	    // Indexes in the current pyramid resolution and resampled spaces
+	    int pyramid_index = (int) channels * ( floor(ii/scale) + floor(jj/scale)*view_width );
+	    int resampled_index = (ii + jj*resampled_width)*channels;
+	    for( unsigned int kk=0; kk<channels; kk++ ){
+	      buf[resampled_index+kk] = buf[pyramid_index+kk];
+	    }
+	  }
+	}
+      }
+
+      current_height += resampled_tile_height;
+
+      // If we are on the last strip, make sure we adjust to take into account rounding errors
+      // in resampled images.
+      if( i==endy-1 ) resampled_tile_height += resampled_height - current_height;
 
       // Compress the strip
-      len = session->jpeg->CompressStrip( buf, dst_tile_height );
+      len = session->jpeg->CompressStrip( buf, resampled_tile_height );
 
 
       if( session->loglevel >= 3 ){

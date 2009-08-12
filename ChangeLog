@@ -1,3 +1,11 @@
+11/08/2009:
+	- Added simple nearest neighbour resampling to CVT command to allow it to
+	  resize to the exact dimensions and not just the nearest available pyramid
+	  resolution.
+	- CVT Content-disposition tag now gives the image filename allowing the user
+	  to save the image directly with this.
+
+
 01/07/2009:
 	- Added quality layer parameter to images for future use with file formats
 	  such as JPEG2000 that support this. This allows the decoding of several

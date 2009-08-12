@@ -33,7 +33,8 @@ void View::calculateResolution( unsigned int dimension,
   // 750 pixel height on a 1000 pixel image should give us the
   // full 1000 pixel image, not the 500.
 
-  while( ( (1.5*dimension) / i ) > requested_size ){
+  //  while( ( (1.5*dimension) / i ) > requested_size ){
+  while( ( (dimension) / i ) >= requested_size ){
     i *= 2;
     j++;
   }
