@@ -1,3 +1,9 @@
+14/08/2009:
+	- Modification to View.cc and CVT.cc to calculate the appropriate
+	  resolution as the smallest resolution with a dimension greater size
+	  than the requested dimensions. The WID and HEI directives now
+	  effectively give bounding dimensions.
+
 11/08/2009:
 	- Added simple nearest neighbour resampling to CVT command to allow it to
 	  resize to the exact dimensions and not just the nearest available pyramid

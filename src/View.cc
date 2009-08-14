@@ -1,7 +1,7 @@
 /*
     View Member Functions
 
-    Copyright (C) 2004 Ruven Pillay.
+    Copyright (C) 2004-2009 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -28,20 +28,14 @@ void View::calculateResolution( unsigned int dimension,
   unsigned int j = 1;
 
   // Calculate the resolution number for this request.
-  // We want the resolution for images greater than 1.5 times
-  // the size of the next smallest resolution. eg a request for
-  // 750 pixel height on a 1000 pixel image should give us the
-  // full 1000 pixel image, not the 500.
-
-  //  while( ( (1.5*dimension) / i ) > requested_size ){
-  while( ( (dimension) / i ) >= requested_size ){
+  while( (int)(dimension/i) >= requested_size ){
     i *= 2;
     j++;
   }
 
   // Only set this if our requested resolution is greater than that
   // that has already been set.
-  if( max_resolutions - j + 1 > resolution ) resolution = max_resolutions - j + 1;
+  if( max_resolutions - j + 1 < resolution ) resolution = max_resolutions - j + 1;
 
   // Make sure our value is possible
   if( resolution > (signed int)(max_resolutions - 1) ) resolution = max_resolutions - 1;
@@ -54,6 +48,7 @@ unsigned int View::getResolution(){
 
   unsigned int i, max_width, max_height;
 
+  resolution = max_resolutions - 1;
   if( requested_width ) View::calculateResolution( width, requested_width );
   if( requested_height ) View::calculateResolution( height, requested_height );
 

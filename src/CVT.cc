@@ -158,10 +158,12 @@ void CVT::run( Session* session, const std::string& a ){
 
     // Create a RawTile for the entire image
     unsigned int requested_width = session->view->getRequestWidth();
-    //unsigned int requested_height = session->view->getRequestHeight();
+    unsigned int requested_height = session->view->getRequestHeight();
 
-    // Calculate the scaling required to get the requested size
+    // Calculate the scaling required to get the requested size. Consider our requested width and height
+    // as maximum constraints
     float scale = static_cast<float>(requested_width) / static_cast<float>(im_width);
+    if( static_cast<float>(requested_height) / static_cast<float>(im_height) < scale ) scale = static_cast<float>(requested_height) / static_cast<float>(im_height);
 
     // Calculate our resampled width and height
     unsigned int resampled_width = floor(view_width * scale);
@@ -376,8 +378,8 @@ void CVT::run( Session* session, const std::string& a ){
 	for( unsigned int jj=0; jj<resampled_tile_height; jj++ ){
 	  for( unsigned int ii=0; ii<resampled_width; ii++ ){
 	    // Indexes in the current pyramid resolution and resampled spaces
-	    int pyramid_index = (int) channels * ( floor(ii/scale) + floor(jj/scale)*view_width );
-	    int resampled_index = (ii + jj*resampled_width)*channels;
+	    unsigned int pyramid_index = (int) channels * ( floor(ii/scale) + floor(jj/scale)*view_width );
+	    unsigned int resampled_index = (ii + jj*resampled_width)*channels;
 	    for( unsigned int kk=0; kk<channels; kk++ ){
 	      buf[resampled_index+kk] = buf[pyramid_index+kk];
 	    }
