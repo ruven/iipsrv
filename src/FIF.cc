@@ -134,6 +134,9 @@ void FIF::run( Session* session, const string& src ){
 
     string imtype = test.getImageType();
 
+    // Transform the suffix to lower case
+    transform( imtype.begin(), imtype.end(), imtype.begin(), ::tolower );
+
     if( imtype=="tif" || imtype=="tiff" || imtype=="ptif" || imtype=="dat" ){
       if( session->loglevel >= 2 ) *(session->logfile) << "FIF :: TIFF image requested" << endl;
       *session->image = new TPTImage( test );

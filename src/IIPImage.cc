@@ -27,14 +27,7 @@
 #include <glob.h>
 #endif
 
-#ifdef HAVE_TIME_H
-#include <sys/types.h>
 #include <sys/stat.h>
-#include <unistd.h>
-#endif
-
-#include <cstdio>
-#include <fstream>
 
 
 using namespace std;
@@ -56,7 +49,13 @@ IIPImage::IIPImage()
 
 IIPImage::IIPImage ( const string& p )
 {
-  IIPImage::IIPImage();
+  isFile = false;
+  bpp = 0;
+  channels = 0;
+  isSet = false;
+  currentX = 0;
+  currentY = 90;
+  timestamp = 0;
   imagePath = p;
 }
 
@@ -108,20 +107,14 @@ const IIPImage& IIPImage::operator = ( const IIPImage& image )
 
 void IIPImage::testImageType()
 {
+  // Check whether it is a regular file
+  struct stat sb;
 
-  ifstream file( imagePath.c_str() );
-
-  if( file ){
+  if( (stat(imagePath.c_str(),&sb)==0) && S_ISREG(sb.st_mode) ){
     isFile = true;
-  }
-  file.close();
-  
-
-  if( isFile ){
-    // ie is regular file
     int dot = imagePath.find_last_of( "." );
     type = imagePath.substr( dot + 1, imagePath.length() );
-    updateTimestamp( imagePath );
+    timestamp = sb.st_mtime;
   }
   else{
 
@@ -141,7 +134,7 @@ void IIPImage::testImageType()
       string message = string( "There are multiple file extensions matching " )  + filename;
       throw message;      
     }  
-    
+
     string tmp( gdat.gl_pathv[0] );
     globfree( &gdat );
 
@@ -195,14 +188,13 @@ void IIPImage::measureVerticalAngles()
     // Extract angle no from path name.
     int angle;
     string tmp( gdat.gl_pathv[i] );
-    int len = tmp.length();
-    string sequence_no = tmp.substr( len - 7, len - 4 );
+    int len = tmp.length() - type.length() - 1;
+    string sequence_no = tmp.substr( len-2, len );
     angle = atoi( sequence_no.c_str() );
     verticalAnglesList.push_front( angle );
   }
 
   verticalAnglesList.sort();
-//   noVerticalImages = gdat.gl_pathc;
 
   globfree( &gdat );
 
@@ -232,14 +224,13 @@ void IIPImage::measureHorizontalAngles()
     // Extract angle no from path name.
     int angle;
     string tmp( gdat.gl_pathv[i] );
-    int len = tmp.length();
-    string horizontalAnglesList_no = tmp.substr( len - 11, len - 9 );
+    int len = tmp.length() - type.length() - 1;
+    string horizontalAnglesList_no = tmp.substr( len-6, len-4 );
     angle = atoi( (char*) horizontalAnglesList_no.c_str() );
     horizontalAnglesList.push_front( angle );
   }
 
   horizontalAnglesList.sort();
-//   noSequenceImages = gdat.gl_pathc;
   
   globfree( &gdat );
 
@@ -268,19 +259,6 @@ void IIPImage::Initialise()
 
 }
 
-
-
-list <int> IIPImage::getVerticalViewsList()
-{ 
-  return verticalAnglesList;
-}
-
-
-
-list <int> IIPImage::getHorizontalViewsList()
-{ 
-  return horizontalAnglesList;
-}
 
 
 

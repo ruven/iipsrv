@@ -1,3 +1,8 @@
+19/08/2009:
+	- Minor updates to IIPImage.h and IIPImage.cc. FIF.cc also now tests
+	  for upper/lowercase .tif and .tiff suffixes.
+
+
 14/08/2009:
 	- Modification to View.cc and CVT.cc to calculate the appropriate
 	  resolution as the smallest resolution with a dimension greater size

@@ -125,10 +125,10 @@ class IIPImage {
   void Initialise();
 
   /// Return a list of available vertical angles
-  std::list <int> getVerticalViewsList();
+  std::list <int> getVerticalViewsList(){ return verticalAnglesList; };
 
   /// Return a list of horizontal angles
-  std::list <int> getHorizontalViewsList();
+  std::list <int> getHorizontalViewsList(){ return horizontalAnglesList; };
 
   /// Return the image path
   const std::string& getImagePath() { return imagePath; };
