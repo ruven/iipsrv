@@ -1,3 +1,9 @@
+30/10/2009:
+	- Security fixes to Task.cc to make sure while loop is limited to the
+	  expected number of arguments. (Thanks to Willem Hengeveld for pointing
+	  this out).
+	
+
 19/08/2009:
 	- Minor updates to IIPImage.h and IIPImage.cc. FIF.cc also now tests
 	  for upper/lowercase .tif and .tiff suffixes.

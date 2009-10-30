@@ -150,7 +150,7 @@ void RGN::run( Session* session, const std::string& argument ){
   if( session->loglevel >= 2 ) *(session->logfile) << "RGN handler reached" << endl;
 
   float region[4];
-  while( izer.hasMoreTokens() ){
+  while( izer.hasMoreTokens() && i<4 ){
     try{
       region[i++] = atof( izer.nextToken().c_str() );
     }
@@ -193,7 +193,7 @@ void JTLS::run( Session* session, const std::string& argument ){
   if( session->loglevel >= 2 ) *(session->logfile) << "JTLS handler reached" << endl;
 
   int values[4];
-  while( izer.hasMoreTokens() ){
+  while( izer.hasMoreTokens() && i<4 ){
     try{
       values[i++] = atoi( izer.nextToken().c_str() );
     }
@@ -230,7 +230,7 @@ void SHD::run( Session* session, const std::string& argument ){
   if( session->loglevel >= 2 ) *(session->logfile) << "SHD handler reached" << endl;
 
   int values[2];
-  while( izer.hasMoreTokens() ){
+  while( izer.hasMoreTokens() && i<2 ){
     try{
       values[i++] = atoi( izer.nextToken().c_str() );
     }
