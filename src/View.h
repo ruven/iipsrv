@@ -93,6 +93,8 @@ class View{
       requested_width = static_cast<unsigned int>( width * requested_height / height );
     }
     if( requested_width > width ) requested_width = width;
+    // If no width has been set, use our full size
+    if( requested_width <= 0 ) requested_width = width;
     return requested_width;
   };
 
@@ -109,6 +111,8 @@ class View{
       requested_height = static_cast<unsigned int>( height * requested_width / width );
     }
     if( requested_height > height ) requested_height = height;
+    // If no height has been set, use our full size
+    if( requested_height <= 0 ) requested_height = height;
     return requested_height;
   };
 

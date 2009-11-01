@@ -1,3 +1,10 @@
+01/11/2009:
+	- Fixes to View.h and View.cc to set the requested size to the maximum
+	  allowable if not WID or HEI is set for the CVT command. The correct
+	  resolution to use for CVT is now calculated for views smaller than
+	  the smallest available.
+
+
 30/10/2009:
 	- Security fixes to Task.cc to make sure while loop is limited to the
 	  expected number of arguments. (Thanks to Willem Hengeveld for pointing

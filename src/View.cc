@@ -28,10 +28,13 @@ void View::calculateResolution( unsigned int dimension,
   unsigned int j = 1;
 
   // Calculate the resolution number for this request.
-  while( (int)(dimension/i) >= requested_size ){
+  while( (unsigned int)(dimension/i) >= requested_size ){
     i *= 2;
     j++;
   }
+
+  // Limit j to the maximum resolution
+  if( j > max_resolutions+1 ) j = max_resolutions + 1;
 
   // Only set this if our requested resolution is greater than that
   // that has already been set.
@@ -98,14 +101,14 @@ void View::setViewTop( float y ) {
 
 void View::setViewWidth( float w ) {
   if( w > 1.0 ) view_width = 1.0;
-  else if( w < 0.0 ) view_width = 0.0;
+  else if( w <= 0.0 ) view_width = 0.001;
   else view_width = w;
 }
 
 
 void View::setViewHeight( float h ) {
   if( h > 1.0 ) view_height = 1.0;
-  else if( h < 0.0 ) view_height = 0.0;
+  else if( h <= 0.0 ) view_height = 0.001;
   else view_height = h;
 }
 
