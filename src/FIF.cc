@@ -24,7 +24,6 @@
 #include "TPTImage.h"
 
 
-
 using namespace std;
 
 
@@ -65,8 +64,20 @@ void FIF::run( Session* session, const string& src ){
       // Don't assume well-formed input
       if( std::distance(iter, src.end()) >= 2 &&
 	  std::isxdigit(*(iter + 1)) && std::isxdigit(*(iter + 2)) ){
-	c = *++iter;
-	argument.append(1,hexToChar(c,*++iter));
+
+	// Filter out embedded NULL bytes of the form %00 from the URL
+	if( (*(iter+1)=='0' && *(iter+2)=='0') ){
+	  if( session->loglevel >= 1 ){
+	    *(session->logfile) << "FIF :: Warning! Detected embedded NULL byte in URL: " << src << endl;
+	  }
+	  // Wind forward our iterator
+	  iter+=2;
+	}
+	// Otherwise decode the character
+	else{
+	  c = *++iter;
+	  argument.append(1,hexToChar(c,*++iter));
+	}
       }
       // Just pass the % through untouched
       else {
@@ -80,12 +91,20 @@ void FIF::run( Session* session, const string& src ){
     }
   }
 
+  // Filter out any ../ to prevent users by-passing any file system prefix
+  unsigned int n;
+  while( (n=argument.find("../")) < argument.length() ) argument.erase(n,3);
+
+
   if( session->loglevel >= 5 ){
-    *(session->logfile) << "FIF :: URL decoding: " << src << " => " << argument << endl;
+    *(session->logfile) << "FIF :: URL decoding/filtering: " << src << " => " << argument << endl;
   }
 
 
   IIPImage test;
+
+  // Get our image pattern variable
+  string filesystem_prefix = Environment::getFileSystemPrefix();
 
   // Get our image pattern variable
   string filename_pattern = Environment::getFileNamePattern();
@@ -102,6 +121,7 @@ void FIF::run( Session* session, const string& src ){
 
       test = IIPImage( argument );
       test.setFileNamePattern( filename_pattern );
+      test.setFileSystemPrefix( filesystem_prefix );
       test.Initialise();
 
       (*session->imageCache)[argument] = test;

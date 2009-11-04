@@ -1,3 +1,9 @@
+04/11/2009:
+	- Added FILESYSTEM_PREFIX environment variable to allow a fixed prefix to
+	  be applied to all image paths. Embedded NULL bytes of the form %00 and
+	  any "../" are also now stripped out of any path for security reasons.
+
+
 01/11/2009:
 	- Fixes to View.h and View.cc to set the requested size to the maximum
 	  allowable if not WID or HEI is set for the CVT command. The correct

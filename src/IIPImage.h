@@ -47,6 +47,9 @@ class IIPImage {
   /// Image path supplied
   std::string imagePath; 
 
+  /// Prefix to add to paths
+  std::string fileSystemPrefix;
+
   /// Pattern for sequences
   std::string fileNamePattern;
 
@@ -147,6 +150,9 @@ class IIPImage {
 
   /// Check whether this object has been initialised
   bool set() { return isSet; };
+
+  /// Set a file system prefix for added security
+  void setFileSystemPrefix( const std::string& prefix ) { fileSystemPrefix = prefix; };
 
   /// Set the file name pattern used in image sequences
   void setFileNamePattern( const std::string& pattern ) { fileNamePattern = pattern; };

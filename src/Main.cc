@@ -212,11 +212,16 @@ int main( int argc, char *argv[] )
   int layers = Environment::getLayers();
 
 
+  // Get the filesystem prefix if any
+  string filesystem_prefix = Environment::getFileSystemPrefix();
+
+
   if( loglevel >= 1 ){
     logfile << "Setting maximum image cache size to " << max_image_cache_size << "MB" << endl;
-    logfile << "Setting 3D file sequence name pattern to " << filename_pattern << endl;
+    logfile << "Setting filesystem prefix to '" << filesystem_prefix << "'" << endl;
     logfile << "Setting default JPEG quality to " << jpeg_quality << endl;
     logfile << "Setting maximum CVT size to " << max_CVT << endl;
+    logfile << "Setting 3D file sequence name pattern to '" << filename_pattern << "'" << endl;
     logfile << "Setting default decoded quality layers (for supported file formats) to " << layers << endl;
   }
 

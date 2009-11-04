@@ -31,6 +31,7 @@
 #define JPEG_QUALITY 75
 #define MAX_CVT 5000
 #define LAYERS 1
+#define FILESYSTEM_PREFIX ""
 
 #include <string>
 
@@ -116,6 +117,18 @@ class Environment {
     else layers = LAYERS;
 
     return layers;
+  }
+
+
+  static std::string getFileSystemPrefix(){
+    char* envpara = getenv( "FILESYSTEM_PREFIX" );
+    std::string filesystem_prefix; 
+    if( envpara ){ 
+      filesystem_prefix = std::string( envpara ); 
+    } 
+    else filesystem_prefix = FILESYSTEM_PREFIX; 
+
+    return filesystem_prefix;
   }
 
 };

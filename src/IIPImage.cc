@@ -67,6 +67,7 @@ IIPImage::IIPImage( const IIPImage& image )
   imagePath = image.imagePath;
   isFile = image.isFile;
   type = image.type;
+  fileSystemPrefix = image.fileSystemPrefix;
   fileNamePattern = image.fileNamePattern;
   horizontalAnglesList = image.horizontalAnglesList;
   verticalAnglesList = image.verticalAnglesList;
@@ -88,6 +89,7 @@ const IIPImage& IIPImage::operator = ( const IIPImage& image )
   imagePath = image.imagePath;
   isFile = image.isFile;
   type = image.type;
+  fileSystemPrefix = image.fileSystemPrefix;
   fileNamePattern = image.fileNamePattern;
   horizontalAnglesList = image.horizontalAnglesList;
   verticalAnglesList = image.verticalAnglesList;
@@ -110,7 +112,9 @@ void IIPImage::testImageType()
   // Check whether it is a regular file
   struct stat sb;
 
-  if( (stat(imagePath.c_str(),&sb)==0) && S_ISREG(sb.st_mode) ){
+  string path = fileSystemPrefix + imagePath;
+
+  if( (stat(path.c_str(),&sb)==0) && S_ISREG(sb.st_mode) ){
     isFile = true;
     int dot = imagePath.find_last_of( "." );
     type = imagePath.substr( dot + 1, imagePath.length() );
@@ -122,11 +126,11 @@ void IIPImage::testImageType()
 
     // Check for sequence
     glob_t gdat;
-    string filename = imagePath + fileNamePattern + "000_090.*";
+    string filename = path + fileNamePattern + "000_090.*";
       
     if( glob( filename.c_str(), 0, NULL, &gdat ) != 0 ){
       globfree( &gdat );
-      string message = imagePath + fileNamePattern + string( " is neither a file or part of an image sequence" );
+      string message = path + fileNamePattern + string( " is neither a file or part of an image sequence" );
       throw message;      
     }  
     if( gdat.gl_pathc != 1 ){
@@ -148,7 +152,7 @@ void IIPImage::testImageType()
     updateTimestamp( tmp );
 
 #else
-    string message = imagePath + string( " is not a file and no glob support enabled" );
+    string message = path + string( " is not a file and no glob support enabled" );
     throw message;
 #endif
 
@@ -177,7 +181,7 @@ void IIPImage::measureVerticalAngles()
   glob_t gdat;
   unsigned int i;
 
-  string filename = imagePath + fileNamePattern + "000_*." + type;
+  string filename = fileSystemPrefix + imagePath + fileNamePattern + "000_*." + type;
   
   if( glob( filename.c_str(), 0, NULL, &gdat ) != 0 ){
     globfree( &gdat );
@@ -213,7 +217,7 @@ void IIPImage::measureHorizontalAngles()
   glob_t gdat;
   unsigned int i;
 
-  string filename = imagePath + fileNamePattern + "*_090." + type;
+  string filename = fileSystemPrefix + imagePath + fileNamePattern + "*_090." + type;
   
   if( glob( filename.c_str(), 0, NULL, &gdat ) != 0 ){
     globfree( &gdat );
@@ -265,12 +269,11 @@ void IIPImage::Initialise()
 const string IIPImage::getFileName( int seq, int ang )
 {
   char name[1024];
-  string suffix;
 
-  if( isFile ) return imagePath;
+  if( isFile ) return fileSystemPrefix+imagePath;
   else{
     snprintf( name, 1024,
-	      "%s%s%.3d_%.3d.%s", imagePath.c_str(), fileNamePattern.c_str(),
+	      "%s%s%.3d_%.3d.%s", (fileSystemPrefix+imagePath).c_str(), fileNamePattern.c_str(),
 	      seq, ang, type.c_str() );
     
     string file( name );
