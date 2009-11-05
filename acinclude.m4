@@ -1,6 +1,6 @@
 dnl     $Id: acinclude.m4,v 1.2 2001/12/21 03:12:50 robs Exp $
 
-AC_DEFUN(FCGI_COMMON_CHECKS, [
+AC_DEFUN([FCGI_COMMON_CHECKS], [
     AC_CHECK_TYPE([ssize_t], [int]) 
 
     AC_MSG_CHECKING([for sun_len in sys/un.h])
@@ -662,4 +662,5 @@ else
         $2
 fi
 
-])dnl
+])
+dnl
