@@ -1,3 +1,7 @@
+17/11/2009:
+	- Update to Zoomify to fix way it calculates number of zoom levels.
+
+
 05/11/2009:
 	- Updated the autoconf, aclocal, automake and libtool scripts to the 
 	  latest versions.

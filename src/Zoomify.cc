@@ -62,9 +62,12 @@ void Zoomify::run( Session* session, const std::string& argument ){
   // Load image info
   (*session->image)->loadImageInfo( session->view->xangle, session->view->yangle );
 
+
   // Get the full image size and the total number of resolutions available
   unsigned int width = (*session->image)->getImageWidth();
   unsigned int height = (*session->image)->getImageHeight();
+
+
   unsigned int tw = (*session->image)->getTileWidth();
   unsigned int numResolutions = (*session->image)->getNumResolutions();
 
@@ -73,13 +76,17 @@ void Zoomify::run( Session* session, const std::string& argument ){
   // level must be the largest size that can fit within a single tile, so
   // we must discard any smaller than this
   unsigned int n;
+
+  unsigned int discard = 0;
+
   for( n=0; n<numResolutions; n++ ){
     if( (*session->image)->image_widths[n] < tw && (*session->image)->image_heights[n] < tw ){
-      break;
+      discard++;
     }
   }
 
-  unsigned int discard = numResolutions - n - 1;
+
+  if( discard > 0 ) discard -= 1;
 
   if( session->loglevel >= 2 ){
     if( discard > 0 ){
