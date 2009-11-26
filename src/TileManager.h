@@ -102,7 +102,7 @@ class TileManager{
    *  @param tile tile number
    *  @param xangle horizontal sequence number
    *  @param yangle vertical sequence number
-   *  @param number of quality layers within image to decode
+   *  @param layers number of quality layers within image to decode
    *  @param c CompressionType
    *  @return RawTile
    */

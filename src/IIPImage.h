@@ -232,10 +232,11 @@ class IIPImage {
       \param ha horizontal angle
       \param va vertical angle
       \param r resolution
-      \param x
-      \param y
-      \param w
-      \param h
+      \param t tile number
+      \param x top left of region
+      \param y top left of region
+      \param w region width
+      \param h region height
   */
   virtual RawTile getRegion( int ha, int va, unsigned int r, unsigned int t, int x, int y, int w, int h ) { return RawTile(); };
 
