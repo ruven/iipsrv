@@ -156,23 +156,20 @@ void CVT::run( Session* session, const std::string& a ){
     if( session->view->shaded ) o_channels = 1;
     unsigned char* buf = new unsigned char[view_width * src_tile_height * o_channels];
 
-    // Create a RawTile for the entire image
-    unsigned int requested_width = session->view->getRequestWidth();
-    unsigned int requested_height = session->view->getRequestHeight();
 
-    // Calculate the scaling required to get the requested size. Consider our requested width and height
-    // as maximum constraints
-    float scale = static_cast<float>(requested_width) / static_cast<float>(im_width);
-    if( static_cast<float>(requested_height) / static_cast<float>(im_height) < scale ) scale = static_cast<float>(requested_height) / static_cast<float>(im_height);
+    // Get the scaling required to get the requested size.
+    float scale = session->view->getScale();
+
 
     // Calculate our resampled width and height
     unsigned int resampled_width = floor(view_width * scale);
     unsigned int resampled_height = floor(view_height * scale);
 
     if( session->loglevel >= 3 ){
-      *(session->logfile) << "CVT :: Requested region size is " << resampled_width << "x" << resampled_height
+      *(session->logfile) << "CVT :: Requested scaled region size is " << resampled_width << "x" << resampled_height
 			  << ". Nearest pyramid region size is " << view_width << "x" << view_height << endl;
     }
+
 
     // Create our rawtile object and initialize with our size, channels etc.
     RawTile complete_image( 0, 0, 0, 0, resampled_width, resampled_height, o_channels, 8 );

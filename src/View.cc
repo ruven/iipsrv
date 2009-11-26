@@ -49,14 +49,12 @@ void View::calculateResolution( unsigned int dimension,
 
 unsigned int View::getResolution(){
 
-  unsigned int i, max_width, max_height;
+  unsigned int i;
 
   resolution = max_resolutions - 1;
+
   if( requested_width ) View::calculateResolution( width, requested_width );
   if( requested_height ) View::calculateResolution( height, requested_height );
-
-  max_width = width;
-  max_height = height;
 
   // Caluclate our new width and height based on the calculated resolution
   for( i=0; i < (max_resolutions - resolution - 1); i++ ){
@@ -65,11 +63,16 @@ unsigned int View::getResolution(){
   }
 
   // Check if we need to use a smaller resolution due to our max size limit
-  if( (width*view_width > max_size) || (height*view_height > max_size) ){
+  float scale = getScale();
+
+  if( (width*view_width*scale > max_size) || (height*view_height*scale > max_size) ){
     int dimension;
-    if( (width*view_width/max_size) > (height*view_width/max_size) )
-      dimension = (int) (width*view_width);
-    else dimension = (int) (height*view_width);
+    if( (width*view_width/max_size) > (height*view_width/max_size) ){
+      dimension = (int) (width*view_width*scale);
+    }
+    else{
+      dimension = (int) (height*view_height*scale);
+    }
 
     i = 1;
     while( (dimension / i) > max_size ){
@@ -81,6 +84,31 @@ unsigned int View::getResolution(){
   }
 
   return resolution;
+
+}
+
+
+float View::getScale(){
+
+  unsigned int rw;
+  unsigned int rh;
+  if( requested_width == 0 && requested_height > 0 ){
+    rw = static_cast<unsigned int>( width * requested_height / height );
+  }
+  else rw = requested_width;
+
+  if( requested_height == 0 && requested_width > 0 ){
+    rh = static_cast<unsigned int>( height * requested_width / width );
+  }
+  else rh = requested_height;
+
+  float scale = static_cast<float>(rw) / static_cast<float>(width);
+
+  if( static_cast<float>(rh) / static_cast<float>(height) < scale ) scale = static_cast<float>(rh) / static_cast<float>(height);
+
+  // Sanity check
+  if( scale <= 0 || scale > 1.0 ) scale = 1.0;
+  return scale;
 
 }
 

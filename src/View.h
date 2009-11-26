@@ -30,12 +30,12 @@ class View{
 
  private:
 
-  // Resolution independent x,y,w,h viewport
+  // Resolution independent x,y,w,h region viewport
   float view_left, view_top, view_width, view_height;
 
   int resolution;                             /// Requested resolution
   unsigned int max_resolutions;               /// Total available resolutions
-  unsigned int left, top, width, height;      /// Requested width and height
+  unsigned int left, top, width, height;      /// Width and height at requested resolution
   unsigned int min_size;                      /// Minimum viewport dimension
   unsigned int max_size;                      /// Maximum viewport dimension
   unsigned int requested_width;               /// Width requested by WID command
@@ -87,12 +87,12 @@ class View{
 
 
   /// Get the size of the requested width
-  unsigned int getRequestWidth()
-  {
+  unsigned int getRequestWidth(){
     if( requested_width == 0 && requested_height > 0 ){
       requested_width = static_cast<unsigned int>( width * requested_height / height );
     }
     if( requested_width > width ) requested_width = width;
+    if( requested_width > max_size ) requested_width = max_size;
     // If no width has been set, use our full size
     if( requested_width <= 0 ) requested_width = width;
     return requested_width;
@@ -101,16 +101,19 @@ class View{
 
   /// Set the size of the requested width
   /** \param w requested image width */
-  void setRequestWidth( unsigned int w ){ requested_width = w; };
+  void setRequestWidth( unsigned int w ){
+    if( w < max_size ) requested_width = w;
+    else requested_width = max_size;
+  };
 
 
   /// Get the size of the requested height
-  unsigned int getRequestHeight()
-  { 
+  unsigned int getRequestHeight(){
     if( requested_height == 0 && requested_width > 0 ){
       requested_height = static_cast<unsigned int>( height * requested_width / width );
     }
     if( requested_height > height ) requested_height = height;
+    if( requested_height > max_size ) requested_height = max_size;
     // If no height has been set, use our full size
     if( requested_height <= 0 ) requested_height = height;
     return requested_height;
@@ -118,11 +121,18 @@ class View{
 
   /// Set the size of the requested height
   /** \param h requested image height */
-  void setRequestHeight( unsigned int h ){ requested_height = h; };
+  void setRequestHeight( unsigned int h ){
+    if( h < max_size ) requested_height = h;
+    else requested_height = max_size;
+  };
 
 
   /// Return the requested resolution
   unsigned int getResolution();
+
+
+  /// Return the scaling required in case our requested width or height is in between available resolutions
+  float getScale();
 
 
   /// Set the left co-ordinate of the viewport

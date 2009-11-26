@@ -1,3 +1,8 @@
+26/11/2009:
+	- Fix to View class to take resampling into account when limiting
+	  the CVT output size to the maximum server setting.
+
+
 17/11/2009:
 	- Update to Zoomify to fix way it calculates number of zoom levels.
 
