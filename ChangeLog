@@ -1,3 +1,10 @@
+29/11/2009:
+	- Added SPECTRA.cc class for returning spectral reflectance values
+	  from multispectral images.
+	- Fix to IIPImage.cc to properly count the number of horizontal and
+	  vertical angles (used for multispectral bands).
+
+
 26/11/2009:
 	- Fix to View class to take resampling into account when limiting
 	  the CVT output size to the maximum server setting.

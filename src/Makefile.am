@@ -41,6 +41,7 @@ iipsrv_fcgi_SOURCES = \
 			ICC.cc \
 			CVT.cc \
 			Zoomify.cc \
+			SPECTRA.cc \
 			DSOImage.h \
 			DSOImage.cc
 
@@ -76,6 +77,13 @@ iipsrv_fcgi_SOURCES = \
 			TIL.cc \
 			ICC.cc \
 			CVT.cc \
-			Zoomify.cc
+			Zoomify.cc \
+			SPECTRA.cc
 
 endif
+
+
+#if ENABLE_KAKADU
+#	iipsrv_fcgi_SOURCES =  @iipsrv_fcgi_SOURCES@ KakaduImage.h KakaduImage.cc
+#endif
+

@@ -193,7 +193,7 @@ void IIPImage::measureVerticalAngles()
     int angle;
     string tmp( gdat.gl_pathv[i] );
     int len = tmp.length() - type.length() - 1;
-    string sequence_no = tmp.substr( len-2, len );
+    string sequence_no = tmp.substr( len-3, 3 );
     angle = atoi( sequence_no.c_str() );
     verticalAnglesList.push_front( angle );
   }
@@ -218,7 +218,7 @@ void IIPImage::measureHorizontalAngles()
   unsigned int i;
 
   string filename = fileSystemPrefix + imagePath + fileNamePattern + "*_090." + type;
-  
+
   if( glob( filename.c_str(), 0, NULL, &gdat ) != 0 ){
     globfree( &gdat );
   }  
@@ -229,7 +229,7 @@ void IIPImage::measureHorizontalAngles()
     int angle;
     string tmp( gdat.gl_pathv[i] );
     int len = tmp.length() - type.length() - 1;
-    string horizontalAnglesList_no = tmp.substr( len-6, len-4 );
+    string horizontalAnglesList_no = tmp.substr( len-7, 3 );
     angle = atoi( (char*) horizontalAnglesList_no.c_str() );
     horizontalAnglesList.push_front( angle );
   }

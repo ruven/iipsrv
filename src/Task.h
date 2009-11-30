@@ -251,6 +251,13 @@ class Zoomify : public Task {
 };
 
 
+/// SPECTRA Request Command
+class SPECTRA : public Task {
+ public:
+  void run( Session* session, const std::string& argument );
+};
+
+
 /// Quality Layers Command
 class LYR : public Task {
  public:

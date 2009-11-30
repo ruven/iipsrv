@@ -52,6 +52,7 @@ Task* Task::factory( const string& t ){
   else if( type == "cvt" ) return new CVT;
   else if( type == "shd" ) return new SHD;
   else if( type == "zoomify" ) return new Zoomify;
+  else if( type == "spectra" ) return new SPECTRA;
   else if( type == "lyr" ) return new LYR;
   else return NULL;
 
