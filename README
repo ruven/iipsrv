@@ -12,16 +12,18 @@ surface topologies.
 
 
 FEATURES:
---------
-* Handles the main subset of the IIP specification
-* Dynamic decoder module capability
-* Caching capability for high performance
-* Dynamic JPEG compression
-* Fast dynamic generation of full or regions of JPEG images at any resolution
-* 16 bit images handled
+-------- 
+* Fast lightweight embeddable FastCGI server module
+* High performance with inbuilt configurable cache
+* Support for gigapixel images
+* Dynamic JPEG export of full or regions of JPEG images at any resolution
+* 16 bit image support
 * Automatic CIELAB->sRGB colour space conversion
-* 3D panoramic views (requires java client)
+* Supports Zoomify and DeepZoom protocols
+* Multispectral image support
+* 3D panoramic views 
 * Dynamic hillshading of 3D surface topologies
+* Dynamic decoder module capability
 
 
 
@@ -91,24 +93,39 @@ They are all optional.
 LOGFILE: the server will log its output to the file specified, if it can.
 
 VERBOSITY: 0 means no logging, 1 is minimal logging, 2 lots of debugging stuff,
-3 even more debugging stuff and 4 a very large amount indeed ;-)
+3 even more debugging stuff and 10 a very large amount indeed ;-)
 
 MAX_IMAGE_CACHE_SIZE: Max image cache size to be held in RAM in MB. This is
 a cache of the compressed JPEG image tiles requested by the client.
 The default is 10MB.
 
-FILENAME_PATTERN: Pattern the follows the name stem for a sequence.
-eg: "_pyr_" for FZ1_pyr_000_090.tif. The default is "_pyr_". This is only
-relevent to 3D image sequences.
+FILESYSTEM_PREFIX: This is a prefix automatically added by the server to the 
+beginning of each file system path. This can be useful for security reasons to 
+limit access to certain sub-directories. For example, with a prefix of 
+"/home/images/" set on the server, a request by a client for "image.tif" will 
+point to the path "/home/images/image.tif".  Any reverse directory path 
+component such as ../ is also filtered out. No default value.
 
 JPEG_QUALITY: The default JPEG quality factor for compression when the
 client does not specify one . The value should be between 1 (highest level of
 compression) and 100 (highest image quality). The default is 75.
 
-MAX_CVT: The maximum WID or HEI allowable for CVT commands. The default
-is 5000.
+MAX_CVT: Limits the maximum image dimensions in pixels (the WID or HEI 
+commands) allowable for dynamic JPEG export via the CVT command. This 
+prevents huge requests from overloading the server. The default is 5000.
 
-DECODER_MODULES: Comma separated list of modules for loading external formats.
+LAYERS: The number of quality layers to decode for image that support 
+progressive quality encoding, such as JPEG2000. Ignored for other file 
+formats. The default is 1.
+
+FILENAME_PATTERN: Pattern that follows the name stem for a 3D or multispectral 
+sequence. eg: "_pyr_" for FZ1_pyr_000_090.tif. The default is "_pyr_". This is 
+only relevent to 3D image sequences.
+
+DECODER_MODULES: Comma separated list of external modules for decoding 
+other image formats. This is only necessary if you have activated 
+--enable-modules for ./configure and written your own image format 
+handler(s).
 
 
 
@@ -220,6 +237,18 @@ fastcgi.server = ( "/fcgi-bin/iipsrv.fcgi" =>
   ))
 )
 --------------------------------------------------------------------
+
+
+spawn-fcgi:
+----------
+
+iipsrv can also be used with lighttpd's spawn-fcgi without the need for a 
+full web server. Simply spawn the iipsrv process on the command line. The 
+process can be bound to an IP address and port for backend load-balancing 
+configurations. For example:
+
+spawn-fcgi -f src/iipsrv.fcgi -a 192.168.0.1 -p 9000
+
 
 
 MyServer:
