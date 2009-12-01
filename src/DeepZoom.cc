@@ -84,8 +84,9 @@ void DeepZoom::run( Session* session, const std::string& argument ){
   if( height > width ) max = height;
   dzi_res = (int) ceil( log2(max) );
 
-  *(session->logfile) << "DeepZoom :: required resolutions : " << dzi_res << ", real: " << numResolutions << endl;
-
+  if( session->loglevel >= 4 ){
+    *(session->logfile) << "DeepZoom :: required resolutions : " << dzi_res << ", real: " << numResolutions << endl;
+  }
 
 
   // DeepZoom clients have 2 phases, the initialization phase where they request
@@ -96,10 +97,10 @@ void DeepZoom::run( Session* session, const std::string& argument ){
     if( session->loglevel >= 2 )
       *(session->logfile) << "DeepZoom :: DZI header request" << endl;
 
-
-    *(session->logfile) << "DeepZoom :: Total resolutions: " << numResolutions << ", image width: " << width
-			<< ", image height: " << height << endl;
-
+    if( session->loglevel >= 4 ){
+      *(session->logfile) << "DeepZoom :: Total resolutions: " << numResolutions << ", image width: " << width
+			  << ", image height: " << height << endl;
+    }
 
     char str[1024];
     snprintf( str, 1024, "Content-Type: application/xml\r\n"
