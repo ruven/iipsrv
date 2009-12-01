@@ -110,6 +110,7 @@ void SPECTRA::run( Session* session, const std::string& argument ){
 
     if( session->loglevel >= 5 ) (*session->logfile) << "SPECTRA :: " << rawtile.bpc << " bits per channel data" << endl;
 
+    // Handle depending on bit depth and normalize to 0.0->1.0
     if( rawtile.bpc == 16 ){
       usptr = (unsigned short*) (rawtile.data);
       reflectance = static_cast<float>((float)usptr[index]) / 65536.0;

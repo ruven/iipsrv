@@ -264,4 +264,12 @@ class LYR : public Task {
   void run( Session* session, const std::string& argument );
 };
 
+
+/// DeepZoom Request Command
+class DeepZoom : public Task {
+ public:
+  void run( Session* session, const std::string& argument );
+};
+
+
 #endif

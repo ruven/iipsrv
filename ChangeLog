@@ -1,3 +1,11 @@
+01/12/2009:
+	- Added DeepZoom protocol support. Work carried out thanks to
+	  Moravian Library in Brno (Moravska zemska knihovna v Brne,
+	  http://www.mzk.cz/) R&D grant MK00009494301 & Old Maps Online
+	  (http://www.oldmapsonline.org/) from the Ministry of Culture of
+	  the Czech Republic.
+
+
 29/11/2009:
 	- Added SPECTRA.cc class for returning spectral reflectance values
 	  from multispectral images.

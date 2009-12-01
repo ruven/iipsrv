@@ -41,6 +41,7 @@ iipsrv_fcgi_SOURCES = \
 			ICC.cc \
 			CVT.cc \
 			Zoomify.cc \
+			DeepZoom.cc \
 			SPECTRA.cc \
 			DSOImage.h \
 			DSOImage.cc
@@ -78,6 +79,7 @@ iipsrv_fcgi_SOURCES = \
 			ICC.cc \
 			CVT.cc \
 			Zoomify.cc \
+			DeepZoom.cc \
 			SPECTRA.cc
 
 endif

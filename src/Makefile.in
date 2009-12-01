@@ -51,7 +51,7 @@ am__iipsrv_fcgi_SOURCES_DIST = Main.cc IIPImage.h IIPImage.cc \
 	Tokenizer.h IIPResponse.h IIPResponse.cc View.h View.cc \
 	ColourTransforms.h ColourTransforms.cc Environment.h Writer.h \
 	Task.h Task.cc OBJ.cc FIF.cc JTL.cc TIL.cc ICC.cc CVT.cc \
-	Zoomify.cc SPECTRA.cc DSOImage.h DSOImage.cc
+	Zoomify.cc DeepZoom.cc SPECTRA.cc DSOImage.h DSOImage.cc
 @ENABLE_MODULES_FALSE@am_iipsrv_fcgi_OBJECTS = Main.$(OBJEXT) \
 @ENABLE_MODULES_FALSE@	IIPImage.$(OBJEXT) TPTImage.$(OBJEXT) \
 @ENABLE_MODULES_FALSE@	JPEGCompressor.$(OBJEXT) \
@@ -62,7 +62,7 @@ am__iipsrv_fcgi_SOURCES_DIST = Main.cc IIPImage.h IIPImage.cc \
 @ENABLE_MODULES_FALSE@	FIF.$(OBJEXT) JTL.$(OBJEXT) \
 @ENABLE_MODULES_FALSE@	TIL.$(OBJEXT) ICC.$(OBJEXT) \
 @ENABLE_MODULES_FALSE@	CVT.$(OBJEXT) Zoomify.$(OBJEXT) \
-@ENABLE_MODULES_FALSE@	SPECTRA.$(OBJEXT)
+@ENABLE_MODULES_FALSE@	DeepZoom.$(OBJEXT) SPECTRA.$(OBJEXT)
 @ENABLE_MODULES_TRUE@am_iipsrv_fcgi_OBJECTS = Main.$(OBJEXT) \
 @ENABLE_MODULES_TRUE@	IIPImage.$(OBJEXT) TPTImage.$(OBJEXT) \
 @ENABLE_MODULES_TRUE@	JPEGCompressor.$(OBJEXT) \
@@ -71,8 +71,8 @@ am__iipsrv_fcgi_SOURCES_DIST = Main.cc IIPImage.h IIPImage.cc \
 @ENABLE_MODULES_TRUE@	ColourTransforms.$(OBJEXT) Task.$(OBJEXT) \
 @ENABLE_MODULES_TRUE@	OBJ.$(OBJEXT) FIF.$(OBJEXT) JTL.$(OBJEXT) \
 @ENABLE_MODULES_TRUE@	TIL.$(OBJEXT) ICC.$(OBJEXT) CVT.$(OBJEXT) \
-@ENABLE_MODULES_TRUE@	Zoomify.$(OBJEXT) SPECTRA.$(OBJEXT) \
-@ENABLE_MODULES_TRUE@	DSOImage.$(OBJEXT)
+@ENABLE_MODULES_TRUE@	Zoomify.$(OBJEXT) DeepZoom.$(OBJEXT) \
+@ENABLE_MODULES_TRUE@	SPECTRA.$(OBJEXT) DSOImage.$(OBJEXT)
 iipsrv_fcgi_OBJECTS = $(am_iipsrv_fcgi_OBJECTS)
 iipsrv_fcgi_LDADD = $(LDADD)
 DEFAULT_INCLUDES = -I.@am__isrc@
@@ -264,6 +264,7 @@ AM_LDFLAGS = @LIBFCGI_LDFLAGS@
 @ENABLE_MODULES_FALSE@			ICC.cc \
 @ENABLE_MODULES_FALSE@			CVT.cc \
 @ENABLE_MODULES_FALSE@			Zoomify.cc \
+@ENABLE_MODULES_FALSE@			DeepZoom.cc \
 @ENABLE_MODULES_FALSE@			SPECTRA.cc
 
 @ENABLE_MODULES_TRUE@iipsrv_fcgi_SOURCES = \
@@ -297,6 +298,7 @@ AM_LDFLAGS = @LIBFCGI_LDFLAGS@
 @ENABLE_MODULES_TRUE@			ICC.cc \
 @ENABLE_MODULES_TRUE@			CVT.cc \
 @ENABLE_MODULES_TRUE@			Zoomify.cc \
+@ENABLE_MODULES_TRUE@			DeepZoom.cc \
 @ENABLE_MODULES_TRUE@			SPECTRA.cc \
 @ENABLE_MODULES_TRUE@			DSOImage.h \
 @ENABLE_MODULES_TRUE@			DSOImage.cc
@@ -354,6 +356,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/CVT.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ColourTransforms.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/DSOImage.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/DeepZoom.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/FIF.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ICC.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/IIPImage.Po@am__quote@
