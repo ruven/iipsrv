@@ -1,4 +1,9 @@
-02/12/2009: Version 0.9.8 Released
+03/12/2009: Version 0.9.8 Released
+
+
+02/12/2009:
+	- Adding missing include to IIPImage.cc for compilation with
+	  gcc 4.4.1
 
 
 01/12/2009:

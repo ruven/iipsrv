@@ -27,6 +27,7 @@
 #include <glob.h>
 #endif
 
+#include <cstdio>
 #include <sys/stat.h>
 
 
