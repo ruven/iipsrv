@@ -1,6 +1,8 @@
 04/01/2010:
 	- Fixed bug in FIF.cc - the file system prefix was not being
 	  initialized for each new image.
+	- Layers environment variable changed to MAX_LAYERS to represent
+	  the maximum number of layers user is allowed to decode.
 
 
 03/12/2009: Version 0.9.8 Released

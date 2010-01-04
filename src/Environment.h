@@ -30,7 +30,7 @@
 #define FILENAME_PATTERN "_pyr_"
 #define JPEG_QUALITY 75
 #define MAX_CVT 5000
-#define LAYERS 1
+#define MAX_LAYERS 0
 #define FILESYSTEM_PREFIX ""
 
 #include <string>
@@ -110,11 +110,11 @@ class Environment {
   }
 
 
-  static int getLayers(){
-    char* envpara = getenv( "LAYERS" );
+  static int getMaxLayers(){
+    char* envpara = getenv( "MAX_LAYERS" );
     int layers;
     if( envpara ) layers = atoi( envpara );
-    else layers = LAYERS;
+    else layers = MAX_LAYERS;
 
     return layers;
   }

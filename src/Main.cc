@@ -209,7 +209,7 @@ int main( int argc, char *argv[] )
 
 
   // Get the default number of quality layers to decode
-  int layers = Environment::getLayers();
+  int max_layers = Environment::getMaxLayers();
 
 
   // Get the filesystem prefix if any
@@ -222,7 +222,7 @@ int main( int argc, char *argv[] )
     logfile << "Setting default JPEG quality to " << jpeg_quality << endl;
     logfile << "Setting maximum CVT size to " << max_CVT << endl;
     logfile << "Setting 3D file sequence name pattern to '" << filename_pattern << "'" << endl;
-    logfile << "Setting default decoded quality layers (for supported file formats) to " << layers << endl;
+    if( max_layers > 0 ) logfile << "Setting max quality layers (for supported file formats) to " << max_layers << endl;
   }
 
 
@@ -343,7 +343,7 @@ int main( int argc, char *argv[] )
       view.setMaxSize( max_CVT );
       if( loglevel >= 2 ) logfile << "CVT maximum viewport size set to " << max_CVT << endl;
     }
-    view.setLayers( layers );
+    if( max_layers > 0 ) view.setMaxLayers( max_layers );
 
 
     // Create an IIPResponse object - we use this for the OBJ requests.
