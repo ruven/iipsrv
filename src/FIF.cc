@@ -119,13 +119,13 @@ void FIF::run( Session* session, const string& src ){
 
     if( session->imageCache->empty() ){
 
+      if( session->loglevel >= 1 ) *(session->logfile) << "FIF :: Image cache initialisation" << endl;
       test = IIPImage( argument );
       test.setFileNamePattern( filename_pattern );
       test.setFileSystemPrefix( filesystem_prefix );
       test.Initialise();
 
       (*session->imageCache)[argument] = test;
-      if( session->loglevel >= 1 ) *(session->logfile) << "FIF :: Image cache initialisation" << endl;
     }
 
     else{
@@ -137,10 +137,11 @@ void FIF::run( Session* session, const string& src ){
 	}
       }
       else{
+	if( session->loglevel >= 2 ) *(session->logfile) << "FIF :: Image cache miss" << endl;
 	test = IIPImage( argument );
 	test.setFileNamePattern( filename_pattern );
+	test.setFileSystemPrefix( filesystem_prefix );
 	test.Initialise();
-	if( session->loglevel >= 2 ) *(session->logfile) << "FIF :: Image cache miss" << endl;
 	if( session->imageCache->size() >= 100 ) session->imageCache->erase( session->imageCache->end() );
 	(*session->imageCache)[argument] = test;
       }
