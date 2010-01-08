@@ -109,13 +109,14 @@ void Zoomify::run( Session* session, const std::string& argument ){
     int ntiles = (int) ceil( (double)width/tw ) * (int) ceil( (double)height/tw );
 
     char str[1024];
-    snprintf( str, 1024, "Content-Type: application/xml\r\n"
-	      "Cache-Control: max-age=604800\r\n"
-	      "Last-Modified: Sat, 01 Jan 2000 00:00:00 GMT\r\n"
-	      "Etag: ImageProperties.xml\r\n"
+    snprintf( str, 1024,
+	      "Server: iipsrv/%s\r\n"
+	      "Content-Type: application/xml\r\n"
+	      "Cache-Control: max-age=%d\r\n"
+	      "Last-Modified: %s\r\n"
 	      "\r\n"
 	      "<IMAGE_PROPERTIES WIDTH=\"%d\" HEIGHT=\"%d\" NUMTILES=\"%d\" NUMIMAGES=\"1\" VERSION=\"1.8\" TILESIZE=\"%d\" />",
-	      width, height, ntiles, tw );
+	      VERSION, MAX_AGE,(*session->image)->getTimestamp().c_str(), width, height, ntiles, tw );
 
     session->out->printf( (const char*) str );
     session->out->printf( "\r\n" );
@@ -239,12 +240,14 @@ void Zoomify::run( Session* session, const std::string& argument ){
 
 #ifndef DEBUG
   char str[1024];
-  snprintf( str, 1024, "Content-Type: image/jpeg\r\n"
+  snprintf( str, 1024,
+	    "Server: iipsrv/%s\r\n"
+	    "Content-Type: image/jpeg\r\n"
             "Content-Length: %d\r\n"
-	    "Cache-Control: max-age=604800\r\n"
-	    "Last-Modified: Sat, 01 Jan 2000 00:00:00 GMT\r\n"
-	    "Etag: zoomify.jpg\r\n"
-	    "\r\n", len );
+	    "Cache-Control: max-age=%d\r\n"
+	    "Last-Modified: %s\r\n"
+	    "\r\n",
+	    VERSION, len, MAX_AGE, (*session->image)->getTimestamp().c_str() );
 
   session->out->printf( (const char*) str );
 #endif

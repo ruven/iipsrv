@@ -148,6 +148,9 @@ class IIPImage {
   /// Get the image timestamp
   void updateTimestamp( const std::string& );
 
+  /// Get a HTTP RFC 1123 formatted timestamp
+  const std::string getTimestamp();
+
   /// Check whether this object has been initialised
   bool set() { return isSet; };
 
@@ -232,13 +235,12 @@ class IIPImage {
       \param ha horizontal angle
       \param va vertical angle
       \param r resolution
-      \param t tile number
-      \param x top left of region
-      \param y top left of region
-      \param w region width
-      \param h region height
+      \param x
+      \param y
+      \param w
+      \param h
   */
-  virtual RawTile getRegion( int ha, int va, unsigned int r, unsigned int t, int x, int y, int w, int h ) { return RawTile(); };
+    virtual void getRegion( int ha, int va, unsigned int r, int layers, int x, int y, int w, int h, unsigned char* b ){ return; };
 
   /// Assignment operator
   const IIPImage& operator = ( const IIPImage& );

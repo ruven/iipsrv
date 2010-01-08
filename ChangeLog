@@ -1,3 +1,11 @@
+08/01/2010:
+	- Major changes to the HTTP headers sent by iipsrv. Added
+	  HTTP Server id and Last-Modified timestamps to all server output.
+	  Checks are now made for a If-Modified-Since response and a
+	  304 Not Modified reponse returned if the timestamps match.
+	  This should significantly improve server performance.
+
+
 04/01/2010:
 	- Fixed bug in FIF.cc - the file system prefix was not being
 	  initialized for each new image.

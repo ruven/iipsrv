@@ -22,6 +22,11 @@
 #ifndef _IIPRESPONSE_H
 #define _IIPRESPONSE_H
 
+#ifndef VERSION
+#define VERSION "0.9.9.9"
+#endif
+
+
 #include <string>
 
 
@@ -32,6 +37,9 @@ class IIPResponse{
 
  private:
 
+  std::string server;              // Server header
+  std::string modified;            // Last modified header
+  std::string cache;               // Cache control header
   std::string mimeType;            // Mime type header
   std::string eof;                 // End of response delimitter eg "\r\n"
   std::string protocol;            // IIP protocol version
@@ -49,6 +57,11 @@ class IIPResponse{
   /// Set the IIP protocol version
   /** \param p IIP protocol version */
   void setProtocol( const std::string& p ) { protocol = p; };
+
+
+  /// Set the Last Modified header
+  /** \param m Last modifed date as a HTTP RFC 1123 formatted timestamp */
+  void setLastModified( const std::string& m ) { modified = "Last-Modified: " + m; };
 
 
   /// Add a response string

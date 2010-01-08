@@ -23,7 +23,6 @@
 #include <cstring>
 // #include <iconv.h>
 
-
 using namespace std;
 
 
@@ -33,7 +32,10 @@ IIPResponse::IIPResponse(){
   responseBody = "";
   error = "";
   protocol = "";
-  mimeType = "Content-type: application/vnd.netfpx";
+  server = "Server: iipsrv/" + string(VERSION);
+  modified = "";
+  cache = "Cache-Control: max-age=86400";
+  mimeType = "Content-Type: application/vnd.netfpx";
   eof = "\r\n";
   sent = false;
 }
@@ -111,12 +113,12 @@ string IIPResponse::formatResponse() {
    */
   string response;
   if( error.length() ){
-    response = mimeType + eof +
-      "Content-disposition: inline;filename=\"IIPisAMadGameClosedToOurUnderstanding.netfpx\"" +
+    response = server + eof + "Cache-Control: no-cache" + eof + mimeType + eof +
+      "Content-Disposition: inline;filename=\"IIPisAMadGameClosedToOurUnderstanding.netfpx\"" +
       eof + eof + error;
   }
   else{
-    response = mimeType + eof + eof + protocol + eof + responseBody;
+    response = server + eof + cache + eof + modified + eof + mimeType + eof + eof + protocol + eof + responseBody;
   }
 
   return response;
@@ -126,8 +128,8 @@ string IIPResponse::formatResponse() {
 
 string IIPResponse::getAdvert( const string& version ){
 
-  string advert = "Content-type: text/html" + eof;
-  advert += "Content-disposition: inline;filename=\"iipsrv.html\"" + eof + eof;
+  string advert = server + eof + "Content-Type: text/html" + eof;
+  advert += "Content-Disposition: inline;filename=\"iipsrv.html\"" + eof + eof;
   advert += "<?xml version=\"1.0\" encoding=\"UTF-8\"?><!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.1//EN\" \"http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd\"><html xmlns=\"http://www.w3.org/1999/xhtml\" xml:lang=\"en\" ><head><title>IIP Server</title><meta name=\"author\" content=\"Ruven Pillay &lt;ruven@users.sourceforge.net&gt;\"/></head><body style=\"font-family:Helvetica,sans-serif; margin:4em\"><center><h1>Internet Imaging Protocol Server</h1><h2>Version "
     + version +
     "</h2><br/><h3>Project Home Page: <a href=\"http://iipimage.sourceforge.net\">http://iipimage.sourceforge.net</a></h3><br/><h4>by<br/>Ruven Pillay</h4></center></body></html>";

@@ -31,8 +31,6 @@
 #include <string>
 #include <utility>
 #include <map>
-#include <sys/time.h>
-
 
 #include "TPTImage.h"
 #include "JPEGCompressor.h"
@@ -77,12 +75,8 @@ void IIPSignalHandler( int signal )
 {
   if( loglevel >= 1 ){
 
-#ifdef HAVE_TIME_H	
-	time_t current_time = time( NULL );
-	char *date = ctime( &current_time );
-#else
-	char *date = "Today";
-#endif
+    time_t current_time = time( NULL );
+    char *date = ctime( &current_time );
 
     logfile << endl << "Caught signal " << signal << ". "
 	    << "Terminating after " << IIPcount << " accesses" << endl
@@ -106,12 +100,7 @@ int main( int argc, char *argv[] )
 
 
   // Define ourselves a version
-#ifdef VERSION
   string version = string( VERSION );
-#else
-  string version = string( "0.9.9.9" );
-#endif
-
 
 
 
@@ -139,13 +128,9 @@ int main( int argc, char *argv[] )
     // Put a header marker and credit in the file
     else{
 
-      // Get current time if possible
-#ifdef HAVE_TIME_H	
+      // Get current time
       time_t current_time = time( NULL );
       char *date = ctime( &current_time );
-#else
-      char *date = "Today";
-#endif
 
       logfile << "<----------------------------------->" << endl
 	      << date << endl
@@ -381,7 +366,16 @@ int main( int argc, char *argv[] )
       session.imageCache = &imageCache;
       session.tileCache = &tileCache;
       session.out = &writer;
+      session.headers.empty();
 
+      // Get certain HTTP headers, such as if modified since
+      char* header = NULL;
+      if( header = FCGX_GetParam("HTTP_IF_MODIFIED_SINCE", request.envp) ){
+	session.headers["HTTP_IF_MODIFIED_SINCE"] = string(header);
+	if( loglevel >= 2 ){
+	  logfile << "HTTP Header: If-Modified-Since: " << session.headers["HTTP_IF_MODIFIED_SINCE"] << endl;
+	}
+      }
 
       // Parse up the command list
 
@@ -464,6 +458,32 @@ int main( int argc, char *argv[] )
       //////////////////////////////////////////////////////
     }
 
+    /* Use this for sending various HTTP status codes
+     */
+    catch( const int& code ){
+
+      string status;
+
+      switch( code ){
+
+        case 304:
+	  status = "Status: 304 Not Modified\r\nServer: iipsrv/" + version + "\r\n\r\n";
+	  writer.printf( status.c_str() );
+	  writer.flush();
+          if( loglevel >= 1 ){
+	    logfile << "Sending HTTP 304 Not Modified" << endl;
+	  }
+	  break;
+
+        default:
+          if( loglevel >= 1 ){
+	    logfile << "Unsupported HTTP status code: " << code << endl << endl;
+	  }
+       }
+    }
+
+    /* Catch any errors
+     */
     catch( const string& error ){
 
       if( loglevel >= 1 ){

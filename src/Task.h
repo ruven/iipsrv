@@ -35,6 +35,9 @@
 #include "Writer.h"
 #include "Cache.h"
 
+// Define our http header cache max age
+#define MAX_AGE 86400
+
 
 // Use the hashmap extensions if we are using >= gcc 3.1
 #ifdef __GNUC__
@@ -81,6 +84,7 @@ struct Session {
   IIPResponse* response;
   int loglevel;
   std::ofstream* logfile;
+  std::map <const std::string, std::string> headers;
 
   imageCacheMapType *imageCache;
   Cache* tileCache;

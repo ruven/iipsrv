@@ -108,6 +108,7 @@ void FIF::run( Session* session, const string& src ){
 
   // Get our image pattern variable
   string filename_pattern = Environment::getFileNamePattern();
+  
 
 
   // Put the image opening into a try block so that we can set
@@ -205,13 +206,16 @@ void FIF::run( Session* session, const string& src ){
 
 
     (*session->image)->openImage();
+    session->response->setLastModified( (*session->image)->getTimestamp() );
 
     if( session->loglevel >= 2 ){
       *(session->logfile) << "FIF :: Image dimensions are " << (*session->image)->getImageWidth()
 			  << " x " << (*session->image)->getImageHeight() << endl;
-#ifdef HAVE_TIME_H
-      *(session->logfile) << "FIF :: Image timestamp: " << ctime( &(*session->image)->timestamp );
-#endif
+      tm *t;
+      t = gmtime( &(*session->image)->timestamp );
+      char strt[128];
+      strftime( strt, 128, "%a, %d %b %Y %H:%M:%S GMT", t );
+      *(session->logfile) << "FIF :: Image timestamp: " << strt << endl;
     }
 
   }
@@ -222,11 +226,34 @@ void FIF::run( Session* session, const string& src ){
   }
 
 
+  // Check whether we have had an if modified since header. If so, compare to our image timestamp
+  if( session->headers.find("HTTP_IF_MODIFIED_SINCE") != session->headers.end() ){
+
+      tm mod_t;
+      strptime( (session->headers)["HTTP_IF_MODIFIED_SINCE"].c_str(), "%a, %d %b %Y %H:%M:%S GMT", &mod_t );
+      time_t t;
+      t = timegm(&mod_t);
+      if( (*session->image)->timestamp <= t ){
+
+	if( session->loglevel >= 2 ){
+	  *(session->logfile)	<< "FIF :: Unmodified content" << endl;
+	  *(session->logfile)	<< "FIF :: Total command time " << command_timer.getTime() << " microseconds" << endl;
+	}
+
+	throw( 304 );
+      }
+      else{
+	if( session->loglevel >= 2 ){
+	  *(session->logfile)	<< "FIF :: Content modified" << endl;
+	}
+      }
+  }
+
   // Reset our angle values
   session->view->xangle = 0;
   session->view->yangle = 90;
 
-	  
+
   if( session->loglevel >= 2 ){
     *(session->logfile)	<< "FIF :: Total command time " << command_timer.getTime() << " microseconds" << endl;
   }

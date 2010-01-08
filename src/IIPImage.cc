@@ -164,12 +164,22 @@ void IIPImage::testImageType()
 
 void IIPImage::updateTimestamp( const string& path )
 {
-#ifdef HAVE_TIME_H
-    // Get a modification time for our image
-    struct stat sb;
-    stat( path.c_str(), &sb );
-    timestamp = sb.st_mtime;
-#endif
+  // Get a modification time for our image
+  struct stat sb;
+  stat( path.c_str(), &sb );
+  timestamp = sb.st_mtime;
+}
+
+
+const std::string IIPImage::getTimestamp()
+{
+  tm *t;
+  const time_t tm1 = timestamp;
+  t = gmtime( &tm1 );
+  char strt[128];
+  strftime( strt, 128, "%a, %d %b %Y %H:%M:%S GMT", t );
+
+  return string(strt);
 }
 
 

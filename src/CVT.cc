@@ -196,12 +196,13 @@ void CVT::run( Session* session, const std::string& a ){
     string basename = filename.substr( pos, filename.rfind(".")-pos );
 
     char str[1024];
-    snprintf( str, 1024, "Cache-Control: max-age=86400\r\n"
-			 "Last-Modified: Mon, 1 Jan 2000 00:00:00 GMT\r\n"
-			 "ETag: \"CVT\"\r\n"
+    snprintf( str, 1024, "Server: iipsrv/%s\r\n"
+	                 "Cache-Control: max-age=%d\r\n"
+			 "Last-Modified: %s\r\n"
  			 "Content-Type: image/jpeg\r\n"
 			 "Content-Disposition: inline;filename=\"%s.jpg\"\r\n"
-	                 "\r\n", basename.c_str() );
+	                 "\r\n",
+	                 VERSION, MAX_AGE, (*session->image)->getTimestamp().c_str(), basename.c_str() );
 
     session->out->printf( (const char*) str );
 #endif
