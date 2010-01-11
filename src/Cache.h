@@ -26,6 +26,9 @@
 #ifndef _CACHE_H
 #define _CACHE_H
 
+// Remove our deprecated warnings for now. We should upgrade our hash_maps to
+// unordered_maps, however
+#undef __DEPRECATED
 
 // Use the hashmap extensions if we are using >= gcc 3.1
 #ifdef __GNUC__

@@ -126,7 +126,7 @@ AC_ARG_WITH( fcgi-lib,
 AC_CHECK_LIB( fcgi, FCGI_Accept, 
 		AC_MSG_RESULT([configure: found fcgi]);
 			LIBFCGI_INCLUDES="-I$fcgi_include_path";
-			LIBFCGI_LDFLAGS="-L$fcgi-lib_path";
+#			LIBFCGI_LDFLAGS="-L$fcgi_lib_path";
 			LIBFCGI_LIBS="-lfcgi",
 		AC_MSG_RESULT([configure: unable to find user installed libfcgi - using bundled version]);
 			LIBFCGI_INCLUDES="-I../fcgi/include -I../fcgi";

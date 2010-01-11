@@ -82,6 +82,9 @@ float&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="cla
 <tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="classView.html#c8709157ac54e0c4cba12ffce1c5aabe">setImageSize</a> (unsigned int w, unsigned int h)</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Set the source image pixel size.  <a href="#c8709157ac54e0c4cba12ffce1c5aabe"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="classView.html#d78accfff9a117df08c02d6061a60157">setMaxLayers</a> (int l)</td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Limit the maximum number of quality layers we are allowed to decode.  <a href="#d78accfff9a117df08c02d6061a60157"></a><br></td></tr>
 <tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="classView.html#f6e72554b02976d98058170b3685a371">setLayers</a> (int l)</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Set the number of quality layers to decode.  <a href="#f6e72554b02976d98058170b3685a371"></a><br></td></tr>
@@ -137,10 +140,14 @@ bool&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="clas
 int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="classView.html#6caf330847d42fc8f5527359cade610c">shade</a> [3]</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Whether to use shading view. <br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="65d44ca93e3e4712909232ab5961e410"></a><!-- doxytag: member="View::max_layers" ref="65d44ca93e3e4712909232ab5961e410" args="" -->
+int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="classView.html#65d44ca93e3e4712909232ab5961e410">max_layers</a></td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Shading incident light angles (x,y,z). <br></td></tr>
 <tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="c2d157433d47b53439fec339fc6be28e"></a><!-- doxytag: member="View::layers" ref="c2d157433d47b53439fec339fc6be28e" args="" -->
 int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="classView.html#c2d157433d47b53439fec339fc6be28e">layers</a></td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Shading incident light angles (x,y,z). <br></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Maximum number of quality layers allowed. <br></td></tr>
 </table>
 <hr><a name="_details"></a><h2>Detailed Description</h2>
 Class to intelligently handle Image Transforms. <hr><h2>Constructor &amp; Destructor Documentation</h2>
@@ -163,7 +170,7 @@ Class to intelligently handle Image Transforms. <hr><h2>Constructor &amp; Destru
 Number of quality layers. 
 <p>
 Constructor 
-<p>References <a class="el" href="View_8h-source.html#l00059">layers</a>, <a class="el" href="View_8h-source.html#l00058">shade</a>, <a class="el" href="View_8h-source.html#l00057">shaded</a>, and <a class="el" href="View_8h-source.html#l00056">yangle</a>.</p>
+<p>References <a class="el" href="View_8h-source.html#l00060">layers</a>, <a class="el" href="View_8h-source.html#l00059">max_layers</a>, <a class="el" href="View_8h-source.html#l00058">shade</a>, <a class="el" href="View_8h-source.html#l00057">shaded</a>, and <a class="el" href="View_8h-source.html#l00056">yangle</a>.</p>
 
 </div>
 </div><p>
@@ -257,7 +264,36 @@ Set the number of quality layers to decode.
   </table>
 </dl>
 
-<p>References <a class="el" href="View_8h-source.html#l00059">layers</a>.</p>
+<p>References <a class="el" href="View_8h-source.html#l00060">layers</a>.</p>
+
+</div>
+</div><p>
+<a class="anchor" name="d78accfff9a117df08c02d6061a60157"></a><!-- doxytag: member="View::setMaxLayers" ref="d78accfff9a117df08c02d6061a60157" args="(int l)" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void View::setMaxLayers           </td>
+          <td>(</td>
+          <td class="paramtype">int&nbsp;</td>
+          <td class="paramname"> <em>l</em>          </td>
+          <td>&nbsp;)&nbsp;</td>
+          <td><code> [inline]</code></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>
+Limit the maximum number of quality layers we are allowed to decode. 
+<p>
+<dl compact><dt><b>Parameters:</b></dt><dd>
+  <table border="0" cellspacing="2" cellpadding="0">
+    <tr><td valign="top"></td><td valign="top"><em>l</em>&nbsp;</td><td>Max number of layers to decode </td></tr>
+  </table>
+</dl>
+
+<p>References <a class="el" href="View_8h-source.html#l00059">max_layers</a>.</p>
 
 </div>
 </div><p>
@@ -480,7 +516,7 @@ Set the width co-ordinate of the viewport.
 <hr>The documentation for this class was generated from the following file:<ul>
 <li><a class="el" href="View_8h-source.html">View.h</a></ul>
 </div>
-<hr size="1"><address style="text-align: right;"><small>Generated on Tue Dec 1 19:55:25 2009 for iipsrv by&nbsp;
+<hr size="1"><address style="text-align: right;"><small>Generated on Mon Jan 11 19:27:28 2010 for iipsrv by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.5.8 </small></address>
 </body>

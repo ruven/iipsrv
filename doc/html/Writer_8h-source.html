@@ -26,7 +26,7 @@
 <h1>Writer.h</h1><div class="fragment"><pre class="fragment"><a name="l00001"></a>00001 <span class="comment">/*</span>
 <a name="l00002"></a>00002 <span class="comment">    IIP Generic Output Writer Classes</span>
 <a name="l00003"></a>00003 <span class="comment"></span>
-<a name="l00004"></a>00004 <span class="comment">    Copyright (C) 2006 Ruven Pillay.</span>
+<a name="l00004"></a>00004 <span class="comment">    Copyright (C) 2006-2010 Ruven Pillay.</span>
 <a name="l00005"></a>00005 <span class="comment"></span>
 <a name="l00006"></a>00006 <span class="comment">    This program is free software; you can redistribute it and/or modify</span>
 <a name="l00007"></a>00007 <span class="comment">    it under the terms of the GNU General Public License as published by</span>
@@ -117,7 +117,7 @@
 <a name="l00101"></a>00101     <span class="keywordflow">return</span> fputs( msg, out );
 <a name="l00102"></a>00102   }
 <a name="l00103"></a>00103   <span class="keywordtype">int</span> printf( <span class="keyword">const</span> <span class="keywordtype">char</span>* msg ){
-<a name="l00104"></a>00104     <span class="keywordflow">return</span> fprintf( out, msg );
+<a name="l00104"></a>00104     <span class="keywordflow">return</span> fprintf( out, <span class="stringliteral">"%s"</span>, msg );
 <a name="l00105"></a>00105   };
 <a name="l00106"></a>00106   <span class="keywordtype">int</span> flush(){
 <a name="l00107"></a>00107     <span class="keywordflow">return</span> fflush( out );
@@ -129,7 +129,7 @@
 <a name="l00113"></a>00113 
 <a name="l00114"></a>00114 <span class="preprocessor">#endif</span>
 </pre></div></div>
-<hr size="1"><address style="text-align: right;"><small>Generated on Tue Dec 1 19:55:25 2009 for iipsrv by&nbsp;
+<hr size="1"><address style="text-align: right;"><small>Generated on Mon Jan 11 19:27:28 2010 for iipsrv by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.5.8 </small></address>
 </body>

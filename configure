@@ -18316,7 +18316,7 @@ if test "x$ac_cv_lib_fcgi_FCGI_Accept" = x""yes; then
   { $as_echo "$as_me:$LINENO: result: configure: found fcgi" >&5
 $as_echo "configure: found fcgi" >&6; };
 			LIBFCGI_INCLUDES="-I$fcgi_include_path";
-			LIBFCGI_LDFLAGS="-L$fcgi-lib_path";
+#			LIBFCGI_LDFLAGS="-L$fcgi_lib_path";
 			LIBFCGI_LIBS="-lfcgi"
 else
   { $as_echo "$as_me:$LINENO: result: configure: unable to find user installed libfcgi - using bundled version" >&5

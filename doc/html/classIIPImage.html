@@ -34,7 +34,8 @@ Inheritance diagram for IIPImage:</div>
 
 <p><center><img src="classIIPImage.png" usemap="#IIPImage_map" border="0" alt=""></center>
 <map name="IIPImage_map">
-<area href="classTPTImage.html" alt="TPTImage" shape="rect" coords="0,56,67,80">
+<area href="classKakaduImage.html" alt="KakaduImage" shape="rect" coords="0,56,87,80">
+<area href="classTPTImage.html" alt="TPTImage" shape="rect" coords="97,56,184,80">
 </map>
 </div>
 
@@ -85,6 +86,10 @@ const std::string &amp;&nbsp;</td><td class="memItemRight" valign="bottom"><a cl
 void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="classIIPImage.html#29c9b63f8d7615fcd45a65ff5d656299">updateTimestamp</a> (const std::string &amp;)</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Get the image timestamp. <br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="0482c9740d637e3f61f8f80475b3cde5"></a><!-- doxytag: member="IIPImage::getTimestamp" ref="0482c9740d637e3f61f8f80475b3cde5" args="()" -->
+const std::string&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="classIIPImage.html#0482c9740d637e3f61f8f80475b3cde5">getTimestamp</a> ()</td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Get a HTTP RFC 1123 formatted timestamp. <br></td></tr>
 <tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="596986be264c107c4798e48db471acc0"></a><!-- doxytag: member="IIPImage::set" ref="596986be264c107c4798e48db471acc0" args="()" -->
 bool&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="classIIPImage.html#596986be264c107c4798e48db471acc0">set</a> ()</td></tr>
 
@@ -151,9 +156,9 @@ virtual void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" hr
 <tr><td class="memItemLeft" nowrap align="right" valign="top">virtual <a class="el" href="classRawTile.html">RawTile</a>&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="classIIPImage.html#e0f3b29ad6016e40a543db581f60f87b">getTile</a> (int h, int v, unsigned int r, int l, unsigned int t)</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Return an individual tile for a given angle and resolution.  <a href="#e0f3b29ad6016e40a543db581f60f87b"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">virtual <a class="el" href="classRawTile.html">RawTile</a>&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="classIIPImage.html#3b439cb5ffd09de3339a549439cb12ef">getRegion</a> (int ha, int va, unsigned int r, unsigned int t, int x, int y, int w, int h)</td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">virtual void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="classIIPImage.html#b597b14c4d3438f80dcc5c30e2af8ebf">getRegion</a> (int ha, int va, unsigned int r, int layers, int x, int y, int w, int h, unsigned char *b)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Return a region for a given angle and resolution.  <a href="#3b439cb5ffd09de3339a549439cb12ef"></a><br></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Return a region for a given angle and resolution.  <a href="#b597b14c4d3438f80dcc5c30e2af8ebf"></a><br></td></tr>
 <tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="c3e775e7fdde761cb5137ed9c181b99f"></a><!-- doxytag: member="IIPImage::operator=" ref="c3e775e7fdde761cb5137ed9c181b99f" args="(const IIPImage &amp;)" -->
 const <a class="el" href="classIIPImage.html">IIPImage</a> &amp;&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="classIIPImage.html#c3e775e7fdde761cb5137ed9c181b99f">operator=</a> (const <a class="el" href="classIIPImage.html">IIPImage</a> &amp;)</td></tr>
 
@@ -349,12 +354,12 @@ Return image metadata.
 
 </div>
 </div><p>
-<a class="anchor" name="3b439cb5ffd09de3339a549439cb12ef"></a><!-- doxytag: member="IIPImage::getRegion" ref="3b439cb5ffd09de3339a549439cb12ef" args="(int ha, int va, unsigned int r, unsigned int t, int x, int y, int w, int h)" -->
+<a class="anchor" name="b597b14c4d3438f80dcc5c30e2af8ebf"></a><!-- doxytag: member="IIPImage::getRegion" ref="b597b14c4d3438f80dcc5c30e2af8ebf" args="(int ha, int va, unsigned int r, int layers, int x, int y, int w, int h, unsigned char *b)" -->
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">virtual <a class="el" href="classRawTile.html">RawTile</a> IIPImage::getRegion           </td>
+          <td class="memname">virtual void IIPImage::getRegion           </td>
           <td>(</td>
           <td class="paramtype">int&nbsp;</td>
           <td class="paramname"> <em>ha</em>, </td>
@@ -374,8 +379,8 @@ Return image metadata.
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">unsigned int&nbsp;</td>
-          <td class="paramname"> <em>t</em>, </td>
+          <td class="paramtype">int&nbsp;</td>
+          <td class="paramname"> <em>layers</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
@@ -399,7 +404,13 @@ Return image metadata.
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">int&nbsp;</td>
-          <td class="paramname"> <em>h</em></td><td>&nbsp;</td>
+          <td class="paramname"> <em>h</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">unsigned char *&nbsp;</td>
+          <td class="paramname"> <em>b</em></td><td>&nbsp;</td>
         </tr>
         <tr>
           <td></td>
@@ -418,13 +429,14 @@ Return a <a class="el" href="classRawTile.html" title="Class to represent a sing
     <tr><td valign="top"></td><td valign="top"><em>ha</em>&nbsp;</td><td>horizontal angle </td></tr>
     <tr><td valign="top"></td><td valign="top"><em>va</em>&nbsp;</td><td>vertical angle </td></tr>
     <tr><td valign="top"></td><td valign="top"><em>r</em>&nbsp;</td><td>resolution </td></tr>
-    <tr><td valign="top"></td><td valign="top"><em>t</em>&nbsp;</td><td>tile number </td></tr>
-    <tr><td valign="top"></td><td valign="top"><em>x</em>&nbsp;</td><td>top left of region </td></tr>
-    <tr><td valign="top"></td><td valign="top"><em>y</em>&nbsp;</td><td>top left of region </td></tr>
-    <tr><td valign="top"></td><td valign="top"><em>w</em>&nbsp;</td><td>region width </td></tr>
-    <tr><td valign="top"></td><td valign="top"><em>h</em>&nbsp;</td><td>region height </td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>x</em>&nbsp;</td><td></td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>y</em>&nbsp;</td><td></td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>w</em>&nbsp;</td><td></td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>h</em>&nbsp;</td><td></td></tr>
   </table>
 </dl>
+
+<p>Reimplemented in <a class="el" href="classKakaduImage.html#19b4c61e4f97b13d037c668e3f866d49">KakaduImage</a>.</p>
 
 </div>
 </div><p>
@@ -484,7 +496,7 @@ Return a <a class="el" href="classRawTile.html" title="Class to represent a sing
   </table>
 </dl>
 
-<p>Reimplemented in <a class="el" href="classTPTImage.html#475f61c355abbeaf4a234c61f6d88ace">TPTImage</a>.</p>
+<p>Reimplemented in <a class="el" href="classKakaduImage.html#afb16ba604d6d20b3cf6339451e3ede2">KakaduImage</a>, and <a class="el" href="classTPTImage.html#475f61c355abbeaf4a234c61f6d88ace">TPTImage</a>.</p>
 
 </div>
 </div><p>
@@ -550,14 +562,14 @@ Load information about the image eg. number of channels, tile size etc.
   </table>
 </dl>
 
-<p>Reimplemented in <a class="el" href="classTPTImage.html#0b4a82bb950818c1196377a8ee32930d">TPTImage</a>.</p>
+<p>Reimplemented in <a class="el" href="classKakaduImage.html#9ad91aef16d4079bc0e47d9aa658299f">KakaduImage</a>, and <a class="el" href="classTPTImage.html#0b4a82bb950818c1196377a8ee32930d">TPTImage</a>.</p>
 
 </div>
 </div><p>
 <hr>The documentation for this class was generated from the following file:<ul>
 <li><a class="el" href="IIPImage_8h-source.html">IIPImage.h</a></ul>
 </div>
-<hr size="1"><address style="text-align: right;"><small>Generated on Tue Dec 1 19:55:25 2009 for iipsrv by&nbsp;
+<hr size="1"><address style="text-align: right;"><small>Generated on Mon Jan 11 19:27:28 2010 for iipsrv by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.5.8 </small></address>
 </body>

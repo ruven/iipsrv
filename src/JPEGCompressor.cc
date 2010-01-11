@@ -89,7 +89,7 @@ iip_init_destination (j_compress_ptr cinfo)
      However, this seems to break something in Kakadu, so disable in this case
   */
 #ifndef HAVE_KAKADU
-  mx += 1024
+  mx += 1024;
 #endif
 
 

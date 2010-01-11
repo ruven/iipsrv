@@ -373,7 +373,7 @@ int main( int argc, char *argv[] )
 
       // Get certain HTTP headers, such as if modified since
       char* header = NULL;
-      if( header = FCGX_GetParam("HTTP_IF_MODIFIED_SINCE", request.envp) ){
+      if( (header = FCGX_GetParam("HTTP_IF_MODIFIED_SINCE", request.envp)) ){
 	session.headers["HTTP_IF_MODIFIED_SINCE"] = string(header);
 	if( loglevel >= 2 ){
 	  logfile << "HTTP Header: If-Modified-Since: " << session.headers["HTTP_IF_MODIFIED_SINCE"] << endl;

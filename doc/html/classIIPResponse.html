@@ -40,6 +40,9 @@
 <tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="classIIPResponse.html#d8514e54aecbdedbe9c80e4a2dc5dd4a">setProtocol</a> (const std::string &amp;p)</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Set the IIP protocol version.  <a href="#d8514e54aecbdedbe9c80e4a2dc5dd4a"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="classIIPResponse.html#b5b7e6db61ef585e7715b73a9fdf04bb">setLastModified</a> (const std::string &amp;m)</td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Set the Last Modified header.  <a href="#b5b7e6db61ef585e7715b73a9fdf04bb"></a><br></td></tr>
 <tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="classIIPResponse.html#fb3b9be7408ea6772280c2cce3caaf02">addResponse</a> (const std::string &amp;r)</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Add a response string.  <a href="#fb3b9be7408ea6772280c2cce3caaf02"></a><br></td></tr>
@@ -320,6 +323,33 @@ Set an error.
 
 </div>
 </div><p>
+<a class="anchor" name="b5b7e6db61ef585e7715b73a9fdf04bb"></a><!-- doxytag: member="IIPResponse::setLastModified" ref="b5b7e6db61ef585e7715b73a9fdf04bb" args="(const std::string &amp;m)" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void IIPResponse::setLastModified           </td>
+          <td>(</td>
+          <td class="paramtype">const std::string &amp;&nbsp;</td>
+          <td class="paramname"> <em>m</em>          </td>
+          <td>&nbsp;)&nbsp;</td>
+          <td><code> [inline]</code></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>
+Set the Last Modified header. 
+<p>
+<dl compact><dt><b>Parameters:</b></dt><dd>
+  <table border="0" cellspacing="2" cellpadding="0">
+    <tr><td valign="top"></td><td valign="top"><em>m</em>&nbsp;</td><td>Last modifed date as a HTTP RFC 1123 formatted timestamp </td></tr>
+  </table>
+</dl>
+
+</div>
+</div><p>
 <a class="anchor" name="d8514e54aecbdedbe9c80e4a2dc5dd4a"></a><!-- doxytag: member="IIPResponse::setProtocol" ref="d8514e54aecbdedbe9c80e4a2dc5dd4a" args="(const std::string &amp;p)" -->
 <div class="memitem">
 <div class="memproto">
@@ -350,7 +380,7 @@ Set the IIP protocol version.
 <hr>The documentation for this class was generated from the following file:<ul>
 <li><a class="el" href="IIPResponse_8h-source.html">IIPResponse.h</a></ul>
 </div>
-<hr size="1"><address style="text-align: right;"><small>Generated on Tue Dec 1 19:55:25 2009 for iipsrv by&nbsp;
+<hr size="1"><address style="text-align: right;"><small>Generated on Mon Jan 11 19:27:28 2010 for iipsrv by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.5.8 </small></address>
 </body>
