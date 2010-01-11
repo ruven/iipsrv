@@ -1,7 +1,7 @@
 /*
     IIP FCGI server module - Main loop.
 
-    Copyright (C) 2000-2009 Ruven Pillay
+    Copyright (C) 2000-2010 Ruven Pillay
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -208,6 +208,9 @@ int main( int argc, char *argv[] )
     logfile << "Setting maximum CVT size to " << max_CVT << endl;
     logfile << "Setting 3D file sequence name pattern to '" << filename_pattern << "'" << endl;
     if( max_layers > 0 ) logfile << "Setting max quality layers (for supported file formats) to " << max_layers << endl;
+#ifdef HAVE_KAKADU
+    logfile << "Setting up JPEG2000 support via Kakadu SDK" << endl;
+#endif
   }
 
 

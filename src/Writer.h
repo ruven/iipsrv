@@ -1,7 +1,7 @@
 /*
     IIP Generic Output Writer Classes
 
-    Copyright (C) 2006 Ruven Pillay.
+    Copyright (C) 2006-2010 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -101,7 +101,7 @@ class FileWriter {
     return fputs( msg, out );
   }
   int printf( const char* msg ){
-    return fprintf( out, msg );
+    return fprintf( out, "%s", msg );
   };
   int flush(){
     return fflush( out );

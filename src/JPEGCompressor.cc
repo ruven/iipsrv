@@ -1,6 +1,6 @@
-/*  JPEG class wrapper to ijg jpeg library 
+/*  JPEG class wrapper to ijg jpeg library
 
-    Copyright (C) 2000-2005 Ruven Pillay.
+    Copyright (C) 2000-2010 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -86,8 +86,12 @@ iip_init_destination (j_compress_ptr cinfo)
   /* Add a kB because when we have very small tiles, the JPEG data
      including header can end up being larger than the original raw
      data size!
+     However, this seems to break something in Kakadu, so disable in this case
   */
-  mx += 1024;
+#ifndef HAVE_KAKADU
+  mx += 1024
+#endif
+
 
   /* Allocate the output buffer --- it will be released when done with image
    */
@@ -383,8 +387,9 @@ int JPEGCompressor::Compress( RawTile& rawtile ) throw (string)
   dest->pub.term_destination = iip_term_destination;
   dest->strip_height = 0;
 
-  dest->source = data;
-
+  //  dest->source = data;
+  unsigned char t[width*height*channels];
+  dest->source = &t[0];
 
   // Set floating point quality (highest, but possibly slower depending
   //  on hardware)
@@ -408,10 +413,10 @@ int JPEGCompressor::Compress( RawTile& rawtile ) throw (string)
   int row_stride = width * channels;
 
 
-  // Try to pass the whole image array at once if it is less than 256x256 pixels:
+  // Try to pass the whole image array at once if it is less than 512x512 pixels:
   // Should be faster than scanlines.
 
-  if( (row_stride * height) <= (256*256*channels) ){
+  if( (row_stride * height) <= (512*512*channels) ){
 
     JSAMPROW *array = new JSAMPROW[height+1];
     for( y=0; y < height; y++ ){
@@ -433,6 +438,7 @@ int JPEGCompressor::Compress( RawTile& rawtile ) throw (string)
   // Tidy up, get the compressed data size and de-allocate memory
   jpeg_finish_compress( &cinfo );
   y = dest->size;
+  memcpy( rawtile.data, dest->source, y );
   jpeg_destroy_compress( &cinfo );
 
 

@@ -1,10 +1,8 @@
 # Process this file with autoconf to produce a configure script.
 
-AC_INIT(iipsrv,0.9.8,ruven@users.sourceforge.net)
+AC_INIT(iipsrv,0.9.9,ruven@users.sourceforge.net)
 AC_CONFIG_MACRO_DIR([m4])
-AM_INIT_AUTOMAKE(iipsrv,0.9.8)
-
-# AM_INIT_AUTOMAKE(IIPImageTest,1.0)
+AM_INIT_AUTOMAKE
 
 
 AC_PREFIX_DEFAULT( `pwd` )
@@ -126,11 +124,11 @@ AC_ARG_WITH( fcgi-lib,
    fcgi_lib_path=$withval)
 
 AC_CHECK_LIB( fcgi, FCGI_Accept, 
-		AC_MSG_WARN(found fcgi);
+		AC_MSG_RESULT([configure: found fcgi]);
 			LIBFCGI_INCLUDES="-I$fcgi_include_path";
-			#LIBFCGI_LDFLAGS="-L$fcgi_lib_path";
+			LIBFCGI_LDFLAGS="-L$fcgi-lib_path";
 			LIBFCGI_LIBS="-lfcgi",
-		AC_MSG_WARN(unable to find user version of libfcgi ... no problem - will use the bundled version instead);
+		AC_MSG_RESULT([configure: unable to find user installed libfcgi - using bundled version]);
 			LIBFCGI_INCLUDES="-I../fcgi/include -I../fcgi";
 			LIBFCGI_LIBS="../fcgi/libfcgi/libfcgi.a" )
 
@@ -166,9 +164,26 @@ AC_SUBST(DL_LIBS)
 
 dnl	************************************************************
 
+dnl 	Check for Kakadu JPEG2000 library
+
+AC_ARG_WITH( kakadu,
+   [  --with-kakadu=DIR          location of the kakadu source files],
+   kakadu_path=$withval)
+
+
+AC_CHECK_FILE($kakadu_path/managed/all_includes/jpx.h,AC_MSG_RESULT([configure: Found Kakadu sources. Will compile JPEG2000 support]);kakadu=true,AC_MSG_RESULT([configure: No Kakadu JPEG2000 Sources Found]))
+AM_CONDITIONAL(ENABLE_KAKADU, test x$kakadu = xtrue)
+
+if test "$kakadu" = "true"; then
+	AC_DEFINE(HAVE_KAKADU)
+	INCLUDES="$INCLUDES -I$kakadu_path/managed/all_includes/"
+	EXTRAS="KakaduImage.o"
+	LIBS="$LIBS $kakadu_path/apps/make/jpx.o $kakadu_path/apps/make/jp2.o $kakadu_path/apps/make/kdu_stripe_decompressor.o $kakadu_path/apps/make/*.so -lpthread"
+fi
 
 INCLUDES="$INCLUDES -I."
 AC_SUBST(INCLUDES)
+AC_SUBST(EXTRAS)
 
 AC_CHECK_LIB(c,get_nprocs_conf,AC_DEFINE(NPROCS))
 

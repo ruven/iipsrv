@@ -1,7 +1,7 @@
 /*
     IIP FIF Command Handler Class Member Function
 
-    Copyright (C) 2006-2009 Ruven Pillay.
+    Copyright (C) 2006-2010 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -23,6 +23,9 @@
 #include "Environment.h"
 #include "TPTImage.h"
 
+#ifdef HAVE_KAKADU
+#include "KakaduImage.h"
+#endif
 
 using namespace std;
 
@@ -163,6 +166,12 @@ void FIF::run( Session* session, const string& src ){
       if( session->loglevel >= 2 ) *(session->logfile) << "FIF :: TIFF image requested" << endl;
       *session->image = new TPTImage( test );
     }
+#ifdef HAVE_KAKADU
+    else if( imtype=="jpx" || imtype=="jp2" ){
+      if( session->loglevel >= 2 ) *(session->logfile) << "FIF :: JPEG2000 image requested" << endl;
+      *session->image = new KakaduImage( test );
+    }
+#endif
     else throw string( "Unsupported image type: " + imtype );
 
     /* Disable module loading for now!

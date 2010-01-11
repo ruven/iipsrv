@@ -33,6 +33,8 @@ POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
 noinst_PROGRAMS = iipsrv.fcgi$(EXEEXT)
+@ENABLE_KAKADU_TRUE@am__append_1 = KakaduImage.o
+@ENABLE_MODULES_TRUE@am__append_2 = DSOImage.o
 subdir = src
 DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
@@ -45,36 +47,15 @@ am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs
 CONFIG_CLEAN_FILES =
 PROGRAMS = $(noinst_PROGRAMS)
-am__iipsrv_fcgi_SOURCES_DIST = Main.cc IIPImage.h IIPImage.cc \
-	TPTImage.h TPTImage.cc JPEGCompressor.h JPEGCompressor.cc \
-	RawTile.h Timer.h Cache.h TileManager.h TileManager.cc \
-	Tokenizer.h IIPResponse.h IIPResponse.cc View.h View.cc \
-	ColourTransforms.h ColourTransforms.cc Environment.h Writer.h \
-	Task.h Task.cc OBJ.cc FIF.cc JTL.cc TIL.cc ICC.cc CVT.cc \
-	Zoomify.cc DeepZoom.cc SPECTRA.cc DSOImage.h DSOImage.cc
-@ENABLE_MODULES_FALSE@am_iipsrv_fcgi_OBJECTS = Main.$(OBJEXT) \
-@ENABLE_MODULES_FALSE@	IIPImage.$(OBJEXT) TPTImage.$(OBJEXT) \
-@ENABLE_MODULES_FALSE@	JPEGCompressor.$(OBJEXT) \
-@ENABLE_MODULES_FALSE@	TileManager.$(OBJEXT) \
-@ENABLE_MODULES_FALSE@	IIPResponse.$(OBJEXT) View.$(OBJEXT) \
-@ENABLE_MODULES_FALSE@	ColourTransforms.$(OBJEXT) \
-@ENABLE_MODULES_FALSE@	Task.$(OBJEXT) OBJ.$(OBJEXT) \
-@ENABLE_MODULES_FALSE@	FIF.$(OBJEXT) JTL.$(OBJEXT) \
-@ENABLE_MODULES_FALSE@	TIL.$(OBJEXT) ICC.$(OBJEXT) \
-@ENABLE_MODULES_FALSE@	CVT.$(OBJEXT) Zoomify.$(OBJEXT) \
-@ENABLE_MODULES_FALSE@	DeepZoom.$(OBJEXT) SPECTRA.$(OBJEXT)
-@ENABLE_MODULES_TRUE@am_iipsrv_fcgi_OBJECTS = Main.$(OBJEXT) \
-@ENABLE_MODULES_TRUE@	IIPImage.$(OBJEXT) TPTImage.$(OBJEXT) \
-@ENABLE_MODULES_TRUE@	JPEGCompressor.$(OBJEXT) \
-@ENABLE_MODULES_TRUE@	TileManager.$(OBJEXT) \
-@ENABLE_MODULES_TRUE@	IIPResponse.$(OBJEXT) View.$(OBJEXT) \
-@ENABLE_MODULES_TRUE@	ColourTransforms.$(OBJEXT) Task.$(OBJEXT) \
-@ENABLE_MODULES_TRUE@	OBJ.$(OBJEXT) FIF.$(OBJEXT) JTL.$(OBJEXT) \
-@ENABLE_MODULES_TRUE@	TIL.$(OBJEXT) ICC.$(OBJEXT) CVT.$(OBJEXT) \
-@ENABLE_MODULES_TRUE@	Zoomify.$(OBJEXT) DeepZoom.$(OBJEXT) \
-@ENABLE_MODULES_TRUE@	SPECTRA.$(OBJEXT) DSOImage.$(OBJEXT)
+am_iipsrv_fcgi_OBJECTS = IIPImage.$(OBJEXT) TPTImage.$(OBJEXT) \
+	JPEGCompressor.$(OBJEXT) TileManager.$(OBJEXT) \
+	IIPResponse.$(OBJEXT) View.$(OBJEXT) \
+	ColourTransforms.$(OBJEXT) Task.$(OBJEXT) OBJ.$(OBJEXT) \
+	FIF.$(OBJEXT) JTL.$(OBJEXT) TIL.$(OBJEXT) ICC.$(OBJEXT) \
+	CVT.$(OBJEXT) Zoomify.$(OBJEXT) DeepZoom.$(OBJEXT) \
+	SPECTRA.$(OBJEXT)
 iipsrv_fcgi_OBJECTS = $(am_iipsrv_fcgi_OBJECTS)
-iipsrv_fcgi_LDADD = $(LDADD)
+iipsrv_fcgi_DEPENDENCIES = Main.o $(am__append_1) $(am__append_2)
 DEFAULT_INCLUDES = -I.@am__isrc@
 depcomp = $(SHELL) $(top_srcdir)/depcomp
 am__depfiles_maybe = depfiles
@@ -96,8 +77,8 @@ CCLD = $(CC)
 LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) \
 	--mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) \
 	$(LDFLAGS) -o $@
-SOURCES = $(iipsrv_fcgi_SOURCES)
-DIST_SOURCES = $(am__iipsrv_fcgi_SOURCES_DIST)
+SOURCES = $(iipsrv_fcgi_SOURCES) $(EXTRA_iipsrv_fcgi_SOURCES)
+DIST_SOURCES = $(iipsrv_fcgi_SOURCES) $(EXTRA_iipsrv_fcgi_SOURCES)
 ETAGS = etags
 CTAGS = ctags
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
@@ -129,9 +110,10 @@ ECHO_N = @ECHO_N@
 ECHO_T = @ECHO_T@
 EGREP = @EGREP@
 EXEEXT = @EXEEXT@
+EXTRAS = @EXTRAS@
 FGREP = @FGREP@
 GREP = @GREP@
-INCLUDES = @INCLUDES@ @LIBFCGI_INCLUDES@ @JPEG_INCLUDES@ @TIFF_INCLUDES@ -Wno-deprecated
+INCLUDES = @INCLUDES@ @LIBFCGI_INCLUDES@ @JPEG_INCLUDES@ @TIFF_INCLUDES@
 INSTALL = @INSTALL@
 INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
@@ -233,75 +215,40 @@ top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 AM_LDFLAGS = @LIBFCGI_LDFLAGS@ 
-@ENABLE_MODULES_FALSE@iipsrv_fcgi_SOURCES = \
-@ENABLE_MODULES_FALSE@			Main.cc \
-@ENABLE_MODULES_FALSE@			IIPImage.h \
-@ENABLE_MODULES_FALSE@			IIPImage.cc \
-@ENABLE_MODULES_FALSE@			TPTImage.h \
-@ENABLE_MODULES_FALSE@			TPTImage.cc \
-@ENABLE_MODULES_FALSE@			JPEGCompressor.h \
-@ENABLE_MODULES_FALSE@			JPEGCompressor.cc \
-@ENABLE_MODULES_FALSE@			RawTile.h \
-@ENABLE_MODULES_FALSE@			Timer.h \
-@ENABLE_MODULES_FALSE@			Cache.h \
-@ENABLE_MODULES_FALSE@			TileManager.h \
-@ENABLE_MODULES_FALSE@			TileManager.cc \
-@ENABLE_MODULES_FALSE@			Tokenizer.h \
-@ENABLE_MODULES_FALSE@			IIPResponse.h \
-@ENABLE_MODULES_FALSE@			IIPResponse.cc \
-@ENABLE_MODULES_FALSE@			View.h \
-@ENABLE_MODULES_FALSE@			View.cc \
-@ENABLE_MODULES_FALSE@			ColourTransforms.h \
-@ENABLE_MODULES_FALSE@			ColourTransforms.cc \
-@ENABLE_MODULES_FALSE@			Environment.h \
-@ENABLE_MODULES_FALSE@			Writer.h \
-@ENABLE_MODULES_FALSE@			Task.h \
-@ENABLE_MODULES_FALSE@			Task.cc \
-@ENABLE_MODULES_FALSE@			OBJ.cc \
-@ENABLE_MODULES_FALSE@			FIF.cc \
-@ENABLE_MODULES_FALSE@			JTL.cc \
-@ENABLE_MODULES_FALSE@			TIL.cc \
-@ENABLE_MODULES_FALSE@			ICC.cc \
-@ENABLE_MODULES_FALSE@			CVT.cc \
-@ENABLE_MODULES_FALSE@			Zoomify.cc \
-@ENABLE_MODULES_FALSE@			DeepZoom.cc \
-@ENABLE_MODULES_FALSE@			SPECTRA.cc
-
-@ENABLE_MODULES_TRUE@iipsrv_fcgi_SOURCES = \
-@ENABLE_MODULES_TRUE@			Main.cc \
-@ENABLE_MODULES_TRUE@			IIPImage.h \
-@ENABLE_MODULES_TRUE@			IIPImage.cc \
-@ENABLE_MODULES_TRUE@			TPTImage.h \
-@ENABLE_MODULES_TRUE@			TPTImage.cc \
-@ENABLE_MODULES_TRUE@			JPEGCompressor.h \
-@ENABLE_MODULES_TRUE@			JPEGCompressor.cc \
-@ENABLE_MODULES_TRUE@			RawTile.h \
-@ENABLE_MODULES_TRUE@			Timer.h \
-@ENABLE_MODULES_TRUE@			Cache.h \
-@ENABLE_MODULES_TRUE@			TileManager.h \
-@ENABLE_MODULES_TRUE@			TileManager.cc \
-@ENABLE_MODULES_TRUE@			Tokenizer.h \
-@ENABLE_MODULES_TRUE@			IIPResponse.h \
-@ENABLE_MODULES_TRUE@			IIPResponse.cc \
-@ENABLE_MODULES_TRUE@			View.h \
-@ENABLE_MODULES_TRUE@			View.cc \
-@ENABLE_MODULES_TRUE@			ColourTransforms.h \
-@ENABLE_MODULES_TRUE@			ColourTransforms.cc \
-@ENABLE_MODULES_TRUE@			Environment.h \
-@ENABLE_MODULES_TRUE@			Writer.h \
-@ENABLE_MODULES_TRUE@			Task.h \
-@ENABLE_MODULES_TRUE@			Task.cc \
-@ENABLE_MODULES_TRUE@			OBJ.cc \
-@ENABLE_MODULES_TRUE@			FIF.cc \
-@ENABLE_MODULES_TRUE@			JTL.cc \
-@ENABLE_MODULES_TRUE@			TIL.cc \
-@ENABLE_MODULES_TRUE@			ICC.cc \
-@ENABLE_MODULES_TRUE@			CVT.cc \
-@ENABLE_MODULES_TRUE@			Zoomify.cc \
-@ENABLE_MODULES_TRUE@			DeepZoom.cc \
-@ENABLE_MODULES_TRUE@			SPECTRA.cc \
-@ENABLE_MODULES_TRUE@			DSOImage.h \
-@ENABLE_MODULES_TRUE@			DSOImage.cc
+iipsrv_fcgi_LDADD = Main.o $(am__append_1) $(am__append_2)
+EXTRA_iipsrv_fcgi_SOURCES = DSOImage.h DSOImage.cc KakaduImage.h KakaduImage.cc Main.cc
+iipsrv_fcgi_SOURCES = \
+			IIPImage.h \
+			IIPImage.cc \
+			TPTImage.h \
+			TPTImage.cc \
+			JPEGCompressor.h \
+			JPEGCompressor.cc \
+			RawTile.h \
+			Timer.h \
+			Cache.h \
+			TileManager.h \
+			TileManager.cc \
+			Tokenizer.h \
+			IIPResponse.h \
+			IIPResponse.cc \
+			View.h \
+			View.cc \
+			ColourTransforms.h \
+			ColourTransforms.cc \
+			Environment.h \
+			Writer.h \
+			Task.h \
+			Task.cc \
+			OBJ.cc \
+			FIF.cc \
+			JTL.cc \
+			TIL.cc \
+			ICC.cc \
+			CVT.cc \
+			Zoomify.cc \
+			DeepZoom.cc \
+			SPECTRA.cc
 
 all: all-am
 
@@ -363,6 +310,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/IIPResponse.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/JPEGCompressor.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/JTL.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/KakaduImage.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Main.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/OBJ.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/SPECTRA.Po@am__quote@
@@ -575,10 +523,6 @@ uninstall-am:
 	mostlyclean-compile mostlyclean-generic mostlyclean-libtool \
 	pdf pdf-am ps ps-am tags uninstall uninstall-am
 
-
-#if ENABLE_KAKADU
-#	iipsrv_fcgi_SOURCES =  @iipsrv_fcgi_SOURCES@ KakaduImage.h KakaduImage.cc
-#endif
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
 .NOEXPORT:

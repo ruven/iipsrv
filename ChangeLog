@@ -1,3 +1,13 @@
+11/01/2010:
+	- JPEG2000 support added via the Kakadu SDK. Added new class
+	  KakaduImage derived from the IIPImage class. JPEG2000 support
+	  added thanks to Moravian Library in Brno (Moravska zemska knihovna
+	  v Brne, http://www.mzk.cz/) R&D grant MK00009494301 & Old Maps Online
+	  (http://www.oldmapsonline.org/) from the Ministry of Culture of
+	  the Czech Republic.
+	- Fix to string literal warnings in Writer.h
+
+
 08/01/2010:
 	- Major changes to the HTTP headers sent by iipsrv. Added
 	  HTTP Server id and Last-Modified timestamps to all server output.
