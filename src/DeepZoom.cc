@@ -195,13 +195,15 @@ void DeepZoom::run( Session* session, const std::string& argument ){
 
   float contrast = session->view->getContrast();
 
-  unsigned char* buf = new unsigned char[ rawtile.width*rawtile.height*rawtile.channels ];
+  unsigned char* buf;
   unsigned char* ptr = (unsigned char*) rawtile.data;
 
 
   // Convert CIELAB to sRGB, performing tile cropping if necessary
   if( (*session->image)->getColourSpace() == CIELAB ){
     if( session->loglevel >= 4 ) *(session->logfile) << "DeepZoom :: Converting from CIELAB->sRGB" << endl;
+
+    buf = new unsigned char[ rawtile.width*rawtile.height*rawtile.channels ];
     for( unsigned int j=0; j<rawtile.height; j++ ){
       for( unsigned int i=0; i<rawtile.width*rawtile.channels; i+=rawtile.channels ){
 	iip_LAB2sRGB( &ptr[j*tw*rawtile.channels + i], &buf[j*rawtile.width*rawtile.channels + i] );
@@ -219,6 +221,8 @@ void DeepZoom::run( Session* session, const std::string& argument ){
 
     float v;
     if( session->loglevel >= 4 ) *(session->logfile) << "DeepZoom :: Applying contrast scaling of " << contrast << endl;
+
+    buf = new unsigned char[ rawtile.width*rawtile.height*rawtile.channels ];
     for( unsigned int j=0; j<rawtile.height; j++ ){
       for( unsigned int i=0; i<rawtile.width*rawtile.channels; i++ ){
 
@@ -269,7 +273,6 @@ void DeepZoom::run( Session* session, const std::string& argument ){
       *(session->logfile) << "DeepZoom :: Error writing jpeg tile" << endl;
     }
   }
-
 
   session->out->printf( "\r\n" );
 

@@ -184,13 +184,15 @@ void Zoomify::run( Session* session, const std::string& argument ){
 
   float contrast = session->view->getContrast();
 
-  unsigned char* buf = new unsigned char[ rawtile.width*rawtile.height*rawtile.channels ];
+  unsigned char* buf;
   unsigned char* ptr = (unsigned char*) rawtile.data;
 
 
   // Convert CIELAB to sRGB, performing tile cropping if necessary
   if( (*session->image)->getColourSpace() == CIELAB ){
     if( session->loglevel >= 4 ) *(session->logfile) << "Zoomify :: Converting from CIELAB->sRGB" << endl;
+
+    buf = new unsigned char[ rawtile.width*rawtile.height*rawtile.channels ];
     for( unsigned int j=0; j<rawtile.height; j++ ){
       for( unsigned int i=0; i<rawtile.width*rawtile.channels; i+=rawtile.channels ){
 	iip_LAB2sRGB( &ptr[j*tw*rawtile.channels + i], &buf[j*rawtile.width*rawtile.channels + i] );
@@ -208,6 +210,8 @@ void Zoomify::run( Session* session, const std::string& argument ){
 
     float v;
     if( session->loglevel >= 4 ) *(session->logfile) << "Zoomify :: Applying contrast scaling of " << contrast << endl;
+
+    buf = new unsigned char[ rawtile.width*rawtile.height*rawtile.channels ];
     for( unsigned int j=0; j<rawtile.height; j++ ){
       for( unsigned int i=0; i<rawtile.width*rawtile.channels; i++ ){
 
@@ -259,7 +263,6 @@ void Zoomify::run( Session* session, const std::string& argument ){
     }
   }
 
-
   session->out->printf( "\r\n" );
 
   if( session->out->flush() == -1 ) {
@@ -271,6 +274,7 @@ void Zoomify::run( Session* session, const std::string& argument ){
 
   // Inform our response object that we have sent something to the client
   session->response->setImageSent();
+
 
   // Total Zoomify response time
   if( session->loglevel >= 2 ){
