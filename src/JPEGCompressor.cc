@@ -185,7 +185,6 @@ void JPEGCompressor::InitCompression( RawTile& rawtile, unsigned int strip_heigh
   //  or something like that. So, we use an extern "C" function declared at the top
   //  of this file and pass our arguments through this. I'm sure there's a better
   //  way of doing this, but this seems to work :/
-
   setup_error_functions( &cinfo );
 
   jpeg_create_compress( &cinfo );
@@ -226,8 +225,6 @@ void JPEGCompressor::InitCompression( RawTile& rawtile, unsigned int strip_heigh
   cinfo.dct_method = JDCT_FASTEST;
 
   jpeg_set_quality( &cinfo, Q, TRUE );
-
-  jpeg_write_tables(&cinfo);
 
   jpeg_start_compress( &cinfo, TRUE );
 
@@ -315,7 +312,7 @@ unsigned int JPEGCompressor::Finish() throw (string)
   // Tidy up and de-allocate memory
   // There seems to be a problem with jpeg_finish_compress :-(
   // We've manually added the EOI markers, so we don't have to bother calling it
-  //   jpeg_finish_compress( &cinfo );
+  //jpeg_finish_compress( &cinfo );
   jpeg_destroy_compress( &cinfo );
   
 

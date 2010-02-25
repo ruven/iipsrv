@@ -1,3 +1,9 @@
+23/02/2010:
+	- Modified JPEGCompressor.cc to fix compatibility problem with
+	  libjpeg version 8. Simply removed jpeg_write_tables from
+	  InitCompression function.
+
+
 09/02/2010:
 	- Fixed memory leak in Zoomify.cc and DeepZoom.cc
 

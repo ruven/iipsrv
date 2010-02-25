@@ -36,9 +36,9 @@ doc subdirectory
 
 LICENCE:
 -------
-iipsrv is released under the Gnu Public License (GPL) See the copyright notice
-COPYING in this directory for licensing details or go to http://www.gnu.org for
-more details.
+iipsrv is released under the GNU General Public License (GPL). See the copyright
+notice COPYING in this directory for licensing details or go to
+http://www.gnu.org/licenses/gpl.html for more details.
 
 If you use IIPImage on a public site and remove the IIP link logo from the 
 client, you must provide a link on your site back to the IIPImage site - 
