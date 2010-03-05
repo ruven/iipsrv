@@ -1,3 +1,8 @@
+05/03/2010:
+	- Another fix to JPEGCompressor.cc to fix a crash with very small
+	  tiles with libjpeg-8.
+
+
 23/02/2010:
 	- Modified JPEGCompressor.cc to fix compatibility problem with
 	  libjpeg version 8. Simply removed jpeg_write_tables from

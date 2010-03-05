@@ -89,7 +89,7 @@ iip_init_destination (j_compress_ptr cinfo)
      However, this seems to break something in Kakadu, so disable in this case
   */
 #ifndef HAVE_KAKADU
-  mx += 1024;
+    mx += 1024;
 #endif
 
 
@@ -385,7 +385,7 @@ int JPEGCompressor::Compress( RawTile& rawtile ) throw (string)
   dest->strip_height = 0;
 
   //  dest->source = data;
-  unsigned char t[width*height*channels];
+  unsigned char t[width*height*channels+1024]; // Add an extra 1k for extra buffering
   dest->source = &t[0];
 
   // Set floating point quality (highest, but possibly slower depending
