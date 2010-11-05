@@ -52,7 +52,7 @@ void Watermark::init()
 	return;
       }
 
-      // Set our number of channels to 3 as TIFFReadRGBAImage always outputs a colour image
+      // Set our number of channels to 3 as TIFFReadRGBAImage always outputs an 8bit colour image
       _channels = 3;
 
       // Set up the memory storage
@@ -115,19 +115,15 @@ void Watermark::apply( void* data, unsigned int width, unsigned int height, unsi
 
 	  unsigned int id = (j+yoffset)*width*channels + (i+xoffset)*channels + k;
 
-	  // For 16bit images
+	  // For 16bit images we need to multiply up as our watermark data is always 8bit
 	  if( bpc == 16 ){
 	    unsigned short* d = (unsigned short*) data;
-	    // If our tile is 16 bit but our watermark is 8, multiply it up
-	    if( _bpc == 8 ) d[id] += _watermark[j*_width*_channels + i*_channels + k] * 256;
-	    else d[id] += _watermark[j*_width*_channels + i*_channels + k];	      
+	    d[id] += (unsigned short) _watermark[j*_width*_channels + i*_channels + k] * 256.0;
 	  }
-	  // For 8bit images
+	  // TIFFReadRGBAImage always scales to 8bit, so never any need for downscaling
 	  else{
 	    unsigned char* d = (unsigned char*) data;
-	    // If our tile is 8 bit but our watermark is 16, divide down
-	    if( _bpc == 16 ) d[id] += _watermark[j*_width*_channels + i*_channels + k] / 256;
-	    else d[id] += _watermark[j*_width*_channels + i*_channels + k];
+	    d[id] += _watermark[j*_width*_channels + i*_channels + k];
 	  }
 	}
       }
