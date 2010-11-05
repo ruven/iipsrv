@@ -159,7 +159,7 @@ void Zoomify::run( Session* session, const std::string& argument ){
 
 
   // Get our tile
-  TileManager tilemanager( session->tileCache, *session->image, session->jpeg, session->logfile, session->loglevel );
+  TileManager tilemanager( session->tileCache, *session->image, session->watermark, session->jpeg, session->logfile, session->loglevel );
 
   CompressionType ct;
   if( (*session->image)->getColourSpace() == CIELAB ) ct = UNCOMPRESSED;

@@ -50,5 +50,7 @@ iipsrv_fcgi_SOURCES = \
 			CVT.cc \
 			Zoomify.cc \
 			DeepZoom.cc \
-			SPECTRA.cc
+			SPECTRA.cc \
+			Watermark.h \
+			Watermark.cc
 

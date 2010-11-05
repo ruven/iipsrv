@@ -42,7 +42,8 @@
 #include "Task.h"
 #include "Environment.h"
 #include "Writer.h"
-
+#include "Watermark.h"
+#include "Memcached.h"
 
 #ifdef ENABLE_DL
 #include "DSOImage.h"
@@ -201,12 +202,23 @@ int main( int argc, char *argv[] )
   string filesystem_prefix = Environment::getFileSystemPrefix();
 
 
+  // Set up our watermark object
+  Watermark watermark( Environment::getWatermark(),
+		       Environment::getWatermarkOpacity(),
+		       Environment::getWatermarkProbability() );
+
+
   if( loglevel >= 1 ){
     logfile << "Setting maximum image cache size to " << max_image_cache_size << "MB" << endl;
     logfile << "Setting filesystem prefix to '" << filesystem_prefix << "'" << endl;
     logfile << "Setting default JPEG quality to " << jpeg_quality << endl;
     logfile << "Setting maximum CVT size to " << max_CVT << endl;
     logfile << "Setting 3D file sequence name pattern to '" << filename_pattern << "'" << endl;
+    if( watermark.getImage().length() > 0 ){
+      logfile << "Setting watermark image to '" << watermark.getImage()
+	      << "' with probability " << watermark.getProbability()
+	      << " and opacity " << watermark.getOpacity() << endl;
+    }
     if( max_layers > 0 ) logfile << "Setting max quality layers (for supported file formats) to " << max_layers << endl;
 #ifdef HAVE_KAKADU
     logfile << "Setting up JPEG2000 support via Kakadu SDK" << endl;
@@ -261,6 +273,12 @@ int main( int argc, char *argv[] )
 
 
 
+  // Load our watermark image if we have one
+  if( loglevel >= 2 ) logfile << "Loading watermark" << endl;
+  watermark.init();
+
+
+
 
 
   /***********************************************************
@@ -287,8 +305,11 @@ int main( int argc, char *argv[] )
   }
 
 
-  // Set up some timers and create our tile cache
+  // Set up our request timers and seed our random number generator with the millisecond count from it
   Timer request_timer;
+  srand( request_timer.getTime() );
+
+  // Create our tile cache
   Cache tileCache( max_image_cache_size );
   Task* task = NULL;
 
@@ -334,6 +355,9 @@ int main( int argc, char *argv[] )
     if( max_layers > 0 ) view.setMaxLayers( max_layers );
 
 
+
+
+
     // Create an IIPResponse object - we use this for the OBJ requests.
     // As the commands return images etc, they handle their own responses.
     IIPResponse response;
@@ -369,6 +393,7 @@ int main( int argc, char *argv[] )
       session.imageCache = &imageCache;
       session.tileCache = &tileCache;
       session.out = &writer;
+      session.watermark = &watermark;
       session.headers.empty();
 
       // Get certain HTTP headers, such as if modified since

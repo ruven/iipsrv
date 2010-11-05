@@ -6,6 +6,8 @@ TODO:
    - Asynchronous via asio or libevent
 * Improved cache using shared memory or memcached
 * ICC profile integration via lcms library
-* Rotation / transposition support
+* Lossless Rotation / transposition support for JPEG tiles
 * JPEG source image support
-* JPEG2000 source image support
+* Move all contrast adjustments, colour space changes etc into new Filter class
+* Clean up CVT code
+* Standardize tile cropping

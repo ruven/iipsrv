@@ -82,6 +82,7 @@ struct Session {
   JPEGCompressor* jpeg;
   View* view;
   IIPResponse* response;
+  Watermark* watermark;
   int loglevel;
   std::ofstream* logfile;
   std::map <const std::string, std::string> headers;

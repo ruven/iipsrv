@@ -128,7 +128,7 @@ void TIL::run( Session* session, const std::string& a ){
       int n = i + (j*ntlx);
 
       // Get our tile using our tile manager
-      TileManager tilemanager( session->tileCache, *session->image, session->jpeg, session->logfile, session->loglevel );
+      TileManager tilemanager( session->tileCache, *session->image, session->watermark, session->jpeg, session->logfile, session->loglevel );
       RawTile rawtile = tilemanager.getTile( resolution, n, session->view->xangle,
 					     session->view->yangle, session->view->layers, JPEG );
 

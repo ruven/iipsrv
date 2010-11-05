@@ -4,7 +4,7 @@
 
 /*  IIP Server: Tile Cache Handler
 
-    Copyright (C) 2005-2009 Ruven Pillay.
+    Copyright (C) 2005-2010 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -40,9 +40,20 @@ RawTile TileManager::getNewTile( int resolution, int tile, int xangle, int yangl
   RawTile ttt;
   int len = 0;
 
-  // Get our raw tile
+  // Get our raw tile from the IIPImage image object
   ttt = image->getTile( xangle, yangle, resolution, layers, tile );
 
+
+  // Apply the watermark if we have one
+  if( watermark && watermark->isSet() ){
+    if( loglevel >= 2 ) insert_timer.start();
+    watermark->apply( ttt.data, ttt.width, ttt.height, ttt.channels, ttt.bpc );
+    if( loglevel >= 2 ) *logfile << "TileManager :: Watermark applied: " << insert_timer.getTime()
+				 << " microseconds" << endl;
+  }
+
+
+  // Add our uncompressed tile directly into our cache
   if( c == UNCOMPRESSED ){
     // Add to our tile cache
     if( loglevel >= 2 ) insert_timer.start();

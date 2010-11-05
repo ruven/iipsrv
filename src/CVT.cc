@@ -283,7 +283,7 @@ void CVT::run( Session* session, const std::string& a ){
 	if( session->loglevel >= 2 ) tile_timer.start();
 
 	// Get an uncompressed tile from our TileManager
-	TileManager tilemanager( session->tileCache, *session->image, session->jpeg, session->logfile, session->loglevel );
+	TileManager tilemanager( session->tileCache, *session->image, session->watermark, session->jpeg, session->logfile, session->loglevel );
 	RawTile rawtile = tilemanager.getTile( requested_res, (i*ntlx) + j, session->view->xangle, session->view->yangle,
 					       session->view->layers, UNCOMPRESSED );
 

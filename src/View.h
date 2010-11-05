@@ -23,6 +23,9 @@
 #define _VIEW_H
 
 
+#include <cstddef>
+
+
 /// Class to intelligently handle Image Transforms
 
 class View{
@@ -42,6 +45,7 @@ class View{
   unsigned int requested_height;              /// Height requested by HEI command
   float contrast;                             /// Contrast adjustment requested by CNT command
 
+
   /// Internal function to calculate the resolution associated with a width
   ///  or height request. This also takes into account maximum size limits.
   /** \param m maximum size
@@ -58,6 +62,7 @@ class View{
   int shade[3];                                /// Shading incident light angles (x,y,z)
   int max_layers;			       /// Maximum number of quality layers allowed
   int layers;			               /// Number of quality layers
+
 
   /// Constructor
   View() {

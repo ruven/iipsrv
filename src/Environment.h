@@ -32,6 +32,10 @@
 #define MAX_CVT 5000
 #define MAX_LAYERS 0
 #define FILESYSTEM_PREFIX ""
+#define WATERMARK ""
+#define WATERMARK_PROBABILITY 1.0
+#define WATERMARK_OPACITY 1.0
+
 
 #include <string>
 
@@ -130,6 +134,47 @@ class Environment {
 
     return filesystem_prefix;
   }
+
+
+  static std::string getWatermark(){
+    char* envpara = getenv( "WATERMARK" );
+    std::string watermark;
+    if( envpara ){
+      watermark = std::string( envpara );
+    }
+    else watermark = WATERMARK;
+
+    return watermark;
+  }
+
+
+  static float getWatermarkProbability(){
+    float watermark_probability = WATERMARK_PROBABILITY;
+    char* envpara = getenv( "WATERMARK_PROBABILITY" );
+
+    if( envpara ){
+      watermark_probability = atof( envpara ); 
+      if( watermark_probability > 1.0 ) watermark_probability = 1.0; 
+      if( watermark_probability < 0 ) watermark_probability = 0.0; 
+    }
+
+    return watermark_probability;
+  }
+
+
+  static float getWatermarkOpacity(){ 
+    float watermark_opacity = WATERMARK_OPACITY;
+    char* envpara = getenv( "WATERMARK_OPACITY" );
+
+    if( envpara ){
+      watermark_opacity = atof( envpara );
+      if( watermark_opacity > 1.0 ) watermark_opacity = 1.0;
+      if( watermark_opacity < 0 ) watermark_opacity = 0.0;
+    }
+
+    return watermark_opacity;
+  }
+
 
 };
 

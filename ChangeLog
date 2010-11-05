@@ -1,3 +1,13 @@
+31/10/2010:
+	- Added simple watermarking support via Watermark class. New environment
+	  variables added for the watermark image, the opacity and probability.
+	  Changes mainly to the TileManager and Session class. Watermarking happens
+	  transparently within the TileManager class for all tiles. Thanks to
+	  Moravian Library in Brno (Moravska zemska knihovna v Brne, http://www.mzk.cz/)
+	  R&D grant MK00009494301 & Old Maps Online (http://www.oldmapsonline.org/)
+	  from the Ministry of Culture of the Czech Republic.
+
+
 15/09/2010:
 	- Modified IIPImage.cc to enable handling of images with spectral band
 	  indices with mixtures of 3 or 4 digits. For example, H1_pyr_000_090.tif

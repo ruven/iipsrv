@@ -51,7 +51,7 @@ void JTL::run( Session* session, const std::string& argument ){
 
 
 
-  TileManager tilemanager( session->tileCache, *session->image, session->jpeg, session->logfile, session->loglevel );
+  TileManager tilemanager( session->tileCache, *session->image, session->watermark, session->jpeg, session->logfile, session->loglevel );
 
   CompressionType ct;
   if( (*session->image)->getColourSpace() == CIELAB ) ct = UNCOMPRESSED;
@@ -95,7 +95,7 @@ void JTL::run( Session* session, const std::string& argument ){
     rawtile.data = buf;
   }
 
-  // Handle 16bit images or contrast adjustments
+  // Handle 16bit images or contrast adjustments, performing tile cropping if necessary
   else if( (rawtile.bpc==16) || (contrast !=1.0) ){
 
     // Normalise 16bit images to 8bit for JPEG
