@@ -63,13 +63,15 @@ void Watermark::init()
       for( uint32 i=0; i<_width*_height; i++ ){
 	uint32 rgba = buffer[i];
 	unsigned char r,g,b;
-	// Extract the RGB values
+	float a;
+	// Extract the RGBA values
 	r = (unsigned char) TIFFGetR(rgba);
 	g = (unsigned char) TIFFGetG(rgba);
 	b = (unsigned char) TIFFGetB(rgba);
-	_watermark[i*3] = r * _opacity;
-	_watermark[i*3 + 1] = g * _opacity;
-	_watermark[i*3 + 2] = b * _opacity;
+	a = (float) TIFFGetA(rgba) / 255;
+	_watermark[i*3] = r * _opacity * a;
+	_watermark[i*3 + 1] = g * _opacity * a;
+	_watermark[i*3 + 2] = b * _opacity * a;
       }
     }
 
