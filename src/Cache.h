@@ -2,7 +2,7 @@
 
 /*  IIP Image Server
 
-    Copyright (C) 2005-2009 Ruven Pillay.
+    Copyright (C) 2005-2010 Ruven Pillay.
     Based on an LRU cache by Patrick Audley <http://blackcat.ca/lifeline/query.php/tag=LRU_CACHE>
     Copyright (C) 2004 by Patrick Audley
 
@@ -137,7 +137,7 @@ class Cache {
   void _remove( const TileMap::iterator &miter ) {
     // Reduce our current size counter
     currentSize -= ( (miter->second->second).dataLength +
-		     (miter->second->second).filename.length()*sizeof(char) +
+		     ((miter->second->second).filename.capacity()+1)*sizeof(char) +
 		     tileSize );
     tileList.erase( miter->second );
     tileMap.erase( miter );
@@ -202,8 +202,10 @@ class Cache {
     List_Iter liter = tileList.begin();
     tileMap[ key ] = liter;
 
-    // Update our total current size variable
-    currentSize += (r.dataLength + r.filename.capacity()*sizeof(char) + tileSize);
+    // Update our total current size variable. Use the string::capacity function
+    // rather than length() as std::string can allocate slightly more than necessary
+    // The +1 is for the terminating null byte
+    currentSize += (r.dataLength + (r.filename.capacity()+1)*sizeof(char) + tileSize);
 
     // Check to see if we need to remove an element due to exceeding max_size
     while( currentSize > maxSize ) {
