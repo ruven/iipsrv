@@ -203,7 +203,7 @@ class Cache {
     tileMap[ key ] = liter;
 
     // Update our total current size variable
-    currentSize += (r.dataLength + r.filename.length()*sizeof(char) + tileSize);
+    currentSize += (r.dataLength + r.filename.capacity()*sizeof(char) + tileSize);
 
     // Check to see if we need to remove an element due to exceeding max_size
     while( currentSize > maxSize ) {
