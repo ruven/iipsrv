@@ -8,7 +8,7 @@ AM_INIT_AUTOMAKE
 AC_PREFIX_DEFAULT( `pwd` )
 
 
-dnl Checks for programs.
+# Checks for programs.
 AC_PROG_CXX
 AC_PROG_AWK
 AC_PROG_CC
@@ -25,7 +25,7 @@ AC_TYPE_SIZE_T
 LT_INIT
 
 
-dnl Checks for header files.
+# Checks for header files.
 AC_CHECK_HEADERS(glob.h)
 AC_CHECK_HEADERS(time.h)
 AC_CHECK_HEADERS(sys/time.h)
@@ -35,7 +35,7 @@ AC_FUNC_MALLOC
 AC_CHECK_FUNCS([floor gettimeofday pow sqrt])
 
 
-dnl For our windows build
+# For our windows build
 AC_CHECK_HEADERS(windows.h)
 
 
@@ -43,76 +43,86 @@ AC_CHECK_HEADERS(windows.h)
 AC_SYS_LARGEFILE
 
 
-dnl	************************************************************ 
+#************************************************************ 
 
 
-dnl Check for compile options.
-dnl AC_ARG_ENABLE(debug,
-dnl     [  --enable-debug          compile with debugging on],
-dnl     , )
-dnl AC_DEFINE(DEBUG))
+# Check for compile options.
+# AC_ARG_ENABLE(debug,
+#     [  --enable-debug          compile with debugging on],
+#     , )
+# AC_DEFINE(DEBUG))
 
 
-dnl	************************************************************ 
+#************************************************************ 
 
 
-dnl 	Check for a user specified location for libjpeg
+# Check for a user specified location for libjpeg
 
-dnl AC_ARG_WITH(libjpeg-incl,
-dnl   [  --with-libjpeg-incl=DIR     location of the jpeg library include files],
-dnl   jpeg_incl=-I$withval)
+# AC_ARG_WITH(libjpeg-incl,
+#   [  --with-libjpeg-incl=DIR     location of the jpeg library include files],
+#   jpeg_incl=-I$withval)
 
-dnl AC_ARG_WITH(libjpeg-lib,
-dnl   [  --with-libjpeg-lib=DIR     location of the jpeg library files],
-dnl   jpeg_lib=-L$withval)
+# AC_ARG_WITH(libjpeg-lib,
+#   [  --with-libjpeg-lib=DIR     location of the jpeg library files],
+#   jpeg_lib=-L$withval)
 
-dnl AC_CHECK_LIB(jpeg, jpeg_destroy_decompress,
-dnl   LIBJPEG_INCL=$jpeg_incl; LIBJPEG_LIB="$jpeg_lib -ljpeg",
-dnl   AC_MSG_ERROR(unable to find libjpeg),
-dnl   $jpeg_lib)
+# AC_CHECK_LIB(jpeg, jpeg_destroy_decompress,
+#   LIBJPEG_INCL=$jpeg_incl; LIBJPEG_LIB="$jpeg_lib -ljpeg",
+#   AC_MSG_ERROR(unable to find libjpeg),
+#   $jpeg_lib)
 
 FIND_JPEG(,[AC_MSG_ERROR([libjpeg not found])])
 
 
-dnl	************************************************************ 
 
-dnl	Check for a standard libz
+#************************************************************ 
+# Check for a standard libz
 
 AC_CHECK_LIB(z, gzopen)
 
-dnl	************************************************************ 
+#************************************************************ 
 
 
-dnl 	Check for user specified location for libtiff
 
-dnl AC_ARG_WITH(libtiff-incl,
-dnl   [  --with-libtiff-incl=DIR     location of the tiff library include files],
-dnl   tiff_incl=-I$withval)
+#************************************************************
+# Check for libmemecached
 
-dnl AC_ARG_WITH(libtiff-lib,
-dnl   [  --with-libtiff-lib=DIR     location of the tiff library files],
-dnl   tiff_lib=-L$withval)
+AC_CHECK_HEADERS(libmemcached/memcached.h, AC_CHECK_LIB(memcached, memcached_create, LIBS="${LIBS} -lmemcached";AC_DEFINE(HAVE_MEMCACHED) ) )
 
-dnl AC_CHECK_LIB(tiff, TIFFReadScanline,
-dnl   LIBTIFF_INCL=$tiff_incl; LIBTIFF_LIB="$tiff_lib -ltiff -ljpeg -lm",
-dnl   AC_MSG_ERROR(unable to find libtiff),
-dnl   $tiff_lib -ljpeg -lm)
+#************************************************************
+
+
+
+# Check for user specified location for libtiff
+
+# AC_ARG_WITH(libtiff-incl,
+#   [  --with-libtiff-incl=DIR     location of the tiff library include files],
+#   tiff_incl=-I$withval)
+
+# AC_ARG_WITH(libtiff-lib,
+#   [  --with-libtiff-lib=DIR     location of the tiff library files],
+#   tiff_lib=-L$withval)
+
+# AC_CHECK_LIB(tiff, TIFFReadScanline,
+#   LIBTIFF_INCL=$tiff_incl; LIBTIFF_LIB="$tiff_lib -ltiff -ljpeg -lm",
+#   AC_MSG_ERROR(unable to find libtiff),
+#   $tiff_lib -ljpeg -lm)
 
 
 FIND_TIFF(,[AC_MSG_ERROR([libtiff not found])])
 
 
-dnl     ************************************************************
+#************************************************************
 
-dnl     Check for little cms library
+# Check for little cms library
 
 AC_CHECK_HEADERS(lcms/lcms.h, AC_CHECK_LIB(lcms, cmsOpenProfileFromMem, LIBS="${LIBS} -llcms";AC_DEFINE(LCMS) ) )
 
 
 
-dnl	************************************************************ 
+#************************************************************ 
 
-dnl 	Check for user specified locations for fast cgi library
+# Check for user specified locations for fast cgi library
 
 
 AC_ARG_WITH( fcgi-incl,
@@ -136,10 +146,10 @@ AC_SUBST(LIBFCGI_INCLUDES)
 AC_SUBST(LIBFCGI_LDFLAGS)
 AC_SUBST(LIBFCGI_LIBS)
 
-dnl	************************************************************ 
+#************************************************************ 
 
 
-dnl Check for libdl for dynamic library loading
+# Check for libdl for dynamic library loading
 
 AC_ARG_ENABLE(modules,
     [  --enable-modules       enable dynamic module loading] )
@@ -162,9 +172,9 @@ AM_CONDITIONAL( ENABLE_MODULES, test x$modules = xtrue )
 AC_SUBST(DL_LIBS)
 
 
-dnl	************************************************************
+#************************************************************
 
-dnl 	Check for Kakadu JPEG2000 library
+# 	Check for Kakadu JPEG2000 library
 
 AC_ARG_WITH( kakadu,
    [  --with-kakadu=DIR          location of the kakadu source files],
@@ -191,14 +201,14 @@ AC_SUBST(LIBS)
 
 
 
-dnl	************************************************************
-dnl     FCGI library configure
-dnl	************************************************************
+#************************************************************
+#     FCGI library configure
+#************************************************************
 
 
 AC_LANG([C++])
 
-dnl autoconf defaults CXX to 'g++', so its unclear whether it exists/works
+# autoconf defaults CXX to 'g++', so its unclear whether it exists/works
 AC_MSG_CHECKING([whether $CXX works])
 AC_TRY_COMPILE([#include <iostream>], 
                [std::cout << "ok";], 

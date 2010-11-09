@@ -5,7 +5,7 @@ noinst_PROGRAMS =	iipsrv.fcgi
 
 INCLUDES =		@INCLUDES@ @LIBFCGI_INCLUDES@ @JPEG_INCLUDES@ @TIFF_INCLUDES@
 LIBS =			@LIBS@ @LIBFCGI_LIBS@ @DL_LIBS@ @JPEG_LIBS@ @TIFF_LIBS@ -lz -lm
-AM_LDFLAGS =		@LIBFCGI_LDFLAGS@ 
+AM_LDFLAGS =		@LIBFCGI_LDFLAGS@
 
 iipsrv_fcgi_LDADD = Main.o
 
@@ -17,7 +17,7 @@ if ENABLE_MODULES
 iipsrv_fcgi_LDADD += DSOImage.o
 endif
 
-EXTRA_iipsrv_fcgi_SOURCES = DSOImage.h DSOImage.cc KakaduImage.h KakaduImage.cc Main.cc
+EXTRA_iipsrv_fcgi_SOURCES = DSOImage.h DSOImage.cc KakaduImage.h KakaduImage.cc Memcached.h Main.cc
 
 iipsrv_fcgi_SOURCES = \
 			IIPImage.h \
