@@ -43,7 +43,6 @@
 #include "Environment.h"
 #include "Writer.h"
 #include "Watermark.h"
-#include "Memcached.h"
 
 #ifdef ENABLE_DL
 #include "DSOImage.h"
