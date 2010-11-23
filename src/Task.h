@@ -34,6 +34,8 @@
 #include "Timer.h"
 #include "Writer.h"
 #include "Cache.h"
+#include "Watermark.h"
+
 
 // Define our http header cache max age
 #define MAX_AGE 86400

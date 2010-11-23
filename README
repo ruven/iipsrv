@@ -24,6 +24,7 @@ FEATURES:
 * 3D panoramic views 
 * Dynamic hillshading of 3D surface topologies
 * Dynamic watermarking
+* Memcached support
 * Dynamic decoder module capability
 
 
@@ -131,6 +132,12 @@ WATERMARK_PROBABILITY: The probability that a particilar tile will have a waterm
 applied to it. 0 means never, 1 means always.
 
 WATERMARK_OPACITY: The opacity (between 0 and 1) applied to the watermark image.
+
+MEMCACHED_SERVERS: A comma-delimitted list of memcached servers with optional
+port numbers. For example: localhost,192.168.0.1:8888,192.168.0.2.
+
+MEMCACHED_TIMEOUT: (Optional) Time in seconds that cache remains fresh.
+Default is 3600 seconds (1 hour).
 
 DECODER_MODULES: Comma separated list of external modules for decoding 
 other image formats. This is only necessary if you have activated 

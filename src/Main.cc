@@ -42,7 +42,10 @@
 #include "Task.h"
 #include "Environment.h"
 #include "Writer.h"
-#include "Watermark.h"
+
+#ifdef HAVE_MEMCACHED
+#include "Memcached.h"
+#endif
 
 #ifdef ENABLE_DL
 #include "DSOImage.h"
@@ -207,6 +210,14 @@ int main( int argc, char *argv[] )
 		       Environment::getWatermarkProbability() );
 
 
+#ifdef HAVE_MEMCACHED
+  // Get our list of memcached servers if we have any and the timeout
+  string memcached_servers = Environment::getMemcachedServers();
+  unsigned int memcached_timeout = Environment::getMemcachedTimeout();
+#endif
+
+
+  // 
   if( loglevel >= 1 ){
     logfile << "Setting maximum image cache size to " << max_image_cache_size << "MB" << endl;
     logfile << "Setting filesystem prefix to '" << filesystem_prefix << "'" << endl;
@@ -219,9 +230,14 @@ int main( int argc, char *argv[] )
 	      << " and opacity " << watermark.getOpacity() << endl;
     }
     if( max_layers > 0 ) logfile << "Setting max quality layers (for supported file formats) to " << max_layers << endl;
+#ifdef HAVE_MEMCACHED
+    logfile << "Setting list of Memcached servers to '" << memcached_servers << "'"
+	    << " with timeout " << memcached_timeout << endl;
+#endif
 #ifdef HAVE_KAKADU
     logfile << "Setting up JPEG2000 support via Kakadu SDK" << endl;
 #endif
+    logfile << endl;
   }
 
 
@@ -271,13 +287,20 @@ int main( int argc, char *argv[] )
 #endif
 
 
-
   // Load our watermark image if we have one
   if( loglevel >= 2 ) logfile << "Loading watermark" << endl;
   watermark.init();
 
 
 
+#ifdef HAVE_MEMCACHED
+  // Create our memcached object
+  Memcache memcached( memcached_servers, memcached_timeout );
+  if( loglevel >= 2 ){
+    if( memcached.connected() ) logfile << "Connected to Memcached servers" << endl;
+    else logfile << "Unable to connect to Memcached servers" << memcached.error() << endl;
+  }
+#endif
 
 
   /***********************************************************
@@ -366,9 +389,9 @@ int main( int argc, char *argv[] )
       
       // Get the query into a string
 #ifdef DEBUG
-      string request_string = argv[1];
+      const string request_string = argv[1];
 #else
-      string request_string = FCGX_GetParam( "QUERY_STRING", request.envp );
+      const string request_string = FCGX_GetParam( "QUERY_STRING", request.envp );
 #endif
 
       // Check that we actually have a request string
@@ -379,6 +402,17 @@ int main( int argc, char *argv[] )
       if( loglevel >=2 ){
 	logfile << "Full Request is " << request_string << endl;
       }
+
+
+#ifdef HAVE_MEMCACHED
+      // Check whether this exists in memcached
+      char* memcached_response = NULL;
+      if( memcached_response = memcached.retrieve( request_string ) ){
+	writer.putStr( memcached_response, memcached.length() );
+	writer.flush();
+	throw( 100 );
+      }
+#endif
 
 
       // Set up our session data object
@@ -395,7 +429,7 @@ int main( int argc, char *argv[] )
       session.watermark = &watermark;
       session.headers.empty();
 
-      // Get certain HTTP headers, such as if modified since
+      // Get certain HTTP headers, such as if_modified_since and the query_string
       char* header = NULL;
       if( (header = FCGX_GetParam("HTTP_IF_MODIFIED_SINCE", request.envp)) ){
 	session.headers["HTTP_IF_MODIFIED_SINCE"] = string(header);
@@ -403,6 +437,8 @@ int main( int argc, char *argv[] )
 	  logfile << "HTTP Header: If-Modified-Since: " << session.headers["HTTP_IF_MODIFIED_SINCE"] << endl;
 	}
       }
+      session.headers["QUERY_STRING"] = request_string;
+
 
       // Parse up the command list
 
@@ -473,10 +509,27 @@ int main( int argc, char *argv[] )
 	    response.formatResponse() <<
 	    endl << "---" << endl;
 	}
-	if( writer.putS( response.formatResponse().c_str() ) == -1 ){
+	if( writer.printf( response.formatResponse().c_str() ) == -1 ){
 	  if( loglevel >= 1 ) logfile << "Error sending IIPResponse" << endl;
 	}
       }
+
+
+      ////////////////////////////////////////////////////////
+      ////////// Insert the result into Memcached ////////////
+      ////////////////////////////////////////////////////////
+
+#ifdef HAVE_MEMCACHED
+      if( memcached.connected() ){
+	Timer memcached_timer;
+	memcached_timer.start();
+	memcached.store( session.headers["QUERY_STRING"], writer.buffer, writer.sz );
+	if( loglevel >= 3 ){
+	  logfile << "Memcached :: stored " << writer.sz << " bytes in "
+		  << memcached_timer.getTime() << " microseconds" << endl;
+	}
+      }
+#endif
 
 
 
@@ -502,6 +555,12 @@ int main( int argc, char *argv[] )
 	  }
 	  break;
 
+        case 100:
+	  if( loglevel >= 1 ){
+	    logfile << "Memcached hit" << endl;
+	  }
+	  break;
+
         default:
           if( loglevel >= 1 ){
 	    logfile << "Unsupported HTTP status code: " << code << endl << endl;
@@ -523,14 +582,14 @@ int main( int argc, char *argv[] )
 	    response.formatResponse() <<
 	    endl << "---" << endl;
 	}
-	if( writer.putS( response.formatResponse().c_str() ) == -1 ){
+	if( writer.printf( response.formatResponse().c_str() ) == -1 ){
 	  if( loglevel >= 1 ) logfile << "Error sending IIPResponse" << endl;
 	}
       }
       else{
 	/* Display our advertising banner ;-)
 	 */
-	writer.putS( response.getAdvert( version ).c_str() );
+	writer.printf( response.getAdvert( version ).c_str() );
       }
 
     }
@@ -545,7 +604,7 @@ int main( int argc, char *argv[] )
 
       /* Display our advertising banner ;-)
        */
-      writer.putS( response.getAdvert( version ).c_str() );
+      writer.printf( response.getAdvert( version ).c_str() );
 
     }
 
@@ -561,6 +620,8 @@ int main( int argc, char *argv[] )
 #ifdef DEBUG
     fclose( f );
 #endif
+
+
 
     // How long did this request take?
     if( loglevel >= 2 ){

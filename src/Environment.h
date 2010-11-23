@@ -1,7 +1,7 @@
 /*
     IIP Environment Variable Class
 
-    Copyright (C) 2006-2009 Ruven Pillay.
+    Copyright (C) 2006-2010 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -23,7 +23,7 @@
 
 
 /* Define some default values
- */
+ */ 
 #define VERBOSITY 1
 #define LOGFILE "/tmp/iipsrv.log"
 #define MAX_IMAGE_CACHE_SIZE 10.0
@@ -35,6 +35,9 @@
 #define WATERMARK ""
 #define WATERMARK_PROBABILITY 1.0
 #define WATERMARK_OPACITY 1.0
+#define LIBMEMCACHED_SERVERS "localhost"
+#define LIBMEMCACHED_TIMEOUT 3600
+
 
 
 #include <string>
@@ -42,6 +45,7 @@
 
 /// Class to obtain environment variables
 class Environment {
+
 
  public:
 
@@ -174,6 +178,30 @@ class Environment {
 
     return watermark_opacity;
   }
+
+
+  static std::string getMemcachedServers(){
+    char* envpara = getenv( "MEMCACHED_SERVERS" );
+    std::string memcached_servers;
+    if( envpara ){
+      memcached_servers = std::string( envpara );
+    }
+    else memcached_servers = LIBMEMCACHED_SERVERS;
+
+    return memcached_servers;
+  }
+
+
+  static unsigned int getMemcachedTimeout(){
+    char* envpara = getenv( "MEMCACHED_TIMEOUT" );
+    unsigned int memcached_timeout;
+    if( envpara ) memcached_timeout = atoi( envpara );
+    else memcached_timeout = LIBMEMCACHED_TIMEOUT;
+
+    return memcached_timeout;
+  }
+
+
 
 
 };
