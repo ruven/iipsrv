@@ -160,6 +160,14 @@ RawTile TPTImage::getTile( int seq, int ang, unsigned int res, int layers, unsig
   string filename;
 
 
+  // Check the resolution exists
+  if( res > numResolutions ){
+    ostringstream tile_no;
+    tile_no << "Kakadu :: Asked for non-existant resolution: " << res;
+    throw tile_no.str();
+  }
+
+
   // Try to open image and allocate a buffer if not already open
 
   // If we are currently working on a different sequence number, then

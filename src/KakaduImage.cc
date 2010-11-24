@@ -125,14 +125,15 @@ void KakaduImage::loadImageInfo( int seq, int ang ) throw(string)
 
   // If we don't have enough resolutions to fit a whole image into a single tile
   // we need to generate them ourselves virtually. Fortunately, the 
-  // kdu_region_decompressor function is able to handle the downsampling for us!
+  // kdu_region_decompressor function is able to handle the downsampling for us for one extra level.
+  // Extra downsampling has to be done ourselves
   int n = 1;
   unsigned int w = image_widths[0];
   unsigned int h = image_heights[0];
   while( (w>tile_width) || (h>tile_height) ){
     n++;
-    w /= (int) 2;
-    h /= (int) 2;
+    w /= (int) floor(2);
+    h /= (int) floor(2);
     if( n > numResolutions ){
       image_widths.push_back(w);
       image_heights.push_back(h);
@@ -142,11 +143,12 @@ void KakaduImage::loadImageInfo( int seq, int ang ) throw(string)
 
   if( n > numResolutions ){
 #ifdef DEBUG
-    logfile << "Kakadu :: Warning! Insufficient resolution levels in JPEG2000 stream. Will generate them dynamically -" << endl
+    logfile << "Kakadu :: Warning! Insufficient resolution levels in JPEG2000 stream. Will generate " << n-numResolutions << " extra levels dynamically -" << endl
 	    << "Kakadu :: However, you are advised to regenerate the file with at least " << n << " levels" << endl;
 #endif
   }
 
+  if( n-numResolutions-1 > 0 ) virtual_levels = n-numResolutions-1;
   numResolutions = n;
 
 
@@ -170,6 +172,7 @@ void KakaduImage::loadImageInfo( int seq, int ang ) throw(string)
 }
 
 
+// Close our image descriptors
 void KakaduImage::closeImage()
 {
 #ifdef DEBUG
@@ -182,6 +185,7 @@ void KakaduImage::closeImage()
 
   // Close our JP2 family and JPX files
   src.close();
+
   jpx_input.close();
 
 #ifdef DEBUG
@@ -195,6 +199,12 @@ RawTile KakaduImage::getTile( int seq, int ang, unsigned int res, int layers, un
 {
   Timer timer;
   timer.start();
+
+  if( res > numResolutions ){
+    ostringstream tile_no;
+    tile_no << "Kakadu :: Asked for non-existant resolution: " << res;
+    throw tile_no.str();
+  }
 
   int vipsres = ( numResolutions - 1 ) - res;
 
@@ -241,25 +251,27 @@ RawTile KakaduImage::getTile( int seq, int ang, unsigned int res, int layers, un
   logfile << "Kadaku :: Tile size: " << tw << "x" << th << " @" << channels << endl;
 #endif
 
+
   // Create our Rawtile object and initialize with data
   // Set bpp to 8 here as we have limited this in the process() function
   RawTile rawtile( tile, res, seq, ang, tw, th, channels, 8 );
 
+
   // Create our raw tile buffer and initialize some values
-  unsigned char data[tw*th*channels];
-  rawtile.data = &data[0];
+  rawtile.data = new unsigned char[tw*th*channels];
   rawtile.dataLength = tw*th*channels;
   rawtile.filename = getImagePath();
   rawtile.timestamp = timestamp;
-  rawtile.memoryManaged = 0;
 
   // Set the number of layers to half of the number of detected layers if we have not set the 
   // layers parameter manually
   if( layers <= 0 ) layers = ceil( max_layers/2.0 );
   if( layers < 1 ) layers = 1;
 
+
   // Process the tile
-  process( vipsres, layers, xoffset, yoffset, tw, th, rawtile.data );
+  process( res, layers, xoffset, yoffset, tw, th, rawtile.data );
+
 
 #ifdef DEBUG
   logfile << "Kakadu :: bytes parsed: " << codestream.get_total_bytes(true) << endl;
@@ -271,15 +283,15 @@ RawTile KakaduImage::getTile( int seq, int ang, unsigned int res, int layers, un
 }
 
 
-
+// Get an entire region and not just a tile
 void KakaduImage::getRegion( int seq, int ang, unsigned int res, int layers, int x, int y, int w, int h, unsigned char* buf ) throw (string)
 {
+#ifdef DEBUG
   Timer timer;
   timer.start();
+#endif
 
-  int vipsres = ( numResolutions - 1 ) - res;
-
-  process( vipsres, layers, x, y, w, h, buf );
+  process( res, layers, x, y, w, h, buf );
 
 #ifdef DEBUG
   logfile << "Kadaku :: getRegion() :: " << timer.getTime() << " microseconds" << endl; 
@@ -287,8 +299,23 @@ void KakaduImage::getRegion( int seq, int ang, unsigned int res, int layers, int
 }
 
 
-void KakaduImage::process( int vipsres, int layers, int xoffset, int yoffset, int tw, int th, void *d ) throw (string)
+// Main processing function
+void KakaduImage::process( int res, int layers, int xoffset, int yoffset, int tw, int th, void *d ) throw (string)
 {
+  int vipsres = ( numResolutions - 1 ) - res;
+
+  // Handle virtual resolutions
+  if( res < virtual_levels ){
+    unsigned int factor = 2*(virtual_levels-res);
+    xoffset *= factor;
+    yoffset *= factor;
+    tw *= factor;
+    th *= factor;
+    vipsres = numResolutions - 1 - (virtual_levels-res);
+  }
+
+  // Create a local buffer
+  unsigned char *buffer = NULL;
 
 
   // Set up the bounding box for our tile
@@ -327,9 +354,12 @@ void KakaduImage::process( int vipsres, int layers, int xoffset, int yoffset, in
   logfile << "Kakadu :: decoding " << layers << " quality layers" << endl;
 #endif
 
+
+  //kdu_byte *stripe_buffer = NULL;
+
   try{
 
-    codestream.apply_input_restrictions( 0,0,vipsres,layers,&image_dims,KDU_WANT_OUTPUT_COMPONENTS );
+    codestream.apply_input_restrictions( 0, 0, vipsres, layers, &image_dims, KDU_WANT_OUTPUT_COMPONENTS );
 
     decompressor.start( codestream, false, true, env_ref, NULL );
 
@@ -355,9 +385,12 @@ void KakaduImage::process( int vipsres, int layers, int xoffset, int yoffset, in
 
     // Create our buffers
     kdu_byte stripe_buffer[tw*th*channels];
+    //stripe_buffer = new kdu_byte[tw*th*channels];
 
     int index = 0;
     bool continues = true;
+
+    buffer = new unsigned char[tw*th*channels];
 
     while( continues ){
 
@@ -373,7 +406,7 @@ void KakaduImage::process( int vipsres, int layers, int xoffset, int yoffset, in
 
       // Copy the data into the supplied buffer
       void *b1 = &stripe_buffer[0];
-      void *b2 = &( (unsigned char*)d )[index];
+      void *b2 = &buffer[index];
       memcpy( b2, b1, tw * stripe_heights[0] * channels );
 
       // Advance our buffer pointer
@@ -390,15 +423,43 @@ void KakaduImage::process( int vipsres, int layers, int xoffset, int yoffset, in
       throw( "Kakadu :: Error indicated by finish()" );
     }
 
+
+    // Shrink virtual resolution tiles
+    if( res < virtual_levels ){
+
+#ifdef DEBUG
+      logfile << "Kadaku :: resizing tile to virtual resolution" << endl;
+#endif
+
+      unsigned char* d_ptr = (unsigned char*) d;
+      unsigned int n = 0;
+      unsigned int factor = 2*(virtual_levels-res);
+      for( unsigned int j=0; j<th; j+=factor ){
+	for( unsigned int i=0; i<tw; i+=factor ){
+	  for( unsigned int k=0; k<channels; k++ ){
+	    d_ptr[n++] = buffer[j*tw*channels + i*channels + k];
+	  }
+	}
+      }
+    }
+    else memcpy( d, buffer, tw*th*channels );
+
+    // Delete our local buffer
+    if( buffer ) delete[] buffer;
+
+
 #ifdef DEBUG
     logfile << "Kakadu :: decompressor completed" << endl; 
 #endif
 
+
   }
   catch (...){
-    // Destroy our threads and codestream
+    // Shut down our decompressor, destroy our threads and codestream before rethrowing the exception
+    decompressor.finish();
     if( env.exists() ) env.destroy();
-
+    //if( stripe_buffer ) delete[] stripe_buffer;
+    if( buffer ) delete[] buffer;
     throw string( "Kakadu :: Core Exception Caught"); // Rethrow the exception
   }
 
@@ -406,5 +467,7 @@ void KakaduImage::process( int vipsres, int layers, int xoffset, int yoffset, in
   // Destroy our threads
   if( env.exists() ) env.destroy();
 
+  // Delete our stripe buffer
+  //if( stripe_buffer ) delete[] stripe_buffer;
 
 }

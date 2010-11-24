@@ -1,3 +1,28 @@
+24/11/2010:
+	- Added extra checks to both TPTImage and KakaduImage for whether the
+	  requested resolution exists.
+	- Added ability to KakaduImage to downsize resolutions that were not generated
+	  during encoding.
+	- Added decompressor.finish() to catch block as finish crashes if called after
+	  thread environment shut down.
+
+
+18/11/2010:
+	- Fixed problem when clipping when applying watermarks for both 8 and 16 bit images.
+
+
+15/11/2010:
+	- Added memcached support via libmemcached. List of servers passed via
+	  MEMCACHED_SERVERS environment variable. Length of time the cache
+	  remains valid set by optional MEMCACHED_TIMEOUT environment variable
+	  (default is 3600 seconds). Storage is at output level, rather than tile
+	  level, so is complementary to internal tile cache.
+	  Thanks to Moravian Library in Brno (Moravska zemska knihovna v Brne,
+	  http://www.mzk.cz/) R&D grant MK00009494301 & Old Maps Online
+	  (http://www.oldmapsonline.org/) from the Ministry of Culture
+	  of the Czech Republic.
+
+
 06/11/2010:
 	- Modification to Cache.h to use string::capacity() function instead of length()
 	  to determine space used by string.

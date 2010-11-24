@@ -43,7 +43,9 @@
 
 #define TILESIZE 256
 
+
 extern std::ofstream logfile;
+
 
 class kdu_stream_message : public kdu_message {
  private: // Data
@@ -104,12 +106,16 @@ class KakaduImage : public IIPImage {
   // Quality layers
   unsigned int max_layers;
 
+  /// Number of levels that don't physically exist
+  unsigned int virtual_levels;
+
+
  public:
 
   /// Constructor
  KakaduImage():IIPImage() { 
     tile_width = TILESIZE; tile_height = TILESIZE;
-    numResolutions = 0;
+    numResolutions = 0; virtual_levels = 0;
   };
 
   /// Constructor
@@ -117,7 +123,7 @@ class KakaduImage : public IIPImage {
    */
  KakaduImage( const std::string& path ): IIPImage( path ) { 
     tile_width = TILESIZE; tile_height = TILESIZE;
-    numResolutions = 0;
+    numResolutions = 0; virtual_levels = 0;
   };
 
   /// Copy Constructor
@@ -125,7 +131,7 @@ class KakaduImage : public IIPImage {
    */
  KakaduImage( const IIPImage& image ): IIPImage( image ) {
     tile_width = TILESIZE; tile_height = TILESIZE;
-    numResolutions = 0;
+    numResolutions = 0; virtual_levels = 0;
   };
 
   /// Destructor
@@ -163,7 +169,7 @@ class KakaduImage : public IIPImage {
       \param w
       \param h
   */
-      void getRegion( int ha, int va, unsigned int r, int layers, int x, int y, int w, int h, unsigned char* b ) throw (std::string);
+  void getRegion( int ha, int va, unsigned int r, int layers, int x, int y, int w, int h, unsigned char* b ) throw (std::string);
 
   void process( int, int,int, int, int, int, void* ) throw (std::string);
 
