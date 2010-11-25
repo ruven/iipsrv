@@ -1,3 +1,8 @@
+25/11/2010:
+	- Removed final CRLF from JTL, Zoomify and DeepZoom requests, which causes
+	  problems with http pipelining in firefox.
+
+
 24/11/2010:
 	- Added extra checks to both TPTImage and KakaduImage for whether the
 	  requested resolution exists.

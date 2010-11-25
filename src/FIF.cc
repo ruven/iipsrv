@@ -154,7 +154,7 @@ void FIF::run( Session* session, const string& src ){
 
 
     /***************************************************************
-	      Test for different image types - only TIFF is native for now
+      Test for different image types - only TIFF is native for now
     ***************************************************************/
 
     string imtype = test.getImageType();

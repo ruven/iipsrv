@@ -165,8 +165,6 @@ void JTL::run( Session* session, const std::string& argument ){
   }
 
 
-  session->out->printf( "\r\n" );
-
   if( session->out->flush() == -1 ) {
     if( session->loglevel >= 1 ){
       *(session->logfile) << "JTL :: Error flushing jpeg tile" << endl;
