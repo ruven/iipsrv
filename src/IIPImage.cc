@@ -197,7 +197,7 @@ void IIPImage::measureVerticalAngles()
   
   if( glob( filename.c_str(), 0, NULL, &gdat ) != 0 ){
     globfree( &gdat );
-  }  
+  }
 
   for( i=0; i < gdat.gl_pathc; i++ ){
 
@@ -283,16 +283,15 @@ const string IIPImage::getFileName( int seq, int ang )
 {
   char name[1024];
 
-  if( isFile ) return fileSystemPrefix+imagePath;
+  if( isFile ){
+    return fileSystemPrefix+imagePath;
+  }
   else{
     // The angle or spectral band indices should be a minimum of 3 digits when padded
     snprintf( name, 1024,
 	      "%s%s%03d_%03d.%s", (fileSystemPrefix+imagePath).c_str(), fileNamePattern.c_str(),
 	      seq, ang, type.c_str() );
-    
-    string file( name );
-
-    return file;
+    return string( name );
   }
 }
 

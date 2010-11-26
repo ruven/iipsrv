@@ -79,7 +79,7 @@ class Watermark {
   };
 
   /// Constructor
-  /** @param image image path
+  /** @param file image file path
       @param opacity opacity applied to watermark
       @param probability probability that watermark will be applied to a particular tile
    */
@@ -104,8 +104,8 @@ class Watermark {
   /** @param data buffer of image data
       @param width tile width
       @param height tile height
-      @params channels number of channels
-      @params bpc bits per channel (8 or 16)
+      @param channels number of channels
+      @param bpc bits per channel (8 or 16)
     */
   void apply( void* data, unsigned int width, unsigned int height, unsigned int channels, unsigned int bpc );
 

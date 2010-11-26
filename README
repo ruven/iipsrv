@@ -21,10 +21,10 @@ FEATURES:
 * Automatic CIELAB->sRGB colour space conversion
 * Supports Zoomify and DeepZoom protocols
 * Multispectral image support
-* 3D panoramic views 
-* Dynamic hillshading of 3D surface topologies
 * Dynamic watermarking
 * Memcached support
+* 3D panoramic views 
+* Dynamic hillshading of 3D surface topologies
 * Dynamic decoder module capability
 
 
@@ -75,6 +75,28 @@ path using --with-fcgi-incl=<path> and --with-fcgi-lib=<path>.
 eg.
 ./configure
 make
+
+
+
+OPTIONAL LIBRARIES: MEMCACHED:
+-----------------------------
+IIPImage is able to use Memcached (http://www.memcached.org), a high-performance,
+distributed memory object caching system. If enabled, IIPImage will cache
+results using Memcached, giving IIPImage added speed and scalability. To use
+this, you will need to install the library (and development files) of
+libmemcached (http://libmemcached.org). This will be automatically detected
+during the build process. 
+
+
+
+OPTIONAL LIBRARIES: KAKADU:
+--------------------------
+IIPImage is able to decode JPEG2000 images via the Kakadu SDK
+(http://www.kakadusoftware.com). This is, however, not open source and will
+need to purchase a license for the source code. In order to use, first build
+the Kakadu SDK as per the instructions supplied with the SDK. Then, the
+following parameters to the ./configure command
+--with-kakadu=/path/to/kakadu/distribution
 
 
 

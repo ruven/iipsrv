@@ -81,6 +81,7 @@ class TileManager{
   /**
    * @param tc pointer to tile cache object
    * @param im pointer to IIPImage object
+   * @param w  pointer to watermark object
    * @param j  pointer to JPEGCompressor object
    * @param s  pointer to output file stream
    * @param l  logging level

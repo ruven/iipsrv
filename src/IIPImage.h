@@ -235,10 +235,12 @@ class IIPImage {
       \param ha horizontal angle
       \param va vertical angle
       \param r resolution
-      \param x
-      \param y
-      \param w
-      \param h
+      \param layers number of layers to decode
+      \param x offset in x direction
+      \param y offset in y direction
+      \param w width of region
+      \param h height of region
+      \param b image buffer
   */
     virtual void getRegion( int ha, int va, unsigned int r, int layers, int x, int y, int w, int h, unsigned char* b ){ return; };
 

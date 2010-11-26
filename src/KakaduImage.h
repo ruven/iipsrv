@@ -47,6 +47,7 @@
 extern std::ofstream logfile;
 
 
+/// Wrapper class to handle error messages from Kakadu
 class kdu_stream_message : public kdu_message {
  private: // Data
   std::ostream *stream;
@@ -110,6 +111,19 @@ class KakaduImage : public IIPImage {
   unsigned int virtual_levels;
 
 
+  /// Main processing function
+  /** \param r resolution
+      \param l number of quality levels to decode
+      \param x x coordinate
+      \param y y coordinate
+      \param w width of region
+      \param h height of region
+      \param d buffer to fill
+   */
+  void process( int r, int l, int x, int y, int w, int h, void* d ) throw (std::string);
+
+
+
  public:
 
   /// Constructor
@@ -154,7 +168,7 @@ class KakaduImage : public IIPImage {
   /** \param x horizontal sequence angle
       \param y vertical sequence angle
       \param r resolution
-      \param l quality layers
+      \param l number of quality layers to decode
       \param t tile number
   */
     RawTile getTile( int x, int y, unsigned int r, int l, unsigned int t ) throw (std::string);
@@ -164,19 +178,15 @@ class KakaduImage : public IIPImage {
       \param ha horizontal angle
       \param va vertical angle
       \param r resolution
-      \param x
-      \param y
-      \param w
-      \param h
+      \param l number of quality layers to decode
+      \param x x coordinate
+      \param y y coordinate
+      \param w width of region
+      \param h height of region
+      \param b buffer to fill
   */
-  void getRegion( int ha, int va, unsigned int r, int layers, int x, int y, int w, int h, unsigned char* b ) throw (std::string);
+  void getRegion( int ha, int va, unsigned int r, int l, int x, int y, int w, int h, unsigned char* b ) throw (std::string);
 
-  void process( int, int,int, int, int, int, void* ) throw (std::string);
-
-
-  void startStrip( int vipsres, int layers, int xoffset, int yoffset, int tw, int th, void *d );
-  int processStrip(unsigned char* buffer);
-  void finishStrip();
 
 };
 
