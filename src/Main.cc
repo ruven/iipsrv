@@ -210,37 +210,58 @@ int main( int argc, char *argv[] )
 		       Environment::getWatermarkProbability() );
 
 
-#ifdef HAVE_MEMCACHED
-  // Get our list of memcached servers if we have any and the timeout
-  string memcached_servers = Environment::getMemcachedServers();
-  unsigned int memcached_timeout = Environment::getMemcachedTimeout();
-#endif
-
-
-  // 
+  // Print out some information
   if( loglevel >= 1 ){
     logfile << "Setting maximum image cache size to " << max_image_cache_size << "MB" << endl;
     logfile << "Setting filesystem prefix to '" << filesystem_prefix << "'" << endl;
     logfile << "Setting default JPEG quality to " << jpeg_quality << endl;
     logfile << "Setting maximum CVT size to " << max_CVT << endl;
     logfile << "Setting 3D file sequence name pattern to '" << filename_pattern << "'" << endl;
-    if( watermark.getImage().length() > 0 ){
-      logfile << "Setting watermark image to '" << watermark.getImage()
-	      << "' with probability " << watermark.getProbability()
-	      << " and opacity " << watermark.getOpacity() << endl;
-    }
     if( max_layers > 0 ) logfile << "Setting max quality layers (for supported file formats) to " << max_layers << endl;
-#ifdef HAVE_MEMCACHED
-    logfile << "Setting list of Memcached servers to '" << memcached_servers << "'"
-	    << " with timeout " << memcached_timeout << endl;
-#endif
 #ifdef HAVE_KAKADU
     logfile << "Setting up JPEG2000 support via Kakadu SDK" << endl;
 #endif
-    logfile << endl;
   }
 
 
+  // Try to load our watermark
+  if( watermark.getImage().length() > 0 ){
+    watermark.init();
+    if( loglevel >= 1 ){
+      if( watermark.isSet() ){
+	logfile << "Loaded watermark image '" << watermark.getImage()
+		<< "': setting probability to " << watermark.getProbability()
+		<< " and opacity to " << watermark.getOpacity() << endl;
+      }
+      else{
+	logfile << "Unable to load watermark image '" << watermark.getImage() << "'" << endl;
+      }
+    }
+  }
+
+
+#ifdef HAVE_MEMCACHED
+
+  // Get our list of memcached servers if we have any and the timeout
+  string memcached_servers = Environment::getMemcachedServers();
+  unsigned int memcached_timeout = Environment::getMemcachedTimeout();
+
+  // Create our memcached object
+  Memcache memcached( memcached_servers, memcached_timeout );
+  if( loglevel >= 1 ){
+    if( memcached.connected() ){
+      logfile << "Memcached support enabled. Connected to servers: '" << memcached_servers
+	      << "' with timeout " << memcached_timeout << endl;
+    }
+    else logfile << "Unable to connect to Memcached servers" << memcached.error() << endl;
+  }
+
+#endif
+
+
+
+  // Add a new line
+  if( loglevel >= 1 ) logfile << endl;
 
 
   /***********************************************************
@@ -286,21 +307,6 @@ int main( int argc, char *argv[] )
 
 #endif
 
-
-  // Load our watermark image if we have one
-  if( loglevel >= 2 ) logfile << "Loading watermark" << endl;
-  watermark.init();
-
-
-
-#ifdef HAVE_MEMCACHED
-  // Create our memcached object
-  Memcache memcached( memcached_servers, memcached_timeout );
-  if( loglevel >= 2 ){
-    if( memcached.connected() ) logfile << "Connected to Memcached servers" << endl;
-    else logfile << "Unable to connect to Memcached servers" << memcached.error() << endl;
-  }
-#endif
 
 
   /***********************************************************

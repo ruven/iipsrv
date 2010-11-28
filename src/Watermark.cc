@@ -73,10 +73,11 @@ void Watermark::init()
 	_watermark[i*3 + 1] = g * _opacity * a;
 	_watermark[i*3 + 2] = b * _opacity * a;
       }
+
+      TIFFClose( tiff_watermark );
+      _isSet = true;
     }
 
-    _isSet = true;
-    TIFFClose( tiff_watermark );
   }
 
 }
@@ -86,6 +87,10 @@ void Watermark::init()
 // Apply the watermark to a buffer of data
 void Watermark::apply( void* data, unsigned int width, unsigned int height, unsigned int channels, unsigned int bpc )
 {
+
+  // Sanity check
+  if( !_isSet ) return;
+
   // Get random number as a float between 0 and 1
   float random = (float) rand() / RAND_MAX;
  
