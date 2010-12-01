@@ -1,3 +1,9 @@
+01/12/2010:
+	- Modified Main.cc to not check in Memcached if there has been a
+	  If-Modified-Since parameter sent and to not store 304 or error replies.
+	  Otherwise we risk to send 304 replies to requests from uncached browsers.
+
+
 25/11/2010:
 	- Removed final CRLF from JTL, Zoomify and DeepZoom requests, which causes
 	  problems with http pipelining in firefox.

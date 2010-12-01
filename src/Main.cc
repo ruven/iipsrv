@@ -188,11 +188,11 @@ int main( int argc, char *argv[] )
   string filename_pattern = Environment::getFileNamePattern();
 
 
-  //  Get our default quality variable
+  // Get our default quality variable
   int jpeg_quality = Environment::getJPEGQuality();
 
 
-  //  Get our max CVT size
+  // Get our max CVT size
   int max_CVT = Environment::getMaxCVT();
 
 
@@ -409,17 +409,7 @@ int main( int argc, char *argv[] )
 	logfile << "Full Request is " << request_string << endl;
       }
 
-
-#ifdef HAVE_MEMCACHED
-      // Check whether this exists in memcached
-      char* memcached_response = NULL;
-      if( memcached_response = memcached.retrieve( request_string ) ){
-	writer.putStr( memcached_response, memcached.length() );
-	writer.flush();
-	throw( 100 );
-      }
-#endif
-
+      
 
       // Set up our session data object
       Session session;
@@ -444,6 +434,20 @@ int main( int argc, char *argv[] )
 	}
       }
       session.headers["QUERY_STRING"] = request_string;
+
+
+#ifdef HAVE_MEMCACHED
+      // Check whether this exists in memcached, but only if we haven't had an if_modified_since
+      // request, which should always be faster to send
+      if( !header ){
+	char* memcached_response = NULL;
+	if( memcached_response = memcached.retrieve( request_string ) ){
+	  writer.putStr( memcached_response, memcached.length() );
+	  writer.flush();
+	  throw( 100 );
+	}
+      }
+#endif
 
 
       // Parse up the command list
@@ -522,7 +526,9 @@ int main( int argc, char *argv[] )
 
 
       ////////////////////////////////////////////////////////
-      ////////// Insert the result into Memcached ////////////
+      ////////// Insert the result into Memcached  ///////////
+      ////////// - Note that we never store errors ///////////
+      //////////   or 304 replies                  ///////////
       ////////////////////////////////////////////////////////
 
 #ifdef HAVE_MEMCACHED
