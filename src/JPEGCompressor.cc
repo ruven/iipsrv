@@ -316,6 +316,8 @@ unsigned int JPEGCompressor::Finish() throw (string)
   // Tidy up and de-allocate memory
   // There seems to be a problem with jpeg_finish_compress :-(
   // We've manually added the EOI markers, so we don't have to bother calling it
+
+  delete[] dest->buffer;
   //jpeg_finish_compress( &cinfo );
   jpeg_destroy_compress( &cinfo );
   

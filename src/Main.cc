@@ -450,6 +450,7 @@ int main( int argc, char *argv[] )
 	if( (memcached_response = memcached.retrieve( request_string )) ){
 	  writer.putStr( memcached_response, memcached.length() );
 	  writer.flush();
+	  free( memcached_response );
 	  throw( 100 );
 	}
       }

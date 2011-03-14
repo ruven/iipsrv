@@ -7,6 +7,8 @@
 	  JTL.cc, DeepZoom.cc and Zoomify.cc.
 	- Added extra buffer overhead during JPEG compression.
 	- Minor fixes to buffer copy code in Writer.h.
+	- Fixed memory leak in Memcached code - need to explicitly free returned
+	  objects!
 
 
 01/12/2010:
