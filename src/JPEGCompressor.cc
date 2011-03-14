@@ -89,16 +89,18 @@ iip_init_destination (j_compress_ptr cinfo)
      However, this seems to break something in Kakadu, so disable in this case
   */
 #ifndef HAVE_KAKADU
-    mx += 1024;
+  mx += 2048;
 #endif
 
 
   /* Allocate the output buffer --- it will be released when done with image
-   */
+   
   dest->buffer = (JOCTET *)
     (*cinfo->mem->alloc_small) ( (j_common_ptr) cinfo, JPOOL_IMAGE,
 				 mx * sizeof(JOCTET) );
-  
+  */
+
+  dest->buffer = new JOCTET[mx];
   dest->size = mx;
 
   // Set compressor pointers for library
@@ -150,6 +152,8 @@ void iip_term_destination( j_compress_ptr cinfo )
   }
 
   dest->size = datacount;
+
+  delete[] dest->buffer;
 }
 
 
@@ -281,7 +285,7 @@ unsigned int JPEGCompressor::CompressStrip( unsigned char* buf, unsigned int til
 
 
   // Set compressor pointers for library
-  size_t mx = (cinfo.image_width * dest->strip_height * cinfo.input_components) + 1024;
+  size_t mx = (cinfo.image_width * dest->strip_height * cinfo.input_components);
   dest->pub.next_output_byte = dest->buffer;
   dest->pub.free_in_buffer = mx;
   cinfo.next_scanline = 0;
@@ -326,7 +330,6 @@ int JPEGCompressor::Compress( RawTile& rawtile ) throw (string)
 {
 
   // Do some initialisation
-  
   data = (unsigned char*) rawtile.data;
   struct jpeg_compress_struct cinfo;
   struct jpeg_error_mgr jerr;
@@ -341,7 +344,7 @@ int JPEGCompressor::Compress( RawTile& rawtile ) throw (string)
 
 
   // Make sure we only try to compress images with 1 or 3 channels
-  if( ! ( (channels==1) || (channels==3) )  ){
+  if( ! ( (channels==1) || (channels==3) ) ){
     throw string( "JPEGCompressor: JPEG can only handle images of either 1 or 3 channels" );
   }
 
@@ -385,7 +388,7 @@ int JPEGCompressor::Compress( RawTile& rawtile ) throw (string)
   dest->strip_height = 0;
 
   //  dest->source = data;
-  unsigned char t[width*height*channels+1024]; // Add an extra 1k for extra buffering
+  unsigned char t[width*height*channels + 2048]; // Add an extra 2k for extra buffering
   dest->source = &t[0];
 
   // Set floating point quality (highest, but possibly slower depending
@@ -435,11 +438,13 @@ int JPEGCompressor::Compress( RawTile& rawtile ) throw (string)
   // Tidy up, get the compressed data size and de-allocate memory
   jpeg_finish_compress( &cinfo );
   y = dest->size;
+
+  // Copy memory back to the tile
   memcpy( rawtile.data, dest->source, y );
   jpeg_destroy_compress( &cinfo );
 
 
-  // Set the tile compression type
+  // Set the tile compression parameters
   rawtile.dataLength = y;
   rawtile.compressionType = JPEG;
   rawtile.quality = Q;

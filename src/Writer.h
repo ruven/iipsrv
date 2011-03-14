@@ -65,8 +65,8 @@ class FCGIWriter {
   static const unsigned int bufsize = 65536;
 
   /// Add the message to our buffer
-  void cpy2buf( const char* msg, unsigned int len ){
-    if( sz + len > bufsize ) buffer = (char*) realloc( buffer, sz+len );
+  void cpy2buf( const char* msg, size_t len ){
+    if( sz+len > bufsize ) buffer = (char*) realloc( buffer, sz+len );
     memcpy( &buffer[sz], msg, len );
     sz += len;
   };
@@ -75,12 +75,12 @@ class FCGIWriter {
  public:
 
   char* buffer;
-  unsigned int sz;
+  size_t sz;
 
   /// Constructor
   FCGIWriter( FCGX_Stream* o ){
     out = o;
-    buffer = new char[bufsize];
+    buffer = (char*) malloc(bufsize);
     sz = 0;
   };
 

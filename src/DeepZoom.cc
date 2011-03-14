@@ -34,6 +34,13 @@
 using namespace std;
 
 
+// Windows does not provide a log2 function!
+#if _MSC_VER
+double log2(double max){
+  return log((double)max)/log((double)2);
+}
+#endif
+
 
 void DeepZoom::run( Session* session, const std::string& argument ){
 
@@ -222,7 +229,8 @@ void DeepZoom::run( Session* session, const std::string& argument ){
     float v;
     if( session->loglevel >= 4 ) *(session->logfile) << "DeepZoom :: Applying contrast scaling of " << contrast << endl;
 
-    buf = new unsigned char[ rawtile.width*rawtile.height*rawtile.channels ];
+    unsigned int dataLength = rawtile.width*rawtile.height*rawtile.channels;
+    buf = new unsigned char[ dataLength ];
     for( unsigned int j=0; j<rawtile.height; j++ ){
       for( unsigned int i=0; i<rawtile.width*rawtile.channels; i++ ){
 
@@ -241,8 +249,13 @@ void DeepZoom::run( Session* session, const std::string& argument ){
 	buf[j*rawtile.width*rawtile.channels + i] = (unsigned char) v;
       }
     }
-    delete[] ptr;
-    rawtile.data = buf;
+
+    // Copy this new buffer back
+    memcpy(rawtile.data, buf, dataLength);
+    rawtile.dataLength = dataLength;
+
+    // And delete our buffer
+    delete[] buf;
   }
 
 

@@ -1,3 +1,14 @@
+14/03/2011:
+	- Fixed problem with standalone mode. Can now bind to an FCGI socket by
+	  running iipsrv on the command line with the argument --bind.
+	  For example: ./iipsrv.fcgi --bind localhost:9000
+	- Fixed memory problem reported by valgrind with 16bit images.
+	  Now simply use memcpy instead of re-assigning memory blocks. Changes to
+	  JTL.cc, DeepZoom.cc and Zoomify.cc.
+	- Added extra buffer overhead during JPEG compression.
+	- Minor fixes to buffer copy code in Writer.h.
+
+
 01/12/2010:
 	- Modified Main.cc to not check in Memcached if there has been a
 	  If-Modified-Since parameter sent and to not store 304 or error replies.

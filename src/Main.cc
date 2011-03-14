@@ -152,8 +152,9 @@ int main( int argc, char *argv[] )
 
   FCGX_Request request;
   int listen_socket = 0;
+  bool standalone = false;
 
-  if( argv[1] && (string(argv[1]) == "--standalone") ){
+  if( argv[1] && (string(argv[1]) == "--bind") ){
     string socket = argv[2];
     if( !socket.length() ){
       logfile << "No socket specified" << endl << endl;
@@ -164,13 +165,18 @@ int main( int argc, char *argv[] )
       logfile << "Unable to open socket '" << socket << "'" << endl << endl;
       exit(1);
     }
+    standalone = true;
+    logfile << "Running in standalone mode on socket: " << socket << endl << endl;
   }
 
   if( FCGX_InitRequest( &request, listen_socket, 0 ) ) return(1);
 
+  // Check whether we are really in FCGI mode - only if we are not in standalone mode
   if( FCGX_IsCGI() ){
-    if( loglevel >= 1 ) logfile << "CGI-only mode detected. Terminating" << endl << endl;
-    return( 1 );
+    if( !standalone ){
+      if( loglevel >= 1 ) logfile << "CGI-only mode detected" << endl << endl;
+      return( 1 );
+    }
   }
   else{
     if( loglevel >= 1 ) logfile << "Running in FCGI mode" << endl << endl;
@@ -441,7 +447,7 @@ int main( int argc, char *argv[] )
       // request, which should always be faster to send
       if( !header ){
 	char* memcached_response = NULL;
-	if( memcached_response = memcached.retrieve( request_string ) ){
+	if( (memcached_response = memcached.retrieve( request_string )) ){
 	  writer.putStr( memcached_response, memcached.length() );
 	  writer.flush();
 	  throw( 100 );

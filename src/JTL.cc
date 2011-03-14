@@ -104,8 +104,8 @@ void JTL::run( Session* session, const std::string& argument ){
     float v;
     if( session->loglevel >= 4 ) *(session->logfile) << "JTL :: Applying contrast scaling of " << contrast << endl;
 
-
-    unsigned char* buf = new unsigned char[ rawtile.width*rawtile.height*rawtile.channels ];
+    unsigned int dataLength = rawtile.width*rawtile.height*rawtile.channels;
+    unsigned char* buf = new unsigned char[ dataLength ];
 
     for( unsigned int j=0; j<rawtile.height; j++ ){
       for( unsigned int i=0; i<rawtile.width*rawtile.channels; i++ ){
@@ -126,12 +126,12 @@ void JTL::run( Session* session, const std::string& argument ){
       }
     }
 
-    // Delete our old tile data and set it to our new buffer
-    //  - we have to be careful to cast to the appropriate type
-    if( rawtile.bpc == 16 ) delete[] (unsigned short*) rawtile.data;
-    else delete[] (unsigned char*) rawtile.data;
-    rawtile.data = buf;
-    rawtile.bpc = 8;
+    // Copy this new buffer back
+    memcpy(rawtile.data, buf, dataLength);
+    rawtile.dataLength = dataLength;
+
+    // And delete our buffer
+    delete[] buf;
   }
 
 
@@ -154,11 +154,11 @@ void JTL::run( Session* session, const std::string& argument ){
 	    "\r\n",
 	    VERSION, len, MAX_AGE, (*session->image)->getTimestamp().c_str() );
 
-  session->out->printf( (const char*) str );
+  session->out->printf( str );
 #endif
 
 
-  if( session->out->putStr( (const char*) rawtile.data, len ) != len ){
+  if( session->out->putStr( static_cast<const char*>(rawtile.data), len ) != len ){
     if( session->loglevel >= 1 ){
       *(session->logfile) << "JTL :: Error writing jpeg tile" << endl;
     }

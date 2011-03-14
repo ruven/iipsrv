@@ -211,7 +211,8 @@ void Zoomify::run( Session* session, const std::string& argument ){
     float v;
     if( session->loglevel >= 4 ) *(session->logfile) << "Zoomify :: Applying contrast scaling of " << contrast << endl;
 
-    buf = new unsigned char[ rawtile.width*rawtile.height*rawtile.channels ];
+    unsigned int dataLength = rawtile.width*rawtile.height*rawtile.channels;
+    buf = new unsigned char[ dataLength ];
     for( unsigned int j=0; j<rawtile.height; j++ ){
       for( unsigned int i=0; i<rawtile.width*rawtile.channels; i++ ){
 
@@ -230,8 +231,13 @@ void Zoomify::run( Session* session, const std::string& argument ){
 	buf[j*rawtile.width*rawtile.channels + i] = (unsigned char) v;
       }
     }
-    delete[] ptr;
-    rawtile.data = buf;
+
+    // Copy this new buffer back
+    memcpy(rawtile.data, buf, dataLength);
+    rawtile.dataLength = dataLength;
+
+    // And delete our buffer
+    delete[] buf;
   }
 
 
