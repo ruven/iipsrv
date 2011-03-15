@@ -21,7 +21,6 @@
 
 
 #include "TPTImage.h"
-#include <iostream>
 #include <sstream>
 
 
@@ -162,9 +161,9 @@ RawTile TPTImage::getTile( int seq, int ang, unsigned int res, int layers, unsig
 
   // Check the resolution exists
   if( res > numResolutions ){
-    ostringstream tile_no;
-    tile_no << "Kakadu :: Asked for non-existant resolution: " << res;
-    throw tile_no.str();
+    ostringstream error;
+    error << "TPTImage :: Asked for non-existant resolution: " << res;
+    throw error.str();
   }
 
 

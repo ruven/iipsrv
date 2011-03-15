@@ -21,6 +21,8 @@
 #include "Task.h"
 #include "ColourTransforms.h"
 
+#include <sstream>
+
 using namespace std;
 
 
@@ -49,6 +51,12 @@ void JTL::run( Session* session, const std::string& argument ){
   delimitter = argument.find( "," );
   tile = atoi( argument.substr( delimitter + 1, argument.length() ).c_str() );
 
+  //Sanity check
+  if( (resolution<0) || (tile<0) ){
+    ostringstream error;
+    error << "JTL :: Invalid resolution/tile number: " << resolution << "," << tile; 
+    throw error.str();
+  }
 
 
   TileManager tilemanager( session->tileCache, *session->image, session->watermark, session->jpeg, session->logfile, session->loglevel );

@@ -89,7 +89,7 @@ void Watermark::apply( void* data, unsigned int width, unsigned int height, unsi
 {
 
   // Sanity check
-  if( !_isSet ) return;
+  if( !_isSet || (_probability==0) || (_opacity==0) ) return;
 
   // Get random number as a float between 0 and 1
   float random = (float) rand() / RAND_MAX;

@@ -44,10 +44,11 @@ RawTile TileManager::getNewTile( int resolution, int tile, int xangle, int yangl
   ttt = image->getTile( xangle, yangle, resolution, layers, tile );
 
 
-  // Apply the watermark if we have one
+  // Apply the watermark if we have one.
+  // Do this before inserting into cache so that we cache watermarked tiles
   if( watermark && watermark->isSet() ){
     if( loglevel >= 2 ) insert_timer.start();
-    watermark->apply( ttt.data, ttt.width, ttt.height, ttt.channels, ttt.bpc );
+    watermark->apply( ttt.data, image->getTileWidth(), image->getTileHeight(), ttt.channels, ttt.bpc );
     if( loglevel >= 2 ) *logfile << "TileManager :: Watermark applied: " << insert_timer.getTime()
 				 << " microseconds" << endl;
   }

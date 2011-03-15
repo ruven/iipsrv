@@ -1,3 +1,9 @@
+15/03/2011:
+	- Added sanity check for requested resolutions and tiles in JTL.cc.
+	- Fixed problem with edge tiles and watermarking.
+	- Clean-up of error message in TPTImage.cc.
+
+
 14/03/2011:
 	- Fixed problem with standalone mode. Can now bind to an FCGI socket by
 	  running iipsrv on the command line with the argument --bind.
