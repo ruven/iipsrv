@@ -9,7 +9,7 @@
     Culture of the Czech Republic. 
 
 
-    Copyright (C) 2009-2010 IIPImage.
+    Copyright (C) 2009-2011 IIPImage.
     Authors: Ruven Pillay & Petr Pridal
 
     This program is free software; you can redistribute it and/or modify
@@ -120,7 +120,7 @@ class KakaduImage : public IIPImage {
       \param h height of region
       \param d buffer to fill
    */
-  void process( int r, int l, int x, int y, int w, int h, void* d ) throw (std::string);
+  void process( unsigned int r, int l, int x, int y, unsigned int w, unsigned int h, void* d ) throw (std::string);
 
 
 
@@ -185,7 +185,7 @@ class KakaduImage : public IIPImage {
       \param h height of region
       \param b buffer to fill
   */
-  void getRegion( int ha, int va, unsigned int r, int l, int x, int y, int w, int h, unsigned char* b ) throw (std::string);
+  void getRegion( int ha, int va, unsigned int r, int l, int x, int y, unsigned int w, unsigned int h, unsigned char* b ) throw (std::string);
 
 
 };

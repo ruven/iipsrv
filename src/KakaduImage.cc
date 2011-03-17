@@ -7,7 +7,7 @@
     Culture of the Czech Republic. 
 
 
-    Copyright (C) 2009-2010 IIPImage.
+    Copyright (C) 2009-2011 IIPImage.
     Authors: Ruven Pillay & Petr Pridal
 
     This program is free software; you can redistribute it and/or modify
@@ -112,7 +112,7 @@ void KakaduImage::loadImageInfo( int seq, int ang ) throw(string)
   bpp = codestream.get_bit_depth(0,true);
 
   // Loop through each resolution and get the image dimensions
-  for( int c=1; c<numResolutions; c++ ){
+  for( unsigned int c=1; c<numResolutions; c++ ){
    codestream.apply_input_restrictions(0,0,c,1,NULL,KDU_WANT_OUTPUT_COMPONENTS );
    kdu_dims layers;
    codestream.get_dims(0,layers,true);
@@ -127,7 +127,7 @@ void KakaduImage::loadImageInfo( int seq, int ang ) throw(string)
   // we need to generate them ourselves virtually. Fortunately, the 
   // kdu_region_decompressor function is able to handle the downsampling for us for one extra level.
   // Extra downsampling has to be done ourselves
-  int n = 1;
+  unsigned int n = 1;
   unsigned int w = image_widths[0];
   unsigned int h = image_heights[0];
   while( (w>tile_width) || (h>tile_height) ){
@@ -148,7 +148,7 @@ void KakaduImage::loadImageInfo( int seq, int ang ) throw(string)
 #endif
   }
 
-  if( n-numResolutions-1 > 0 ) virtual_levels = n-numResolutions-1;
+  if( n > numResolutions+1 ) virtual_levels = n-numResolutions-1;
   numResolutions = n;
 
 
@@ -284,7 +284,7 @@ RawTile KakaduImage::getTile( int seq, int ang, unsigned int res, int layers, un
 
 
 // Get an entire region and not just a tile
-void KakaduImage::getRegion( int seq, int ang, unsigned int res, int layers, int x, int y, int w, int h, unsigned char* buf ) throw (string)
+void KakaduImage::getRegion( int seq, int ang, unsigned int res, int layers, int x, int y, unsigned int w, unsigned int h, unsigned char* buf ) throw (string)
 {
 #ifdef DEBUG
   Timer timer;
@@ -300,7 +300,7 @@ void KakaduImage::getRegion( int seq, int ang, unsigned int res, int layers, int
 
 
 // Main processing function
-void KakaduImage::process( int res, int layers, int xoffset, int yoffset, int tw, int th, void *d ) throw (string)
+void KakaduImage::process( unsigned int res, int layers, int xoffset, int yoffset, unsigned int tw, unsigned int th, void *d ) throw (string)
 {
   int vipsres = ( numResolutions - 1 ) - res;
 

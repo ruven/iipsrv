@@ -2,7 +2,7 @@
 
 /*  IIP fcgi server module
 
-    Copyright (C) 2000-2009 Ruven Pillay.
+    Copyright (C) 2000-2011 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -23,6 +23,11 @@
 #ifndef _IIPIMAGE_H
 #define _IIPIMAGE_H
 
+
+// Fix missing snprintf in Windows
+#if _MSC_VER
+#define snprintf _snprintf
+#endif
 
 
 #include <string>
@@ -89,7 +94,7 @@ class IIPImage {
   ColourSpaces colourspace;
 
   /// The number of available resolutions in this image
-  int numResolutions;
+  unsigned int numResolutions;
 
   /// The bits per pixel for this image
   unsigned int bpp;
@@ -242,7 +247,7 @@ class IIPImage {
       \param h height of region
       \param b image buffer
   */
-    virtual void getRegion( int ha, int va, unsigned int r, int layers, int x, int y, int w, int h, unsigned char* b ){ return; };
+    virtual void getRegion( int ha, int va, unsigned int r, int layers, int x, int y, unsigned int w, unsigned int h, unsigned char* b ){ return; };
 
   /// Assignment operator
   const IIPImage& operator = ( const IIPImage& );
