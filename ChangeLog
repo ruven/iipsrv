@@ -1,6 +1,8 @@
 21/03/2011:
 	- Added extra NULL assignment to Task pointer after catch block to avoid
 	  problems with uninitialized memory being deleted.
+	- Added SIGINT handler for Ctrl-C interruptions with strsignal() to
+	  display a more meaningful message.
 
 
 17/03/2011:

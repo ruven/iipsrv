@@ -80,8 +80,9 @@ void IIPSignalHandler( int signal )
 
     time_t current_time = time( NULL );
     char *date = ctime( &current_time );
+    char *sigstr = strsignal( signal );
 
-    logfile << endl << "Caught signal " << signal << ". "
+    logfile << endl << "Caught " << sigstr << " signal. "
 	    << "Terminating after " << IIPcount << " accesses" << endl
 	    << date
 	    << "<----------------------------------->" << endl << endl;
@@ -316,7 +317,7 @@ int main( int argc, char *argv[] )
 
 
   /***********************************************************
-    Set up a signal handler for USR1, TERM and SIGHUP signals
+    Set up a signal handler for USR1, TERM, HUP and INT signals
     - to simplify things, they can all just shutdown the
       server. We can rely on mod_fastcgi to restart us.
     - SIGUSR1 and SIGHUP don't exist on Windows, though. 
@@ -328,7 +329,7 @@ int main( int argc, char *argv[] )
 #endif
 
   signal( SIGTERM, IIPSignalHandler );
-
+  signal( SIGINT, IIPSignalHandler );
 
 
 
