@@ -1,3 +1,8 @@
+21/03/2011:
+	- Added extra NULL assignment to Task pointer after catch block to avoid
+	  problems with uninitialized memory being deleted.
+
+
 17/03/2011:
 	- Clean-up of signed/unsigned variables in IIPImage.h and KakaduImage.h.
 

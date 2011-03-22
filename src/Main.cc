@@ -1,7 +1,7 @@
 /*
     IIP FCGI server module - Main loop.
 
-    Copyright (C) 2000-2010 Ruven Pillay
+    Copyright (C) 2000-2011 Ruven Pillay
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -631,7 +631,10 @@ int main( int argc, char *argv[] )
     /* Do some cleaning up etc. here after all the potential exceptions
        have been handled
      */
-    if( task ) delete task;
+    if( task ){
+      delete task;
+      task = NULL;
+    }
     delete image;
     image = NULL;
     IIPcount ++;
