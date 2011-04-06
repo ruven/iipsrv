@@ -26,6 +26,11 @@
 #define VERSION "0.9.9.9"
 #endif
 
+// Fix missing snprintf in Windows
+#if _MSC_VER
+#define snprintf _snprintf
+#endif
+
 
 #include <string>
 

@@ -389,9 +389,8 @@ int JPEGCompressor::Compress( RawTile& rawtile ) throw (string)
   dest->pub.term_destination = iip_term_destination;
   dest->strip_height = 0;
 
-  //  dest->source = data;
-  unsigned char t[width*height*channels + 2048]; // Add an extra 2k for extra buffering
-  dest->source = &t[0];
+  // Allocate memory for our destination
+  dest->source = new unsigned char[width*height*channels + 2048]; // Add an extra 2k for extra buffering
 
   // Set floating point quality (highest, but possibly slower depending
   //  on hardware)
@@ -443,6 +442,7 @@ int JPEGCompressor::Compress( RawTile& rawtile ) throw (string)
 
   // Copy memory back to the tile
   memcpy( rawtile.data, dest->source, y );
+  delete[] dest->source;
   jpeg_destroy_compress( &cinfo );
 
 

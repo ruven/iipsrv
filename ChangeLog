@@ -1,3 +1,11 @@
+06/04/2011:
+	- Changes to allow compilation on Windows with Visual C++ Express 2010.
+	  New windows subfolder with missing time definitions and VC solution file.
+	  Fixes also include definition of snprintf, log2 and S_ISREG, which are
+	  all missing in Windows. Many thanks to Rob "Bubba" Hines for his help in
+	  porting.
+
+
 21/03/2011:
 	- Added extra NULL assignment to Task pointer after catch block to avoid
 	  problems with uninitialized memory being deleted.

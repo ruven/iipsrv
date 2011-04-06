@@ -2,11 +2,11 @@
 
 /*  IIP fcgi server module
 
-    Copyright (C) 2005 Ruven Pillay.
+    Copyright (C) 2005-2011 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
-    the Free Software Foundation; either version 2 of the License, or
+    the Free Software Foundation; either version 3 of the License, or
     (at your option) any later version.
 
     This program is distributed in the hope that it will be useful,
@@ -20,14 +20,14 @@
 */
 
 
-
 #ifndef _TIMER_H
 #define _TIMER_H
 
 
 #ifdef HAVE_SYS_TIME_H
-
 #include <sys/time.h>
+#endif
+
 
 
 /// Simple Timer class to allow us to time our responses
@@ -60,7 +60,7 @@ class Timer {
   /** Initialise with our start time */
   void start() {
     tz.tz_minuteswest = 0;
-    if( gettimeofday( &tv, &tz ) == 0 ){
+    if( gettimeofday( &tv, NULL ) == 0 ){
       start_t = tv.tv_sec;
       start_u = tv.tv_usec;
     }
@@ -70,7 +70,7 @@ class Timer {
 
   /// Return time since we were initialised in microseconds 
   long getTime() {
-    if( gettimeofday( &tv, &tz ) == 0 ) return (tv.tv_sec - start_t) * 1000000 + (tv.tv_usec - start_u);
+    if( gettimeofday( &tv, NULL ) == 0 ) return (tv.tv_sec - start_t) * 1000000 + (tv.tv_usec - start_u);
     else return 0;
   }
 
@@ -78,28 +78,6 @@ class Timer {
 };
 
 
-
-#else
-
-/// If sys/time.h is not available, create a fake Timer class
-
-class Timer {
-
- public:
-
-  /// Constructor
-  Timer() {;};
-
-  /// Initialise our start time
-  void start() {;};
-
-  /// Return the time since we were initialised
-  long getTime(){ return 0; }
-
-};
-
-
-#endif
 
 #endif
 

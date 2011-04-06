@@ -27,6 +27,10 @@
 #include <glob.h>
 #endif
 
+#if _MSC_VER
+#define S_ISREG(mode) (((mode) & S_IFMT) == S_IFREG)
+#endif
+
 #include <cstdio>
 #include <sys/stat.h>
 #include <sstream>

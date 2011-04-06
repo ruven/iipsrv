@@ -21,7 +21,7 @@
 #include "Task.h"
 #include "ColourTransforms.h"
 #include <cmath>
-
+#include <algorithm>
 
 using namespace std;
 

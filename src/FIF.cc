@@ -19,6 +19,7 @@
 */
 
 
+#include <algorithm>
 #include "Task.h"
 #include "Environment.h"
 #include "TPTImage.h"
@@ -65,8 +66,8 @@ void FIF::run( Session* session, const string& src ){
       break;
     case '%':
       // Don't assume well-formed input
-      if( std::distance(iter, src.end()) >= 2 &&
-	  std::isxdigit(*(iter + 1)) && std::isxdigit(*(iter + 2)) ){
+      if( distance(iter, src.end()) >= 2 &&
+          isxdigit(*(iter + 1)) && isxdigit(*(iter + 2)) ){
 
 	// Filter out embedded NULL bytes of the form %00 from the URL
 	if( (*(iter+1)=='0' && *(iter+2)=='0') ){

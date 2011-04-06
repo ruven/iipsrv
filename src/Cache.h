@@ -59,6 +59,13 @@ namespace __gnu_cxx
 #include <map>
 #endif
 
+
+// Fix missing snprintf in Windows
+#if _MSC_VER
+#define snprintf _snprintf
+#endif
+
+
 #include <iostream>
 #include <list>
 #include <string>
@@ -73,11 +80,11 @@ class Cache {
 
  private:
 
-  /// Max memory size in bytes
-  unsigned long maxSize;
-
   /// Basic object storage size
   int tileSize;
+
+  /// Max memory size in bytes
+  unsigned long maxSize;
 
   /// Current memory running total
   unsigned long currentSize;
@@ -132,12 +139,12 @@ class Cache {
   /// Interal remove function
   /**
    *  @param miter Map_Iter that points to the key to remove
-   *  @warning miter is now longer usable after being passed to this function.
+   *  @warning miter is no longer usable after being passed to this function.
    */
   void _remove( const TileMap::iterator &miter ) {
     // Reduce our current size counter
     currentSize -= ( (miter->second->second).dataLength +
-		     ((miter->second->second).filename.capacity()+1)*sizeof(char) +
+		     ( (miter->second->second).filename.capacity() + (miter->second->first).capacity() )*sizeof(char) +
 		     tileSize );
     tileList.erase( miter->second );
     tileMap.erase( miter );
@@ -159,9 +166,9 @@ class Cache {
   /** @param max Maximum cache size in MB */
   Cache( float max ) {
     maxSize = (unsigned long)(max*1024000) ; currentSize = 0;
-    // 128 added at the end represents 2*average strings lengths
+    // 64 chars added at the end represents an average string length
     tileSize = sizeof( RawTile ) + sizeof( std::pair<const std::string,RawTile> ) +
-      sizeof( std::pair<const std::string, List_Iter> ) + 128;
+      sizeof( std::pair<const std::string, List_Iter> ) + sizeof(char)*64 + sizeof(List_Iter);
   };
 
 
@@ -205,7 +212,7 @@ class Cache {
     // Update our total current size variable. Use the string::capacity function
     // rather than length() as std::string can allocate slightly more than necessary
     // The +1 is for the terminating null byte
-    currentSize += (r.dataLength + (r.filename.capacity()+1)*sizeof(char) + tileSize);
+    currentSize += (r.dataLength + (r.filename.capacity()+key.capacity())*sizeof(char) + tileSize);
 
     // Check to see if we need to remove an element due to exceeding max_size
     while( currentSize > maxSize ) {

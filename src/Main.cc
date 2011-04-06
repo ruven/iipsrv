@@ -80,7 +80,13 @@ void IIPSignalHandler( int signal )
 
     time_t current_time = time( NULL );
     char *date = ctime( &current_time );
+
+    // No strsignal on Windows
+#ifdef WIN32
+    int sigstr = signal;
+#else
     char *sigstr = strsignal( signal );
+#endif
 
     logfile << endl << "Caught " << sigstr << " signal. "
 	    << "Terminating after " << IIPcount << " accesses" << endl

@@ -44,10 +44,11 @@ void Watermark::init()
       TIFFGetField( tiff_watermark, TIFFTAG_IMAGEWIDTH, &_width );
       TIFFGetField( tiff_watermark, TIFFTAG_IMAGELENGTH, &_height );
       TIFFGetField( tiff_watermark, TIFFTAG_BITSPERSAMPLE, &_bpc );
-      uint32 buffer[_width*_height];
-      uint32* b = &buffer[0];
 
-      if( TIFFReadRGBAImageOriented( tiff_watermark, _width, _height, b, ORIENTATION_TOPLEFT ) == 0 ){
+      uint32 *buffer = new uint32[_width*_height];
+
+      if( TIFFReadRGBAImageOriented( tiff_watermark, _width, _height, buffer, ORIENTATION_TOPLEFT ) == 0 ){
+	delete[] buffer;
 	TIFFClose( tiff_watermark );
 	return;
       }
@@ -74,6 +75,7 @@ void Watermark::init()
 	_watermark[i*3 + 2] = b * _opacity * a;
       }
 
+      delete[] buffer;
       TIFFClose( tiff_watermark );
       _isSet = true;
     }

@@ -146,9 +146,11 @@ FILENAME_PATTERN: Pattern that follows the name stem for a 3D or multispectral
 sequence. eg: "_pyr_" for FZ1_pyr_000_090.tif. The default is "_pyr_". This is 
 only relevent to 3D image sequences.
 
-WATERMARK: TIFF image to use as watermark file. This image should be not bigger
-the tile size used for TIFF tiling. If smaller, the watermark will be positioned
-randomly within the available space. The image can be either colour or grayscale.
+WATERMARK: TIFF image to use as watermark file. This image should be not be 
+bigger the tile size used for TIFF tiling. If bigger, it will simply be 
+cropped to the tile size. If smaller, the watermark will be positioned 
+randomly within the available space. The image can be either colour or 
+grayscale.
 
 WATERMARK_PROBABILITY: The probability that a particilar tile will have a watermark
 applied to it. 0 means never, 1 means always.
@@ -158,8 +160,8 @@ WATERMARK_OPACITY: The opacity (between 0 and 1) applied to the watermark image.
 MEMCACHED_SERVERS: A comma-delimitted list of memcached servers with optional
 port numbers. For example: localhost,192.168.0.1:8888,192.168.0.2.
 
-MEMCACHED_TIMEOUT: (Optional) Time in seconds that cache remains fresh.
-Default is 3600 seconds (1 hour).
+MEMCACHED_TIMEOUT: Time in seconds that cache remains fresh.
+Default is 86400 seconds (24 hours).
 
 DECODER_MODULES: Comma separated list of external modules for decoding 
 other image formats. This is only necessary if you have activated 
@@ -225,6 +227,7 @@ LoadModule fcgid_module /path/to/apachemodules/mod_fcgid.so
 Here is an example configuration. Note that mod_fcgid does not have a 
 FastCgiServer directive and there is no need to explicitly start the server:
 
+-------------------------------------------------------------------
 # Create a directory for the iipsrv binary
 ScriptAlias /fcgi-bin/ "/var/www/localhost/fcgi-bin/"
 
@@ -240,18 +243,22 @@ ScriptAlias /fcgi-bin/ "/var/www/localhost/fcgi-bin/"
 </Directory>
 
 # Set our environment variables for the IIP server
-DefaultInitEnv VERBOSITY "5"
-DefaultInitEnv LOGFILE "/tmp/iipsrv.log"
-DefaultInitEnv MAX_IMAGE_CACHE_SIZE "10"
-DefaultInitEnv JPEG_QUALITY "50"
-DefaultInitEnv MAX_CVT "3000"
+FcgidInitialEnv VERBOSITY "5"
+FcgidInitialEnv LOGFILE "/tmp/iipsrv.log"
+FcgidInitialEnv MAX_IMAGE_CACHE_SIZE "10"
+FcgidInitialEnv JPEG_QUALITY "50"
+FcgidInitialEnv MAX_CVT "3000"
 
 # Define the idle timeout as unlimited and the number of
 # processes we want
-IdleTimeout -1
-DefaultMaxClassProcessCount 1
+FcgidIdleTimeout 0
+FcgidMaxClassProcessesPerClass 1
+
 -------------------------------------------------------------------
 
+Note that on CentOS, FcgidIPCDir is configured by default to 
+/var/log/httpd/fcgidsock, which may not be writable by Apache. If this is the case, 
+specify another location for FcgidIPCDir, which is writable, such as /tmp/fcgidsock
 
 
 Lighttpd:
