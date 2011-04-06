@@ -29,6 +29,10 @@
 #endif
 
 
+#ifdef WIN32
+#include "../windows/Time.h"
+#endif
+
 
 /// Simple Timer class to allow us to time our responses
 
