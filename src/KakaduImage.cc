@@ -12,7 +12,7 @@
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
-    the Free Software Foundation; either version 2 of the License, or
+    the Free Software Foundation; either version 3 of the License, or
     (at your option) any later version.
 
     This program is distributed in the hope that it will be useful,
@@ -355,7 +355,7 @@ void KakaduImage::process( unsigned int res, int layers, int xoffset, int yoffse
 #endif
 
 
-  //kdu_byte *stripe_buffer = NULL;
+  kdu_byte *stripe_buffer = NULL;
 
   try{
 
@@ -384,8 +384,7 @@ void KakaduImage::process( unsigned int res, int layers, int xoffset, int yoffse
 #endif
 
     // Create our buffers
-    kdu_byte stripe_buffer[tw*th*channels];
-    //stripe_buffer = new kdu_byte[tw*th*channels];
+    stripe_buffer = new kdu_byte[tw*th*channels];
 
     int index = 0;
     bool continues = true;
@@ -458,7 +457,7 @@ void KakaduImage::process( unsigned int res, int layers, int xoffset, int yoffse
     // Shut down our decompressor, destroy our threads and codestream before rethrowing the exception
     decompressor.finish();
     if( env.exists() ) env.destroy();
-    //if( stripe_buffer ) delete[] stripe_buffer;
+    if( stripe_buffer ) delete[] stripe_buffer;
     if( buffer ) delete[] buffer;
     throw string( "Kakadu :: Core Exception Caught"); // Rethrow the exception
   }
@@ -468,6 +467,6 @@ void KakaduImage::process( unsigned int res, int layers, int xoffset, int yoffse
   if( env.exists() ) env.destroy();
 
   // Delete our stripe buffer
-  //if( stripe_buffer ) delete[] stripe_buffer;
+  if( stripe_buffer ) delete[] stripe_buffer;
 
 }
