@@ -125,7 +125,7 @@ void Watermark::apply( void* data, unsigned int width, unsigned int height, unsi
 	  unsigned int id = (j+yoffset)*width*channels + (i+xoffset)*channels + k;
 
 	  // For 16bit images we need to multiply up as our watermark data is always 8bit
-	  // Clip doing our maths in unsigned int to allow us to clip correctly
+	  // We do our maths in unsigned int to allow us to clip correctly
 	  if( bpc == 16 ){
 	    unsigned short* d = (unsigned short*) data;
 	    unsigned int t = (unsigned int)( d[id] + _watermark[j*_width*_channels + i*_channels + k]*256 );
@@ -136,7 +136,7 @@ void Watermark::apply( void* data, unsigned int width, unsigned int height, unsi
 	  // We do our maths in unsigned short to allow us to clip correctly after
 	  else{
 	    unsigned char* d = (unsigned char*) data;
-	    unsigned short t = (unsigned short) (d[id] + _watermark[j*_width*_channels + i*_channels + k]);
+	    unsigned short t = (unsigned short)( d[id] + _watermark[j*_width*_channels + i*_channels + k] );
 	    if( t > 255 ) t = 255;
 	    d[id] = (unsigned char) t;
 	  }

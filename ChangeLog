@@ -1,3 +1,8 @@
+08/04/2011:
+	- Change to TileManager.cc to take into account whether a tile is padded
+	  or not when applying a watermark.
+
+
 06/04/2011:
 	- Changes to allow compilation on Windows with Visual C++ Express 2010.
 	  New windows subfolder with missing time definitions and VC solution file.
