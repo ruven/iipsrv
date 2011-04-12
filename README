@@ -1,6 +1,6 @@
--------------------------------------------
-IIPImage - Internet Imaging Protocol Server
--------------------------------------------
+-----------------------------------------------------------------------
+       IIPImage - High Resolution Streaming Imaging Server
+-----------------------------------------------------------------------
 
 
 ABOUT:
@@ -16,9 +16,10 @@ FEATURES:
 * Fast lightweight embeddable FastCGI server module
 * High performance with inbuilt configurable cache
 * Support for gigapixel images
-* Dynamic JPEG export of full or regions of JPEG images at any resolution
+* Dynamic JPEG export of whole or regions of images at any resolution
 * 16 bit image support
-* Automatic CIELAB->sRGB colour space conversion
+* CIELAB support with automatic CIELAB->sRGB colour space conversion
+* JPEG2000 support
 * Supports Zoomify and DeepZoom protocols
 * Multispectral image support
 * Dynamic watermarking
@@ -53,12 +54,16 @@ See COPYING.FCGI for licensing information for these libraries.
 
 REQUIREMENTS:
 ------------
-Requirements: libtiff and the IJG JPEG libraries. Plus, of course, an
-fcgi-enabled web server. The server has been successfully tested on the
-following servers:
+Requirements: libtiff, zlib and the IJG JPEG development libraries.
+Optional: libmemcached (for Memcached) and Kakadu (for JPEG2000)
+
+Plus, of course, an fcgi-enabled web server. The server has been successfully
+tested on the following servers:
 Apache (http://httpd.apache.org),
 Lighttpd (http://www.lighttpd.net)
+IIS (http://www.iis.net)
 MyServer (http://www.myserverproject.net)
+
 Example server configurations are shown below.
 
 
@@ -297,7 +302,6 @@ configurations. For example:
 spawn-fcgi -f src/iipsrv.fcgi -a 192.168.0.1 -p 9000
 
 
-
 MyServer:
 --------
 Simply run the MyServer configuration and in the MIME section, choose the .fcgi extension
@@ -310,7 +314,27 @@ Manager: NONE
 --------------------------------------------------------------------
 
 
+Command Line:
+-------------
+
+It is also possible to start iipsrv on the command line. For example:
+
+iipsrv.fcgi --bind 192.168.0.1:9000
+
+where the argument given to bind is the socket on which to listen to FCGI
+requests. Your web server should, therefore, be configured to use this socket.
+For example with lighttpd:
+
+fastcgi.server = (
+  "/fcgi-bin/iipsrv.fcgi" => (
+        ("host"=>"192.168.0.1", "port"=>9000, "check-local"=>"disable")
+  )
+)
+
+
+
+
 ---------------------------------------------------------------------------
 Please refer to the project site http://iipimage.sf.net for further details
 ---------------------------------------------------------------------------
-(c) 2000-2010 Ruven Pillay <ruven@users.sf.net>
+(c) 2000-2011 Ruven Pillay <ruven@users.sourceforge.net>
