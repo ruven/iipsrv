@@ -11,11 +11,11 @@
     </Filter>
     <Filter Include="Resource Files">
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
-      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav</Extensions>
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\src\Zoomify.cc">
+    <ClCompile Include="Time.cc">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\src\ColourTransforms.cc">
@@ -75,11 +75,17 @@
     <ClCompile Include="..\src\Watermark.cc">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Time.cc">
+    <ClCompile Include="..\src\Zoomify.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\Log.cc">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Time.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
     <ClInclude Include="..\src\Cache.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -131,7 +137,7 @@
     <ClInclude Include="..\src\Writer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Time.h">
+    <ClInclude Include="..\src\Log.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

@@ -11,22 +11,17 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectGuid>{18F529A3-258B-40C9-986C-57826894DD0B}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
-    <RootNamespace>IIPIMAGE</RootNamespace>
-    <ProjectName>iipsrv</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <WholeProgramOptimization>true</WholeProgramOptimization>
-    <CharacterSet>Unicode</CharacterSet>
+    <UseOfMfc>Static</UseOfMfc>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
@@ -37,53 +32,59 @@
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release2|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <LinkIncremental>true</LinkIncremental>
-    <TargetExt>.fcgi</TargetExt>
+    <LinkIncremental>false</LinkIncremental>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
-    <TargetExt>.fcgi</TargetExt>
+    <GenerateManifest>true</GenerateManifest>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release2|Win32'">
+    <LinkIncremental>true</LinkIncremental>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
-      <PrecompiledHeader>
-      </PrecompiledHeader>
-      <WarningLevel>Level1</WarningLevel>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <WarningLevel>Level3</WarningLevel>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;HAVE_TIME_H;VERSION="0.9.9";_BASETSD_H;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>C:\Documents and Settings\Administrateur\Bureau\IIPImage\libmemcached-0.48;C:\Documents and Settings\Administrateur\Bureau\IIPImage\zlib-1.2.5;C:\Documents and Settings\Administrateur\Bureau\IIPImage\tiff-4.0.0beta6\libtiff;C:\Documents and Settings\Administrateur\Bureau\IIPImage\jpeg-8c;C:\Documents and Settings\Administrateur\Bureau\IIPImage\fcgi-2.4.0\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)dependencies\includes;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
-      <SubSystem>Console</SubSystem>
+      <TargetMachine>MachineX86</TargetMachine>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>C:\Documents and Settings\Administrateur\Bureau\IIPImage\libmemcached-0.48\libmemcached\.libs;C:\Documents and Settings\Administrateur\Bureau\IIPImage\zlib-1.2.5\lib;C:\Documents and Settings\Administrateur\Bureau\IIPImage\jpeg-8c;C:\Documents and Settings\Administrateur\Bureau\IIPImage\tiff-4.0.0beta6\libtiff;C:\Documents and Settings\Administrateur\Bureau\IIPImage\fcgi-2.4.0\libfcgi\Release;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>libfcgi.lib;libtiff.lib;libjpeg.lib;zdll.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <SubSystem>Console</SubSystem>
+      <AdditionalLibraryDirectories>$(ProjectDir)dependencies\libs;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>jpeg.lib;libfcgi.lib;libtiff.lib;zlibwapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalOptions>/LTCG %(AdditionalOptions)</AdditionalOptions>
+      <IgnoreAllDefaultLibraries>false</IgnoreAllDefaultLibraries>
+      <IgnoreSpecificDefaultLibraries>MSVCRT;%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
-      <WarningLevel>Level2</WarningLevel>
-      <PrecompiledHeader>
-      </PrecompiledHeader>
-      <Optimization>MaxSpeed</Optimization>
-      <FunctionLevelLinking>true</FunctionLevelLinking>
-      <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;VERSION="0.9.9";HAVE_TIME_H;_BASETSD_H;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>C:\Documents and Settings\Administrateur\Bureau\IIPImage\tiff-4.0.0beta6\libtiff;C:\Documents and Settings\Administrateur\Bureau\IIPImage\zlib-1.2.5\include;C:\Documents and Settings\Administrateur\Bureau\IIPImage\jpeg-8c;C:\Documents and Settings\Administrateur\Bureau\IIPImage\fcgi-2.4.0\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
-      <OmitFramePointers>true</OmitFramePointers>
-      <StringPooling>true</StringPooling>
-      <BufferSecurityCheck>false</BufferSecurityCheck>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <WarningLevel>Level3</WarningLevel>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <AdditionalIncludeDirectories>$(ProjectDir)dependencies\includes;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
+      <TargetMachine>MachineX86</TargetMachine>
+      <GenerateDebugInformation>false</GenerateDebugInformation>
       <SubSystem>Console</SubSystem>
-      <GenerateDebugInformation>true</GenerateDebugInformation>
-      <EnableCOMDATFolding>true</EnableCOMDATFolding>
-      <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalLibraryDirectories>C:\Documents and Settings\Administrateur\Bureau\IIPImage\tiff-4.0.0beta6\libtiff;C:\Documents and Settings\Administrateur\Bureau\IIPImage\jpeg-8c;C:\Documents and Settings\Administrateur\Bureau\IIPImage\zlib-1.2.5\;C:\Documents and Settings\Administrateur\Bureau\IIPImage\fcgi-2.4.0\libfcgi\Release;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>libjpeg.lib;zlib.lib;libfcgi.lib;libtiff.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <EnableCOMDATFolding>false</EnableCOMDATFolding>
+      <OptimizeReferences>false</OptimizeReferences>
+      <AdditionalLibraryDirectories>$(ProjectDir)dependencies\libs;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>libfcgi.lib;libtiff.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <IgnoreSpecificDefaultLibraries>LIBCMT;%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
+      <AdditionalOptions>/LTCG %(AdditionalOptions)</AdditionalOptions>
+      <IgnoreAllDefaultLibraries>false</IgnoreAllDefaultLibraries>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
@@ -97,6 +98,7 @@
     <ClCompile Include="..\src\IIPResponse.cc" />
     <ClCompile Include="..\src\JPEGCompressor.cc" />
     <ClCompile Include="..\src\JTL.cc" />
+    <ClCompile Include="..\src\Log.cc" />
     <ClCompile Include="..\src\Main.cc" />
     <ClCompile Include="..\src\OBJ.cc" />
     <ClCompile Include="..\src\SPECTRA.cc" />
@@ -117,6 +119,7 @@
     <ClInclude Include="..\src\IIPImage.h" />
     <ClInclude Include="..\src\IIPResponse.h" />
     <ClInclude Include="..\src\JPEGCompressor.h" />
+    <ClInclude Include="..\src\Log.h" />
     <ClInclude Include="..\src\Memcached.h" />
     <ClInclude Include="..\src\RawTile.h" />
     <ClInclude Include="..\src\Task.h" />
@@ -132,4 +135,12 @@
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
+  <ItemGroup>
+    <DLLFiles Include="$(ProjectDir)\dependencies\dlls\*.dll" />
+  </ItemGroup>
+  
+  <Target Name="AfterBuild">
+    <Copy SourceFiles="@(DLLFiles)" DestinationFolder="$(ProjectDir)$(Configuration)\fcgi-bin" OverwriteReadOnlyFiles="true"/>
+    <Copy SourceFiles="$(ProjectDir)$(Configuration)\$(TargetFileName)" DestinationFiles="$(ProjectDir)$(Configuration)\fcgi-bin\iipsrv.fcgi"  OverwriteReadOnlyFiles="true"/>
+  </Target>
 </Project>

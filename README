@@ -314,6 +314,33 @@ Manager: NONE
 --------------------------------------------------------------------
 
 
+Java Application Servers (Tomcat, Jetty, JBoss etc)
+---------------------------------------------------
+
+IIPImage can also be used with Java Application Servers such as Apache Tomcat, JBoss and Jetty. Simply add 
+the JFastCGI jar file to your webapp and add the following to your web.xml configuration file in order to 
+re-route FCGI requests to the IIPImage server on the specified port.
+
+<!-- Gateway Servlet to IIPImage FCGI server -->
+
+<servlet>
+  <servlet-name>fcgi</servlet-name>
+  <servlet-class>net.jr.fastcgi.FastCGIServlet</servlet-class>
+  <init-param>>
+    <param-name>server-address</param-name>
+   <param-value>127.0.0.1:6667</param-value>
+  </init-param>
+</servlet>
+
+<servlet-mapping>
+  <servlet-name>fcgi</servlet-name>
+  <url-pattern>/cgi-bin/iipsrv.fcgi</url-pattern>
+</servlet-mapping>
+
+You then need to start an instance of the server on the requested port (6667 in this example) using 
+spawn-cgi (see spawn-cgi section above).
+
+
 Command Line:
 -------------
 

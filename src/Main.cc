@@ -266,7 +266,7 @@ int main( int argc, char *argv[] )
       logfile << "Memcached support enabled. Connected to servers: '" << memcached_servers
 	      << "' with timeout " << memcached_timeout << endl;
     }
-    else logfile << "Unable to connect to Memcached servers" << memcached.error() << endl;
+    else logfile << "Unable to connect to Memcached servers: '" << memcached.error() << "'" << endl;
   }
 
 #endif
@@ -576,13 +576,13 @@ int main( int argc, char *argv[] )
 	  status = "Status: 304 Not Modified\r\nServer: iipsrv/" + version + "\r\n\r\n";
 	  writer.printf( status.c_str() );
 	  writer.flush();
-          if( loglevel >= 1 ){
+          if( loglevel >= 2 ){
 	    logfile << "Sending HTTP 304 Not Modified" << endl;
 	  }
 	  break;
 
         case 100:
-	  if( loglevel >= 1 ){
+	  if( loglevel >= 2 ){
 	    logfile << "Memcached hit" << endl;
 	  }
 	  break;
