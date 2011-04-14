@@ -1,6 +1,10 @@
 15/04/2009: Version 0.9.9 Released
 
 
+14/04/2011:
+	- Minor logging update to Zoomify.cc.
+
+
 13/04/2011:
 	- Updated VC++ project files.
 	- Minor changes to logging in Main.cc.

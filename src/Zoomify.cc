@@ -99,12 +99,11 @@ void Zoomify::run( Session* session, const std::string& argument ){
   // These 2 phases are handled separately
   if( suffix == "ImageProperties.xml" ){
 
-    if( session->loglevel >= 2 )
+    if( session->loglevel >= 2 ){
       *(session->logfile) << "Zoomify :: ImageProperties.xml request" << endl;
-
-
-    *(session->logfile) << "Zoomify :: Total resolutions: " << numResolutions << ", image width: " << width
-			<< ", image height: " << height << endl;
+      *(session->logfile) << "Zoomify :: Total resolutions: " << numResolutions << ", image width: " << width
+			  << ", image height: " << height << endl;
+    }
 
     int ntiles = (int) ceil( (double)width/tw ) * (int) ceil( (double)height/tw );
 
