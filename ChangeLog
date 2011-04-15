@@ -1,6 +1,10 @@
 15/04/2009: Version 0.9.9 Released
 
 
+15/04/2011:
+	- Fix to View.h to properly take into account max layers variable.
+
+
 14/04/2011:
 	- Minor logging update to Zoomify.cc.
 

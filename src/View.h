@@ -172,9 +172,12 @@ class View{
   /** \param l Max number of layers to decode */
   void setMaxLayers( int l ){ max_layers = l; };
 
-  /// Set the number of quality layers to decode
+  /// Set the number of quality layers to decode, limiting to our max value
   /** \param l Number of layers to decode */
-  void setLayers( int l ){ layers = l; };
+  void setLayers( int l ){ layers = ( l<max_layers )? l : max_layers; };
+
+  /// Return the number of layers to decode
+  unsigned int getLayers(){ return layers; };
 
   /// Return the contrast adjustment
   float getContrast(){ return contrast; };
@@ -196,12 +199,6 @@ class View{
 
   /// Return the pixel height of the viewport
   unsigned int getViewHeight();
-
-  /// Return the number of layers to decode
-  unsigned int getLayers(){ 
-    if( layers > max_layers ) layers = max_layers;
-    return layers;
-  };
 
   /// Indicate whether the viewport has been set
   bool viewPortSet();
