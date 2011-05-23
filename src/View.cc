@@ -1,11 +1,11 @@
 /*
     View Member Functions
 
-    Copyright (C) 2004-2009 Ruven Pillay.
+    Copyright (C) 2004-2011 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
-    the Free Software Foundation; either version 2 of the License, or
+    the Free Software Foundation; either version 3 of the License, or
     (at your option) any later version.
 
     This program is distributed in the hope that it will be useful,
@@ -182,3 +182,11 @@ unsigned int View::getViewHeight(){
 }
 
 
+/// Return the number of layers to decode
+unsigned int View::getLayers(){
+  // If max_layers is set, limit to this value, otherwise return layers
+  if( max_layers > 0 ){
+    return ((layers>0)&&(layers<max_layers)) ? layers : max_layers;
+  }
+  return layers;
+}

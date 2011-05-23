@@ -7,11 +7,11 @@
     Culture of the Czech Republic. 
 
 
-    Copyright (C) 2009 Ruven Pillay.
+    Copyright (C) 2009-2011 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
-    the Free Software Foundation; either version 2 of the License, or
+    the Free Software Foundation; either version 3 of the License, or
     (at your option) any later version.
 
     This program is distributed in the hope that it will be useful,
@@ -131,7 +131,7 @@ void DeepZoom::run( Session* session, const std::string& argument ){
   }
 
 
-  // Get the tile coordinates. DeepZoom requests are of the form $image_files/r/x-y.jpg
+  // Get the tile coordinates. DeepZoom requests are of the form $image_files/r/x_y.jpg
   // where r is the resolution number and x and y are the tile coordinates
   
   int resolution, x, y;
@@ -187,7 +187,7 @@ void DeepZoom::run( Session* session, const std::string& argument ){
 
 
   RawTile rawtile = tilemanager.getTile( resolution, tile, session->view->xangle,
-					 session->view->yangle, session->view->layers, ct );
+					 session->view->yangle, session->view->getLayers(), ct );
 
   int len = rawtile.dataLength;
 

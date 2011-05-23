@@ -1,11 +1,11 @@
 /*
     IIP SPECTRA Command Handler Class Member Function
 
-    Copyright (C) 2009 Ruven Pillay.
+    Copyright (C) 2009-2011 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
-    the Free Software Foundation; either version 2 of the License, or
+    the Free Software Foundation; either version 3 of the License, or
     (at your option) any later version.
 
     This program is distributed in the hope that it will be useful,
@@ -101,7 +101,7 @@ void SPECTRA::run( Session* session, const std::string& argument ){
 
     int n = *i;
 
-    RawTile rawtile = tilemanager.getTile( resolution, tile, n, session->view->yangle, session->view->layers, UNCOMPRESSED );
+    RawTile rawtile = tilemanager.getTile( resolution, tile, n, session->view->yangle, session->view->getLayers(), UNCOMPRESSED );
 
     unsigned int tw = (*session->image)->getTileWidth();
     unsigned int index = y*tw + x;

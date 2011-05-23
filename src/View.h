@@ -1,11 +1,11 @@
 /*
     Image View Parameters
 
-    Copyright (C) 2003-2009 Ruven Pillay.
+    Copyright (C) 2003-2011 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
-    the Free Software Foundation; either version 2 of the License, or
+    the Free Software Foundation; either version 3 of the License, or
     (at your option) any later version.
 
     This program is distributed in the hope that it will be useful,
@@ -174,10 +174,10 @@ class View{
 
   /// Set the number of quality layers to decode, limiting to our max value
   /** \param l Number of layers to decode */
-  void setLayers( int l ){ layers = ( l<max_layers )? l : max_layers; };
+  void setLayers( int l ){ layers = l; };
 
   /// Return the number of layers to decode
-  unsigned int getLayers(){ return layers; };
+  unsigned int getLayers();
 
   /// Return the contrast adjustment
   float getContrast(){ return contrast; };

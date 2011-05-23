@@ -1,11 +1,11 @@
 /*
     IIP TIL Command Handler Class Member Function
 
-    Copyright (C) 2006-2008 Ruven Pillay.
+    Copyright (C) 2006-2011 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
-    the Free Software Foundation; either version 2 of the License, or
+    the Free Software Foundation; either version 3 of the License, or
     (at your option) any later version.
 
     This program is distributed in the hope that it will be useful,
@@ -130,7 +130,7 @@ void TIL::run( Session* session, const std::string& a ){
       // Get our tile using our tile manager
       TileManager tilemanager( session->tileCache, *session->image, session->watermark, session->jpeg, session->logfile, session->loglevel );
       RawTile rawtile = tilemanager.getTile( resolution, n, session->view->xangle,
-					     session->view->yangle, session->view->layers, JPEG );
+					     session->view->yangle, session->view->getLayers(), JPEG );
 
       int len = rawtile.dataLength;
 

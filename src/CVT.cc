@@ -1,11 +1,11 @@
 /*
     IIP CVT Command Handler Class Member Function
 
-    Copyright (C) 2006-2010 Ruven Pillay.
+    Copyright (C) 2006-2011 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
-    the Free Software Foundation; either version 2 of the License, or
+    the Free Software Foundation; either version 3 of the License, or
     (at your option) any later version.
 
     This program is distributed in the hope that it will be useful,
@@ -237,7 +237,7 @@ void CVT::run( Session* session, const std::string& a ){
     // class itself
     if( (*session->image)->getImageType() == "jpx" || (*session->image)->getImageType() == "jp2" ){
       (*session->image)->getRegion( session->view->xangle, session->view->yangle,
-				    requested_res, session->view->layers,
+				    requested_res, session->view->getLayers(),
 				    view_left, view_top, view_width, view_height, buf );
 
 
@@ -285,7 +285,7 @@ void CVT::run( Session* session, const std::string& a ){
 	// Get an uncompressed tile from our TileManager
 	TileManager tilemanager( session->tileCache, *session->image, session->watermark, session->jpeg, session->logfile, session->loglevel );
 	RawTile rawtile = tilemanager.getTile( requested_res, (i*ntlx) + j, session->view->xangle, session->view->yangle,
-					       session->view->layers, UNCOMPRESSED );
+					       session->view->getLayers(), UNCOMPRESSED );
 
 	if( session->loglevel >= 2 ){
 	  *(session->logfile) << "CVT :: Tile access time " << tile_timer.getTime() << " microseconds for tile "

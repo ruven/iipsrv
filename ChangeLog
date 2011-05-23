@@ -1,3 +1,8 @@
+23/05/2011:
+	- Another fix to ensure the max layers variable is correctly used in
+	  Zoomify and DeepZoom output.
+
+
 15/04/2009: Version 0.9.9 Released
 
 
