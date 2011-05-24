@@ -1,3 +1,8 @@
+24/05/2011:
+	- Fix added to DeepZoom.cc as FreeBSD does not have the log2 function.
+	  Thanks to Andrew Hankinson for spotting this.
+
+
 23/05/2011:
 	- Another fix to ensure the max layers variable is correctly used in
 	  Zoomify and DeepZoom output.

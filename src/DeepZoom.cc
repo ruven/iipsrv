@@ -35,7 +35,7 @@ using namespace std;
 
 
 // Windows does not provide a log2 function!
-#if _MSC_VER
+#if _MSC_VER || __FreeBSD__
 double log2(double max){
   return log((double)max)/log((double)2);
 }
