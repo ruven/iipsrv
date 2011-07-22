@@ -122,6 +122,10 @@ class KakaduImage : public IIPImage {
    */
   void process( unsigned int r, int l, int x, int y, unsigned int w, unsigned int h, void* d ) throw (std::string);
 
+  /// Convenience function to delete allocated buffers
+  /** \param b pointer to buffer
+   */
+  void delete_buffer( void* b );
 
 
  public:

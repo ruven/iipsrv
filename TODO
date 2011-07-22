@@ -4,7 +4,6 @@ TODO:
    - threads
    - multiple instances using shared memory to share a cache
    - Asynchronous via asio or libevent
-* Improved cache using shared memory or memcached
 * ICC profile integration via lcms library
 * Lossless Rotation / transposition support for JPEG tiles
 * JPEG source image support

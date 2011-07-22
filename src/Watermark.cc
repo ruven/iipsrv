@@ -136,9 +136,9 @@ void Watermark::apply( void* data, unsigned int width, unsigned int height, unsi
 	  // We do our maths in unsigned short to allow us to clip correctly after
 	  else{
 	    unsigned char* d = (unsigned char*) data;
-	    unsigned short t = (unsigned short)( d[id] + _watermark[j*_width*_channels + i*_channels + k] );
+ 	    unsigned short t = (unsigned short)( d[id] + _watermark[j*_width*_channels + i*_channels + k] );
 	    if( t > 255 ) t = 255;
-	    d[id] = (unsigned char) t;
+ 	    d[id] = (unsigned char) t;
 	  }
 	}
       }

@@ -76,8 +76,8 @@ class Watermark {
   Watermark(){
     _isSet=false;
     _watermark = NULL;
-    _opacity = 0;
-    _probability = 0;
+    _opacity = 0.0;
+    _probability = 0.0;
   };
 
   /// Constructor

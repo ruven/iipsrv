@@ -114,7 +114,7 @@ class RawTile{
     width = w; height = h; bpc = b; dataLength = 0; data = NULL;
     tileNum = tn; resolution = res; hSequence = hs ; vSequence = vs;
     memoryManaged = 1; channels = c; compressionType = UNCOMPRESSED; quality = 0;
-    timestamp = 0; padded = 0;
+    timestamp = 0; padded = false;
   };
 
 

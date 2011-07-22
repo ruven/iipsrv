@@ -81,7 +81,9 @@ void JTL::run( Session* session, const std::string& argument ){
 
 
   float contrast = session->view->getContrast();
-  unsigned int w = (*session->image)->getTileWidth();
+
+  // Get the tile width, which depends on whether tiles are padded or not
+  unsigned int w = rawtile.padded ? (*session->image)->getTileWidth() : rawtile.width;
   //  unsigned int h = (*session->image)->getTileHeight();
 
 
@@ -104,7 +106,7 @@ void JTL::run( Session* session, const std::string& argument ){
   }
 
   // Handle 16bit images or contrast adjustments, performing tile cropping if necessary
-  else if( (rawtile.bpc==16) || (contrast !=1.0) ){
+  else if( (rawtile.bpc==16) || (contrast!=1.0) ){
 
     // Normalise 16bit images to 8bit for JPEG
     if( rawtile.bpc == 16 ) contrast = contrast / 256.0;

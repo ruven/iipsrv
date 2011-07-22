@@ -152,12 +152,12 @@ void KakaduImage::loadImageInfo( int seq, int ang ) throw(string)
   numResolutions = n;
 
 
-  // Set our colour space
+  // Set our colour space - we let Kakadu automatically handle CIELAB->sRGB conversion for the time being
   if( channels == 1 ) colourspace = GREYSCALE;
   else{
     jp2_colour_space cs = j2k_colour.get_space();
-    if( cs == JP2_sRGB_SPACE ) colourspace = sRGB;
-    else if ( cs == JP2_CIELab_SPACE ) colourspace = CIELAB;
+    if( cs == JP2_sRGB_SPACE || cs == JP2_CIELab_SPACE ) colourspace = sRGB;
+    //else if ( cs == JP2_CIELab_SPACE ) colourspace = CIELAB;
   }
 
 
@@ -234,7 +234,7 @@ RawTile KakaduImage::getTile( int seq, int ang, unsigned int res, int layers, un
     tw = rem_x;
     edge_x = true;
   }
-  
+
   // Alter the tile size if it's in the bottom row
   bool edge_y = false;
   if( ( tile / ntlx == ntly - 1 ) && rem_y != 0 ) {
@@ -254,12 +254,13 @@ RawTile KakaduImage::getTile( int seq, int ang, unsigned int res, int layers, un
 
   // Create our Rawtile object and initialize with data
   // Set bpp to 8 here as we have limited this in the process() function
-  RawTile rawtile( tile, res, seq, ang, tw, th, channels, 8 );
+  RawTile rawtile( tile, res, seq, ang, tw, th, channels, bpp );
 
 
   // Create our raw tile buffer and initialize some values
-  rawtile.data = new unsigned char[tw*th*channels];
-  rawtile.dataLength = tw*th*channels;
+  if( bpp == 16 ) rawtile.data = new unsigned short[tw*th*channels];
+  else rawtile.data = new unsigned char[tw*th*channels];
+  rawtile.dataLength = tw*th*channels*bpp/8;
   rawtile.filename = getImagePath();
   rawtile.timestamp = timestamp;
 
@@ -291,7 +292,27 @@ void KakaduImage::getRegion( int seq, int ang, unsigned int res, int layers, int
   timer.start();
 #endif
 
-  process( res, layers, x, y, w, h, buf );
+  // The function assumes 8bit data, so handle 16bit and do conversion
+  // -- should really handle this in the CVT function itself perhaps, but
+  // let's leave this here for now ...
+  void* buffer;
+  if( bpp == 16 ) buffer = new unsigned short[w*h*channels];
+  else buffer = buf;
+
+  process( res, layers, x, y, w, h, buffer );
+
+  if( bpp == 16 ){
+    float v;
+    for( unsigned int j=0; j<h; j++ ){
+      for( unsigned int i=0; i<w*channels; i++ ){
+	v = ( (float) ((unsigned short*)buffer)[j*w*channels + i] ) * 0.00390625;
+	if( v > 255.0 ) v = 255.0;
+	if( v < 0.0 ) v = 0.0;
+	buf[j*w*channels + i] = (unsigned char) v;
+      }
+    }
+    delete[] (unsigned short*) buffer;
+  }
 
 #ifdef DEBUG
   logfile << "Kadaku :: getRegion() :: " << timer.getTime() << " microseconds" << endl; 
@@ -315,7 +336,7 @@ void KakaduImage::process( unsigned int res, int layers, int xoffset, int yoffse
   }
 
   // Create a local buffer
-  unsigned char *buffer = NULL;
+  void *buffer = NULL;
 
 
   // Set up the bounding box for our tile
@@ -355,7 +376,7 @@ void KakaduImage::process( unsigned int res, int layers, int xoffset, int yoffse
 #endif
 
 
-  kdu_byte *stripe_buffer = NULL;
+  void *stripe_buffer = NULL;
 
   try{
 
@@ -383,20 +404,32 @@ void KakaduImage::process( unsigned int res, int layers, int xoffset, int yoffse
     logfile << "Kakadu :: About to pull stripes" << endl;
 #endif
 
-    // Create our buffers
-    stripe_buffer = new kdu_byte[tw*th*channels];
-
     int index = 0;
     bool continues = true;
 
-    buffer = new unsigned char[tw*th*channels];
+    // Create our buffers
+    if( bpp == 16 ){
+      stripe_buffer = new kdu_uint16[tw*th*channels];
+      buffer = new unsigned short[tw*th*channels];
+    }
+    else{
+      stripe_buffer = new kdu_byte[tw*th*channels];
+      buffer = new unsigned char[tw*th*channels];
+    }
+
 
     while( continues ){
 
       decompressor.get_recommended_stripe_heights( comp_dims.size.y, 
 						   1024, stripe_heights, NULL );
- 
-      continues = decompressor.pull_stripe( stripe_buffer, stripe_heights, NULL, NULL, NULL );
+
+      if( bpp == 16 ){
+	bool s = false;
+	continues = decompressor.pull_stripe( (kdu_int16*) stripe_buffer, (int*)stripe_heights, NULL, NULL, NULL, NULL, &s );
+      }
+      else{
+	continues = decompressor.pull_stripe( (kdu_byte*) stripe_buffer, stripe_heights, NULL, NULL, NULL );
+      }
 
 
 #ifdef DEBUG
@@ -404,9 +437,17 @@ void KakaduImage::process( unsigned int res, int layers, int xoffset, int yoffse
 #endif
 
       // Copy the data into the supplied buffer
-      void *b1 = &stripe_buffer[0];
-      void *b2 = &buffer[index];
-      memcpy( b2, b1, tw * stripe_heights[0] * channels );
+      void *b1, *b2;
+      if( bpp == 16 ){
+	b1 = &( ((kdu_uint16*)stripe_buffer)[0] );
+	b2 = &( ((unsigned short*)buffer)[index] );
+      }
+      else{
+	b1 = &( ((kdu_byte*)stripe_buffer)[0] );
+	b2 = &( ((unsigned char*)buffer)[index] ) ;
+      }
+
+      memcpy( b2, b1, tw * stripe_heights[0] * channels * bpp/8 );
 
       // Advance our buffer pointer
       index += tw * stripe_heights[0] * channels;
@@ -430,22 +471,26 @@ void KakaduImage::process( unsigned int res, int layers, int xoffset, int yoffse
       logfile << "Kadaku :: resizing tile to virtual resolution" << endl;
 #endif
 
-      unsigned char* d_ptr = (unsigned char*) d;
       unsigned int n = 0;
       unsigned int factor = 2*(virtual_levels-res);
       for( unsigned int j=0; j<th; j+=factor ){
 	for( unsigned int i=0; i<tw; i+=factor ){
 	  for( unsigned int k=0; k<channels; k++ ){
-	    d_ptr[n++] = buffer[j*tw*channels + i*channels + k];
+	    // Handle 16 and 8 bit data
+	    if( bpp==16 ){
+	      ((unsigned short*)d)[n++] = ((unsigned short*)buffer)[j*tw*channels + i*channels + k];
+	    }
+	    else{
+	      ((unsigned char*)d)[n++] = ((unsigned char*)buffer)[j*tw*channels + i*channels + k];
+	    }
 	  }
 	}
       }
     }
-    else memcpy( d, buffer, tw*th*channels );
+    else memcpy( d, buffer, tw*th*channels * bpp/8 );
 
     // Delete our local buffer
-    if( buffer ) delete[] buffer;
-
+    delete_buffer( buffer );
 
 #ifdef DEBUG
     logfile << "Kakadu :: decompressor completed" << endl; 
@@ -454,11 +499,11 @@ void KakaduImage::process( unsigned int res, int layers, int xoffset, int yoffse
 
   }
   catch (...){
-    // Shut down our decompressor, destroy our threads and codestream before rethrowing the exception
+    // Shut down our decompressor, delete our buffers, destroy our threads and codestream before rethrowing the exception
     decompressor.finish();
     if( env.exists() ) env.destroy();
-    if( stripe_buffer ) delete[] stripe_buffer;
-    if( buffer ) delete[] buffer;
+    delete_buffer( stripe_buffer );
+    delete_buffer( buffer );
     throw string( "Kakadu :: Core Exception Caught"); // Rethrow the exception
   }
 
@@ -467,6 +512,17 @@ void KakaduImage::process( unsigned int res, int layers, int xoffset, int yoffse
   if( env.exists() ) env.destroy();
 
   // Delete our stripe buffer
-  if( stripe_buffer ) delete[] stripe_buffer;
+  delete_buffer( stripe_buffer );
+
+}
+
+
+// Delete our buffers
+void KakaduImage::delete_buffer( void* buffer ){
+  if( buffer ){
+    if( bpp == 16 ) delete[] (kdu_uint16*) buffer;
+    else delete[] (kdu_byte*) buffer;
+  }
+
 
 }
