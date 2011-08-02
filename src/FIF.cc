@@ -168,7 +168,7 @@ void FIF::run( Session* session, const string& src ){
       *session->image = new TPTImage( test );
     }
 #ifdef HAVE_KAKADU
-    else if( imtype=="jpx" || imtype=="jp2" ){
+    else if( imtype=="jpx" || imtype=="jp2" || imtype=="j2k" ){
       if( session->loglevel >= 2 ) *(session->logfile) << "FIF :: JPEG2000 image requested" << endl;
       *session->image = new KakaduImage( test );
     }
@@ -242,7 +242,17 @@ void FIF::run( Session* session, const string& src ){
       tm mod_t;
       strptime( (session->headers)["HTTP_IF_MODIFIED_SINCE"].c_str(), "%a, %d %b %Y %H:%M:%S GMT", &mod_t );
       time_t t;
-      t = timegm(&mod_t);
+
+      // Use POSIX cross-platform mktime() function to generate a timestamp. However, we need to reset
+      // our timezone temporarily to UTC for this to work properly
+      char *tz = getenv ("TZ");
+      setenv("TZ","",1);
+      tzset();
+      t = mktime(&mod_t);
+      if(tz) setenv("TZ", tz, 1);
+      else unsetenv("TZ");
+      tzset();
+
       if( (*session->image)->timestamp <= t ){
 
 	if( session->loglevel >= 2 ){

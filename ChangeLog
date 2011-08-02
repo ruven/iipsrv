@@ -1,3 +1,8 @@
+02/08/2011:
+	- Changed timegm function in FIF.cc to use more cross-platform POSIX
+	  mktime function instead. Fixes compilation error on Solaris.
+
+
 22/07/2011:
 	- Added 16bit and CIELAB support for JPEG2000.
 	- Other minor cleanups.
