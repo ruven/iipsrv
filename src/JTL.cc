@@ -82,7 +82,7 @@ void JTL::run( Session* session, const std::string& argument ){
 
   float contrast = session->view->getContrast();
 
-  // Get the tile width, which depends on whether tiles are padded or not
+  // Get the tile width, which depends on whether tiles are padded or not. Don't need to know the height
   unsigned int w = rawtile.padded ? (*session->image)->getTileWidth() : rawtile.width;
   //  unsigned int h = (*session->image)->getTileHeight();
 

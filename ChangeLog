@@ -1,3 +1,9 @@
+24/08/2011:
+	- Updates to configure.in, FIF.cc and DeepZoom.cc to check for and
+	  handle missing setenv, unsetenv and log2 functions. Fixes problem
+	  on Solaris 10.
+
+
 02/08/2011:
 	- Changed timegm function in FIF.cc to use more cross-platform POSIX
 	  mktime function instead. Fixes compilation error on Solaris.

@@ -3,4 +3,4 @@ ACLOCAL_AMFLAGS = -I m4
 
 SUBDIRS = fcgi src
 
-EXTRA_DIST = TODO COPYING.FCGI doc windows
+EXTRA_DIST = TODO COPYING.FCGI doc platform
