@@ -167,11 +167,14 @@ void IIPImage::testImageType()
 }
 
 
-void IIPImage::updateTimestamp( const string& path )
+void IIPImage::updateTimestamp( const string& path ) throw(string)
 {
   // Get a modification time for our image
   struct stat sb;
-  stat( path.c_str(), &sb );
+  if( stat( path.c_str(), &sb ) == -1 ){
+    string message = string( "Unable to open file " ) + path;
+    throw message;
+  }
   timestamp = sb.st_mtime;
 }
 

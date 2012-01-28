@@ -151,7 +151,7 @@ class IIPImage {
   const std::string& getImageType() { return type; };
 
   /// Get the image timestamp
-  void updateTimestamp( const std::string& );
+    void updateTimestamp( const std::string& ) throw( std::string );
 
   /// Get a HTTP RFC 1123 formatted timestamp
   const std::string getTimestamp();

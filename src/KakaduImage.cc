@@ -7,7 +7,7 @@
     Culture of the Czech Republic. 
 
 
-    Copyright (C) 2009-2011 IIPImage.
+    Copyright (C) 2009-2012 IIPImage.
     Authors: Ruven Pillay & Petr Pridal
 
     This program is free software; you can redistribute it and/or modify
@@ -59,8 +59,14 @@ void KakaduImage::openImage() throw (string)
   timer.start();
 
   // Open the JPX or JP2 file
-  src.open( filename.c_str(), true );
-  if( jpx_input.open( &src, false ) != 1 ) throw string( "Error opening '"+filename+"' with Kakadu" );;
+  try{
+    src.open( filename.c_str(), true );
+  }
+  catch (...){ 
+    throw string( "Kakadu :: Unable to open '"+filename+"'"); // Rethrow the exception 
+  } 
+
+  if( jpx_input.open( &src, false ) != 1 ) throw string( "Kakadu :: Error opening '"+filename+"'" );
 
   // Get our JPX codestream
   jpx_stream = jpx_input.access_codestream(0);
@@ -165,7 +171,8 @@ void KakaduImage::loadImageInfo( int seq, int ang ) throw(string)
   kdu_tile kt = codestream.open_tile(kdu_coords(0,0),NULL);
   max_layers = codestream.get_max_tile_layers();
 #ifdef DEBUG
-  logfile << "Kakadu :: " << max_layers << " quality layers detected" << endl;
+  logfile << "Kakadu :: " << bpp << " bit data" << endl
+	  << "Kakadu :: " << max_layers << " quality layers detected" << endl;
 #endif
   kt.close();
 
@@ -180,8 +187,8 @@ void KakaduImage::closeImage()
   timer.start();
 #endif
 
-  // Close our codestream
-  codestream.destroy();
+  // Close our codestream - need to make sure it exists or it'll crash
+  if( codestream.exists() ) codestream.destroy();
 
   // Close our JP2 family and JPX files
   src.close();
@@ -265,7 +272,7 @@ RawTile KakaduImage::getTile( int seq, int ang, unsigned int res, int layers, un
   rawtile.timestamp = timestamp;
 
   // Set the number of layers to half of the number of detected layers if we have not set the 
-  // layers parameter manually
+  // layers parameter manually. Also make sure we have at least 1 layer
   if( layers <= 0 ) layers = ceil( max_layers/2.0 );
   if( layers < 1 ) layers = 1;
 
@@ -296,19 +303,22 @@ void KakaduImage::getRegion( int seq, int ang, unsigned int res, int layers, int
   // -- should really handle this in the CVT function itself perhaps, but
   // let's leave this here for now ...
   void* buffer;
+
+  // Handle both 8 and 16bit data
   if( bpp == 16 ) buffer = new unsigned short[w*h*channels];
   else buffer = buf;
+
+  // Set the number of layers to half of the number of detected layers if we have not set the 
+  // layers parameter manually
+  if( layers <= 0 ) layers = ceil( max_layers/2.0 );
+  if( layers < 1 ) layers = 1;
 
   process( res, layers, x, y, w, h, buffer );
 
   if( bpp == 16 ){
-    float v;
     for( unsigned int j=0; j<h; j++ ){
       for( unsigned int i=0; i<w*channels; i++ ){
-	v = ( (float) ((unsigned short*)buffer)[j*w*channels + i] ) * 0.00390625;
-	if( v > 255.0 ) v = 255.0;
-	if( v < 0.0 ) v = 0.0;
-	buf[j*w*channels + i] = (unsigned char) v;
+	buf[j*w*channels + i] = (unsigned char) (((unsigned short*)buffer)[j*w*channels + i] >> 8 );
       }
     }
     delete[] (unsigned short*) buffer;

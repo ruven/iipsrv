@@ -1,3 +1,15 @@
+28/01/2012:
+	- Fixes to KakaduImage.cc to properly catch exceptions during file
+	  opening and a check for existence during codestream shutdown.
+	- Also added a check to updateTimeStamp to throw an exception if file
+	  unreadable.
+
+
+28/08/2011:
+	- Performance improvement to JPEG2000 16->8 bit downsampling. Now
+	  using integer arithmetic rather than float.
+
+
 24/08/2011:
 	- Updates to configure.in, FIF.cc and DeepZoom.cc to check for and
 	  handle missing setenv, unsetenv and log2 functions. Fixes problem
