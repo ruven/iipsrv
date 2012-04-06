@@ -1,3 +1,18 @@
+21/03/2012:
+	- Fix to TPTImage.c to force RGB conversion for YCbCr compressed
+	  JPEG TIFFs, which is now the default in VIPS. Thanks to John
+	  Cupitt for spotting this.
+
+
+17/03/2012:
+	- Changes to View.[h,cc] to make sure getRequestWidth and Height
+	  return correctly rounded values.
+
+
+12/03/2012:
+	- Added HTTP Status: 400 Bad Request to error messages.
+
+
 28/01/2012:
 	- Fixes to KakaduImage.cc to properly catch exceptions during file
 	  opening and a check for existence during codestream shutdown.

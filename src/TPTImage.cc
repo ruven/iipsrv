@@ -103,6 +103,13 @@ void TPTImage::loadImageInfo( int seq, int ang ) throw(string)
   TIFFGetField( tiff, TIFFTAG_BITSPERSAMPLE, &bitspersample );
   TIFFGetField( tiff, TIFFTAG_PHOTOMETRIC, &colour );
 
+  // JPEG can use YCbCr, so set the JPEG color mode tag to force
+  // conversion to RGB by libjpeg
+  if( colour == PHOTOMETRIC_YCBCR ){
+    TIFFSetField( tiff, TIFFTAG_JPEGCOLORMODE, JPEGCOLORMODE_RGB );
+    colour = PHOTOMETRIC_RGB;
+  }
+
   // We have to do this conversion explicitly to avoid problems on Mac OS X
   channels = (unsigned int) samplesperpixel;
   bpp = (unsigned int) bitspersample;
@@ -247,14 +254,14 @@ RawTile TPTImage::getTile( int seq, int ang, unsigned int res, int layers, unsig
 
 
   // Alter the tile size if it's in the last column
-  
+
   if( ( tile % ntlx == ntlx - 1 ) && ( rem_x != 0 ) ) {
     tw = rem_x;
   }
 
 
   // Alter the tile size if it's in the bottom row
-   
+
   if( ( tile / ntlx == ntly - 1 ) && rem_y != 0 ) {
     th = rem_y;
   }
