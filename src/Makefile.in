@@ -52,11 +52,10 @@ CONFIG_CLEAN_VPATH_FILES =
 PROGRAMS = $(noinst_PROGRAMS)
 am_iipsrv_fcgi_OBJECTS = IIPImage.$(OBJEXT) TPTImage.$(OBJEXT) \
 	JPEGCompressor.$(OBJEXT) TileManager.$(OBJEXT) \
-	IIPResponse.$(OBJEXT) View.$(OBJEXT) \
-	ColourTransforms.$(OBJEXT) Task.$(OBJEXT) OBJ.$(OBJEXT) \
-	FIF.$(OBJEXT) JTL.$(OBJEXT) TIL.$(OBJEXT) ICC.$(OBJEXT) \
-	CVT.$(OBJEXT) Zoomify.$(OBJEXT) DeepZoom.$(OBJEXT) \
-	SPECTRA.$(OBJEXT) Watermark.$(OBJEXT)
+	IIPResponse.$(OBJEXT) View.$(OBJEXT) Transforms.$(OBJEXT) \
+	Task.$(OBJEXT) OBJ.$(OBJEXT) FIF.$(OBJEXT) JTL.$(OBJEXT) \
+	TIL.$(OBJEXT) ICC.$(OBJEXT) CVT.$(OBJEXT) Zoomify.$(OBJEXT) \
+	DeepZoom.$(OBJEXT) SPECTRA.$(OBJEXT) Watermark.$(OBJEXT)
 iipsrv_fcgi_OBJECTS = $(am_iipsrv_fcgi_OBJECTS)
 iipsrv_fcgi_DEPENDENCIES = Main.o $(am__append_1) $(am__append_2)
 DEFAULT_INCLUDES = -I.@am__isrc@
@@ -238,8 +237,8 @@ iipsrv_fcgi_SOURCES = \
 			IIPResponse.cc \
 			View.h \
 			View.cc \
-			ColourTransforms.h \
-			ColourTransforms.cc \
+			Transforms.h \
+			Transforms.cc \
 			Environment.h \
 			Writer.h \
 			Task.h \
@@ -310,7 +309,6 @@ distclean-compile:
 	-rm -f *.tab.c
 
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/CVT.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ColourTransforms.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/DSOImage.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/DeepZoom.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/FIF.Po@am__quote@
@@ -327,6 +325,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/TPTImage.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Task.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/TileManager.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Transforms.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/View.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Watermark.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Zoomify.Po@am__quote@

@@ -1,7 +1,7 @@
 /*
     View Member Functions
 
-    Copyright (C) 2004-2011 Ruven Pillay.
+    Copyright (C) 2004-2012 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -20,6 +20,8 @@
 
 
 #include "View.h"
+#include <cmath>
+
 
 
 void View::calculateResolution( unsigned int dimension,
@@ -88,7 +90,7 @@ unsigned int View::getResolution(){
 }
 
 
-float View::getScale(){
+double View::getScale(){
 
   unsigned int rw;
   unsigned int rh;
@@ -102,9 +104,9 @@ float View::getScale(){
   }
   else rh = requested_height;
 
-  float scale = static_cast<float>(rw) / static_cast<float>(width);
+  double scale = static_cast<double>(rw) / static_cast<double>(width);
 
-  if( static_cast<float>(rh) / static_cast<float>(height) < scale ) scale = static_cast<float>(rh) / static_cast<float>(height);
+  if( static_cast<double>(rh) / static_cast<double>(height) < scale ) scale = static_cast<double>(rh) / static_cast<double>(height);
 
   // Sanity check
   if( scale <= 0 || scale > 1.0 ) scale = 1.0;
@@ -113,30 +115,30 @@ float View::getScale(){
 }
 
 
-void View::setViewLeft( float x ) {
+void View::setViewLeft( double x ) {
   if( x > 1.0 ) view_left = 1.0;
   else if( x < 0.0 ) view_left = 0.0;
   else view_left = x;
 }
 
 
-void View::setViewTop( float y ) {
+void View::setViewTop( double y ) {
   if( y > 1.0 ) view_top = 1.0;
   else if( y < 0.0 ) view_top = 0.0;
   else view_top = y;
 }
 
 
-void View::setViewWidth( float w ) {
+void View::setViewWidth( double w ) {
   if( w > 1.0 ) view_width = 1.0;
-  else if( w <= 0.0 ) view_width = 0.001;
+  else if( w <= 0.0 ) view_width = 0.0001;
   else view_width = w;
 }
 
 
-void View::setViewHeight( float h ) {
+void View::setViewHeight( double h ) {
   if( h > 1.0 ) view_height = 1.0;
-  else if( h <= 0.0 ) view_height = 0.001;
+  else if( h <= 0.0 ) view_height = 0.0001;
   else view_height = h;
 }
 
@@ -180,6 +182,36 @@ unsigned int View::getViewHeight(){
   if( h < min_size ) h = min_size;
   return h;
 }
+
+
+unsigned int View::getRequestWidth(){
+  if( requested_width == 0 && requested_height > 0 ){
+    requested_width = (unsigned int) round( (double)(width*requested_height) / (double)height );
+  }
+  if( requested_width > width ) requested_width = width;
+  if( requested_width > max_size ) requested_width = max_size;
+  // If no width has been set, use our full size
+  if( requested_width <= 0 ) requested_width = width;
+
+  // If we have a region request, scale our request accordingly
+  if( view_width != 1.0 ) requested_width = (unsigned int) round( requested_width * view_width );
+  return requested_width;
+};
+
+
+unsigned int View::getRequestHeight(){
+  if( requested_height == 0 && requested_width > 0 ){
+    requested_height = (unsigned int) round( (double)(height*requested_width) / (double)width );
+  }
+  if( requested_height > height ) requested_height = height;
+  if( requested_height > max_size ) requested_height = max_size;
+  // If no height has been set, use our full size
+  if( requested_height <= 0 ) requested_height = height;
+
+  // If we have a region request, scale our request accordingly
+  if( view_height != 1.0 ) requested_height = (unsigned int) round( requested_height * view_height );
+  return requested_height;
+};
 
 
 /// Return the number of layers to decode

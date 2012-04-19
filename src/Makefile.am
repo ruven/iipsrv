@@ -36,8 +36,8 @@ iipsrv_fcgi_SOURCES = \
 			IIPResponse.cc \
 			View.h \
 			View.cc \
-			ColourTransforms.h \
-			ColourTransforms.cc \
+			Transforms.h \
+			Transforms.cc \
 			Environment.h \
 			Writer.h \
 			Task.h \

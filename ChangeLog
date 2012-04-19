@@ -1,3 +1,15 @@
+18/04/2012:
+	- Major rewrite of CVT code to unify TIFF and JPEG2000 region
+	  export. Region compositing now in TileManager->getRegion with
+	  modified getRegion Kakadu function. Changes also to View class
+	  and ColourTransforms code to enable greater modularity for
+	  image processing to regions. ColourTransforms renamed to
+	  Transforms.
+	  Thanks to The National Library of Wales, who will be using
+	  iipsrv & iipmooviewer to deliver their Historic Newspapers
+	  in 2012.
+
+
 21/03/2012:
 	- Fix to TPTImage.c to force RGB conversion for YCbCr compressed
 	  JPEG TIFFs, which is now the default in VIPS. Thanks to John

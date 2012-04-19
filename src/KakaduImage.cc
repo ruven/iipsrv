@@ -41,6 +41,7 @@ using namespace std;
 extern std::ofstream logfile;
 #endif
 
+
 void KakaduImage::openImage() throw (string)
 {
 
@@ -62,9 +63,9 @@ void KakaduImage::openImage() throw (string)
   try{
     src.open( filename.c_str(), true );
   }
-  catch (...){ 
-    throw string( "Kakadu :: Unable to open '"+filename+"'"); // Rethrow the exception 
-  } 
+  catch (...){
+    throw string( "Kakadu :: Unable to open '"+filename+"'"); // Rethrow the exception
+  }
 
   if( jpx_input.open( &src, false ) != 1 ) throw string( "Kakadu :: Error opening '"+filename+"'" );
 
@@ -172,6 +173,8 @@ void KakaduImage::loadImageInfo( int seq, int ang ) throw(string)
   max_layers = codestream.get_max_tile_layers();
 #ifdef DEBUG
   logfile << "Kakadu :: " << bpp << " bit data" << endl
+	  << "Kakadu :: " << channels << " channels" << endl
+	  << "Kakadu :: colour space " << j2k_colour.get_space() << endl
 	  << "Kakadu :: " << max_layers << " quality layers detected" << endl;
 #endif
   kt.close();
@@ -260,7 +263,6 @@ RawTile KakaduImage::getTile( int seq, int ang, unsigned int res, int layers, un
 
 
   // Create our Rawtile object and initialize with data
-  // Set bpp to 8 here as we have limited this in the process() function
   RawTile rawtile( tile, res, seq, ang, tw, th, channels, bpp );
 
 
@@ -270,12 +272,6 @@ RawTile KakaduImage::getTile( int seq, int ang, unsigned int res, int layers, un
   rawtile.dataLength = tw*th*channels*bpp/8;
   rawtile.filename = getImagePath();
   rawtile.timestamp = timestamp;
-
-  // Set the number of layers to half of the number of detected layers if we have not set the 
-  // layers parameter manually. Also make sure we have at least 1 layer
-  if( layers <= 0 ) layers = ceil( max_layers/2.0 );
-  if( layers < 1 ) layers = 1;
-
 
   // Process the tile
   process( res, layers, xoffset, yoffset, tw, th, rawtile.data );
@@ -292,41 +288,29 @@ RawTile KakaduImage::getTile( int seq, int ang, unsigned int res, int layers, un
 
 
 // Get an entire region and not just a tile
-void KakaduImage::getRegion( int seq, int ang, unsigned int res, int layers, int x, int y, unsigned int w, unsigned int h, unsigned char* buf ) throw (string)
+RawTile KakaduImage::getRegion( int seq, int ang, unsigned int res, int layers, int x, int y, unsigned int w, unsigned int h ) throw (string)
 {
 #ifdef DEBUG
   Timer timer;
   timer.start();
 #endif
 
-  // The function assumes 8bit data, so handle 16bit and do conversion
-  // -- should really handle this in the CVT function itself perhaps, but
-  // let's leave this here for now ...
-  void* buffer;
+  RawTile rawtile( 0, res, seq, ang, w, h, channels, bpp );
+  if( bpp == 16 ) rawtile.data = new unsigned short[w*h*channels];
+  else rawtile.data = new unsigned char[w*h*channels];
 
-  // Handle both 8 and 16bit data
-  if( bpp == 16 ) buffer = new unsigned short[w*h*channels];
-  else buffer = buf;
+  rawtile.dataLength = w*h*channels*bpp/8;
+  rawtile.filename = getImagePath();
+  rawtile.timestamp = timestamp;
 
-  // Set the number of layers to half of the number of detected layers if we have not set the 
-  // layers parameter manually
-  if( layers <= 0 ) layers = ceil( max_layers/2.0 );
-  if( layers < 1 ) layers = 1;
-
-  process( res, layers, x, y, w, h, buffer );
-
-  if( bpp == 16 ){
-    for( unsigned int j=0; j<h; j++ ){
-      for( unsigned int i=0; i<w*channels; i++ ){
-	buf[j*w*channels + i] = (unsigned char) (((unsigned short*)buffer)[j*w*channels + i] >> 8 );
-      }
-    }
-    delete[] (unsigned short*) buffer;
-  }
+  process( res, layers, x, y, w, h, rawtile.data );
 
 #ifdef DEBUG
   logfile << "Kadaku :: getRegion() :: " << timer.getTime() << " microseconds" << endl; 
 #endif
+
+  return rawtile;
+
 }
 
 
@@ -345,8 +329,10 @@ void KakaduImage::process( unsigned int res, int layers, int xoffset, int yoffse
     vipsres = numResolutions - 1 - (virtual_levels-res);
   }
 
-  // Create a local buffer
-  void *buffer = NULL;
+  // Set the number of layers to half of the number of detected layers if we have not set the 
+  // layers parameter manually. Also make sure we have at least 1 layer
+  if( layers <= 0 ) layers = ceil( max_layers/2.0 );
+  if( layers < 1 ) layers = 1;
 
 
   // Set up the bounding box for our tile
@@ -386,7 +372,10 @@ void KakaduImage::process( unsigned int res, int layers, int xoffset, int yoffse
 #endif
 
 
+  // Setup tile and stripe buffers
+  void *buffer = NULL;
   void *stripe_buffer = NULL;
+
 
   try{
 
@@ -394,43 +383,47 @@ void KakaduImage::process( unsigned int res, int layers, int xoffset, int yoffse
 
     decompressor.start( codestream, false, true, env_ref, NULL );
 
+    int stripe_heights[channels];
+    codestream.get_dims(0,comp_dims,true);
+
 #ifdef DEBUG
     logfile << "Kakadu :: decompressor starting" << endl;
 
     logfile << "Kakadu :: requested region on high resolution canvas: position: "
 	    << image_dims.pos.x << "x" << image_dims.pos.y 
 	    << ". size: " << image_dims.size.x << "x" << image_dims.size.y << endl; 
-#endif
 
-    codestream.get_dims(0,comp_dims,true);
-
-#ifdef DEBUG
     logfile << "Kakadu :: mapped resolution region size: " << comp_dims.size.x << "x" << comp_dims.size.y << endl;
-#endif
-
-    int stripe_heights[channels];
-
-#ifdef DEBUG
     logfile << "Kakadu :: About to pull stripes" << endl;
 #endif
+
 
     int index = 0;
     bool continues = true;
 
+    // Get our stripe heights so that we can allocate our stripe buffer
+    // Assume that first stripe height is largest
+    decompressor.get_recommended_stripe_heights( comp_dims.size.y,
+						 1024, stripe_heights, NULL );
+
+#ifdef DEBUG 
+    logfile << "Kakadu :: Allocating memory for stripe height " << stripe_heights[0] << endl;
+#endif 
+
     // Create our buffers
     if( bpp == 16 ){
-      stripe_buffer = new kdu_uint16[tw*th*channels];
+      stripe_buffer = new kdu_uint16[tw*stripe_heights[0]*channels];
       buffer = new unsigned short[tw*th*channels];
     }
     else{
-      stripe_buffer = new kdu_byte[tw*th*channels];
+      stripe_buffer = new kdu_byte[tw*stripe_heights[0]*channels];
       buffer = new unsigned char[tw*th*channels];
     }
 
 
     while( continues ){
 
-      decompressor.get_recommended_stripe_heights( comp_dims.size.y, 
+      decompressor.get_recommended_stripe_heights( comp_dims.size.y,
 						   1024, stripe_heights, NULL );
 
       if( bpp == 16 ){
@@ -454,7 +447,7 @@ void KakaduImage::process( unsigned int res, int layers, int xoffset, int yoffse
       }
       else{
 	b1 = &( ((kdu_byte*)stripe_buffer)[0] );
-	b2 = &( ((unsigned char*)buffer)[index] ) ;
+	b2 = &( ((unsigned char*)buffer)[index] );
       }
 
       memcpy( b2, b1, tw * stripe_heights[0] * channels * bpp/8 );

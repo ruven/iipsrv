@@ -7,6 +7,7 @@ TODO:
 * ICC profile integration via lcms library
 * Lossless Rotation / transposition support for JPEG tiles
 * JPEG source image support
-* Move all contrast adjustments, colour space changes etc into new Filter class
-* Clean up CVT code
-* Standardize tile cropping
+* Look into using malloc_usable_size to trace real allocated space
+* Lanczos, bilinear etc interpolation for CVT
+* Copy EXIF, IPTC data for CVT exports
+* Optimize FIF code for very large files

@@ -2,13 +2,11 @@
 
 /*  IIP Image Server
 
-    Copyright (C) 2005-2010 Ruven Pillay.
-    Based on an LRU cache by Patrick Audley <http://blackcat.ca/lifeline/query.php/tag=LRU_CACHE>
-    Copyright (C) 2004 by Patrick Audley
+    Copyright (C) 2005-2012 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
-    the Free Software Foundation; either version 2 of the License, or
+    the Free Software Foundation; either version 3 of the License, or
     (at your option) any later version.
 
     This program is distributed in the hope that it will be useful,
@@ -112,6 +110,23 @@ class TileManager{
    */
   RawTile getTile( int resolution, int tile, int xangle, int yangle, int layers, CompressionType c );
 
+
+
+  /// Generate a complete region
+  /**
+   *  Build up an arbitrary region by extracting tiles from the cache by using getTile function.
+   *  Data returned as uncompressed data.
+   *  @param res resolution number
+   *  @param xangle horizontal sequence number
+   *  @param yangle vertical sequence number
+   *  @param layers number of quality layers within image to decode
+   *  @param x left offset with respect to full image
+   *  @param y top offset with respect to full image
+   *  @param w width of region requested
+   *  @param h height of region requested
+   *  @return RawTile
+   */
+    RawTile getRegion( unsigned int res, int xangle, int yangle, int layers, unsigned int x, unsigned int y, unsigned int w, unsigned int h );
 
 };
 

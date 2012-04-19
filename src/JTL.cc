@@ -1,7 +1,7 @@
 /*
     IIP JTLS Command Handler Class Member Function
 
-    Copyright (C) 2006-2011 Ruven Pillay.
+    Copyright (C) 2006-2012 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -19,7 +19,7 @@
 */
 
 #include "Task.h"
-#include "ColourTransforms.h"
+#include "Transforms.h"
 
 #include <sstream>
 
@@ -65,6 +65,7 @@ void JTL::run( Session* session, const std::string& argument ){
   if( (*session->image)->getColourSpace() == CIELAB ) ct = UNCOMPRESSED;
   else if( (*session->image)->getNumBitsPerPixel() == 16 ) ct = UNCOMPRESSED;
   else if( session->view->getContrast() != 1.0 ) ct = UNCOMPRESSED;
+  else if( session->view->shaded ) ct = UNCOMPRESSED;
   else ct = JPEG;
 
   RawTile rawtile = tilemanager.getTile( resolution, tile, session->view->xangle,
@@ -76,73 +77,38 @@ void JTL::run( Session* session, const std::string& argument ){
     *(session->logfile) << "JTL :: Tile size: " << rawtile.width << " x " << rawtile.height << endl
 			<< "JTL :: Channels per sample: " << rawtile.channels << endl
 			<< "JTL :: Bits per channel: " << rawtile.bpc << endl
-			<< "JTL :: Compressed tile size is " << len << endl;
+			<< "JTL :: Data size is " << len << " bytes" << endl;
   }
 
 
-  float contrast = session->view->getContrast();
-
-  // Get the tile width, which depends on whether tiles are padded or not. Don't need to know the height
-  unsigned int w = rawtile.padded ? (*session->image)->getTileWidth() : rawtile.width;
-  //  unsigned int h = (*session->image)->getTileHeight();
-
-
-
-  // Convert CIELAB to sRGB, performing tile cropping if necessary
+  // Convert CIELAB to sRGB
   if( (*session->image)->getColourSpace() == CIELAB ){
-    if( session->loglevel >= 4 ) *(session->logfile) << "JTL :: Converting from CIELAB->sRGB" << endl;
 
-    unsigned char* buf = new unsigned char[ rawtile.width*rawtile.height*rawtile.channels ];
-    unsigned char* ptr = (unsigned char*) rawtile.data;
-    for( unsigned int j=0; j<rawtile.height; j++ ){
-      for( unsigned int i=0; i<rawtile.width*rawtile.channels; i+=rawtile.channels ){
-	iip_LAB2sRGB( &ptr[j*w*rawtile.channels + i], &buf[j*rawtile.width*rawtile.channels + i] );
-      }
+    Timer cielab_timer;
+    if( session->loglevel >= 4 ){
+      *(session->logfile) << "JTL :: Converting from CIELAB->sRGB" << endl;
+      cielab_timer.start();
     }
 
-    // Delete our old tile data and set it to our new buffer
-    delete[] ptr;
-    rawtile.data = buf;
-  }
+    filter_LAB2sRGB( rawtile );
 
-  // Handle 16bit images or contrast adjustments, performing tile cropping if necessary
-  else if( (rawtile.bpc==16) || (contrast!=1.0) ){
-
-    // Normalise 16bit images to 8bit for JPEG
-    if( rawtile.bpc == 16 ) contrast = contrast / 256.0;
-
-    float v;
-    if( session->loglevel >= 4 ) *(session->logfile) << "JTL :: Applying contrast scaling of " << contrast << endl;
-
-    unsigned int dataLength = rawtile.width*rawtile.height*rawtile.channels;
-    unsigned char* buf = new unsigned char[ dataLength ];
-
-    for( unsigned int j=0; j<rawtile.height; j++ ){
-      for( unsigned int i=0; i<rawtile.width*rawtile.channels; i++ ){
-
-	if( rawtile.bpc == 16 ){
-	  unsigned short* sptr = (unsigned short*) rawtile.data;
-	  v = (float) sptr[j*w*rawtile.channels + i];
-	}
-	else{
-	  unsigned char* sptr = (unsigned char*) rawtile.data;
-	  v = (float) sptr[j*w*rawtile.channels + i];
-	}
-
-	v = v * contrast;
-	if( v > 255.0 ) v = 255.0;
-	if( v < 0.0 ) v = 0.0;
-	buf[j*rawtile.width*rawtile.channels + i] = (unsigned char) v;
-      }
+    if( session->loglevel >= 4 ){
+      *(session->logfile) << "JTL :: CIELAB->sRGB conversion in " << cielab_timer.getTime() << " microseconds" << endl;
     }
-
-    // Copy this new buffer back
-    memcpy(rawtile.data, buf, dataLength);
-    rawtile.dataLength = dataLength;
-
-    // And delete our buffer
-    delete[] buf;
   }
+
+
+  // Apply hill shading if requested
+  if( session->view->shaded ){
+    if( session->loglevel >= 3 ){
+      *(session->logfile) << "CVT :: Applying hill-shading" << endl;
+    }
+    filter_shade( rawtile, session->view->shade[0], session->view->shade[1] );
+  }
+
+
+  // Apply any contrast adjustments and/or clipping to 8bit from 16bit
+  filter_contrast( rawtile, session->view->getContrast() );
 
 
   // Compress to JPEG

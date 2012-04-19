@@ -7,7 +7,7 @@
     Culture of the Czech Republic. 
 
 
-    Copyright (C) 2009-2011 Ruven Pillay.
+    Copyright (C) 2009-2012 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -27,7 +27,7 @@
 #include <cmath>
 
 #include "Task.h"
-#include "ColourTransforms.h"
+#include "Transforms.h"
 
 
 
@@ -124,7 +124,6 @@ void DeepZoom::run( Session* session, const std::string& argument ){
 	      VERSION, MAX_AGE, (*session->image)->getTimestamp().c_str(), tw, width, height );
 
     session->out->printf( (const char*) str );
-    session->out->printf( "\r\n" );
     session->response->setImageSent();
 
     return;
@@ -182,7 +181,6 @@ void DeepZoom::run( Session* session, const std::string& argument ){
   CompressionType ct;
   if( (*session->image)->getColourSpace() == CIELAB ) ct = UNCOMPRESSED;
   else if( (*session->image)->getNumBitsPerPixel() == 16 ) ct = UNCOMPRESSED;
-  else if( session->view->getContrast() != 1.0 ) ct = UNCOMPRESSED;
   else ct = JPEG;
 
 
@@ -199,64 +197,25 @@ void DeepZoom::run( Session* session, const std::string& argument ){
   }
 
 
-
-  float contrast = session->view->getContrast();
-
-  unsigned char* buf;
-  unsigned char* ptr = (unsigned char*) rawtile.data;
-
-
-  // Convert CIELAB to sRGB, performing tile cropping if necessary
+  // Convert CIELAB to sRGB
   if( (*session->image)->getColourSpace() == CIELAB ){
-    if( session->loglevel >= 4 ) *(session->logfile) << "DeepZoom :: Converting from CIELAB->sRGB" << endl;
 
-    buf = new unsigned char[ rawtile.width*rawtile.height*rawtile.channels ];
-    for( unsigned int j=0; j<rawtile.height; j++ ){
-      for( unsigned int i=0; i<rawtile.width*rawtile.channels; i+=rawtile.channels ){
-	iip_LAB2sRGB( &ptr[j*tw*rawtile.channels + i], &buf[j*rawtile.width*rawtile.channels + i] );
-      }
-    }
-    delete[] ptr;
-    rawtile.data = buf;
-  }
-
-  // Handle 16bit images or contrast adjustments
-  else if( (rawtile.bpc==16) || (contrast !=1.0) ){
-
-    // Normalise 16bit images to 8bit for JPEG
-    if( rawtile.bpc == 16 ) contrast = contrast / 256.0;
-
-    float v;
-    if( session->loglevel >= 4 ) *(session->logfile) << "DeepZoom :: Applying contrast scaling of " << contrast << endl;
-
-    unsigned int dataLength = rawtile.width*rawtile.height*rawtile.channels;
-    buf = new unsigned char[ dataLength ];
-    for( unsigned int j=0; j<rawtile.height; j++ ){
-      for( unsigned int i=0; i<rawtile.width*rawtile.channels; i++ ){
-
-	if( rawtile.bpc == 16 ){
-	  unsigned short* sptr = (unsigned short*) rawtile.data;
-	  v = sptr[j*tw*rawtile.channels + i];
-	}
-	else{
-	  unsigned char* sptr = (unsigned char*) rawtile.data;
-	  v = sptr[j*tw*rawtile.channels + i];
-	}
-
-	v = v * contrast;
-	if( v > 255.0 ) v = 255.0;
-	if( v < 0.0 ) v = 0.0;
-	buf[j*rawtile.width*rawtile.channels + i] = (unsigned char) v;
-      }
+    Timer cielab_timer;
+    if( session->loglevel >= 4 ){
+      *(session->logfile) << "JTL :: Converting from CIELAB->sRGB" << endl;
+      cielab_timer.start();
     }
 
-    // Copy this new buffer back
-    memcpy(rawtile.data, buf, dataLength);
-    rawtile.dataLength = dataLength;
+    filter_LAB2sRGB( rawtile );
 
-    // And delete our buffer
-    delete[] buf;
+    if( session->loglevel >= 4 ){
+      *(session->logfile) << "JTL :: CIELAB->sRGB conversion in " << cielab_timer.getTime() << " microseconds" << endl;
+    }
   }
+
+
+  // Apply any contrast adjustments and/or clipping to 8bit from 16bit
+  filter_contrast( rawtile, session->view->getContrast() );
 
 
   // Compress to JPEG

@@ -9,7 +9,7 @@
     Culture of the Czech Republic. 
 
 
-    Copyright (C) 2009-2011 IIPImage.
+    Copyright (C) 2009-2012 IIPImage.
     Authors: Ruven Pillay & Petr Pridal
 
     This program is free software; you can redistribute it and/or modify
@@ -110,20 +110,19 @@ class KakaduImage : public IIPImage {
   /// Number of levels that don't physically exist
   unsigned int virtual_levels;
 
-
   /// Main processing function
-  /** \param r resolution
-      \param l number of quality levels to decode
-      \param x x coordinate
-      \param y y coordinate
-      \param w width of region
-      \param h height of region
-      \param d buffer to fill
+  /** @param r resolution
+      @param l number of quality levels to decode
+      @param x x coordinate
+      @param y y coordinate
+      @param w width of region
+      @param h height of region
+      @param d buffer to fill
    */
   void process( unsigned int r, int l, int x, int y, unsigned int w, unsigned int h, void* d ) throw (std::string);
 
   /// Convenience function to delete allocated buffers
-  /** \param b pointer to buffer
+  /** @param b pointer to buffer
    */
   void delete_buffer( void* b );
 
@@ -131,23 +130,23 @@ class KakaduImage : public IIPImage {
  public:
 
   /// Constructor
- KakaduImage():IIPImage() { 
+  KakaduImage():IIPImage() { 
     tile_width = TILESIZE; tile_height = TILESIZE;
     numResolutions = 0; virtual_levels = 0;
   };
 
   /// Constructor
-  /** \param path image path
+  /** @param path image path
    */
- KakaduImage( const std::string& path ): IIPImage( path ) { 
+  KakaduImage( const std::string& path ): IIPImage( path ) { 
     tile_width = TILESIZE; tile_height = TILESIZE;
     numResolutions = 0; virtual_levels = 0;
   };
 
   /// Copy Constructor
-  /** \param image IIPImage object
+  /** @param image IIPImage object
    */
- KakaduImage( const IIPImage& image ): IIPImage( image ) {
+  KakaduImage( const IIPImage& image ): IIPImage( image ) {
     tile_width = TILESIZE; tile_height = TILESIZE;
     numResolutions = 0; virtual_levels = 0;
   };
@@ -160,36 +159,39 @@ class KakaduImage : public IIPImage {
 
 
   /// Overloaded function for loading TIFF image information
-  /** \param x horizontal sequence angle
-      \param y vertical sequence angle
+  /** @param x horizontal sequence angle
+      @param y vertical sequence angle
   */
   void loadImageInfo( int x, int y ) throw (std::string);
 
   /// Overloaded function for closing a TIFF image
   void closeImage();
 
+  /// Return whether this image type directly handles region decoding
+  bool regionDecoding(){ return true; };
+
   /// Overloaded function for getting a particular tile
-  /** \param x horizontal sequence angle
-      \param y vertical sequence angle
-      \param r resolution
-      \param l number of quality layers to decode
-      \param t tile number
+  /** @param x horizontal sequence angle
+      @param y vertical sequence angle
+      @param r resolution
+      @param l number of quality layers to decode
+      @param t tile number
   */
-    RawTile getTile( int x, int y, unsigned int r, int l, unsigned int t ) throw (std::string);
+  RawTile getTile( int x, int y, unsigned int r, int l, unsigned int t ) throw (std::string);
 
   /// Overloaded function for returning a region for a given angle and resolution
   /** Return a RawTile object: Overloaded by child class.
-      \param ha horizontal angle
-      \param va vertical angle
-      \param r resolution
-      \param l number of quality layers to decode
-      \param x x coordinate
-      \param y y coordinate
-      \param w width of region
-      \param h height of region
-      \param b buffer to fill
+      @param ha horizontal angle
+      @param va vertical angle
+      @param r resolution
+      @param l number of quality layers to decode
+      @param x x coordinate
+      @param y y coordinate
+      @param w width of region
+      @param h height of region
+      @param b buffer to fill
   */
-  void getRegion( int ha, int va, unsigned int r, int l, int x, int y, unsigned int w, unsigned int h, unsigned char* b ) throw (std::string);
+  RawTile getRegion( int ha, int va, unsigned int r, int l, int x, int y, unsigned int w, unsigned int h ) throw (std::string);
 
 
 };

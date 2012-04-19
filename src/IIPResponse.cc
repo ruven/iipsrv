@@ -1,11 +1,11 @@
 /*
     IIP Response Handler Class
 
-    Copyright (C) 2003-2009 Ruven Pillay.
+    Copyright (C) 2003-2012 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
-    the Free Software Foundation; either version 2 of the License, or
+    the Free Software Foundation; either version 3 of the License, or
     (at your option) any later version.
 
     This program is distributed in the hope that it will be useful,
@@ -114,6 +114,7 @@ string IIPResponse::formatResponse() {
   string response;
   if( error.length() ){
     response = server + eof + "Cache-Control: no-cache" + eof + mimeType + eof +
+      "Status: 400 Bad Request" + eof +
       "Content-Disposition: inline;filename=\"IIPisAMadGameClosedToOurUnderstanding.netfpx\"" +
       eof + eof + error;
   }
@@ -129,6 +130,7 @@ string IIPResponse::formatResponse() {
 string IIPResponse::getAdvert( const string& version ){
 
   string advert = server + eof + "Content-Type: text/html" + eof;
+  advert += "Status: 400 Bad Request" + eof;
   advert += "Content-Disposition: inline;filename=\"iipsrv.html\"" + eof + eof;
   advert += "<?xml version=\"1.0\" encoding=\"UTF-8\"?><!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.1//EN\" \"http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd\"><html xmlns=\"http://www.w3.org/1999/xhtml\" xml:lang=\"en\" ><head><title>IIP Server</title><meta name=\"author\" content=\"Ruven Pillay &lt;ruven@users.sourceforge.net&gt;\"/></head><body style=\"font-family:Helvetica,sans-serif; margin:4em\"><center><h1>Internet Imaging Protocol Server</h1><h2>Version "
     + version +

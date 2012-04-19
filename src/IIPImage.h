@@ -151,7 +151,7 @@ class IIPImage {
   const std::string& getImageType() { return type; };
 
   /// Get the image timestamp
-    void updateTimestamp( const std::string& ) throw( std::string );
+  void updateTimestamp( const std::string& ) throw( std::string );
 
   /// Get a HTTP RFC 1123 formatted timestamp
   const std::string getTimestamp();
@@ -185,7 +185,6 @@ class IIPImage {
   unsigned int getImageHeight( int n=0 ) { return image_heights[n]; };
 
   /// Return the base tile height in pixels for a given resolution
-
   unsigned int getTileHeight() { return tile_height; };
 
   /// Return the base tile width in pixels
@@ -200,7 +199,8 @@ class IIPImage {
     return metadata[index];
   };
 
-
+  /// Return whether this image type directly handles region decoding
+  virtual bool regionDecoding(){ return false; };
 
   /// Load the appropriate codec module for this image type
   /** Used only for dynamically loading codec modules. Overloaded by DSOImage class.
@@ -247,7 +247,7 @@ class IIPImage {
       \param h height of region
       \param b image buffer
   */
-    virtual void getRegion( int ha, int va, unsigned int r, int layers, int x, int y, unsigned int w, unsigned int h, unsigned char* b ){ return; };
+  virtual RawTile getRegion( int ha, int va, unsigned int r, int layers, int x, int y, unsigned int w, unsigned int h ){ return RawTile(); };
 
   /// Assignment operator
   const IIPImage& operator = ( const IIPImage& );

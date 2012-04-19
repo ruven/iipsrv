@@ -1,6 +1,6 @@
 # Process this file with autoconf to produce a configure script.
 
-AC_INIT(iipsrv,0.9.9,ruven@users.sourceforge.net)
+AC_INIT(iipsrv,1.0,ruven@users.sourceforge.net)
 AC_CONFIG_MACRO_DIR([m4])
 AM_INIT_AUTOMAKE
 
