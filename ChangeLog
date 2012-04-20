@@ -1,3 +1,7 @@
+20/04/2012:
+	- Fixed memory overun error in filter_contrast in Transforms.cc.
+
+
 18/04/2012:
 	- Major rewrite of CVT code to unify TIFF and JPEG2000 region
 	  export. Region compositing now in TileManager->getRegion with

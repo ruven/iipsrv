@@ -23,7 +23,6 @@
 #include <cmath>
 #include "Transforms.h"
 
-
 /* D65 temp 6504.
  */
 #define D65_X0 95.0470
@@ -180,7 +179,7 @@ static void LAB2sRGB( unsigned char *in, unsigned char *out ){
 // Convert whole tile from CIELAB to sRGB
 void filter_LAB2sRGB( RawTile& in ){
 
-  unsigned long np = in.dataLength;
+  unsigned long np = in.width * in.height * in.channels;
 
   for( unsigned long n=0; n<np; n+=in.channels ){
     unsigned char* ptr = (unsigned char*) in.data;
@@ -231,14 +230,14 @@ void filter_interpolate_bilinear( RawTile& in, unsigned int resampled_width, uns
 /// Function to apply a contrast adjustment and clip to 8 bit
 void filter_contrast( RawTile& in, float c ){
 
-  unsigned long np = in.dataLength;
+  unsigned int np = in.width * in.height * in.channels;
 
   unsigned char* buffer;
 
   if( in.bpc == 16 ){
     buffer = new unsigned char[np];
     float contrast = c/256.0;
-    for( unsigned long n=0; n<np; n++ ){
+    for( unsigned int n=0; n<np; n++ ){
       float v = ((unsigned short*)in.data)[n] * contrast;
       v = (v<255.0) ? v : 255.0;
       buffer[n] = (unsigned char) v;
@@ -246,12 +245,11 @@ void filter_contrast( RawTile& in, float c ){
     delete[] (unsigned short*) in.data;
     in.data = buffer;
     in.bpc = 8;
-    in.dataLength = np;
   }
   else{
     if( c == 1.0 ) return;
     buffer = (unsigned char*) in.data;
-    for( unsigned long n=0; n<np; n++ ){
+    for( unsigned int n=0; n<np; n++ ){
       float v = ((unsigned char*)in.data)[n] * c;
       v = (v<255.0) ? v : 255.0;
       buffer[n] = (unsigned char) v;
