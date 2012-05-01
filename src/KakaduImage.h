@@ -3,10 +3,10 @@
 /*  IIP Kakadu JPEG2000 Class
 
 
-    Development supported by Moravian Library in Brno (Moravska zemska 
-    knihovna v Brne, http://www.mzk.cz/) R&D grant MK00009494301 & Old 
-    Maps Online (http://www.oldmapsonline.org/) from the Ministry of 
-    Culture of the Czech Republic. 
+    Development supported by Moravian Library in Brno (Moravska zemska
+    knihovna v Brne, http://www.mzk.cz/) R&D grant MK00009494301 & Old
+    Maps Online (http://www.oldmapsonline.org/) from the Ministry of
+    Culture of the Czech Republic.
 
 
     Copyright (C) 2009-2012 IIPImage.
@@ -23,8 +23,8 @@
     GNU General Public License for more details.
 
     You should have received a copy of the GNU General Public License
-    along with this program; if not, write to the Free Software
-    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+    along with this program; if not, write to the Free Software Foundation,
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
 
@@ -130,7 +130,7 @@ class KakaduImage : public IIPImage {
  public:
 
   /// Constructor
-  KakaduImage():IIPImage() { 
+  KakaduImage():IIPImage() {
     tile_width = TILESIZE; tile_height = TILESIZE;
     numResolutions = 0; virtual_levels = 0;
   };
@@ -138,7 +138,7 @@ class KakaduImage : public IIPImage {
   /// Constructor
   /** @param path image path
    */
-  KakaduImage( const std::string& path ): IIPImage( path ) { 
+  KakaduImage( const std::string& path ): IIPImage( path ) {
     tile_width = TILESIZE; tile_height = TILESIZE;
     numResolutions = 0; virtual_levels = 0;
   };

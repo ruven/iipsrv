@@ -1,3 +1,16 @@
+01/05/2012:
+	- Modified memory handling in JPEGCompressor.cc to better handle
+	  images where the compressed version may be bigger than the
+	  original (for example at very high quality levels).
+	- Changes to CVT.cc to work with new JPEGCompressor code and removal
+	  of chunked encoding header directive from CVT.cc.
+	- Fixed bug in CVT when specifying both WID and HEI.
+	- Fixed compiler warning in IIPResponse.cc.
+	- Added man page.
+	- Added missing definition of get_nprocs() function to Kakadu.cc
+	  for Mac OSX and FreeBSD.
+
+
 20/04/2012:
 	- Fixed memory overun error in filter_contrast in Transforms.cc.
 
@@ -67,7 +80,7 @@
 	  Zoomify and DeepZoom output.
 
 
-15/04/2009: Version 0.9.9 Released
+15/04/2011: Version 0.9.9 Released
 
 
 15/04/2011:

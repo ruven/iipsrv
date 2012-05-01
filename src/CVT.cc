@@ -14,14 +14,16 @@
     GNU General Public License for more details.
 
     You should have received a copy of the GNU General Public License
-    along with this program; if not, write to the Free Software
-    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+    along with this program; if not, write to the Free Software Foundation,
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
 #include "Task.h"
 #include "Transforms.h"
 #include <cmath>
 #include <algorithm>
+
+//#define CHUNKED 1
 
 using namespace std;
 
@@ -121,6 +123,14 @@ void CVT::run( Session* session, const std::string& a ){
       view_height = im_height;
       resampled_width = session->view->getRequestWidth();
       resampled_height = session->view->getRequestHeight();
+
+      // Make sure our requested width and height don't modify the aspect ratio. Make sure the final image fits *within* the requested size
+      if( ((double)resampled_height/(double)view_height) > ((double)resampled_width/(double)view_width) ){
+	resampled_height = (unsigned int) (((double)resampled_width/(double)view_width) * view_height);
+      }
+      else if( ((double)resampled_width/(double)view_width) > ((double)resampled_height/(double)view_height) ){
+	resampled_width = (unsigned int) (((double)resampled_height/(double)view_height) * view_width);
+      }
     }
 
 
@@ -151,7 +161,9 @@ void CVT::run( Session* session, const std::string& a ){
 			 "Last-Modified: %s\r\n"
  			 "Content-Type: image/jpeg\r\n"
 			 "Content-Disposition: inline;filename=\"%s.jpg\"\r\n"
- 	                 "Transfer-Encoding: chunked\r\n"
+#ifdef CHUNKED
+	                 "Transfer-Encoding: chunked\r\n"
+#endif
 	                 "\r\n",
 	                 VERSION, MAX_AGE, (*session->image)->getTimestamp().c_str(), basename.c_str() );
 
@@ -216,15 +228,22 @@ loglevel );
     // Initialise our JPEG compression object
     session->jpeg->InitCompression( complete_image, resampled_height );
     len = session->jpeg->getHeaderSize();
-//     snprintf( str, 1024, "%X\r\n", len );
-//     *(session->logfile) << "CVT :: JPEG Header Chunk : " << str;
-//     session->out->printf( str );
+
+#ifdef CHUNKED
+    snprintf( str, 1024, "%X\r\n", len );
+    if( session->loglevel >= 4 ) *(session->logfile) << "CVT :: JPEG Header Chunk : " << str;
+    session->out->printf( str );
+#endif
+
     if( session->out->putStr( (const char*) session->jpeg->getHeader(), len ) != len ){
       if( session->loglevel >= 1 ){
 	*(session->logfile) << "CVT :: Error writing jpeg header" << endl;
       }
     }
-//     session->out->printf( "\r\n" );
+
+#ifdef CHUNKED
+    session->out->printf( "\r\n" );
+#endif
 
     // Flush our block of data
     if( session->out->flush() == -1 ) {
@@ -234,8 +253,11 @@ loglevel );
     }
 
 
-    // Send out the data per strip of 512 pixels in height
-    unsigned int strip_height = 512;
+    // Send out the data per strip of 512 pixels in height.
+    // Allocate enough memory for this plus an extra 16k for instances where compressed
+    // data is greater than uncompressed
+    unsigned int strip_height = 128;
+    unsigned char* output = new unsigned char[resampled_width*channels*strip_height+16536];
     int strips = (resampled_height/strip_height) + (resampled_height%strip_height == 0 ? 0 : 1);
 
     for( int n=0; n<strips; n++ ){
@@ -251,26 +273,30 @@ loglevel );
       }
 
       // Compress the strip
-      len = session->jpeg->CompressStrip( input, strip_height );
+      len = session->jpeg->CompressStrip( input, output, strip_height );
 
       if( session->loglevel >= 3 ){
 	*(session->logfile) << "CVT :: Compressed data strip length is " << len << endl;
       }
 
+#ifdef CHUNKED
       // Send chunk length in hex
-//       snprintf( str, 1024, "%X\r\n", len );
-//       *(session->logfile) << "CVT :: Chunk : " << str;
-//       session->out->printf( str );
+      snprintf( str, 1024, "%X\r\n", len );
+      if( session->loglevel >= 4 ) *(session->logfile) << "CVT :: Chunk : " << str;
+      session->out->printf( str );
+#endif
 
       // Send this strip out to the client
-      if( len != session->out->putStr( (const char*) input, len ) ){
+      if( len != session->out->putStr( (const char*) output, len ) ){
 	if( session->loglevel >= 1 ){
 	  *(session->logfile) << "CVT :: Error writing jpeg strip data: " << len << endl;
 	}
       }
 
+#ifdef CHUNKED
       // Send closing chunk CRLF
-//       session->out->printf( "\r\n" );
+      session->out->printf( "\r\n" );
+#endif
 
       // Flush our block of data
       if( session->out->flush() == -1 ) {
@@ -281,23 +307,30 @@ loglevel );
 
     }
 
-
     // Finish off the image compression
-    len = session->jpeg->Finish();
-    
-//     snprintf( str, 1024, "%X\r\n", len );
-//     *(session->logfile) << "CVT :: Final Data Chunk : " << str;
-//     session->out->printf( str );
-    if( session->out->putStr( (const char*) complete_image.data, len ) != len ){
+    len = session->jpeg->Finish( output );
+
+#ifdef CHUNKED
+    snprintf( str, 1024, "%X\r\n", len );
+    if( session->loglevel >= 4 ) *(session->logfile) << "CVT :: Final Data Chunk : " << str << endl;
+    session->out->printf( str );
+#endif
+
+    if( session->out->putStr( (const char*) output, len ) != len ){
       if( session->loglevel >= 1 ){
 	*(session->logfile) << "CVT :: Error writing jpeg EOI markers" << endl;
       }
     }
-    // Send closing chunk CRLF
-//     session->out->printf( "\r\n" );
 
+    delete[] output;
+
+
+#ifdef CHUNKED
+    // Send closing chunk CRLF
+    session->out->printf( "\r\n" );
     // Send closing blank chunk
-//     session->out->printf( "0\r\n\r\n" );
+    session->out->printf( "0\r\n\r\n" );
+#endif
 
     if( session->out->flush()  == -1 ) {
       if( session->loglevel >= 1 ){

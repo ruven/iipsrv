@@ -1,10 +1,10 @@
 /*  JPEG class wrapper to ijg jpeg library
 
-    Copyright (C) 2000-2003 Ruven Pillay.
+    Copyright (C) 2000-2012 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
-    the Free Software Foundation; either version 2 of the License, or
+    the Free Software Foundation; either version 3 of the License, or
     (at your option) any later version.
 
     This program is distributed in the hope that it will be useful,
@@ -13,8 +13,8 @@
     GNU General Public License for more details.
 
     You should have received a copy of the GNU General Public License
-    along with this program; if not, write to the Free Software
-    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+    along with this program; if not, write to the Free Software Foundation,
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
 
@@ -30,8 +30,8 @@
 
 
 extern "C"{
-  /* Undefine this to prevent compiler warning
-   */
+/* Undefine this to prevent compiler warning
+ */
 #undef HAVE_STDLIB_H
 #include <jpeglib.h>
 }
@@ -58,7 +58,6 @@ typedef iip_destination_mgr * iip_dest_ptr;
 /// Wrapper class to the IJG JPEG library
 
 class JPEGCompressor{
-
 	
  private:
 
@@ -87,12 +86,12 @@ class JPEGCompressor{
  public:
 
   /// Constructor
-  /** \param quality JPEG Quality factor (0-100) */
+  /** @param quality JPEG Quality factor (0-100) */
   JPEGCompressor( int quality ) { Q = quality; };
 
 
   /// Set the compression quality
-  /** \param factor Quality factor (0-100) */
+  /** @param factor Quality factor (0-100) */
   void setQuality( int factor ) {
     if( factor < 0 ) Q = 0;
     else if( factor > 100 ) Q = 100;
@@ -108,23 +107,25 @@ class JPEGCompressor{
   /** If we are doing a strip based encoding, we need to first initialise
       with InitCompression, then compress a single strip at a time using
       CompressStrip and finally clean up using Finish
-      \param rawtile tile containing the image to be compressed
-      \param strip_height pixel height of the strip we want to compress
+      @param rawtile tile containing the image to be compressed
+      @param strip_height pixel height of the strip we want to compress
    */
-  void InitCompression( RawTile& rawtile, unsigned int strip_height ) throw (std::string);
+  void InitCompression( const RawTile& rawtile, unsigned int strip_height ) throw (std::string);
 
   /// Compress a strip of image data
-  /** \param s source image data
-      \param tile_height pixel height of the tile we are compressing
+  /** @param s source image data
+      @param o output buffer
+      @param tile_height pixel height of the tile we are compressing
    */
-  unsigned int CompressStrip( unsigned char* s, unsigned int tile_height ) throw (std::string);
+  unsigned int CompressStrip( unsigned char* s, unsigned char* o, unsigned int tile_height ) throw (std::string);
 
   /// Finish the strip based compression and free memory
-  unsigned int Finish() throw (std::string);
+  /** @param output output buffer */
+  unsigned int Finish( unsigned char* output ) throw (std::string);
 
 
   /// Compress an entire buffer of image data at once in one command
-  /** \param t tile of image data */
+  /** @param t tile of image data */
   int Compress( RawTile& t ) throw (std::string);
 
 

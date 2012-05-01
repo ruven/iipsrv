@@ -1,11 +1,11 @@
 
 /*  DSO module loader for external image types
 
-    Copyright (C) 2000-2003 Ruven Pillay.
+    Copyright (C) 2000-2012 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
-    the Free Software Foundation; either version 2 of the License, or
+    the Free Software Foundation; either version 3 of the License, or
     (at your option) any later version.
 
     This program is distributed in the hope that it will be useful,
@@ -14,8 +14,8 @@
     GNU General Public License for more details.
 
     You should have received a copy of the GNU General Public License
-    along with this program; if not, write to the Free Software
-    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+    along with this program; if not, write to the Free Software Foundation,
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
 
@@ -183,7 +183,7 @@ void DSOImage::openImage() throw (string)
     throw string( error );
   }
   f = (func) getParameter;
-  image_width = (int) (*f) (NULL);
+  image_widths.push_back( (int) (*f) (NULL) );
 
 
   getParameter = dlsym( libHandle, "get_image_height" );  
@@ -192,7 +192,7 @@ void DSOImage::openImage() throw (string)
     throw string( error );
   }
   f = (func) getParameter;
-  image_height = (int) (*f) (NULL);
+  image_heights.push_back( (int) (*f) (NULL) );
 
 
   getParameter = dlsym( libHandle, "get_num_resolutions" );  
@@ -232,7 +232,7 @@ void DSOImage::closeImage() throw (string)
 
 
 
-RawTile DSOImage::getTile( int seq, int angle, int resolution, int tile ) throw (string)
+RawTile DSOImage::getTile( int seq, int angle, unsigned int resolution, int layer, unsigned int tile ) throw (string)
 {
   // Make sure we are on the correct image
   if( (currentX != seq) && (currentY != angle) ){
@@ -270,7 +270,9 @@ RawTile DSOImage::getTile( int seq, int angle, int resolution, int tile ) throw 
   if( !data ) throw getError();
 
   RawTile rawtile( tile, resolution, seq, angle,
-		   w, h, (unsigned char*) data, 3, data_len );
+		   w, h, 3, 8 );
+  rawtile.data = data;
+  rawtile.dataLength = data_len;
   return rawtile;
 }  
 

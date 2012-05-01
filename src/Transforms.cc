@@ -15,8 +15,8 @@
     GNU General Public License for more details.
 
     You should have received a copy of the GNU General Public License
-    along with this program; if not, write to the Free Software
-    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+    along with this program; if not, write to the Free Software Foundation,
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
 
@@ -198,13 +198,21 @@ void filter_interpolate_nearestneighbour( RawTile& in, unsigned int resampled_wi
   unsigned char* buf = (unsigned char*) in.data;
   int channels = in.channels;
   unsigned int width = in.width;
-//   unsigned int height = in.height;
-  double scale = (double)width / (double)resampled_width;
+  unsigned int height = in.height;
+
+  // Calculate our scale
+  double xscale = (double)width / (double)resampled_width;
+  double yscale = (double)height / (double)resampled_height;
 
   for( unsigned int j=0; j<resampled_height; j++ ){
     for( unsigned int i=0; i<resampled_width; i++ ){
+
       // Indexes in the current pyramid resolution and resampled spaces
-      unsigned int pyramid_index = (unsigned int) channels * ( floor(i*scale) + floor(j*scale)*width );
+      // Make sure to limit our input index to the image surface
+      unsigned int ii = (unsigned int) floor(i*xscale);
+      unsigned int jj = (unsigned int) floor(j*yscale);
+      unsigned int pyramid_index = (unsigned int) channels * ( ii + jj*width );
+
       unsigned int resampled_index = (i + j*resampled_width)*channels;
       for( int k=0; k<in.channels; k++ ){
 	buf[resampled_index+k] = buf[pyramid_index+k];
@@ -235,6 +243,7 @@ void filter_contrast( RawTile& in, float c ){
   unsigned char* buffer;
 
   if( in.bpc == 16 ){
+    // Allocate new 8 bit buffer for tile
     buffer = new unsigned char[np];
     float contrast = c/256.0;
     for( unsigned int n=0; n<np; n++ ){
@@ -242,6 +251,7 @@ void filter_contrast( RawTile& in, float c ){
       v = (v<255.0) ? v : 255.0;
       buffer[n] = (unsigned char) v;
     }
+    // Replace original buffer with new
     delete[] (unsigned short*) in.data;
     in.data = buffer;
     in.bpc = 8;
@@ -250,7 +260,7 @@ void filter_contrast( RawTile& in, float c ){
     if( c == 1.0 ) return;
     buffer = (unsigned char*) in.data;
     for( unsigned int n=0; n<np; n++ ){
-      float v = ((unsigned char*)in.data)[n] * c;
+      float v = (float)(((unsigned char*)in.data)[n]) * c;
       v = (v<255.0) ? v : 255.0;
       buffer[n] = (unsigned char) v;
     }

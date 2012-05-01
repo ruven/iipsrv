@@ -5,10 +5,9 @@
 
 ABOUT:
 -----
-This is a high performance  FCGI server module for high resolution image
-streaming. It implements the main part of the IIP protocol specification
-with extensions for multispectral imaging, 3D panoramic sequences and 3D
-surface topologies.
+IIPImage is an advanced high-performance feature-rich imaging server system for web-based streamed viewing and zooming of ultra high-resolution 
+images. It is designed to be fast and bandwidth-efficient with low processor and memory requirements. The system can comfortably handle gigapixel size images as 
+well as advanced image features such as both 8 and 16 bit depths, CIELAB colorimetric images and scientific imagery such as multispectral images, image sequences and 3D surface topologies.
 
 
 FEATURES:

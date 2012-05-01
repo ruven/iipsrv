@@ -102,7 +102,7 @@ void IIPResponse::addResponse( const char* c, int a, int b ){
 void IIPResponse::setError( const string& code, const string& arg ){
 
   char tmp[32];
-  snprintf( tmp, 32, "Error/%ld:%s %s", code.length() + arg.length() + 1, code.c_str(), arg.c_str() );
+  snprintf( tmp, 32, "Error/%ld:%s %s", (long)(code.length() + arg.length() + 1), code.c_str(), arg.c_str() );
   error += tmp + eof;
 }
 

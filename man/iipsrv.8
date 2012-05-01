@@ -1,0 +1,167 @@
+.TH IIPSRV 8 "APRIL 2012" Linux "User Manuals"
+.SH NAME
+
+IIPSRV \- IIPImage Image Server
+
+.SH DESCRIPTION
+IIPImage is an advanced high-performance feature-rich imaging server system for web-based streamed viewing and zooming of ultra high-resolution 
+images. It is designed to be fast and bandwidth-efficient with low processor and memory requirements. The system can comfortably handle gigapixel size images as 
+well as advanced image features such as both 8 and 16 bit depths, CIELAB colorimetric images and scientific imagery such as multispectral images.
+Source images can be either TIFF (tiled multi-resolution) or JPEG2000 (if enabled).
+
+The imaging server can also dynamically export images in JPEG format and perform basic image processing, such as contrast adjustment, region extraction and arbitrary rescaling.
+
+.SH SYNOPSIS
+
+Command line use:
+
+.B iipsrv.fcgi --bind
+.I host
+:
+.I port
+
+
+.SH FILES
+
+.IR iipsrv.fcgi
+main executable
+
+.IR iipsrv.log
+log file: usually in
+.IR /var/log/
+or
+.IR /tmp/
+
+
+.SH OPTIONS
+
+There are several parameters that can be supplied to
+.B iipsrv.fcgi
+These should be set via the appropriate web server configuration directives if running via Apache or Lighttpd. See
+.B EXAMPLES
+for details of web server configuations.
+Alternatively these parameters can be set via environment settings if running directly from the command line or from
+.B spawn-fcgi.
+
+.IP LOGFILE
+The log file the module will (attempt) to write to. If no
+value is given, no log will be written. Make sure the server
+process has write access to this directory. Paths with spaces
+in them may not work correctly.
+.IP VERBOSITY
+The level of logging. 0 means no logging, 1 is minimal logging,
+2 lots of debugging stuff and 3 even more debugging stuff and 4
+a very large amount indeed. Logging is only enabled if 
+.BR LOGFILE 
+has also been defined.
+.IP JPEG_QUALITY
+The default JPEG quality factor for compression when the client
+does not specify one. The value should be between 1 (highest level
+of compression) and 100 (highest image quality). The default is 75.
+.IP MAX_IMAGE_CACHE_SIZE
+Max image cache size to be held in RAM in MB. This is a cache of
+the compressed JPEG image tiles requested by the client. The default
+is 5MB.
+.IP FILESYSTEM_PREFIX
+This is a prefix automatically added by the server to the 
+beginning of each file system path. This can be useful for security reasons to 
+limit access to certain sub-directories. For example, with a prefix of 
+"/home/images/" set on the server, a request by a client for "image.tif" will 
+point to the path "/home/images/image.tif".  Any reverse directory path 
+component such as ../ is also filtered out. No default value.
+.IP MAX_CVT
+The maximum permitted image pixel size returned by the CVT command
+in conjunction with WID or HEI or RGN. The default is 5000. This
+prevents huge requests from overloading the server
+.IP LAYERS
+The number of quality layers to decode for image that support 
+progressive quality encoding, such as JPEG2000. Ignored for other file 
+formats. The default is 1.
+.IP WATERMARK
+TIFF image to use as watermark file. This image should be not be 
+bigger the tile size used for TIFF tiling. If bigger, it will simply be 
+cropped to the tile size. If smaller, the watermark will be positioned 
+randomly within the available space. The image can be either colour or 
+grayscale.
+.IP WATERMARK_PROBABILITY
+The probability that a particilar tile will have a watermark 
+applied to it. 0 means never, 1 means always.
+.IP WATERMARK_OPACITY
+The opacity (between 0 and 1) applied to the watermark image.
+.IP MEMCACHED_SERVERS
+A comma-delimitted list of memcached servers with optional
+port numbers. For example: localhost,192.168.0.1:8888,192.168.0.2.
+.IP MEMCACHED_TIMEOUT
+Time in seconds that cache remains fresh. Default is 86400 seconds (24 hours).
+.IP FILENAME_PATTERN
+Pattern that follows the name stem for a panoramic image sequence.
+eg: "_pyr_" for 
+.IR FZ1_pyr_000_090.tif . 
+In this example, just supply FZ1 to the FIF command. The "000"
+indicates the vertical angle and "090" the horizontal. This is only
+relevant to 3D image sequences. The default is "_pyr_".
+
+.SH EXAMPLES
+
+.B iipsrv
+will be automatically started by both Apache and Lighttpd. But not by Nginx or Java Application Servers.
+See the example configuration in the README or included with your distribution for the appropriate syntax.
+Note that Apache has two FCGI modules: mod_fastcgi and mod_fcgid which are configured differently.
+
+You may also wish to 
+run
+.B iipsrv
+as a standalone program. To do this, use the following syntax to bind
+to a particular port. In this example,
+.B iipsrv
+will bind to port 9000 on the machine's IP address 192.168.0.1:
+
+% iipsrv.fcgi --bind 192.168.0.1:9000
+
+For use in stand alone mode, you will then need to configure your webserver on the same machine or another to point to this IP address and port.
+
+For web servers such as Nginx or Java Application Servers such as Tomcat, JBoss or Jetty, which cannot automatically start FCGI processes, you will need to run
+.B iipsrv
+as a standalone program.
+
+It is also possible to run
+.Iiipsrv
+via the
+.I spawn-fcgi
+program. Set up any parameters via environment variables and run the command as follows to bind, as in the previous example to port 9000 on IP address 192.168.0.1:
+
+% spawn-fcgi -f src/iipsrv.fcgi -a 192.168.0.1 -p 9000
+
+
+.SH PROTOCOLS
+
+The IIPImage server supports the
+.B Internet Imaging Protocol (IIP)
+, the
+.B Zoomify
+protocol and the
+.B DeepZoom
+protocol. Client applications supporting these protocols should be able to use
+.B iipsrv
+as their back-end server.
+.B IIP
+is the most feature rich of the 3 and allows access to the more advanced imaging server features.
+
+
+
+.SH IMAGE PATHS
+
+The image paths given to the server via the FIF variable must be
+absolute paths on the server machine (eg. FIF=/images/test.tif) 
+and not paths relative to the web server document root location.
+Images do not, therefore, need to be directly accessible by the
+client via the web server. Make sure the server process owner is
+able to access and read the images.
+
+
+.SH SEE ALSO
+IIPImage website: http://iipimage.sourceforge.net
+
+.SH AUTHORS
+Ruven Pillay <ruven@users.sourceforge.net>
+

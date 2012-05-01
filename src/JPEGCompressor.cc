@@ -1,10 +1,10 @@
 /*  JPEG class wrapper to ijg jpeg library
 
-    Copyright (C) 2000-2010 Ruven Pillay.
+    Copyright (C) 2000-2012 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
-    the Free Software Foundation; either version 2 of the License, or
+    the Free Software Foundation; either version 3 of the License, or
     (at your option) any later version.
 
     This program is distributed in the hope that it will be useful,
@@ -13,10 +13,9 @@
     GNU General Public License for more details.
 
     You should have received a copy of the GNU General Public License
-    along with this program; if not, write to the Free Software
-    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+    along with this program; if not, write to the Free Software Foundation,
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA.
 */
-
 
 
 
@@ -26,7 +25,7 @@
 using namespace std;
 
 
-#define MX 4096
+#define MX 16536
 
 
 /* My version of the JPEG error_exit function. We want to pass control back
@@ -86,18 +85,17 @@ iip_init_destination (j_compress_ptr cinfo)
 
   /* Add some extra because when we have very small tiles, the JPEG data
      including header can end up being larger than the original raw
-     data size!
+     data size, especially at high quality factors!
   */
-  mx = (mx < MX)? MX : mx;
+  mx += MX;
 
-
-  /* Allocate the output buffer --- it will be released when done with image
-   
+  /* Allocate the output buffer --- it will be released when done with image   
   dest->buffer = (JOCTET *)
     (*cinfo->mem->alloc_small) ( (j_common_ptr) cinfo, JPOOL_IMAGE,
 				 mx * sizeof(JOCTET) );
   */
 
+  // In fact just allocate with new
   dest->buffer = new JOCTET[mx];
   dest->size = mx;
 
@@ -117,6 +115,9 @@ iip_empty_output_buffer( j_compress_ptr cinfo )
 
   // Copy the JPEG data to our output tile buffer
   if( datacount > 0 ){
+    if( datacount > cinfo->image_width*dest->strip_height*cinfo->input_components + MX ){
+      datacount = cinfo->image_width*dest->strip_height*cinfo->input_components + MX;
+    }
     memcpy( dest->source, dest->buffer, datacount );
   }
 
@@ -157,13 +158,10 @@ void iip_term_destination( j_compress_ptr cinfo )
 
 
 
-void JPEGCompressor::InitCompression( RawTile& rawtile, unsigned int strip_height ) throw (string)
+void JPEGCompressor::InitCompression( const RawTile& rawtile, unsigned int strip_height ) throw (string)
 {
-
   // Do some initialisation
-  data = (unsigned char*) rawtile.data;
   dest = &dest_mgr;
-
 
   // Set up the correct width and height for this particular tile
   width = rawtile.width;
@@ -180,13 +178,14 @@ void JPEGCompressor::InitCompression( RawTile& rawtile, unsigned int strip_heigh
   // We set up the normal JPEG error routines, then override error_exit.
   cinfo.err = jpeg_std_error( &jerr );
 
-  // Overide the error_exit function with our own.
-  //   cinfo.err.error_exit = iip_error_exit;
 
+  // Overide the error_exit function with our own.
   // Hmmm, we have to do this assignment in C due to the strong type checking of C++
   //  or something like that. So, we use an extern "C" function declared at the top
   //  of this file and pass our arguments through this. I'm sure there's a better
   //  way of doing this, but this seems to work :/
+
+  //   cinfo.err.error_exit = iip_error_exit;
   setup_error_functions( &cinfo );
 
   jpeg_create_compress( &cinfo );
@@ -198,9 +197,7 @@ void JPEGCompressor::InitCompression( RawTile& rawtile, unsigned int strip_heigh
    * manager serially with the same JPEG object, because their private object
    * sizes may be different.  Caveat programmer.
    */
-
   if( !cinfo.dest ){
-
     // first time for this JPEG object?
     cinfo.dest = ( struct jpeg_destination_mgr* )
       ( *cinfo.mem->alloc_small )
@@ -210,11 +207,9 @@ void JPEGCompressor::InitCompression( RawTile& rawtile, unsigned int strip_heigh
 
   dest = (iip_dest_ptr) cinfo.dest;
   dest->pub.init_destination = iip_init_destination;
-  dest->pub.empty_output_buffer = iip_empty_output_buffer;
+  //dest->pub.empty_output_buffer = iip_empty_output_buffer;
   dest->pub.term_destination = iip_term_destination;
   dest->strip_height = strip_height;
-
-  dest->source = data;
 
   cinfo.image_width = width;
   cinfo.image_height = height;
@@ -241,10 +236,9 @@ void JPEGCompressor::InitCompression( RawTile& rawtile, unsigned int strip_heigh
 
   // Reset the pointers
   size_t mx = cinfo.image_width * strip_height * cinfo.input_components;
-  dest->size = mx;
+  dest->size = mx + MX;
   dest->pub.next_output_byte = dest->buffer;
-  dest->pub.free_in_buffer = mx;
-
+  dest->pub.free_in_buffer = mx + MX;
 }
 
 
@@ -254,41 +248,31 @@ void JPEGCompressor::InitCompression( RawTile& rawtile, unsigned int strip_heigh
   We use a separate tile_height from the predefined strip_height because
   the tile height for the final row can be different
  */
-unsigned int JPEGCompressor::CompressStrip( unsigned char* buf, unsigned int tile_height ) throw (string)
+unsigned int JPEGCompressor::CompressStrip( unsigned char* input, unsigned char* output, unsigned int tile_height ) throw (string)
 {
   JSAMPROW row[1];
   int row_stride = width * channels;
-  dest->source = buf;
-
-
-//   JSAMPROW *array = new JSAMPROW[tile_height];
-//   for( int y=0; y < tile_height; y++ ){
-//     array[y] = &data[ y * row_stride ];
-//   }
-//   jpeg_write_scanlines( &cinfo, array, tile_height );
-//   delete[] array;
-
+  dest->source = output;
 
   while( cinfo.next_scanline < tile_height ) {
-    row[0] = &buf[ cinfo.next_scanline * row_stride ];
+    row[0] = &input[ cinfo.next_scanline * row_stride ];
     jpeg_write_scanlines( &cinfo, row, 1 );
   }
-
 
   // Copy the JPEG data to our output tile buffer
   size_t datacount = dest->size - dest->pub.free_in_buffer;
   if( datacount > 0 ){
-    memcpy( dest->source, dest->buffer, datacount );
+    // Be careful not to overun our buffer
+    if( datacount > tile_height*width*channels + MX ) datacount = tile_height*width*channels + MX;
+    memcpy( output, dest->buffer, datacount );
   }
 
-
   // Set compressor pointers for library
-  size_t mx = (cinfo.image_width * dest->strip_height * cinfo.input_components);
+  size_t mx = cinfo.image_width * dest->strip_height * cinfo.input_components;
   dest->pub.next_output_byte = dest->buffer;
-  dest->pub.free_in_buffer = mx;
+  dest->pub.free_in_buffer = mx + MX;
   cinfo.next_scanline = 0;
-  dest->size = mx;
-
+  dest->size = mx + MX;
 
   return datacount;
 }
@@ -296,29 +280,18 @@ unsigned int JPEGCompressor::CompressStrip( unsigned char* buf, unsigned int til
 
 
 
-unsigned int JPEGCompressor::Finish() throw (string)
+unsigned int JPEGCompressor::Finish( unsigned char* output ) throw (string)
 {
-  // Add our end of image (EOI) markers
-  // This consists of a NULL byte, followed by the 0xFF, M_EOI
-  *(dest->pub.next_output_byte)++ = (JOCTET) 0x00;
-  *(dest->pub.next_output_byte)++ = (JOCTET) 0xFF;
-  *(dest->pub.next_output_byte)++ = (JOCTET) 0xd9;
-  dest->pub.free_in_buffer -= 3;
-
-  // Copy the JPEG data to our output tile buffer
-  size_t datacount = dest->size - dest->pub.free_in_buffer;
-  if( datacount > 0 ){
-    memcpy( dest->source, dest->buffer, datacount );
-  }
+  dest->source = output;
 
   // Tidy up and de-allocate memory
-  // There seems to be a problem with jpeg_finish_compress :-(
-  // We've manually added the EOI markers, so we don't have to bother calling it
+  dest->pub.next_output_byte = dest->buffer;
+  cinfo.next_scanline = dest->strip_height;
+  jpeg_finish_compress( &cinfo );
 
-  delete[] dest->buffer;
-  //jpeg_finish_compress( &cinfo );
+  size_t datacount = dest->size;
+
   jpeg_destroy_compress( &cinfo );
-  
 
   return datacount;
 }
@@ -352,13 +325,14 @@ int JPEGCompressor::Compress( RawTile& rawtile ) throw (string)
   // We set up the normal JPEG error routines, then override error_exit.
   cinfo.err = jpeg_std_error( &jerr );
 
-  // Overide the error_exit function with our own.
-  //   cinfo.err.error_exit = iip_error_exit;
 
+  // Overide the error_exit function with our own.
   // Hmmm, we have to do this assignment in C due to the strong type checking of C++
   //  or something like that. So, we use an extern "C" function declared at the top
   //  of this file and pass our arguments through this. I'm sure there's a better
   //  way of doing this, but this seems to work :/
+
+  //   cinfo.err.error_exit = iip_error_exit;
   setup_error_functions( &cinfo );
 
   jpeg_create_compress( &cinfo );
@@ -415,7 +389,6 @@ int JPEGCompressor::Compress( RawTile& rawtile ) throw (string)
 
   // Try to pass the whole image array at once if it is less than 512x512 pixels:
   // Should be faster than scanlines.
-
   if( (row_stride * height) <= (512*512*channels) ){
 
     JSAMPROW *array = new JSAMPROW[height];
@@ -437,7 +410,15 @@ int JPEGCompressor::Compress( RawTile& rawtile ) throw (string)
 
   // Tidy up, get the compressed data size and de-allocate memory
   jpeg_finish_compress( &cinfo );
+
+  // Check that we have enough memory in our tile for the JPEG data.
+  // This can happen on small tiles with high quality factors. If so
+  // delete and reallocate memory.
   y = dest->size;
+  if( y > rawtile.width*rawtile.height*rawtile.channels ){
+    delete[] (unsigned char*) rawtile.data;
+    rawtile.data = new unsigned char[y];
+  }
 
   // Copy memory back to the tile
   memcpy( rawtile.data, dest->source, y );

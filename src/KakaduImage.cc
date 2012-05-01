@@ -1,10 +1,10 @@
 /*  IIP Server: Kakadu JPEG2000 handler
 
 
-    Development supported by Moravian Library in Brno (Moravska zemska 
-    knihovna v Brne, http://www.mzk.cz/) R&D grant MK00009494301 & Old 
-    Maps Online (http://www.oldmapsonline.org/) from the Ministry of 
-    Culture of the Czech Republic. 
+    Development supported by Moravian Library in Brno (Moravska zemska
+    knihovna v Brne, http://www.mzk.cz/) R&D grant MK00009494301 & Old
+    Maps Online (http://www.oldmapsonline.org/) from the Ministry of
+    Culture of the Czech Republic.
 
 
     Copyright (C) 2009-2012 IIPImage.
@@ -21,8 +21,8 @@
     GNU General Public License for more details.
 
     You should have received a copy of the GNU General Public License
-    along with this program; if not, write to the Free Software
-    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+    along with this program; if not, write to the Free Software Foundation,
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
 
@@ -31,8 +31,23 @@
 #include <cmath>
 #include <sstream>
 #include <sys/sysinfo.h>
+
+#if defined (__APPLE__) || defined(__FreeBSD__)
+#include <pthread.h>
+#include <sys/sysctl.h>
+unsigned int get_nprocs(){
+  int numProcessors = 0;
+  size_t size = sizeof(numProcessors);
+  int returnCode = sysctlbyname("hw.ncpu", &numProcessors, &size, NULL, 0);
+  if( returnCode != 0 ) return 1;
+  else return (unsigned int)numProcessors;
+
+}
+#endif
+
+
 #include "Timer.h"
-//#define DEBUG 1
+//define DEBUG 1
 
 
 using namespace std;
@@ -131,7 +146,7 @@ void KakaduImage::loadImageInfo( int seq, int ang ) throw(string)
   }
 
   // If we don't have enough resolutions to fit a whole image into a single tile
-  // we need to generate them ourselves virtually. Fortunately, the 
+  // we need to generate them ourselves virtually. Fortunately, the
   // kdu_region_decompressor function is able to handle the downsampling for us for one extra level.
   // Extra downsampling has to be done ourselves
   unsigned int n = 1;
@@ -279,7 +294,7 @@ RawTile KakaduImage::getTile( int seq, int ang, unsigned int res, int layers, un
 
 #ifdef DEBUG
   logfile << "Kakadu :: bytes parsed: " << codestream.get_total_bytes(true) << endl;
-  logfile << "Kadaku :: getTile() :: " << timer.getTime() << " microseconds" << endl; 
+  logfile << "Kadaku :: getTile() :: " << timer.getTime() << " microseconds" << endl;
 #endif
 
   return rawtile;
@@ -306,7 +321,7 @@ RawTile KakaduImage::getRegion( int seq, int ang, unsigned int res, int layers, 
   process( res, layers, x, y, w, h, rawtile.data );
 
 #ifdef DEBUG
-  logfile << "Kadaku :: getRegion() :: " << timer.getTime() << " microseconds" << endl; 
+  logfile << "Kadaku :: getRegion() :: " << timer.getTime() << " microseconds" << endl;
 #endif
 
   return rawtile;
@@ -329,7 +344,7 @@ void KakaduImage::process( unsigned int res, int layers, int xoffset, int yoffse
     vipsres = numResolutions - 1 - (virtual_levels-res);
   }
 
-  // Set the number of layers to half of the number of detected layers if we have not set the 
+  // Set the number of layers to half of the number of detected layers if we have not set the
   // layers parameter manually. Also make sure we have at least 1 layer
   if( layers <= 0 ) layers = ceil( max_layers/2.0 );
   if( layers < 1 ) layers = 1;
@@ -390,8 +405,8 @@ void KakaduImage::process( unsigned int res, int layers, int xoffset, int yoffse
     logfile << "Kakadu :: decompressor starting" << endl;
 
     logfile << "Kakadu :: requested region on high resolution canvas: position: "
-	    << image_dims.pos.x << "x" << image_dims.pos.y 
-	    << ". size: " << image_dims.size.x << "x" << image_dims.size.y << endl; 
+	    << image_dims.pos.x << "x" << image_dims.pos.y
+	    << ". size: " << image_dims.size.x << "x" << image_dims.size.y << endl;
 
     logfile << "Kakadu :: mapped resolution region size: " << comp_dims.size.x << "x" << comp_dims.size.y << endl;
     logfile << "Kakadu :: About to pull stripes" << endl;
@@ -406,9 +421,9 @@ void KakaduImage::process( unsigned int res, int layers, int xoffset, int yoffse
     decompressor.get_recommended_stripe_heights( comp_dims.size.y,
 						 1024, stripe_heights, NULL );
 
-#ifdef DEBUG 
+#ifdef DEBUG
     logfile << "Kakadu :: Allocating memory for stripe height " << stripe_heights[0] << endl;
-#endif 
+#endif
 
     // Create our buffers
     if( bpp == 16 ){
@@ -496,7 +511,7 @@ void KakaduImage::process( unsigned int res, int layers, int xoffset, int yoffse
     delete_buffer( buffer );
 
 #ifdef DEBUG
-    logfile << "Kakadu :: decompressor completed" << endl; 
+    logfile << "Kakadu :: decompressor completed" << endl;
 #endif
 
 

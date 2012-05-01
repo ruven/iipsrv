@@ -14,8 +14,8 @@
     GNU General Public License for more details.
 
     You should have received a copy of the GNU General Public License
-    along with this program; if not, write to the Free Software
-    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+    along with this program; if not, write to the Free Software Foundation,
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
 
@@ -185,9 +185,13 @@ unsigned int View::getViewHeight(){
 
 
 unsigned int View::getRequestWidth(){
+
+  // If our requested width has not been set, but height has, return a width proportional to
+  // this requested height
   if( requested_width == 0 && requested_height > 0 ){
     requested_width = (unsigned int) round( (double)(width*requested_height) / (double)height );
   }
+
   if( requested_width > width ) requested_width = width;
   if( requested_width > max_size ) requested_width = max_size;
   // If no width has been set, use our full size
@@ -200,9 +204,13 @@ unsigned int View::getRequestWidth(){
 
 
 unsigned int View::getRequestHeight(){
+
+  // If our requested height has not been set, but the width has, return a height proportional to
+  // this requested width
   if( requested_height == 0 && requested_width > 0 ){
     requested_height = (unsigned int) round( (double)(height*requested_width) / (double)width );
   }
+
   if( requested_height > height ) requested_height = height;
   if( requested_height > max_size ) requested_height = max_size;
   // If no height has been set, use our full size

@@ -1,8 +1,8 @@
-#! /bin/sh
+#! /bin/bash
 
 # libtool - Provide generalized library-building support services.
 # Generated automatically by config.status (iipsrv) 1.0
-# Libtool was configured on host AgentSmith:
+# Libtool was configured on host X-202:
 # NOTE: Changes made to this file will be lost: look at ltmain.sh.
 #
 #   Copyright (C) 1996, 1997, 1998, 1999, 2000, 2001, 2003, 2004, 2005,
@@ -53,22 +53,22 @@ build_old_libs=yes
 pic_mode=default
 
 # Whether or not to optimize for fast installation.
-fast_install=needless
+fast_install=yes
 
 # Shell to use when invoking shell scripts.
-SHELL="/bin/sh"
+SHELL="/bin/bash"
 
 # An echo program that protects backslashes.
 ECHO="printf %s\\n"
 
 # The host system.
 host_alias=
-host=x86_64-unknown-linux-gnu
+host=i686-pc-linux-gnu
 host_os=linux-gnu
 
 # The build system.
 build_alias=
-build=x86_64-unknown-linux-gnu
+build=i686-pc-linux-gnu
 build_os=linux-gnu
 
 # A sed program that does not truncate output.
@@ -205,7 +205,7 @@ runpath_var=LD_RUN_PATH
 shlibpath_var=LD_LIBRARY_PATH
 
 # Is shlibpath searched before the hard-coded library search path?
-shlibpath_overrides_runpath=yes
+shlibpath_overrides_runpath=no
 
 # Format of library name prefix.
 libname_spec="lib\$name"
@@ -237,10 +237,10 @@ finish_eval=""
 hardcode_into_libs=yes
 
 # Compile-time system search path for libraries.
-sys_lib_search_path_spec="/usr/lib/gcc/x86_64-pc-linux-gnu/4.5.3 /usr/lib64 /lib64 /usr/x86_64-pc-linux-gnu/lib "
+sys_lib_search_path_spec="/usr/lib/gcc/i686-linux-gnu/4.4.5 /usr/lib /lib /usr/lib/i686-linux-gnu "
 
 # Run-time system search path for libraries.
-sys_lib_dlsearch_path_spec="/lib /usr/lib /usr/local/lib /usr/x86_64-pc-linux-gnu/lib /usr/lib32/opengl/nvidia/lib /usr/lib64/opengl/nvidia/lib /lib64 /usr/lib64 /usr/local/lib64 /lib32 /usr/lib32 /usr/local/lib32 /lib /usr/lib /usr/lib/gcc/x86_64-pc-linux-gnu/4.5.3 /usr/lib/gcc/x86_64-pc-linux-gnu/4.5.3/32 /usr/lib/gcc/x86_64-pc-linux-gnu/4.4.5 /usr/lib/gcc/x86_64-pc-linux-gnu/4.4.5/32 //usr/lib64/xulrunner-1.9.2 /usr/lib64/qt4 /usr/lib32/qt4 /usr/lib/qt4 /opt/xulrunner /usr/games/lib64 /usr/games/lib32 /usr/games/lib /opt/cuda/lib64 /usr/lib32/libstdc++-v3/ "
+sys_lib_dlsearch_path_spec="/lib /usr/lib /usr/lib/mesa /lib/i486-linux-gnu /usr/lib/i486-linux-gnu /lib/i686-linux-gnu /usr/lib/i686-linux-gnu /usr/lib/alsa-lib /usr/local/lib /usr/lib/psb "
 
 # Whether dlopen is supported.
 dlopen_support=unknown
@@ -257,7 +257,7 @@ striplib="strip --strip-unneeded"
 
 
 # The linker used to build libraries.
-LD="/usr/x86_64-pc-linux-gnu/bin/ld -m elf_x86_64"
+LD="/usr/bin/ld"
 
 # How to create reloadable object files.
 reload_flag=" -r"
@@ -9255,7 +9255,7 @@ build_old_libs=`case $build_libtool_libs in yes) echo no;; *) echo yes;; esac`
 # ### BEGIN LIBTOOL TAG CONFIG: CXX
 
 # The linker used to build libraries.
-LD="/usr/x86_64-pc-linux-gnu/bin/ld -m elf_x86_64"
+LD="/usr/bin/ld"
 
 # How to create reloadable object files.
 reload_flag=" -r"
@@ -9265,7 +9265,7 @@ reload_cmds="\$LD\$reload_flag -o \$output\$reload_objs"
 old_archive_cmds="\$AR \$AR_FLAGS \$oldlib\$oldobjs~\$RANLIB \$oldlib"
 
 # A language specific compiler.
-CC="g++ -ggdb3"
+CC="g++"
 
 # Is the compiler the GNU compiler?
 with_gcc=yes
@@ -9390,17 +9390,17 @@ file_list_spec=""
 hardcode_action=immediate
 
 # The directories searched by this compiler when creating a shared library.
-compiler_lib_search_dirs="/usr/lib/gcc/x86_64-pc-linux-gnu/4.5.3 /usr/lib/gcc/x86_64-pc-linux-gnu/4.5.3/../../../../lib64 /lib/../lib64 /usr/lib/../lib64 /usr/lib/gcc/x86_64-pc-linux-gnu/4.5.3/../../../../x86_64-pc-linux-gnu/lib /usr/lib/gcc/x86_64-pc-linux-gnu/4.5.3/../../.."
+compiler_lib_search_dirs="/usr/lib/gcc/i686-linux-gnu/4.4.5 /usr/lib/gcc/i686-linux-gnu/4.4.5 /usr/lib/gcc/i686-linux-gnu/4.4.5/../../../../lib /lib/../lib /usr/lib/../lib /usr/lib/gcc/i686-linux-gnu/4.4.5/../../.. /usr/lib/i686-linux-gnu"
 
 # Dependencies to place before and after the objects being linked to
 # create a shared library.
-predep_objects="/usr/lib/gcc/x86_64-pc-linux-gnu/4.5.3/../../../../lib64/crti.o /usr/lib/gcc/x86_64-pc-linux-gnu/4.5.3/crtbeginS.o"
-postdep_objects="/usr/lib/gcc/x86_64-pc-linux-gnu/4.5.3/crtendS.o /usr/lib/gcc/x86_64-pc-linux-gnu/4.5.3/../../../../lib64/crtn.o"
+predep_objects="/usr/lib/gcc/i686-linux-gnu/4.4.5/../../../../lib/crti.o /usr/lib/gcc/i686-linux-gnu/4.4.5/crtbeginS.o"
+postdep_objects="/usr/lib/gcc/i686-linux-gnu/4.4.5/crtendS.o /usr/lib/gcc/i686-linux-gnu/4.4.5/../../../../lib/crtn.o"
 predeps=""
 postdeps="-lstdc++ -lm -lgcc_s -lc -lgcc_s"
 
 # The library search path used internally by the compiler when linking
 # a shared library.
-compiler_lib_search_path="-L/usr/lib/gcc/x86_64-pc-linux-gnu/4.5.3 -L/usr/lib/gcc/x86_64-pc-linux-gnu/4.5.3/../../../../lib64 -L/lib/../lib64 -L/usr/lib/../lib64 -L/usr/lib/gcc/x86_64-pc-linux-gnu/4.5.3/../../../../x86_64-pc-linux-gnu/lib -L/usr/lib/gcc/x86_64-pc-linux-gnu/4.5.3/../../.."
+compiler_lib_search_path="-L/usr/lib/gcc/i686-linux-gnu/4.4.5 -L/usr/lib/gcc/i686-linux-gnu/4.4.5 -L/usr/lib/gcc/i686-linux-gnu/4.4.5/../../../../lib -L/lib/../lib -L/usr/lib/../lib -L/usr/lib/gcc/i686-linux-gnu/4.4.5/../../.. -L/usr/lib/i686-linux-gnu"
 
 # ### END LIBTOOL TAG CONFIG: CXX

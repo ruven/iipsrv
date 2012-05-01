@@ -11,3 +11,4 @@ TODO:
 * Lanczos, bilinear etc interpolation for CVT
 * Copy EXIF, IPTC data for CVT exports
 * Optimize FIF code for very large files
+* Rewrite JPEG writer code for better buffered output
