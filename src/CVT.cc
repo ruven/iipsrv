@@ -253,7 +253,7 @@ loglevel );
     }
 
 
-    // Send out the data per strip of 512 pixels in height.
+    // Send out the data per strip of fixed height.
     // Allocate enough memory for this plus an extra 16k for instances where compressed
     // data is greater than uncompressed
     unsigned int strip_height = 128;
@@ -266,7 +266,7 @@ loglevel );
       unsigned char* input = &((unsigned char*)complete_image.data)[n*strip_height*resampled_width*channels];
 
       // The last strip may have a different height
-      if( n == strips-1 ) strip_height = resampled_height % strip_height;
+      if( (n==strips-1) && (resampled_height%strip_height!=0) ) strip_height = resampled_height % strip_height;
 
       if( session->loglevel >= 3 ){
 	*(session->logfile) << "CVT :: About to JPEG compress strip with height " << strip_height << endl;

@@ -1,3 +1,7 @@
+07/05/2012:
+	- Fixed strip height calculation error in CVT.cc
+
+
 01/05/2012:
 	- Modified memory handling in JPEGCompressor.cc to better handle
 	  images where the compressed version may be bigger than the
