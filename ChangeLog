@@ -1,3 +1,7 @@
+08/05/2012:
+	- Fix to Mac OSX and FreeBSD compilation of KakaduImage.cc.
+
+
 07/05/2012:
 	- Fixed strip height calculation error in CVT.cc
 

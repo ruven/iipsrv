@@ -30,12 +30,17 @@
 #include <kdu_compressed.h>
 #include <cmath>
 #include <sstream>
-#include <sys/sysinfo.h>
 
+// Required for get_nprocs_conf() on Linux
+#ifdef NPROCS
+#include <sys/sysinfo.h>
+#endif
+
+// On Mac OS X, define our own get_nprocs_conf()
 #if defined (__APPLE__) || defined(__FreeBSD__)
 #include <pthread.h>
 #include <sys/sysctl.h>
-unsigned int get_nprocs(){
+unsigned int get_nprocs_conf(){
   int numProcessors = 0;
   size_t size = sizeof(numProcessors);
   int returnCode = sysctlbyname("hw.ncpu", &numProcessors, &size, NULL, 0);
@@ -43,6 +48,7 @@ unsigned int get_nprocs(){
   else return (unsigned int)numProcessors;
 
 }
+#define NPROCS
 #endif
 
 
