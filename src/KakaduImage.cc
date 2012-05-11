@@ -351,8 +351,11 @@ void KakaduImage::process( unsigned int res, int layers, int xoffset, int yoffse
   }
 
   // Set the number of layers to half of the number of detected layers if we have not set the
-  // layers parameter manually. Also make sure we have at least 1 layer
-  if( layers <= 0 ) layers = ceil( max_layers/2.0 );
+  // layers parameter manually. If layers is set to less than 0, use all layers.
+  if( layers < 0 ) layers = max_layers;
+  else if( layers == 0 ) layers = ceil( max_layers/2.0 );
+
+  // Also make sure we have at least 1 layer
   if( layers < 1 ) layers = 1;
 
 

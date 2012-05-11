@@ -230,7 +230,11 @@ int main( int argc, char *argv[] )
     logfile << "Setting default JPEG quality to " << jpeg_quality << endl;
     logfile << "Setting maximum CVT size to " << max_CVT << endl;
     logfile << "Setting 3D file sequence name pattern to '" << filename_pattern << "'" << endl;
-    if( max_layers > 0 ) logfile << "Setting max quality layers (for supported file formats) to " << max_layers << endl;
+    if( max_layers != 0 ){
+      logfile << "Setting max quality layers (for supported file formats) to ";
+      if( max_layers < 0 ) logfile << "all layers" << endl;
+      else logfile << max_layers << endl;
+    }
 #ifdef HAVE_KAKADU
     logfile << "Setting up JPEG2000 support via Kakadu SDK" << endl;
 #endif

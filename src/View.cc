@@ -223,10 +223,12 @@ unsigned int View::getRequestHeight(){
 
 
 /// Return the number of layers to decode
-unsigned int View::getLayers(){
+int View::getLayers(){
   // If max_layers is set, limit to this value, otherwise return layers
   if( max_layers > 0 ){
     return ((layers>0)&&(layers<max_layers)) ? layers : max_layers;
   }
+  if( max_layers<0 && layers==0 ){ return -1; };
+
   return layers;
 }

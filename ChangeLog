@@ -1,3 +1,8 @@
+11/05/2012:
+	- Modified layer handling to decode all available layers if
+	  MAX_LAYERS parameter is set to -1.
+
+
 08/05/2012:
 	- Fix to Mac OSX and FreeBSD compilation of KakaduImage.cc.
 

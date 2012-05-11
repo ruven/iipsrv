@@ -15,7 +15,7 @@
 
     You should have received a copy of the GNU General Public License
     along with this program; if not, write to the Free Software
-    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
 
@@ -160,7 +160,7 @@ class View{
   void setLayers( int l ){ layers = l; };
 
   /// Return the number of layers to decode
-  unsigned int getLayers();
+  int getLayers();
 
   /// Return the contrast adjustment
   float getContrast(){ return contrast; };
