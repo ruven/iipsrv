@@ -181,6 +181,8 @@ void filter_LAB2sRGB( RawTile& in ){
 
   unsigned long np = in.width * in.height * in.channels;
 
+  // Parallelize code using OpenMP
+#pragma omp parallel for
   for( unsigned long n=0; n<np; n+=in.channels ){
     unsigned char* ptr = (unsigned char*) in.data;
     unsigned char q[3];
@@ -195,7 +197,7 @@ void filter_LAB2sRGB( RawTile& in ){
 // Resize image using nearest neighbour interpolation
 void filter_interpolate_nearestneighbour( RawTile& in, unsigned int resampled_width, unsigned int resampled_height ){
 
-  unsigned char* buf = (unsigned char*) in.data;
+  unsigned char* buf = (unsigned char*) in.data; // Assume 8bit data
   int channels = in.channels;
   unsigned int width = in.width;
   unsigned int height = in.height;
@@ -220,6 +222,7 @@ void filter_interpolate_nearestneighbour( RawTile& in, unsigned int resampled_wi
     }
   }
 
+  // Correctly set our Rawtile info
   in.width = resampled_width;
   in.height = resampled_height;
   in.dataLength = resampled_width * resampled_height * channels * in.bpc/8;
@@ -228,14 +231,70 @@ void filter_interpolate_nearestneighbour( RawTile& in, unsigned int resampled_wi
 
 
 // Resize image using bilinear interpolation
+//  - Floating point implementation which benchmarks about 2.5x slower than nearest neighbour
 void filter_interpolate_bilinear( RawTile& in, unsigned int resampled_width, unsigned int resampled_height ){
 
-  // TODO
+  unsigned char* buf = (unsigned char*) in.data; // Assume 8bit data
+  int channels = in.channels;
+  unsigned int width = in.width;
+  unsigned int height = in.height;
+
+  // Calculate our scale
+  float xscale = (float)width / (float)resampled_width;
+  float yscale = (float)height / (float)resampled_height;
+
+  for( unsigned int j=0; j<resampled_height; j++ ){
+
+    // Index to the current pyramid resolution's bottom left right pixel
+    unsigned int jj = (unsigned int) floor(j*yscale);
+
+    // Calculate some weights - do this in the highest loop possible
+    float jscale = j*yscale;
+    float c = (float)(jj+1) - jscale;
+    float d = jscale - (float)jj;
+
+    for( unsigned int i=0; i<resampled_width; i++ ){
+
+      // Index to the current pyramid resolution's bottom left right pixel
+      unsigned int ii = (unsigned int) floor(i*xscale);
+
+      // Calculate the indices of the 4 surrounding pixels
+      unsigned int p11 = (unsigned int) ( channels * ( ii + jj*width ) );
+      unsigned int p12 = (unsigned int) ( channels * ( ii + (jj+1)*width ) );
+      unsigned int p21 = (unsigned int) ( channels * ( (ii+1) + jj*width ) );
+      unsigned int p22 = (unsigned int) ( channels * ( (ii+1) + (jj+1)*width ) );
+      unsigned int resampled_index = ((i + j*resampled_width) * channels);
+
+      // Calculate the rest of our weights
+      float iscale = i*xscale;
+      float a = (float)(ii+1) - iscale;
+      float b = iscale - (float)ii;
+
+      for( int k=0; k<in.channels; k++ ){
+
+	// If we are exactly coincident with a bounding box pixel, use that pixel value.
+	// This should only ever occur on the top left p11 pixel.
+	// Otherwise perform our full interpolation
+	if( resampled_index == p11 ) buf[resampled_index+k] = buf[p11+k];
+	else{
+	  float tx = ((float)buf[p11+k])*a + ((float)buf[p21+k])*b;
+	  float ty = ((float)buf[p12+k])*a + ((float)buf[p22+k])*b;
+	  unsigned char r = (unsigned char)( c*tx + d*ty );
+	  buf[resampled_index+k] = r;
+	}
+      }
+    }
+  }
+
+  // Correctly set our Rawtile info
+  in.width = resampled_width;
+  in.height = resampled_height;
+  in.dataLength = resampled_width * resampled_height * channels * in.bpc/8;
 
 }
 
 
-/// Function to apply a contrast adjustment and clip to 8 bit
+// Function to apply a contrast adjustment and clip to 8 bit
 void filter_contrast( RawTile& in, float c ){
 
   unsigned int np = in.width * in.height * in.channels;

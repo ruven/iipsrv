@@ -20,6 +20,7 @@
 
 #include "Task.h"
 #include "Transforms.h"
+#include "Environment.h"
 #include <cmath>
 #include <algorithm>
 
@@ -195,8 +196,8 @@ loglevel );
       }
       filter_LAB2sRGB( complete_image );
       if( session->loglevel >= 3 ){
-	*(session->logfile) << "CVT :: CIELAB->sRGB conversion in " << cielab_timer.getTime() << " microseconds" << 
-	  endl;
+	*(session->logfile) << "CVT :: CIELAB->sRGB conversion in " << cielab_timer.getTime()
+			    << " microseconds" << endl;
       }
     }
 
@@ -216,12 +217,29 @@ loglevel );
     filter_contrast( complete_image, session->view->getContrast() );
 
 
-    // Resize our image as requested
+    // Resize our image as requested. Use the interpolation method requested in the server configuration.
+    //  - Use bilinear interpolation by default
     if( (view_width!=resampled_width) && (view_height!=resampled_height) ){
-      if( session->loglevel >= 3 ){
-	*(session->logfile) << "CVT :: Resizing using nearest neighbour interpolation" << endl;
+      Timer interpolation_timer;
+      string interpolation_type;
+      if( session->loglevel >= 5 ){
+	interpolation_timer.start();
       }
-      filter_interpolate_nearestneighbour( complete_image, resampled_width, resampled_height );
+      unsigned int interpolation = Environment::getInterpolation();
+      switch( interpolation ){
+        case 0:
+	  interpolation_type = "nearest neighbour";
+	  filter_interpolate_nearestneighbour( complete_image, resampled_width, resampled_height );
+	  break;
+        default:
+	  interpolation_type = "bilinear";
+	  filter_interpolate_bilinear( complete_image, resampled_width, resampled_height );
+	  break;
+      }
+      if( session->loglevel >= 5 ){
+	*(session->logfile) << "CVT :: Resizing using " << interpolation_type << " interpolation in "
+			    << interpolation_timer.getTime() << " microseconds" << endl;
+      }
     }
 
 

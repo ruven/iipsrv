@@ -397,7 +397,7 @@ int main( int argc, char *argv[] )
       view.setMaxSize( max_CVT );
       if( loglevel >= 2 ) logfile << "CVT maximum viewport size set to " << max_CVT << endl;
     }
-    if( max_layers > 0 ) view.setMaxLayers( max_layers );
+    if( max_layers != 0 ) view.setMaxLayers( max_layers );
 
 
 

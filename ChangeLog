@@ -1,3 +1,11 @@
+14/05/2012:
+	- Added bilinear interpolation option for CVT resizing. Added
+	  INTERPOLATION parameter to Environment.h, which takes an integer.
+	  0 for fastest nearest neighbour and 1 for bilinear (default).
+	  Current bilinear implementation 2.5x slower than nearest neighbour.
+	- Additional fix to MAX_LAYERS code.
+
+
 11/05/2012:
 	- Modified layer handling to decode all available layers if
 	  MAX_LAYERS parameter is set to -1.
