@@ -1,3 +1,8 @@
+16/07/2012:
+	- Added check to KakaduImage.cc to handle bilevel images.
+	- Clean up to use only floats and floorf() in Transforms.cc.
+
+
 14/05/2012:
 	- Added bilinear interpolation option for CVT resizing. Added
 	  INTERPOLATION parameter to Environment.h, which takes an integer.

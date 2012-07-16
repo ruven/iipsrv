@@ -200,6 +200,9 @@ void KakaduImage::loadImageInfo( int seq, int ang ) throw(string)
 #endif
   kt.close();
 
+  // JPEG doesn't handle bilevel images, so pack these into 8 bit greyscale
+  if( bpp == 1 ) bpp = 8;
+
 }
 
 

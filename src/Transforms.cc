@@ -203,16 +203,16 @@ void filter_interpolate_nearestneighbour( RawTile& in, unsigned int resampled_wi
   unsigned int height = in.height;
 
   // Calculate our scale
-  double xscale = (double)width / (double)resampled_width;
-  double yscale = (double)height / (double)resampled_height;
+  float xscale = (float)width / (float)resampled_width;
+  float yscale = (float)height / (float)resampled_height;
 
   for( unsigned int j=0; j<resampled_height; j++ ){
     for( unsigned int i=0; i<resampled_width; i++ ){
 
       // Indexes in the current pyramid resolution and resampled spaces
       // Make sure to limit our input index to the image surface
-      unsigned int ii = (unsigned int) floor(i*xscale);
-      unsigned int jj = (unsigned int) floor(j*yscale);
+      unsigned int ii = (unsigned int) floorf(i*xscale);
+      unsigned int jj = (unsigned int) floorf(j*yscale);
       unsigned int pyramid_index = (unsigned int) channels * ( ii + jj*width );
 
       unsigned int resampled_index = (i + j*resampled_width)*channels;
@@ -246,7 +246,7 @@ void filter_interpolate_bilinear( RawTile& in, unsigned int resampled_width, uns
   for( unsigned int j=0; j<resampled_height; j++ ){
 
     // Index to the current pyramid resolution's bottom left right pixel
-    unsigned int jj = (unsigned int) floor(j*yscale);
+    unsigned int jj = (unsigned int) floorf(j*yscale);
 
     // Calculate some weights - do this in the highest loop possible
     float jscale = j*yscale;
@@ -256,7 +256,7 @@ void filter_interpolate_bilinear( RawTile& in, unsigned int resampled_width, uns
     for( unsigned int i=0; i<resampled_width; i++ ){
 
       // Index to the current pyramid resolution's bottom left right pixel
-      unsigned int ii = (unsigned int) floor(i*xscale);
+      unsigned int ii = (unsigned int) floorf(i*xscale);
 
       // Calculate the indices of the 4 surrounding pixels
       unsigned int p11 = (unsigned int) ( channels * ( ii + jj*width ) );

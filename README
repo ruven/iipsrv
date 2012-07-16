@@ -260,7 +260,7 @@ FcgidInitialEnv MAX_CVT "3000"
 # Define the idle timeout as unlimited and the number of
 # processes we want
 FcgidIdleTimeout 0
-FcgidMaxClassProcessesPerClass 1
+FcgidMaxProcessesPerClass 1
 
 -------------------------------------------------------------------
 
