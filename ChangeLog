@@ -1,3 +1,8 @@
+13/08/2012:
+	- Detect JPEG YCbCr encoding in TIFF and request conversion to RGB
+	  by libtiff. Tile _TIFFmalloc() now only occurs in getTile().
+
+
 16/07/2012:
 	- Added check to KakaduImage.cc to handle bilevel images.
 	- Clean up to use only floats and floorf() in Transforms.cc.

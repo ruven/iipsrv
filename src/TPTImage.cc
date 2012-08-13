@@ -2,7 +2,7 @@
 
 /*  IIP Server: Tiled Pyramidal TIFF handler
 
-    Copyright (C) 2000-2009 Ruven Pillay.
+    Copyright (C) 2000-2012 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -15,8 +15,9 @@
     GNU General Public License for more details.
 
     You should have received a copy of the GNU General Public License
-    along with this program; if not, write to the Free Software
-    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+    along with this program; if not, write to the Free Software Foundation,
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA.
+
 */
 
 
@@ -47,11 +48,6 @@ void TPTImage::openImage() throw (string)
   if( ( tiff = TIFFOpen( filename.c_str(), "r" ) ) == NULL ){
     throw string( "tiff open failed for: " + filename );
   }
-
-  if( ( tile_buf = _TIFFmalloc( TIFFTileSize( tiff ) ) ) == NULL ){
-    throw string( "tiff malloc tile failed" );
-  }
-
   loadImageInfo( currentX, currentY );
 
   // Insist on a tiled image
@@ -87,9 +83,6 @@ void TPTImage::loadImageInfo( int seq, int ang ) throw(string)
     if( ( tiff = TIFFOpen( filename.c_str(), "r" ) ) == NULL ){
       throw string( "tiff open failed for:" + filename );
     }
-    if( ( tile_buf = _TIFFmalloc( TIFFTileSize( tiff ) ) ) == NULL ){
-      throw string( "tiff malloc tile failed" );
-    }
     currentX = seq;
     currentY = ang;
   }
@@ -102,13 +95,6 @@ void TPTImage::loadImageInfo( int seq, int ang ) throw(string)
   TIFFGetField( tiff, TIFFTAG_SAMPLESPERPIXEL, &samplesperpixel );
   TIFFGetField( tiff, TIFFTAG_BITSPERSAMPLE, &bitspersample );
   TIFFGetField( tiff, TIFFTAG_PHOTOMETRIC, &colour );
-
-  // JPEG can use YCbCr, so set the JPEG color mode tag to force
-  // conversion to RGB by libjpeg
-  if( colour == PHOTOMETRIC_YCBCR ){
-    TIFFSetField( tiff, TIFFTAG_JPEGCOLORMODE, JPEGCOLORMODE_RGB );
-    colour = PHOTOMETRIC_RGB;
-  }
 
   // We have to do this conversion explicitly to avoid problems on Mac OS X
   channels = (unsigned int) samplesperpixel;
@@ -133,14 +119,21 @@ void TPTImage::loadImageInfo( int seq, int ang ) throw(string)
 
   numResolutions = count+1;
 
-  // Assign the colourspace variable
-  if( colour == 8 ) colourspace = CIELAB;
-  else if( colour == 1 ) colourspace = GREYSCALE;
+  // Handle various colour spaces
+  if( colour == PHOTOMETRIC_CIELAB ) colourspace = CIELAB;
+  else if( colour == PHOTOMETRIC_MINISBLACK ) colourspace = GREYSCALE;
+  else if( colour == PHOTOMETRIC_PALETTE ){
+    // Watch out for colourmapped images. There are stored as 1 sample per pixel,
+    // but are decoded to 3 channels by libtiff, so declare them as sRGB
+    colourspace = sRGB;
+    channels = 3;
+  }
+  else if( colour == PHOTOMETRIC_YCBCR ){
+    // JPEG encoded tiles can be subsampled YCbCr encoded. Ask to decode of these to RGB
+    TIFFSetField( tiff, TIFFTAG_JPEGCOLORMODE, JPEGCOLORMODE_RGB );
+    colourspace = sRGB;
+  }
   else colourspace = sRGB;
-
-  // Watch out for colourmapped images. There are stored as 1 sample per pixel, but
-  // are decoded to 3 channels by libtiff. We declare them as sRGB
-  if( colour == 3 ) channels = 3;
 
 }
 
@@ -174,26 +167,18 @@ RawTile TPTImage::getTile( int seq, int ang, unsigned int res, int layers, unsig
   }
 
 
-  // Try to open image and allocate a buffer if not already open
-
   // If we are currently working on a different sequence number, then
   //  close and reload the image.
-
   if( (currentX != seq) || (currentY != ang) ){
     closeImage();
   }
 
 
+  // Open the TIFF if it's not already open
   if( !tiff ){
     filename = getFileName( seq, ang );
     if( ( tiff = TIFFOpen( filename.c_str(), "r" ) ) == NULL ){
       throw string( "tiff open failed for:" + filename );
-    }
-  }
-
-  if( !tile_buf ){
-    if( ( tile_buf = _TIFFmalloc( TIFFTileSize( tiff ) ) ) == NULL ){
-      throw string( "tiff malloc tile failed" );
     }
   }
 
@@ -207,19 +192,16 @@ RawTile TPTImage::getTile( int seq, int ang, unsigned int res, int layers, unsig
   // The first resolution is the highest, so we need to invert 
   //  the resolution - can avoid this if we store our images with
   //  the smallest image first. 
-  
   int vipsres = ( numResolutions - 1 ) - res;
   
 
   // Change to the right directory for the resolution
-    
   if( !TIFFSetDirectory( tiff, vipsres ) ) {
     throw string( "TIFFSetDirectory failed" );
   }
-  
 
-  // Check that a valid tile number was given
-  
+
+  // Check that a valid tile number was given  
   if( tile >= TIFFNumberOfTiles( tiff ) ) {
     ostringstream tile_no;
     tile_no << "Asked for non-existant tile: " << tile;
@@ -231,7 +213,6 @@ RawTile TPTImage::getTile( int seq, int ang, unsigned int res, int layers, unsig
   //  the number of samples and the colourspace.
   // TIFFTAG_TILEWIDTH give us the values for the resolution,
   //  not for the tile itself
-
   TIFFGetField( tiff, TIFFTAG_TILEWIDTH, &tw );
   TIFFGetField( tiff, TIFFTAG_TILELENGTH, &th );
   TIFFGetField( tiff, TIFFTAG_IMAGEWIDTH, &im_width );
@@ -240,38 +221,52 @@ RawTile TPTImage::getTile( int seq, int ang, unsigned int res, int layers, unsig
 //   TIFFGetField( tiff, TIFFTAG_SAMPLESPERPIXEL, &channels );
 //   TIFFGetField( tiff, TIFFTAG_BITSPERSAMPLE, &bpp );
 
-  
-  // Get the width and height for last row and column tiles
 
+  // Get the width and height for last row and column tiles
   rem_x = im_width % tw;
   rem_y = im_height % th;
 
 
   // Calculate the number of tiles in each direction
-   
   ntlx = (im_width / tw) + (rem_x == 0 ? 0 : 1);
   ntly = (im_height / th) + (rem_y == 0 ? 0 : 1);
 
 
   // Alter the tile size if it's in the last column
-
   if( ( tile % ntlx == ntlx - 1 ) && ( rem_x != 0 ) ) {
     tw = rem_x;
   }
 
 
   // Alter the tile size if it's in the bottom row
-
   if( ( tile / ntlx == ntly - 1 ) && rem_y != 0 ) {
     th = rem_y;
   }
 
 
-  // Assign the colourspace variable
-  if( colour == 8 ) colourspace = CIELAB;
-  else if( colour == 1 ) colourspace = GREYSCALE;
+  // Handle various colour spaces
+  if( colour == PHOTOMETRIC_CIELAB ) colourspace = CIELAB;
+  else if( colour == PHOTOMETRIC_MINISBLACK ) colourspace = GREYSCALE;
+  else if( colour == PHOTOMETRIC_PALETTE ){
+    // Watch out for colourmapped images. There are stored as 1 sample per pixel,
+    // but are decoded to 3 channels by libtiff, so declare them as sRGB
+    colourspace = GREYSCALE;
+    channels = 1;
+  }
+  else if( colour == PHOTOMETRIC_YCBCR ){
+    // JPEG encoded tiles can be subsampled YCbCr encoded. Ask to decode these to RGB
+    TIFFSetField( tiff, TIFFTAG_JPEGCOLORMODE, JPEGCOLORMODE_RGB );
+    colourspace = sRGB;
+  }
   else colourspace = sRGB;
 
+
+  // Allocate memory for our tile.
+  if( !tile_buf ){
+    if( ( tile_buf = _TIFFmalloc( TIFFTileSize(tiff) ) ) == NULL ){
+      throw string( "tiff malloc tile failed" );
+    }
+  }
 
   // Decode and read the tile
   int length = TIFFReadEncodedTile( tiff, (ttile_t) tile,
