@@ -108,7 +108,7 @@ void KakaduImage::openImage() throw (string)
   isSet = true;
 
 #ifdef DEBUG
-  logfile << "Kadaku :: openImage() :: " << timer.getTime() << " microseconds" << endl;
+  logfile << "Kakadu :: openImage() :: " << timer.getTime() << " microseconds" << endl;
 #endif
 
 }
@@ -225,7 +225,7 @@ void KakaduImage::closeImage()
   jpx_input.close();
 
 #ifdef DEBUG
-  logfile << "Kadaku :: closeImage() :: " << timer.getTime() << " microseconds" << endl;
+  logfile << "Kakadu :: closeImage() :: " << timer.getTime() << " microseconds" << endl;
 #endif
 }
 
@@ -284,7 +284,7 @@ RawTile KakaduImage::getTile( int seq, int ang, unsigned int res, int layers, un
   int yoffset = (unsigned int) floor((double)(tile/ntlx)) * tile_height;
 
 #ifdef DEBUG
-  logfile << "Kadaku :: Tile size: " << tw << "x" << th << " @" << channels << endl;
+  logfile << "Kakadu :: Tile size: " << tw << "x" << th << " @" << channels << endl;
 #endif
 
 
@@ -305,7 +305,7 @@ RawTile KakaduImage::getTile( int seq, int ang, unsigned int res, int layers, un
 
 #ifdef DEBUG
   logfile << "Kakadu :: bytes parsed: " << codestream.get_total_bytes(true) << endl;
-  logfile << "Kadaku :: getTile() :: " << timer.getTime() << " microseconds" << endl;
+  logfile << "Kakadu :: getTile() :: " << timer.getTime() << " microseconds" << endl;
 #endif
 
   return rawtile;
@@ -332,7 +332,7 @@ RawTile KakaduImage::getRegion( int seq, int ang, unsigned int res, int layers, 
   process( res, layers, x, y, w, h, rawtile.data );
 
 #ifdef DEBUG
-  logfile << "Kadaku :: getRegion() :: " << timer.getTime() << " microseconds" << endl;
+  logfile << "Kakadu :: getRegion() :: " << timer.getTime() << " microseconds" << endl;
 #endif
 
   return rawtile;
@@ -501,7 +501,7 @@ void KakaduImage::process( unsigned int res, int layers, int xoffset, int yoffse
     if( res < virtual_levels ){
 
 #ifdef DEBUG
-      logfile << "Kadaku :: resizing tile to virtual resolution" << endl;
+      logfile << "Kakadu :: resizing tile to virtual resolution" << endl;
 #endif
 
       unsigned int n = 0;
