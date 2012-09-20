@@ -160,8 +160,10 @@ void KakaduImage::loadImageInfo( int seq, int ang ) throw(string)
   unsigned int h = image_heights[0];
   while( (w>tile_width) || (h>tile_height) ){
     n++;
-    w /= (int) floor(2);
-    h /= (int) floor(2);
+    // We use ceil() rather than floor() because Kakadu generates it's resolutions in this way
+    // TIFFs resolutions, on the other hand, are floor()
+    w = ceil( w/2.0 );
+    h = ceil( h/2.0 );
     if( n > numResolutions ){
       image_widths.push_back(w);
       image_heights.push_back(h);
@@ -279,7 +281,7 @@ RawTile KakaduImage::getTile( int seq, int ang, unsigned int res, int layers, un
 
   // Calculate the pixel offsets for this tile
   int xoffset = (tile % ntlx) * tile_width;
-  int yoffset = (unsigned int) floor(tile / ntlx) * tile_height;
+  int yoffset = (unsigned int) floor((double)(tile/ntlx)) * tile_height;
 
 #ifdef DEBUG
   logfile << "Kadaku :: Tile size: " << tw << "x" << th << " @" << channels << endl;
@@ -402,6 +404,7 @@ void KakaduImage::process( unsigned int res, int layers, int xoffset, int yoffse
   // Setup tile and stripe buffers
   void *buffer = NULL;
   void *stripe_buffer = NULL;
+  int *stripe_heights = NULL;
 
 
   try{
@@ -410,7 +413,7 @@ void KakaduImage::process( unsigned int res, int layers, int xoffset, int yoffse
 
     decompressor.start( codestream, false, true, env_ref, NULL );
 
-    int stripe_heights[channels];
+    stripe_heights = new int[channels];
     codestream.get_dims(0,comp_dims,true);
 
 #ifdef DEBUG
@@ -534,6 +537,7 @@ void KakaduImage::process( unsigned int res, int layers, int xoffset, int yoffse
     if( env.exists() ) env.destroy();
     delete_buffer( stripe_buffer );
     delete_buffer( buffer );
+    if( stripe_heights ) delete[] stripe_heights;
     throw string( "Kakadu :: Core Exception Caught"); // Rethrow the exception
   }
 
@@ -543,6 +547,7 @@ void KakaduImage::process( unsigned int res, int layers, int xoffset, int yoffse
 
   // Delete our stripe buffer
   delete_buffer( stripe_buffer );
+  if( stripe_heights ) delete[] stripe_heights;
 
 }
 

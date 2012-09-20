@@ -1,7 +1,7 @@
 /*  Missing time implementations for Windows
     Code taken largely from rtmpserver (www.rtmpd.com)
 
-    Copyright (C) 2011 Ruven Pillay
+    Copyright (C) 2011-2012 Ruven Pillay
                   2010 Gavriloaie Eugen-Andrei
                   1997, 1998 Kungliga Tekniska Hogskolan
 		             (Royal Institute of Technology, Stockholm, Sweden)
@@ -17,8 +17,8 @@
     GNU General Public License for more details.
 
     You should have received a copy of the GNU General Public License
-    along with this program; if not, write to the Free Software
-    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+    along with this program; if not, write to the Free Software Foundation,
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
 #ifdef WIN32
@@ -492,5 +492,13 @@ strptime (const char *buf, const char *fmt, struct tm *timeptr)
   }
   return (char *)buf;
 }
+
+
+/* Missing round() function in MS VC++
+ */
+double round(double r) {
+  return (r > 0.0) ? floor(r + 0.5) : ceil(r - 0.5);
+}
+
 
 #endif /* WIN32 */
