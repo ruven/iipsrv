@@ -25,6 +25,11 @@
 
 #include <cstddef>
 
+//include round function for MSVC compiler
+#if _MSC_VER
+#include "../windows/Time.h"
+#endif
+
 
 /// Class to intelligently handle Image Transforms
 

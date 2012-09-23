@@ -17,9 +17,10 @@
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
+#ifndef TIME_H
+#define TIME_H
 
-
-// Define mising time related functions on Windows
+// Define mising time related functions on Windows and add round function for MSVC compiler
 #ifdef WIN32
 
 #include <Windows.h>
@@ -35,4 +36,5 @@ char *strptime(const char*, const char*, struct tm*);
 int gettimeofday(struct timeval*, struct timezone*);
 double round(double);
 
+#endif
 #endif
