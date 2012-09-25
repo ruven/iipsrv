@@ -18,9 +18,6 @@
     <ClCompile Include="Time.cc">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\ColourTransforms.cc">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\CVT.cc">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -78,7 +75,22 @@
     <ClCompile Include="..\src\Zoomify.cc">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\Log.cc">
+    <ClCompile Include="..\src\Transforms.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\KakaduImage.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dependencies\includes\kdu_stripe_compressor.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dependencies\includes\kdu_stripe_decompressor.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dependencies\includes\jp2.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dependencies\includes\jpx.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -87,9 +99,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\src\Cache.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\ColourTransforms.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\src\DSOImage.h">
@@ -137,7 +146,13 @@
     <ClInclude Include="..\src\Writer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\Log.h">
+    <ClInclude Include="..\src\Transforms.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\KakaduImage.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="MemcachedWindows.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
