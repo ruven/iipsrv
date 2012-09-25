@@ -24,6 +24,7 @@
 #ifdef WIN32
 
 #include <ctype.h>
+#include <cmath>
 #include <ctime>
 #include <cstdlib>
 #include <cstring>

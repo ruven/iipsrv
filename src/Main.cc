@@ -44,7 +44,11 @@
 #include "Writer.h"
 
 #ifdef HAVE_MEMCACHED
+#ifdef WIN32
+#include "../windows/MemcachedWindows.h"
+#else
 #include "Memcached.h"
+#endif
 #endif
 
 #ifdef ENABLE_DL
