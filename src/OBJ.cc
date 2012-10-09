@@ -252,11 +252,11 @@ void OBJ::metadata( string field ){
 
   string metadata = (*session->image)->getMetadata( field );
   if( session->loglevel >= 3 ){
-    *(session->logfile) << "OBJ :: " << field << " handler returning" << metadata << endl;
+    *(session->logfile) << "OBJ :: " << field << " handler returning '" << metadata << "'" << endl;
   }
 
   if( metadata.length() ){
-    session->response->addResponse( field, metadata.c_str() );
+    session->response->addResponse( field, metadata );
   }
 
 

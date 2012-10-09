@@ -1,11 +1,11 @@
 /*
     IIP Response Handler Class
 
-    Copyright (C) 2003-2004 Ruven Pillay.
+    Copyright (C) 2003-2012 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
-    the Free Software Foundation; either version 2 of the License, or
+    the Free Software Foundation; either version 3 of the License, or
     (at your option) any later version.
 
     This program is distributed in the hope that it will be useful,
@@ -14,8 +14,8 @@
     GNU General Public License for more details.
 
     You should have received a copy of the GNU General Public License
-    along with this program; if not, write to the Free Software
-    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+    along with this program; if not, write to the Free Software Foundation,
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
 
@@ -60,50 +60,50 @@ class IIPResponse{
 
 
   /// Set the IIP protocol version
-  /** \param p IIP protocol version */
+  /** @param p IIP protocol version */
   void setProtocol( const std::string& p ) { protocol = p; };
 
 
   /// Set the Last Modified header
-  /** \param m Last modifed date as a HTTP RFC 1123 formatted timestamp */
+  /** @param m Last modifed date as a HTTP RFC 1123 formatted timestamp */
   void setLastModified( const std::string& m ) { modified = "Last-Modified: " + m; };
 
 
   /// Add a response string
-  /** \param r response string */
+  /** @param r response string */
   void addResponse( const std::string& r ); 
 
 
   /// Add a response string
-  /** \param c response string */
+  /** @param c response string */
   void addResponse( const char* c );
 
 
   /// Add a response string
-  /** \param c response string
-      \param a integer value
+  /** @param c response string
+      @param a integer value
    */
   void addResponse( const char* c, int a );
 
 
   /// Add a response string
-  /** \param c response string
-      \param a string reply
+  /** @param c response string
+      @param a string reply
    */
-  void addResponse( std::string c, const char* a );
+  void addResponse( std::string c, const std::string& a );
 
 
   /// Add a response string
-  /** \param c response string
-      \param a integer value
-      \param b another integer value
+  /** @param c response string
+      @param a integer value
+      @param b another integer value
    */
   void addResponse( const char* c, int a, int b );
 
 
   /// Set an error
-  /** \param code error code
-      \param arg the argument supplied by the client
+  /** @param code error code
+      @param arg the argument supplied by the client
    */
   void setError( const std::string& code, const std::string& arg );
 
@@ -135,7 +135,7 @@ class IIPResponse{
 
 
   /// Display our advertising banner ;-)
-  /** \param version server version */
+  /** @param version server version */
   std::string getAdvert( const std::string& version );
 
 
