@@ -55,8 +55,12 @@ unsigned int View::getResolution(){
 
   resolution = max_resolutions - 1;
 
-  if( requested_width ) View::calculateResolution( width, requested_width );
-  if( requested_height ) View::calculateResolution( height, requested_height );
+  if( requested_width ) View::calculateResolution( (view_width == 0) ? width : width*view_width, requested_width );
+  int resWid = resolution;
+  if( requested_height ) View::calculateResolution( (view_height == 0) ? height : height*view_height, requested_height );
+  if (resWid > resolution){
+	  resolution = resWid;
+  }
 
   // Caluclate our new width and height based on the calculated resolution
   for( i=0; i < (max_resolutions - resolution - 1); i++ ){

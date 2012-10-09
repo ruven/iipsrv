@@ -374,6 +374,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\src\IIIF.cpp"
+				>
+			</File>
+			<File
 				RelativePath="..\src\IIPImage.cc"
 				>
 			</File>
