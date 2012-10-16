@@ -215,7 +215,7 @@ void DeepZoom::run( Session* session, const std::string& argument ){
 
 
   // Apply any contrast adjustments and/or clipping to 8bit from 16bit
-  filter_contrast( rawtile, session->view->getContrast() );
+  filter_contrast( rawtile, session->view->getContrast(), (*session->image)->max, (*session->image)->min );
 
 
   // Compress to JPEG

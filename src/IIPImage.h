@@ -102,6 +102,12 @@ class IIPImage {
   /// The number of channels for this image
   unsigned int channels;
 
+  /// The sample format type (fixed or floating point)
+  SampleType sampleType;
+
+  /// The min and max sample value for each channel
+  std::vector<float> min, max;
+
   /// Indicate whether we have opened and initialised some paramters for this image
   bool isSet;
 
@@ -174,6 +180,9 @@ class IIPImage {
   /// Return the number of channels for this image
   unsigned int getNumChannels() { return channels; };
 
+  /// Return the sample format type
+  SampleType getSampleType(){ return sampleType; };
+
   /// Return the image width in pixels for a given resolution
   /** \param n resolution number (0 is default and full size image)
    */
@@ -195,7 +204,7 @@ class IIPImage {
 
   /// Return image metadata
   /** \param index metadata field name */
-  std::string getMetadata( const std::string& index ) {
+  const std::string& getMetadata( const std::string& index ) {
     return metadata[index];
   };
 

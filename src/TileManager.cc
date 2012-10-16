@@ -17,8 +17,8 @@
     GNU General Public License for more details.
 
     You should have received a copy of the GNU General Public License
-    along with this program; if not, write to the Free Software
-    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+    along with this program; if not, write to the Free Software Foundation,
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
 
@@ -347,13 +347,17 @@ RawTile TileManager::getRegion( unsigned int res, int seq, int ang, int layers, 
 
   unsigned int channels = image->getNumChannels();
   unsigned int bpp = image->getNumBitsPerPixel();
+  SampleType sampleType = image->getSampleType();
 
   // Create an empty tile with the correct dimensions
   RawTile region( 0, res, seq, ang, width, height, channels, bpp );
   region.dataLength = width * height * channels * bpp/8;
+  region.sampleType = sampleType;
 
   // Allocate memory for the region
-  if( bpp == 16 ) region.data = new unsigned short[width*height*channels];
+  if( bpp == 32 && sampleType == FIXED ) region.data = new int[width*height*channels];
+  else if( bpp == 32 && sampleType == FLOAT ) region.data = new float[width*height*channels];
+  else if( bpp == 16 ) region.data = new unsigned short[width*height*channels];
   else region.data = new unsigned char[width*height*channels];
 
   unsigned int current_height = 0;
@@ -443,7 +447,17 @@ RawTile TileManager::getRegion( unsigned int res, int seq, int ang, int layers, 
 	unsigned int inx = ((k+yf)*rawtile.width*channels) + (xf*channels);
 
 	// Simply copy the line of data across
-	if( bpp == 16 ){
+	if( bpp == 32 && sampleType == FIXED ){
+	  int* ptr = (int*) rawtile.data;
+	  int* buf = (int*) region.data;
+	  memcpy( &buf[buffer_index], &ptr[inx], dst_tile_width*channels*4 );
+	}
+	else if( bpp == 32 && sampleType == FLOAT ){
+	  float* ptr = (float*) rawtile.data;
+	  float* buf = (float*) region.data;
+	  memcpy( &buf[buffer_index], &ptr[inx], dst_tile_width*channels*4 );
+	}
+	else if( bpp ==  16 ){
 	  unsigned short* ptr = (unsigned short*) rawtile.data;
 	  unsigned short* buf = (unsigned short*) region.data;
 	  memcpy( &buf[buffer_index], &ptr[inx], dst_tile_width*channels*2 );

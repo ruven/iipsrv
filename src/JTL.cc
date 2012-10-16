@@ -63,7 +63,7 @@ void JTL::run( Session* session, const std::string& argument ){
 
   CompressionType ct;
   if( (*session->image)->getColourSpace() == CIELAB ) ct = UNCOMPRESSED;
-  else if( (*session->image)->getNumBitsPerPixel() == 16 ) ct = UNCOMPRESSED;
+  else if( (*session->image)->getNumBitsPerPixel() > 8 ) ct = UNCOMPRESSED;
   else if( session->view->getContrast() != 1.0 ) ct = UNCOMPRESSED;
   else if( session->view->shaded ) ct = UNCOMPRESSED;
   else ct = JPEG;
@@ -101,14 +101,24 @@ void JTL::run( Session* session, const std::string& argument ){
   // Apply hill shading if requested
   if( session->view->shaded ){
     if( session->loglevel >= 3 ){
-      *(session->logfile) << "CVT :: Applying hill-shading" << endl;
+      *(session->logfile) << "JTL :: Applying hill-shading" << endl;
     }
     filter_shade( rawtile, session->view->shade[0], session->view->shade[1] );
   }
 
 
+  // Apply any gamma correction
+  if( session->view->getGamma() != 1.0 ){
+    float gamma = session->view->getGamma();
+    if( session->loglevel >= 3 ){
+      *(session->logfile) << "JTL :: Applying gamma of " << gamma << endl;
+    }
+    filter_gamma( rawtile, gamma, (*session->image)->max, (*session->image)->min );
+  }
+
+
   // Apply any contrast adjustments and/or clipping to 8bit from 16bit
-  filter_contrast( rawtile, session->view->getContrast() );
+  filter_contrast( rawtile, session->view->getContrast(), (*session->image)->max, (*session->image)->min );
 
 
   // Compress to JPEG

@@ -1,3 +1,19 @@
+16/10/2012:
+	- Added support for TIFF 32 bit integer and float.
+	- Fixed 16 bit JPEG2000 support.
+	- Added 1 bit support for TIFF.
+	- Added gamma support via GAM command.
+	- Thanks to Chiara Marmo for initial implementation.
+
+
+09/09/2012:
+	- TIFF metadata fixes.
+
+
+25/08/2012:
+	- Windows compilation fixes by Michal Becak.
+
+
 13/08/2012:
 	- Detect JPEG YCbCr encoding in TIFF and request conversion to RGB
 	  by libtiff. Tile _TIFFmalloc() now only occurs in getTile().

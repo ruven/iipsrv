@@ -31,8 +31,8 @@
 
 
 static const float _sRGB[3][3] = { {  3.240479, -1.537150, -0.498535 },
-		                  { -0.969256, 1.875992, 0.041556 },
-		                  { 0.055648, -0.204043, 1.057311 } };
+				   { -0.969256, 1.875992, 0.041556 },
+				   { 0.055648, -0.204043, 1.057311 } };
 
 
 
@@ -295,27 +295,14 @@ void filter_interpolate_bilinear( RawTile& in, unsigned int resampled_width, uns
 
 
 // Function to apply a contrast adjustment and clip to 8 bit
-void filter_contrast( RawTile& in, float c ){
+void filter_contrast( RawTile& in, float c, std::vector<float>& max, std::vector<float>& min ){
 
   unsigned int np = in.width * in.height * in.channels;
 
   unsigned char* buffer;
 
-  if( in.bpc == 16 ){
-    // Allocate new 8 bit buffer for tile
-    buffer = new unsigned char[np];
-    float contrast = c/256.0;
-    for( unsigned int n=0; n<np; n++ ){
-      float v = ((unsigned short*)in.data)[n] * contrast;
-      v = (v<255.0) ? v : 255.0;
-      buffer[n] = (unsigned char) v;
-    }
-    // Replace original buffer with new
-    delete[] (unsigned short*) in.data;
-    in.data = buffer;
-    in.bpc = 8;
-  }
-  else{
+  // 8-bit case first
+  if( in.bpc == 8 ){
     if( c == 1.0 ) return;
     buffer = (unsigned char*) in.data;
     for( unsigned int n=0; n<np; n++ ){
@@ -323,6 +310,70 @@ void filter_contrast( RawTile& in, float c ){
       v = (v<255.0) ? v : 255.0;
       buffer[n] = (unsigned char) v;
     }
+  }
+  // 16 and 32 bit images
+  else{
+    float v, contrast;
+
+    // Allocate new 8 bit buffer for tile
+    buffer = new unsigned char[np];
+
+    if( in.bpc == 16 ) contrast = c/256.0;
+
+    for( unsigned int n=0; n<np; n++ ){
+
+      if( in.bpc == 32 ){
+	int ch = (int)( n % in.channels );
+	contrast = c * 256.0 / (max[ch]-min[ch]);
+	v = ((float*)in.data)[n] * contrast;
+      }
+      else v = ((unsigned short*)in.data)[n] * contrast;
+
+      v = (v<255.0) ? v : 255.0;
+      v = (v>0.0) ? v : 0;
+      buffer[n] = (unsigned char) v;
+    }
+
+    // Replace original buffer with new
+    if( in.bpc == 32 ) delete[] (float*) in.data;
+    else delete[] (unsigned short*) in.data;
+
+    in.data = buffer;
+    in.bpc = 8;
+
+  }
+
+}
+
+
+// Gamma correction
+void filter_gamma( RawTile& in, float g, std::vector<float>& max, std::vector<float>& min ){
+
+  float v;
+  unsigned int np = in.width * in.height * in.channels;
+
+  // Loop through our pixels
+  for( unsigned int n=0; n<np; n++ ){
+
+    int c = (int)( n % in.channels );
+
+    if( in.bpc == 32 ) v = (float)((float*)in.data)[n];
+    else if( in.bpc == 16 ) v = (float)((unsigned short*)in.data)[n];
+    else v = (float)((unsigned char*)in.data)[n];
+
+    // Normalize our data
+    v = (v - min[c]) / max[c] - min[c];
+
+    // Perform gamma correction
+    v = max[c] * powf( v, g );
+
+    // Limit to our allowed data range
+    if( v < min[c] ) v = min[c];
+    else if( v > max[c] ) v = max[c];
+
+    if( in.bpc == 32 ) ((float*)in.data)[n] = (float) v;
+    else if( in.bpc == 16 ) ((unsigned short*)in.data)[n] = (unsigned short) v;
+    else v = ((unsigned char*)in.data)[n] = (unsigned char) v;
   }
 
 }

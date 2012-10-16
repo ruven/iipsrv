@@ -22,6 +22,7 @@
 #ifndef _TRANSFORMS_H
 #define _TRANSFORMS_H
 
+#include <vector>
 #include "RawTile.h"
 
 
@@ -43,7 +44,16 @@ void filter_LAB2sRGB( RawTile& in );
 /** @param in tile data to be adjusted
     @param c contrast value
 */
-void filter_contrast( RawTile& in, float c );
+void filter_contrast( RawTile& in, float c, std::vector<float>& max, std::vector<float>& min );
+
+
+/// Apply a gamma correction
+/** @param in tile input data
+    @param g gamma
+    @param max list of max values
+    @param min list of min values
+*/
+void filter_gamma( RawTile& in, float g, std::vector<float>& max, std::vector<float>& min );
 
 
 /// Resize image using nearest neighbour interpolation
