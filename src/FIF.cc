@@ -168,7 +168,8 @@ void FIF::run( Session* session, const string& src ){
 	test.setFileNamePattern( filename_pattern );
 	test.setFileSystemPrefix( filesystem_prefix );
 	test.Initialise();
-	if( session->imageCache->size() >= 100 ) session->imageCache->erase( session->imageCache->end() );
+	// Delete items if our list of images is too long. Arbitrarily set the max to 500.
+	if( session->imageCache->size() >= 250 ) session->imageCache->erase( session->imageCache->begin() );
 	(*session->imageCache)[argument] = test;
       }
     }

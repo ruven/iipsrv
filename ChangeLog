@@ -1,3 +1,7 @@
+18/10/2012:
+	- Fix to imageCache delete in FIF.cc - thanks to Michal Becak.
+
+
 16/10/2012:
 	- Added support for TIFF 32 bit integer and float.
 	- Fixed 16 bit JPEG2000 support.
