@@ -10,7 +10,10 @@
 #include "Transforms.h"
 #include "Tokenizer.h"
 #include "Environment.h"
+
+#if _MSC_VER
 #include "../windows/Time.h"
+#endif
 
 using namespace std;
 
@@ -41,9 +44,9 @@ void IIIF::run( Session* session, const std::string& argument ){
 
   int firstSlashPos = argument.find_first_of("/");
   int lastSlashPos = argument.find_last_of("/");
-  
+
   //check if there is slash in argument and if it is not last / first character, extract identifier and suffix
-  if( lastSlashPos < argument.length() && firstSlashPos < argument.length() 
+  if( lastSlashPos < argument.length() && firstSlashPos < argument.length()
 	  && lastSlashPos > 0 && firstSlashPos > 0 ){
 		  suffix = argument.substr( lastSlashPos+1, string::npos );
 		  filename = argument.substr( 0, firstSlashPos );
@@ -80,7 +83,7 @@ void IIIF::run( Session* session, const std::string& argument ){
   }
 
 
-  //PARSE INPUT PARAMETERS 
+  //PARSE INPUT PARAMETERS
 
   //for info.xml or info.json, we just check if no argument between filename and suffix exists
   if( !errorNo && (suffix == "info.xml" || suffix == "info.json")){
@@ -110,7 +113,7 @@ void IIIF::run( Session* session, const std::string& argument ){
 	if( !errorNo && izer.hasMoreTokens() ) {
 		string regionString = izer.nextToken();
 		transform( regionString.begin(), regionString.end(), regionString.begin(), ::tolower );
-		
+
 		if (regionString == "full"){
 			reqRegionX = 0;
 			reqRegionY = 0;
@@ -125,12 +128,12 @@ void IIIF::run( Session* session, const std::string& argument ){
 				isPCT = true;
 				regionString = regionString.substr(3,string::npos);
 			}
-			
+
 			// we will tokenize region (x,y,width,height)
 			Tokenizer regionIzer(regionString, ",");
 			int numOfSubtokens = 0;
 
-			// X coordinate 
+			// X coordinate
 			if( regionIzer.hasMoreTokens() ) {
 				string reqRegionTemp = regionIzer.nextToken();
 				if( isPCT ) {
@@ -212,7 +215,7 @@ void IIIF::run( Session* session, const std::string& argument ){
 				errorMsg = "Region has less parameters: " + regionString;
 			}
 		}//end of else - end of parsing x,y,w,h
-		
+
 		numOfTokens++;
 		if ( !errorNo && session->loglevel > 3){
 			*(session->logfile) << "IIIF :: requested region of image is x:" << reqRegionX << ", y:" << reqRegionY
@@ -226,7 +229,7 @@ void IIIF::run( Session* session, const std::string& argument ){
 		double aspectRatio = width / (double) height; //w = h * ar, h = w / ar
 		string sizeString = izer.nextToken();
 		transform( sizeString.begin(), sizeString.end(), sizeString.begin(), ::tolower );
-		
+
 		//full request
 		if( sizeString == "full" ){
 			reqSizeWidth = reqRegionWidth;
@@ -238,9 +241,9 @@ void IIIF::run( Session* session, const std::string& argument ){
 			int pctPos = sizeString.find_first_of(":") + 1;
 			double sizePercentage = strtod( sizeString.substr(pctPos,string::npos).c_str(), &conversionChecker );
 			if ( *conversionChecker != NULL
-				 || sizePercentage <= 0 || sizePercentage > 100 ) {
+				 || sizePercentage <= 0 || sizePercentage > 400 ) {
 				errorNo = 400; //bad request
-				errorMsg = "Size percentage must be number between 1 and 100, you have entered: "
+				errorMsg = "Size percentage must be number between 1 and 400, you have entered: "
 									+ sizeString.substr(pctPos,string::npos);
 			}
 			else{
@@ -255,7 +258,7 @@ void IIIF::run( Session* session, const std::string& argument ){
 			bool isExclamationMark = false;
 			//indicates that width should be counted from height
 			bool isBlankWidth = false;
-			
+
 			//!w,h request - remove !, remember it and continue as if w,h request
 			if( sizeString.substr(0,1) == "!" ) {
 				isExclamationMark = true;
@@ -286,13 +289,13 @@ void IIIF::run( Session* session, const std::string& argument ){
 					}
 					isBlankWidth = true;
 				}
-				
+
 				//width is set
 				else {
 					reqSizeWidth = strtol(sizeToken.c_str(), &conversionChecker, 10);
-					if( *conversionChecker != NULL || reqSizeWidth <= 0 || reqSizeWidth > width){
+					if( *conversionChecker != NULL || reqSizeWidth <= 0 || reqSizeWidth > width*4){
 						errorNo = 400; //bad request
-						errorMsg = "Size width must be positive integer between 1 and width of the original image."
+						errorMsg = "Size width must be positive integer between 1 and 4x width of the original image."
 						"You have entered: " + sizeToken;
 					}
 				}
@@ -301,7 +304,7 @@ void IIIF::run( Session* session, const std::string& argument ){
 			//height
 			if( !errorNo ){
 				sizeToken = sizeString.substr(commaPosition+1, string::npos);
-				
+
 				//height is not set
 				if( sizeToken.empty() ){
 					if (isExclamationMark){
@@ -322,9 +325,9 @@ void IIIF::run( Session* session, const std::string& argument ){
 				//height is set
 				else {
 					reqSizeHeight = strtol(sizeToken.c_str(), &conversionChecker, 10);
-					if( *conversionChecker != NULL || reqSizeHeight <= 0 || reqSizeHeight > height){
+					if( *conversionChecker != NULL || reqSizeHeight <= 0 || reqSizeHeight > height*4){
 						errorNo = 400; //bad request
-						errorMsg = "Size height must be positive integer between 1 and height of the original image."
+						errorMsg = "Size height must be positive integer between 1 and 4x height of the original image."
 						"You have entered: " + sizeToken;
 					}
 					if( isBlankWidth ) {
@@ -332,7 +335,7 @@ void IIIF::run( Session* session, const std::string& argument ){
 					}
 				}
 			}
-			
+
 			//  !w,h - modify higher value if it should keep aspect ratio and fit into limits
 			if( isExclamationMark ){
 				if ( (reqSizeHeight * aspectRatio) > reqSizeWidth ){
@@ -355,7 +358,7 @@ void IIIF::run( Session* session, const std::string& argument ){
 	if( !errorNo && izer.hasMoreTokens() ){
 		string rotationString = izer.nextToken();
 		rotation = strtod(rotationString.c_str(), &conversionChecker);
-		
+
 		//check if conversion was successful
 		if( conversionChecker == rotationString || *conversionChecker != NULL
 			|| rotation < 0 || rotation > 360){
@@ -378,13 +381,13 @@ void IIIF::run( Session* session, const std::string& argument ){
 		}
 	}
 
-	//SOLVE QUALITY AND FORMAT PARAMETERS 
+	//SOLVE QUALITY AND FORMAT PARAMETERS
 	if( !errorNo && izer.hasMoreTokens() ){
 		string quality = izer.nextToken();
 		transform( quality.begin(), quality.end(), quality.begin(), ::tolower );
 		int positionDot = quality.find_last_of(".");
-		
-		//if dot is not present, we use default and currently only supported format - jpg 
+
+		//if dot is not present, we use default and currently only supported format - jpg
 		if (positionDot == string::npos){
 			format = "jpg";
 		}
@@ -396,18 +399,24 @@ void IIIF::run( Session* session, const std::string& argument ){
 		//quality
 		qualityNum = strtol(quality.c_str(), &conversionChecker, 10);
 
-		if( quality == "native" || quality == "color" || quality == "grey" || quality == "bitonal" || 
-			(qualityNum > 0 && qualityNum <= 100 && *conversionChecker == NULL) ) {
-				if ( quality != "native" && qualityNum == 0){
+		if( quality == "native" || quality == "color" || quality == "grey" || quality == "bitonal" ||
+			(qualityNum >= 0 && qualityNum <= 100 && *conversionChecker == NULL && conversionChecker != quality) ) {
+			// if one of unsupported formats
+			if ( quality == "color" && quality == "grey" || quality == "bitonal" ){
 				errorNo = 501;
 				errorMsg = "Currently implemented quality parameters are native or number "
-					"between 1 and 100, that implies quality of jpg (1 means best compression, 100 means best quality)";
+					"between 0 and 100, that implies quality of jpg (0 means best compression, 100 means best quality)";
+			}
+			// if value for jpeg quality is 0, set it to 1 (lowest reasonable value)
+			else if ( quality != "native" && qualityNum == 0 ){
+				qualityNum = 1;
 			}
 		}
 		else {
 				errorNo = 400;
-				errorMsg = "Quality parameter must be one of: native, color, grey, bitonal or number between 1 and 100, "
-					"that represents quality of jpg (1 means best compression, 100 means best quality).";
+				errorMsg = "Quality parameter must be one of: native, color, grey, bitonal or number between 0 and 100, "
+					"that represents quality of jpg (0 means best compression, 100 means best quality)."
+					" You have entered: " + quality;
 		}
 
 		// if not jpg format, write appropriate error
@@ -421,7 +430,8 @@ void IIIF::run( Session* session, const std::string& argument ){
 			}
 			else {
 					errorNo = 400;
-					errorMsg = "Format must be one of: jpg, tif, png, gif, jp2 or pdf.";
+					errorMsg = "Format must be one of: jpg, tif, png, gif, jp2 or pdf."
+						" You have entered: " + format;
 			}
 		}
 		numOfTokens++;
@@ -476,7 +486,7 @@ void IIIF::run( Session* session, const std::string& argument ){
 	  session->out->printf((const char*) str);
 	  session->out->flush();
 
-	  *(session->logfile) << "IIIF :: Parsing error occured. " << errorMsg 
+	  *(session->logfile) << "IIIF :: Parsing error occured. " << errorMsg
 		  << " Entered argument was " << argument << endl;
 	  throw errorNo;
   }
@@ -495,7 +505,7 @@ void IIIF::run( Session* session, const std::string& argument ){
 		  << ", rotation - " << rotation << ", quality - " << quality << ", format - " << format << endl;
     }
   }
-  
+
   // INFO.XML OUPUT
   if( suffix == "info.xml" ){
 	std::stringstream xmlStringStream;
@@ -609,7 +619,7 @@ void IIIF::run( Session* session, const std::string& argument ){
 		"Server: iipsrv/%s\r\n"
 	    "Cache-Control: max-age=%d\r\n"
 		"Last-Modified: %s\r\n"
- 		"Content-Type: image/jpeg\r\n"
+		"Content-Type: image/jpeg\r\n"
 		"Content-Disposition: inline;filename=\"%s.jpg\"\r\n"
 	    "\r\n",
 	    VERSION, MAX_AGE, (*session->image)->getTimestamp().c_str(), basename.c_str() );
@@ -623,13 +633,13 @@ void IIIF::run( Session* session, const std::string& argument ){
 	// Get our requested region from our TileManager
     TileManager tilemanager( session->tileCache, *session->image, session->watermark, session->jpeg, session->logfile,
 								session->loglevel );
-	    
+
 	RawTile complete_image = tilemanager.getRegion( requested_res, session->view->xangle, session->view->yangle,
 						    session->view->getLayers(), session->view->getViewLeft(), session->view->getViewTop(),
 							session->view->getViewWidth(), session->view->getViewHeight() );
 
 	if( session->loglevel >= 4 ){
-		*(session->logfile) << "IIIF :: Requested region retrieved, requested resolution: "<< requested_res 
+		*(session->logfile) << "IIIF :: Requested region retrieved, requested resolution: "<< requested_res
 			<< ", region in this resolution X,Y,W,H: "<< session->view->getViewLeft() <<","<< session->view->getViewTop()<<","
 			<< session->view->getViewWidth()<<"," << session->view->getViewHeight()<< endl;
 	}
@@ -654,6 +664,11 @@ void IIIF::run( Session* session, const std::string& argument ){
 
 	// Resize our image as requested. Use the interpolation method requested in the server configuration - bilinear default
 	if( (reqSizeWidth != complete_image.width) || (reqSizeHeight != complete_image.height) ){
+	  if( session->loglevel >= 5 ){
+		  *(session->logfile) << "Resizing is required." << endl;
+	  }
+      //if 16 bits per channel, change it to 8bpc
+      if(complete_image.bpc == 16) filter_contrast( complete_image, 1.0 );
       Timer interpolation_timer;
       string interpolation_type;
       if( session->loglevel >= 5 ){
@@ -673,7 +688,7 @@ void IIIF::run( Session* session, const std::string& argument ){
 
       if( session->loglevel >= 5 ){
 		  *(session->logfile) << "IIIF :: Resizing using " << interpolation_type << " interpolation in "
-				<< interpolation_timer.getTime() << " microseconds, new width: "<< reqSizeWidth 
+				<< interpolation_timer.getTime() << " microseconds, new width: "<< reqSizeWidth
 				<< ", new height:" << reqSizeHeight << endl;
       }
     }//END OF RESIZING
@@ -682,7 +697,7 @@ void IIIF::run( Session* session, const std::string& argument ){
 	// *** ROTATE IMAGE ***
 
 	if( (int) rotation % 90 == 0 && (int) rotation % 360 != 0 ){
-		
+
 		//if 16 bits per channel, change it to 8bpc
 		if(complete_image.bpc == 16) filter_contrast( complete_image, 1.0 );
 
@@ -690,7 +705,7 @@ void IIIF::run( Session* session, const std::string& argument ){
 		if( session->loglevel >= 4 ){
 			rotationTimer.start();
 		}
-		
+
 		int i=0;
 		unsigned char* buf;
 		unsigned char* rotatedImage;

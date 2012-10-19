@@ -52,5 +52,6 @@ iipsrv_fcgi_SOURCES = \
 			DeepZoom.cc \
 			SPECTRA.cc \
 			Watermark.h \
-			Watermark.cc
+			Watermark.cc \
+			IIIF.cc
 

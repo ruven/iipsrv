@@ -374,7 +374,7 @@
 				>
 			</File>
 			<File
-				RelativePath="..\src\IIIF.cpp"
+				RelativePath="..\src\IIIF.cc"
 				>
 			</File>
 			<File

@@ -168,7 +168,7 @@ void FIF::run( Session* session, const string& src ){
 	test.setFileNamePattern( filename_pattern );
 	test.setFileSystemPrefix( filesystem_prefix );
 	test.Initialise();
-	if( session->imageCache->size() >= 100 ) session->imageCache->erase( session->imageCache->end() );
+	if( session->imageCache->size() >= 100 ) session->imageCache->erase( session->imageCache->begin() );
 	(*session->imageCache)[argument] = test;
       }
     }
