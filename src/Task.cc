@@ -42,6 +42,7 @@ Task* Task::factory( const string& t ){
   else if( type == "qlt" ) return new QLT;
   else if( type == "sds" ) return new SDS;
   else if( type == "cnt" ) return new CNT;
+  else if( type == "gam" ) return new GAM;
   else if( type == "wid" ) return new WID;
   else if( type == "hei" ) return new HEI;
   else if( type == "rgn" ) return new RGN;
@@ -118,6 +119,17 @@ void CNT::run( Session* session, const std::string& argument ){
   if( session->loglevel >= 3 ) *(session->logfile) << "CNT :: requested contrast adjustment is " << contrast << endl;
 
   session->view->setContrast( contrast );
+}
+
+
+void GAM::run( Session* session, const std::string& argument ){
+
+  float gamma = (float) atof( argument.c_str() );
+
+  if( session->loglevel >= 2 ) *(session->logfile) << "GAM handler reached" << endl;
+  if( session->loglevel >= 3 ) *(session->logfile) << "GAM :: requested gamma adjustment is " << gamma << endl;
+
+  session->view->setGamma( gamma );
 }
 
 

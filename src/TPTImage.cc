@@ -56,11 +56,13 @@ void TPTImage::openImage() throw (string)
 
   // Also get some metadata
   char *tmp = NULL;
+  int count;
   if( TIFFGetField( tiff, TIFFTAG_ARTIST, &tmp ) ) metadata["author"] = tmp;
   if( TIFFGetField( tiff, TIFFTAG_COPYRIGHT, &tmp ) ) metadata["copyright"] = tmp;
   if( TIFFGetField( tiff, TIFFTAG_DATETIME, &tmp ) ) metadata["create-dtm"] = tmp;
   if( TIFFGetField( tiff, TIFFTAG_IMAGEDESCRIPTION, &tmp ) ) metadata["subject"] = tmp;
   if( TIFFGetField( tiff, TIFFTAG_SOFTWARE, &tmp ) ) metadata["app-name"] = tmp;
+  if( TIFFGetField( tiff, TIFFTAG_XMLPACKET, &count, &tmp ) ) metadata["xmp"] = string(tmp,count);
   isSet = true;
 
 }
@@ -70,7 +72,8 @@ void TPTImage::loadImageInfo( int seq, int ang ) throw(string)
 {
   tdir_t current_dir;
   int count;
-  uint16 colour, samplesperpixel, bitspersample;
+  uint16 colour, samplesperpixel, bitspersample, sampleformat;
+  double sminvalue[4], smaxvalue[4];
   unsigned int w, h;
   string filename;
 
@@ -94,10 +97,12 @@ void TPTImage::loadImageInfo( int seq, int ang ) throw(string)
   TIFFGetField( tiff, TIFFTAG_SAMPLESPERPIXEL, &samplesperpixel );
   TIFFGetField( tiff, TIFFTAG_BITSPERSAMPLE, &bitspersample );
   TIFFGetField( tiff, TIFFTAG_PHOTOMETRIC, &colour );
+  TIFFGetField( tiff, TIFFTAG_SAMPLEFORMAT, &sampleformat );
 
   // We have to do this conversion explicitly to avoid problems on Mac OS X
   channels = (unsigned int) samplesperpixel;
   bpp = (unsigned int) bitspersample;
+  sampleType = (sampleformat==3) ? _FLOAT : _FIXED;
 
   // Check for the no. of resolutions in the pyramidal image
   current_dir = TIFFCurrentDirectory( tiff );
@@ -133,6 +138,18 @@ void TPTImage::loadImageInfo( int seq, int ang ) throw(string)
     colourspace = sRGB;
   }
   else colourspace = sRGB;
+
+  // Get the max and min values for our data type - required for floats
+  TIFFGetFieldDefaulted( tiff, TIFFTAG_SMINSAMPLEVALUE, sminvalue );
+  TIFFGetFieldDefaulted( tiff, TIFFTAG_SMAXSAMPLEVALUE, smaxvalue );
+  for( int i=0; i<channels; i++ ){
+    min.push_back( (float)sminvalue[i] );
+    if( bpp < 32 ){
+      if( bpp == 16 ) smaxvalue[i] = 65535.0;
+      else smaxvalue[i] = 255.0;
+    }
+    max.push_back( smaxvalue[i] );
+  }
 
 }
 
@@ -282,6 +299,7 @@ RawTile TPTImage::getTile( int seq, int ang, unsigned int res, int layers, unsig
   rawtile.timestamp = timestamp;
   rawtile.memoryManaged = 0;
   rawtile.padded = true;
+  rawtile.sampleType = sampleType;
 
   return( rawtile );
 

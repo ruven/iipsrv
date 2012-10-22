@@ -183,7 +183,8 @@ loglevel );
       if( session->view->getContrast() != 1.0 ){
 	*(session->logfile) << "CVT :: Applying contrast of: " << session->view->getContrast() << endl;
       }
-      if( complete_image.bpc == 16 ) *(session->logfile) << "CVT :: Rescaling 16 bit data to 8" << endl;
+      if( complete_image.bpc > 8 ) *(session->logfile) << "CVT :: Rescaling " <<  complete_image.bpc
+						       << " bit data to 8" << endl;
     }
 
 
@@ -208,13 +209,23 @@ loglevel );
 	*(session->logfile) << "CVT :: Applying hill-shading" << endl;
       }
       filter_shade( complete_image, session->view->shade[0], session->view->shade[1] );
-      // Don't forget to reset our channels variable as this is used later
+      // Don't forget to reset our channels variable as hill shades are greyscale and this variable is used later
       channels = 1;
     }
 
 
-    // Apply any contrast adjustments and/or clipping to 8bit from 16bit
-    filter_contrast( complete_image, session->view->getContrast() );
+    // Apply any gamma correction
+    if( session->view->getGamma() != 1.0 ){
+      float gamma = session->view->getGamma();
+      if( session->loglevel >= 3 ){
+        *(session->logfile) << "CVT :: Applying gamma of " << gamma << endl; 
+      }
+      filter_gamma( complete_image, gamma, (*session->image)->max, (*session->image)->min );
+    }
+
+
+    // Apply any contrast adjustments and/or clipping to 8bit from 16bit or 32bit
+    filter_contrast( complete_image, session->view->getContrast(), (*session->image)->max, (*session->image)->min );
 
 
     // Resize our image as requested. Use the interpolation method requested in the server configuration.
@@ -245,6 +256,13 @@ loglevel );
 
     // Initialise our JPEG compression object
     session->jpeg->InitCompression( complete_image, resampled_height );
+
+    // Add XMP metadata if this exists
+    if( (*session->image)->getMetadata("xmp").size() > 0 ){
+      if( session->loglevel >= 4 ) *(session->logfile) << "CVT :: Adding XMP metadata" << endl;
+      session->jpeg->addMetadata( (*session->image)->getMetadata("xmp") );
+    }
+
     len = session->jpeg->getHeaderSize();
 
 #ifdef CHUNKED

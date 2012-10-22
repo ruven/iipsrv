@@ -53,7 +53,7 @@ unsigned int get_nprocs_conf(){
 
 
 #include "Timer.h"
-//define DEBUG 1
+//#define DEBUG 1
 
 
 using namespace std;
@@ -205,6 +205,14 @@ void KakaduImage::loadImageInfo( int seq, int ang ) throw(string)
   // JPEG doesn't handle bilevel images, so pack these into 8 bit greyscale
   if( bpp == 1 ) bpp = 8;
 
+  // Get the max and min values for our data type
+  double sminvalue[4], smaxvalue[4];
+  for( int i=0; i<channels; i++ ){
+    min.push_back( 0.0 );
+    if( bpp == 16 ) max.push_back( 65535.0 );
+    else max.push_back( 255.0 );
+  }
+
 }
 
 
@@ -294,7 +302,9 @@ RawTile KakaduImage::getTile( int seq, int ang, unsigned int res, int layers, un
 
   // Create our raw tile buffer and initialize some values
   if( bpp == 16 ) rawtile.data = new unsigned short[tw*th*channels];
-  else rawtile.data = new unsigned char[tw*th*channels];
+  else if( bpp == 8 ) rawtile.data = new unsigned char[tw*th*channels];
+  else throw string( "Kakadu :: Unsupported number of bits" );
+
   rawtile.dataLength = tw*th*channels*bpp/8;
   rawtile.filename = getImagePath();
   rawtile.timestamp = timestamp;
@@ -322,8 +332,10 @@ RawTile KakaduImage::getRegion( int seq, int ang, unsigned int res, int layers, 
 #endif
 
   RawTile rawtile( 0, res, seq, ang, w, h, channels, bpp );
+
   if( bpp == 16 ) rawtile.data = new unsigned short[w*h*channels];
-  else rawtile.data = new unsigned char[w*h*channels];
+  else if( bpp == 8 ) rawtile.data = new unsigned char[w*h*channels];
+  else throw string( "Kakadu :: Unsupported number of bits" );
 
   rawtile.dataLength = w*h*channels*bpp/8;
   rawtile.filename = getImagePath();
@@ -445,7 +457,7 @@ void KakaduImage::process( unsigned int res, int layers, int xoffset, int yoffse
       stripe_buffer = new kdu_uint16[tw*stripe_heights[0]*channels];
       buffer = new unsigned short[tw*th*channels];
     }
-    else{
+    else if( bpp == 8 ){
       stripe_buffer = new kdu_byte[tw*stripe_heights[0]*channels];
       buffer = new unsigned char[tw*th*channels];
     }
@@ -455,12 +467,11 @@ void KakaduImage::process( unsigned int res, int layers, int xoffset, int yoffse
 
       decompressor.get_recommended_stripe_heights( comp_dims.size.y,
 						   1024, stripe_heights, NULL );
-
       if( bpp == 16 ){
 	bool s = false;
-	continues = decompressor.pull_stripe( (kdu_int16*) stripe_buffer, (int*)stripe_heights, NULL, NULL, NULL, NULL, &s );
+	continues = decompressor.pull_stripe( (kdu_int16*) stripe_buffer, stripe_heights, NULL, NULL, NULL, NULL, &s );
       }
-      else{
+      else if( bpp == 8 ){
 	continues = decompressor.pull_stripe( (kdu_byte*) stripe_buffer, stripe_heights, NULL, NULL, NULL );
       }
 
@@ -475,7 +486,7 @@ void KakaduImage::process( unsigned int res, int layers, int xoffset, int yoffse
 	b1 = &( ((kdu_uint16*)stripe_buffer)[0] );
 	b2 = &( ((unsigned short*)buffer)[index] );
       }
-      else{
+      else if( bpp == 8 ){
 	b1 = &( ((kdu_byte*)stripe_buffer)[0] );
 	b2 = &( ((unsigned char*)buffer)[index] );
       }
@@ -513,7 +524,7 @@ void KakaduImage::process( unsigned int res, int layers, int xoffset, int yoffse
 	    if( bpp==16 ){
 	      ((unsigned short*)d)[n++] = ((unsigned short*)buffer)[j*tw*channels + i*channels + k];
 	    }
-	    else{
+	    else if( bpp==8 ){
 	      ((unsigned char*)d)[n++] = ((unsigned char*)buffer)[j*tw*channels + i*channels + k];
 	    }
 	  }
@@ -556,7 +567,7 @@ void KakaduImage::process( unsigned int res, int layers, int xoffset, int yoffse
 void KakaduImage::delete_buffer( void* buffer ){
   if( buffer ){
     if( bpp == 16 ) delete[] (kdu_uint16*) buffer;
-    else delete[] (kdu_byte*) buffer;
+    else if( bpp == 8 ) delete[] (kdu_byte*) buffer;
   }
 
 

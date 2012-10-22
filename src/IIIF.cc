@@ -668,7 +668,7 @@ void IIIF::run( Session* session, const std::string& argument ){
 		  *(session->logfile) << "Resizing is required." << endl;
 	  }
       //if 16 bits per channel, change it to 8bpc
-      if(complete_image.bpc == 16) filter_contrast( complete_image, 1.0 );
+      if(complete_image.bpc > 8) filter_contrast( complete_image, 1.0, (*session->image)->max, (*session->image)->min );
       Timer interpolation_timer;
       string interpolation_type;
       if( session->loglevel >= 5 ){
@@ -699,7 +699,7 @@ void IIIF::run( Session* session, const std::string& argument ){
 	if( (int) rotation % 90 == 0 && (int) rotation % 360 != 0 ){
 
 		//if 16 bits per channel, change it to 8bpc
-		if(complete_image.bpc == 16) filter_contrast( complete_image, 1.0 );
+		if(complete_image.bpc > 8) filter_contrast( complete_image, 1.0, (*session->image)->max, (*session->image)->min );
 
 		Timer rotationTimer;
 		if( session->loglevel >= 4 ){

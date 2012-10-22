@@ -129,6 +129,11 @@ class JPEGCompressor{
   int Compress( RawTile& t ) throw (std::string);
 
 
+  /// Add metadata to the JPEG header
+  /** @param m metadata */
+  void addMetadata( const std::string& m );
+
+
   /// Return the JPEG header size
   unsigned int getHeaderSize() { return header_size; }
 

@@ -181,6 +181,13 @@ class CNT : public Task {
 };
 
 
+/// Gamma Command
+class GAM : public Task {
+ public:
+  void run( Session* session, const std::string& argument );
+};
+
+
 /// CVT Width Command
 class WID : public Task {
  public:

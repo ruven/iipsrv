@@ -49,6 +49,7 @@ class View{
   unsigned int requested_width;               /// Width requested by WID command
   unsigned int requested_height;              /// Height requested by HEI command
   float contrast;                             /// Contrast adjustment requested by CNT command
+  float gamma;                                /// Gamma adjustment requested by GAM command
 
 
   /// Internal function to calculate the resolution associated with a width
@@ -75,7 +76,7 @@ class View{
     width = 0; height = 0;
     view_left = 0.0; view_top = 0.0; view_width = 1.0; view_height = 1.0;
     requested_width = 0; requested_height = 0;
-    contrast = 1.0;
+    contrast = 1.0; gamma = 1.0;
     xangle = 0; yangle = 90;
     shaded = false; shade[0] = 0; shade[1] = 0; shade[2] = 0;
     max_layers = 0; layers = 0;
@@ -191,6 +192,11 @@ class View{
   /// Indicate whether the viewport has been set
   bool viewPortSet();
 
+  /// Set gamma
+  void setGamma( float g ){ gamma = g; };
+
+  /// Get gamma
+  float getGamma(){ return gamma; };
 
 };
 
