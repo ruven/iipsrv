@@ -76,6 +76,12 @@ in this distribution. The configure script will use this bundled version
 unless it detects one already installed. Alternatively, you may specify the
 path using --with-fcgi-incl=<path> and --with-fcgi-lib=<path>.
 
+If this is an SVN or Git development version, first generate the autoconfigure
+environment using autogen.sh:
+./autogen.sh
+
+Otherwise for release versions, use configure directly:
+
 eg.
 ./configure
 make
