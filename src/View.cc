@@ -55,9 +55,9 @@ unsigned int View::getResolution(){
 
   resolution = max_resolutions - 1;
 
-  if( requested_width ) View::calculateResolution( (view_width == 0) ? width : width*view_width, requested_width );
+  if( requested_width ) View::calculateResolution( (view_width == 0) ? width : (unsigned int)(width*view_width), requested_width );
   int resWid = resolution;
-  if( requested_height ) View::calculateResolution( (view_height == 0) ? height : height*view_height, requested_height );
+  if( requested_height ) View::calculateResolution( (view_height == 0) ? height : (unsigned int)(height*view_height), requested_height );
   if (resWid > resolution){
 	  resolution = resWid;
   }

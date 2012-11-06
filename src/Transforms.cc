@@ -262,7 +262,7 @@ void filter_interpolate_bilinear( RawTile& in, unsigned int resampled_width, uns
 			b = data[(index+1)*channels + k];
 			c = data[(index+width)*channels + k];
 			d = data[(index + width + 1)*channels + k];
-			color = a*(1-x_diff)*(1-y_diff) + b*(x_diff)*(1-y_diff) + c*(1-x_diff)*(y_diff) + d*(x_diff)*(y_diff);
+			color = (unsigned char) (a*(1-x_diff)*(1-y_diff) + b*(x_diff)*(1-y_diff) + c*(1-x_diff)*(y_diff) + d*(x_diff)*(y_diff));
 			buf[offset++] = color;
 		  }
 	  }
