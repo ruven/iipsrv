@@ -32,7 +32,7 @@ void IIIF::run( Session* session, const std::string& argument ){
   //variables to store information from url request
   //suffix is last parameter eg. info.xml or native.jpg and filename is identifier
   string suffix;
-  string filename, quality, format;
+  string filename, params, quality, format;
   int reqRegionX, reqRegionY, reqRegionWidth, reqRegionHeight, reqSizeWidth, reqSizeHeight, qualityNum;
   double rotation;
   //variables to store info about requested image mainly for info requests
@@ -43,18 +43,38 @@ void IIIF::run( Session* session, const std::string& argument ){
   //message of the error that occured during parsing
   string errorMsg;
 
-  int firstSlashPos = argument.find_first_of("/");
   int lastSlashPos = argument.find_last_of("/");
 
   //check if there is slash in argument and if it is not last / first character, extract identifier and suffix
-  if( lastSlashPos < argument.length() && firstSlashPos < argument.length()
-	  && lastSlashPos > 0 && firstSlashPos > 0 ){
+  if( lastSlashPos < argument.length() && lastSlashPos > 0){
 		  suffix = argument.substr( lastSlashPos+1, string::npos );
-		  filename = argument.substr( 0, firstSlashPos );
+		  if( suffix.substr(0,4) == "info" ){
+			filename =  argument.substr(0,lastSlashPos);
+		  }
+		  else{
+			int positionTmp = lastSlashPos;
+			for( int i = 0; i < 3; i++) {
+				positionTmp = argument.substr(0,positionTmp).find_last_of("/");
+			}
+			if(positionTmp > 0){
+				filename = argument.substr(0,positionTmp);
+				params = argument.substr(positionTmp + 1, string::npos);
+			}
+			else{
+				errorNo = 400; //BAD REQUEST
+				errorMsg = "Not enough parameters. Syntax of info request is filename/info.xml, filename/info.json or "
+						"filename/info.json?callback=nameOfCallbackFunction. "
+						"Syntax of image request is {identifier}/{region}/{size}/{rotation}/{quality}{.format} "
+						"You have entered: " + argument;
+			}
+		  }
   }
   else{
 	errorNo = 400; //BAD REQUEST
-	errorMsg = "Not enough parameters. Slash is not present or is first or last character.";
+	errorMsg = "Not enough parameters. Syntax of info request is filename/info.xml, filename/info.json or "
+				"filename/info.json?callback=nameOfCallbackFunction. "
+				"Syntax of image request is {identifier}/{region}/{size}/{rotation}/{quality}{.format} "
+				"You have entered: " + argument;;
   }
 
   if( !errorNo ){
@@ -87,28 +107,23 @@ void IIIF::run( Session* session, const std::string& argument ){
   //PARSE INPUT PARAMETERS
 
   //for info.xml or info.json, we just check if no argument between filename and suffix exists
-  if( !errorNo && (suffix == "info.xml" || suffix == "info.json")){
-	if( firstSlashPos != lastSlashPos ){
+  if( !errorNo && (suffix.substr(0,4) == "info")){
+	if( !( suffix == "info.xml" || suffix == "info.json" || suffix.substr(0,19) == "info.json?callback=" )){
 		errorNo = 400; // bad request
-		errorMsg = "Too much parameters in info request. Syntax is filename/info.xml or filename/info.json.";
+		errorMsg = "Wrong info request. Syntax is filename/info.xml, filename/info.json or "
+			"filename/info.json?callback=nameOfCallbackFunction. You have entered: " + argument;
 	}
   }
 
   //parse image request - any other than info requests are considered image requests
   else if( !errorNo ){
-	Tokenizer izer( argument, "/" );
+	Tokenizer izer( params, "/" );
 	int numOfTokens = 0;
 	//conversionChecker to detect failure of conversion from string to int or double
 	char * conversionChecker;
 
-	//SOLVE IDENTIFIER PARAMETER
-	if( izer.hasMoreTokens() ) {
-		//skip first token (we don't need url encoded filename) and assign image path to filename
-		//filename parsing was already solved in FIF request
-		izer.nextToken();
-		filename = (*session->image)->getImagePath();
-		numOfTokens++;
-	}
+	//SOLVE IDENTIFIER PARAMETER - throw away url encoding
+	filename = (*session->image)->getImagePath();
 
 	//SOLVE REGION PARAMETER (full; x,y,w,h; pct:x,y,w,h)
 	if( !errorNo && izer.hasMoreTokens() ) {
@@ -217,6 +232,11 @@ void IIIF::run( Session* session, const std::string& argument ){
 			}
 		}//end of else - end of parsing x,y,w,h
 
+		if( errorNo ){
+			errorMsg += " Region format is: full, x,y,width,height or pct:x,y,width,height. Your full request is: "
+				+ argument;
+		}
+
 		numOfTokens++;
 		if ( !errorNo && session->loglevel > 3){
 			*(session->logfile) << "IIIF :: requested region of image is x:" << reqRegionX << ", y:" << reqRegionY
@@ -227,7 +247,7 @@ void IIIF::run( Session* session, const std::string& argument ){
 
 	//SOLVE SIZE PARAMETER
 	if( !errorNo && izer.hasMoreTokens() ) {
-		double aspectRatio = width / (double) height; //w = h * ar, h = w / ar
+		double aspectRatio = reqRegionWidth / (double) reqRegionHeight; //w = h * ar, h = w / ar
 		string sizeString = izer.nextToken();
 		transform( sizeString.begin(), sizeString.end(), sizeString.begin(), ::tolower );
 
@@ -348,6 +368,11 @@ void IIIF::run( Session* session, const std::string& argument ){
 			}
 		}
 
+		if( errorNo ){
+			errorMsg += " Size format is: full or width,height or width, or ,heigh or pct:x or !width,height. "
+				"Your full request is: " + argument;
+		}
+
 		numOfTokens++;
 		if( !errorNo && session->loglevel >= 3 ){
 			*(session->logfile) << "IIIF :: requested size of image is width: " << reqSizeWidth 
@@ -437,6 +462,9 @@ void IIIF::run( Session* session, const std::string& argument ){
 		}
 		numOfTokens++;
 
+		if( errorNo ){
+			errorMsg += " Your full request is: " + argument;
+		}
 		if( !errorNo && session->loglevel >= 3 ){
 			*(session->logfile) << "IIIF :: requested quality of image is: " << quality
 				<< ", requested format is: " << format << endl;
@@ -451,7 +479,7 @@ void IIIF::run( Session* session, const std::string& argument ){
 			"You have entered: " + argument;
 	}
 	//NOT ENOUGH PARAMETERS
-	if( !errorNo && numOfTokens < 5 ){
+	if( !errorNo && numOfTokens < 4 ){
 		errorNo = 400;
 		errorMsg = "Inserted query has not enough parameters. "
 			"Syntax should be {identifier}/{region}/{size}/{rotation}/{quality}{.format} "
@@ -548,8 +576,11 @@ void IIIF::run( Session* session, const std::string& argument ){
     return;
   }
   // INFO.JSON OUTPUT
-  else if( suffix == "info.json" ){
+  else if( suffix.substr(0,9) == "info.json" ){
 	std::stringstream jsonStringStream;
+	if( suffix.length() > 19 ){
+		jsonStringStream << suffix.substr(19,string::npos) << "(";
+	}
 	jsonStringStream << "{" << endl;
 	jsonStringStream << "\"identifier\" : \"" << filename << "\"," << endl;
 	jsonStringStream << "\"width\" : " << width << "," << endl;
@@ -566,17 +597,23 @@ void IIIF::run( Session* session, const std::string& argument ){
 	jsonStringStream << "\"qualities\" : [ \"native\" ]," << endl;
 	jsonStringStream << "\"profile\" : \"http://library.stanford.edu/iiif/image-api/compliance.html#level1\"" << endl; 
 	jsonStringStream<< "}";
+	if( suffix.length() > 19 ){
+		jsonStringStream << ");";
+	}
 
+	string jsonMime;
+	if( suffix.length() > 19 )	jsonMime = "javascript";
+	else jsonMime = "json";
 
 	char str[1024];
     snprintf( str, 1024,
 	      "Server: iipsrv/%s\r\n"
-	      "Content-Type: application/json\r\n"
+	      "Content-Type: application/%s\r\n"
 	      "Cache-Control: max-age=%d\r\n"
 	      "Last-Modified: %s\r\n"
 	      "\r\n"
 	      "%s",
-		  VERSION, MAX_AGE,(*session->image)->getTimestamp().c_str(), jsonStringStream.str().c_str() );
+		  VERSION, jsonMime.c_str(), MAX_AGE,(*session->image)->getTimestamp().c_str(), jsonStringStream.str().c_str() );
     session->out->printf( (const char*) str );
     session->response->setImageSent();
     return;
