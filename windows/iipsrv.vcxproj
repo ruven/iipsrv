@@ -175,8 +175,11 @@
     <ClCompile Include="..\src\DSOImage.cc" />
     <ClCompile Include="..\src\FIF.cc" />
     <ClCompile Include="..\src\ICC.cc" />
+    <ClCompile Include="..\src\IIIF.cc" />
     <ClCompile Include="..\src\IIPImage.cc" />
-    <ClCompile Include="..\src\IIPResponse.cc" />
+    <ClCompile Include="..\src\IIPResponse.cc">
+      <DeploymentContent>false</DeploymentContent>
+    </ClCompile>
     <ClCompile Include="..\src\JPEGCompressor.cc" />
     <ClCompile Include="..\src\JTL.cc" />
     <ClCompile Include="..\src\KakaduImage.cc" />

@@ -181,6 +181,13 @@ class CNT : public Task {
 };
 
 
+/// Gamma Command
+class GAM : public Task {
+ public:
+  void run( Session* session, const std::string& argument );
+};
+
+
 /// CVT Width Command
 class WID : public Task {
  public:
@@ -278,5 +285,10 @@ class DeepZoom : public Task {
   void run( Session* session, const std::string& argument );
 };
 
+/// IIIF Request Command
+class IIIF : public Task {
+ public:
+  void run( Session* session, const std::string& argument );
+};
 
 #endif

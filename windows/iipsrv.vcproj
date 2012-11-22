@@ -374,6 +374,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\src\IIIF.cc"
+				>
+			</File>
+			<File
 				RelativePath="..\src\IIPImage.cc"
 				>
 			</File>
