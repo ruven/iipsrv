@@ -730,8 +730,6 @@ void IIIF::run( Session* session, const std::string& argument ){
       if( session->loglevel >= 5 ){
         *(session->logfile) << "Resizing is required." << endl;
       }
-      //if 16 bits per channel, change it to 8bpc
-      if(complete_image.bpc > 8) filter_contrast( complete_image, 1.0, (*session->image)->max, (*session->image)->min );
       Timer interpolation_timer;
       string interpolation_type;
       if( session->loglevel >= 5 ){
@@ -758,73 +756,19 @@ void IIIF::run( Session* session, const std::string& argument ){
 
 
     // *** ROTATE IMAGE ***
-
-    if( (int) rotation % 90 == 0 && (int) rotation % 360 != 0 ){
-
-      //if 16 bits per channel, change it to 8bpc
-      if(complete_image.bpc > 8) filter_contrast( complete_image, 1.0, (*session->image)->max, (*session->image)->min );
-
+    if((int)rotation % 360 != 0){
       Timer rotationTimer;
       if( session->loglevel >= 4 ){
         rotationTimer.start();
       }
 
-      int i=0;
-      unsigned char* buf;
-      unsigned char* rotatedImage;
-      buf = (unsigned char*) complete_image.data;
-      rotatedImage = new unsigned char[complete_image.dataLength];
+      filter_rotate(complete_image, rotation);
 
-      //rotate 90
-      if ((int) rotation % 360 == 90){
-        for (int wid = complete_image.width; wid > 0; wid--){
-          for (int hei = complete_image.height; hei > 0; hei--){
-            for(int chan = 0; chan < complete_image.channels; chan++){
-              rotatedImage[i*complete_image.channels + chan] = buf[(complete_image.width * hei - wid )*complete_image.channels + chan];
-            }
-            i++;
-          }
-        }
-      }
-
-      //rotate 270
-      if( (int) rotation % 360 == 270 ){
-        for (int wid = 1; wid <= complete_image.width; wid++){
-          for (int hei = 1; hei <= complete_image.height; hei++){
-            for(int chan = 0; chan < complete_image.channels; chan++){
-              rotatedImage[i*complete_image.channels + chan] = buf[(complete_image.width * hei - wid )*complete_image.channels + chan];
-            }
-            i++;
-          }
-        }
-      }
-
-      //rotate 180, don't touch channel mathgic inside
-      if( (int) rotation % 360 == 180 ){
-        while ( i < complete_image.dataLength ){
-          rotatedImage[i] = buf[complete_image.dataLength - i];    //blue channel
-          rotatedImage[i+1] = buf[complete_image.dataLength - i - 2];  //red channel
-          rotatedImage[i+2] = buf[complete_image.dataLength - i - 1];  //green channel
-          i = i + 3;
-        }
-      }
-
-      //delete old image
-      if (complete_image.memoryManaged) {
-        delete [] complete_image.data;
-      }
-      //set new image
-      complete_image.data = rotatedImage;
-      complete_image.memoryManaged = 1;
-
-      //for 90 and 270 rotation swap width and height
-      if( (int)rotation % 180 == 90 ){
-        unsigned int tmp = reqSizeHeight;
+      //switch required width and height
+      if((int) rotation % 180 == 90){
+        int tmp = reqSizeHeight;
         reqSizeHeight = reqSizeWidth;
         reqSizeWidth = tmp;
-        tmp = complete_image.height;
-        complete_image.height = complete_image.width;
-        complete_image.width = tmp;
       }
 
       if( session->loglevel >= 4 ){

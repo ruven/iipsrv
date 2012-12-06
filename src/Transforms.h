@@ -72,4 +72,11 @@ void filter_interpolate_nearestneighbour( RawTile& in, unsigned int w, unsigned 
 void filter_interpolate_bilinear( RawTile& in, unsigned int w, unsigned int h );
 
 
+/// Rotate image - currently only by 90, 180 or 270 degrees, other values will do nothing
+/** @param in tile input data
+    @param angle angle of rotation - currently only rotations by 90, 180 and 270 degrees
+    are suported, for other values, no rotation will occur
+*/
+void filter_rotate( RawTile& in, double angle );
+
 #endif
