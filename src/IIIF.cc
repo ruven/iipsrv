@@ -56,7 +56,7 @@ void IIIF::run( Session* session, const std::string& argument ){
   //number of http status code if error during parsing occured
   int errorNo = 0;
   //message of the error that occured during parsing
-  string errorMsg;
+  string errorMsg, errorParam;
 
   int lastSlashPos = argument.find_last_of("/");
 
@@ -77,6 +77,7 @@ void IIIF::run( Session* session, const std::string& argument ){
     }
     else{
       errorNo = 400; //BAD REQUEST
+      errorParam = "unknown";
       errorMsg = "Not enough parameters. Syntax of info request is filename/info.xml, filename/info.json or "
                  "filename/info.json?callback=nameOfCallbackFunction. "
                  "Syntax of image request is {identifier}/{region}/{size}/{rotation}/{quality}{.format} "
@@ -86,6 +87,7 @@ void IIIF::run( Session* session, const std::string& argument ){
   }
   else{
     errorNo = 400; //BAD REQUEST
+    errorParam = "unknown";
     errorMsg = "Not enough parameters. Syntax of info request is filename/info.xml, filename/info.json or "
                "filename/info.json?callback=nameOfCallbackFunction. "
                "Syntax of image request is {identifier}/{region}/{size}/{rotation}/{quality}{.format} "
@@ -101,6 +103,7 @@ void IIIF::run( Session* session, const std::string& argument ){
     //catch any exception thrown in FIF and write error
     catch(const string& error){
       errorNo = 404; //page not found
+      errorParam = "identifier";
       errorMsg =  "Requested file " + filename + " does not exist or is not supported. " + error;
     }
   }
@@ -115,6 +118,11 @@ void IIIF::run( Session* session, const std::string& argument ){
     tw = (*session->image)->getTileWidth();
     th = (*session->image)->getTileHeight();
     numResolutions = (*session->image)->getNumResolutions();
+    if(width <= 1 || height <= 1){
+      errorNo = 415; // invalid media
+      errorParam = "identifier";
+      errorMsg = "Requested file "+ filename +" is probably corrupted. Width or height of loaded image is 1px. You have entered: " + argument;
+    }
   }
 
 
@@ -124,6 +132,7 @@ void IIIF::run( Session* session, const std::string& argument ){
   if( !errorNo && (suffix.substr(0,4) == "info")){
     if( !( suffix == "info.xml" || suffix == "info.json" || suffix.substr(0,19) == "info.json?callback=" )){
       errorNo = 400; // bad request
+      errorParam = "unknown";
       errorMsg = "Wrong info request. Syntax is filename/info.xml, filename/info.json or "
                  "filename/info.json?callback=nameOfCallbackFunction. You have entered: " + argument;
     }
@@ -176,6 +185,7 @@ void IIIF::run( Session* session, const std::string& argument ){
           if (conversionChecker == reqRegionTemp || *conversionChecker != NULL
             || reqRegionX < 0 || reqRegionX > width - 1){
             errorNo = 400; //bad request
+            errorParam = "region";
             errorMsg = "Region X coordinate is wrong: " + reqRegionTemp;
           }
           numOfSubtokens++;
@@ -194,6 +204,7 @@ void IIIF::run( Session* session, const std::string& argument ){
           if (conversionChecker == reqRegionTemp || *conversionChecker != NULL
             || reqRegionY < 0 || reqRegionY > height - 1){
             errorNo = 400; //bad request
+            errorParam = "region";
             errorMsg = "Region Y coordinate is wrong: " + reqRegionTemp;
           }
           numOfSubtokens++;
@@ -212,6 +223,7 @@ void IIIF::run( Session* session, const std::string& argument ){
           if (conversionChecker == reqRegionTemp || *conversionChecker != NULL
             || reqRegionWidth <= 0 || reqRegionWidth > width){
             errorNo = 400; //bad request
+            errorParam = "region";
             errorMsg = "Region WIDTH coordinate is wrong: " + reqRegionTemp;
           }
           numOfSubtokens++;
@@ -230,6 +242,7 @@ void IIIF::run( Session* session, const std::string& argument ){
           if (conversionChecker == reqRegionTemp || *conversionChecker != NULL
             || reqRegionHeight <= 0 || reqRegionHeight > height){
             errorNo = 400; //bad request
+            errorParam = "region";
             errorMsg = "Region HEIGHT coordinate is wrong: " + reqRegionTemp;
           }
           numOfSubtokens++;
@@ -237,11 +250,13 @@ void IIIF::run( Session* session, const std::string& argument ){
         //more region tokens
         if( !errorNo && regionIzer.hasMoreTokens() ){
           errorNo = 400; //bad request
+          errorParam = "region";
           errorMsg = "Region has more parameters: " + regionString;
         }
         //less region tokens
         if( !errorNo && numOfSubtokens < 4 ){
           errorNo = 400; //bad request
+          errorParam = "region";
           errorMsg = "Region has less parameters: " + regionString;
         }
       }//end of else - end of parsing x,y,w,h
@@ -278,6 +293,7 @@ void IIIF::run( Session* session, const std::string& argument ){
         double sizePercentage = strtod( sizeString.substr(pctPos,string::npos).c_str(), &conversionChecker );
         if ( *conversionChecker != NULL || sizePercentage <= 0 || sizePercentage > 400 ) {
           errorNo = 400; //bad request
+          errorParam = "size";
           errorMsg = "Size percentage must be number between 1 and 400, you have entered: "
                     + sizeString.substr(pctPos,string::npos);
         }
@@ -305,6 +321,7 @@ void IIIF::run( Session* session, const std::string& argument ){
         int commaPosition2 = sizeString.substr(commaPosition+1, string::npos).find_first_of(",");
         if( commaPosition < 0 ||  commaPosition2 >= 0){
           errorNo = 400; //bad request
+          errorParam = "size";
           errorMsg = "Not right amount of size parameters. You must insert {width,height} or {width,} or {,height}. "
                      "You have entered: " + sizeString;
         }
@@ -319,6 +336,7 @@ void IIIF::run( Session* session, const std::string& argument ){
           if( sizeToken.empty() ){
             if( isExclamationMark ){
               errorNo = 400; //bad request
+              errorParam = "size";
               errorMsg = "You requested image that fits into specific width and height, but did't specified width."
                          "You have entered: " + sizeString;
             }
@@ -330,6 +348,7 @@ void IIIF::run( Session* session, const std::string& argument ){
             reqSizeWidth = strtol(sizeToken.c_str(), &conversionChecker, 10);
             if( *conversionChecker != NULL || reqSizeWidth <= 0 || reqSizeWidth > width*4){
               errorNo = 400; //bad request
+              errorParam = "size";
               errorMsg = "Size width must be positive integer between 1 and 4x width of the original image."
                          "You have entered: " + sizeToken;
             }
@@ -344,11 +363,13 @@ void IIIF::run( Session* session, const std::string& argument ){
           if( sizeToken.empty() ){
             if (isExclamationMark){
               errorNo = 400; //bad request
+              errorParam = "size";
               errorMsg = "You requested image that fits into specific width and height, but did't specified height."
                          "You have entered: " + sizeString;
             }
             if( isBlankWidth ){
               errorNo = 400; //bad request
+              errorParam = "size";
               errorMsg = "You must enter at least one of width or height (,height or width,)."
                          "You have entered: " + sizeString;
             }
@@ -362,6 +383,7 @@ void IIIF::run( Session* session, const std::string& argument ){
             reqSizeHeight = strtol(sizeToken.c_str(), &conversionChecker, 10);
             if( *conversionChecker != NULL || reqSizeHeight <= 0 || reqSizeHeight > height*4){
               errorNo = 400; //bad request
+              errorParam = "size";
               errorMsg = "Size height must be positive integer between 1 and 4x height of the original image."
                          "You have entered: " + sizeToken;
             }
@@ -417,6 +439,7 @@ void IIIF::run( Session* session, const std::string& argument ){
       if( conversionChecker == rotationString || *conversionChecker != NULL
         || rotation < 0 || rotation > 360){
           errorNo = 400;
+          errorParam = "rotation";
           errorMsg = "Rotation parameter must be decimal number between 0 and 360. "
                      "You have entered: " + rotationString;
       }
@@ -425,6 +448,7 @@ void IIIF::run( Session* session, const std::string& argument ){
       if(!( rotation == 0 || rotation == 90 || rotation == 180 ||
         rotation == 270 || rotation == 360 )){
           errorNo = 501;
+          errorParam = "rotation";
           errorMsg = "Currently implemented rotation angles are 0, 90, 180 and 270 degrees. "
                      "You have entered: " + rotationString;
       }
@@ -458,6 +482,7 @@ void IIIF::run( Session* session, const std::string& argument ){
         // if one of unsupported formats
         if ( quality == "color" && quality == "grey" || quality == "bitonal" ){
           errorNo = 501;
+          errorParam = "quality";
           errorMsg = "Currently implemented quality parameters are native or number "
             "between 0 and 100, that implies quality of jpg (0 means best compression, 100 means best quality)";
         }
@@ -468,6 +493,7 @@ void IIIF::run( Session* session, const std::string& argument ){
       }
       else {
           errorNo = 400;
+          errorParam = "quality";
           errorMsg = "Quality parameter must be one of: native, color, grey, bitonal or number between 0 and 100, "
                      "that represents quality of jpg (0 means best compression, 100 means best quality)."
                      " You have entered: " + quality;
@@ -479,11 +505,13 @@ void IIIF::run( Session* session, const std::string& argument ){
           || format == "jp2" || format == "pdf" ) {
           if( format != "jpg" ){
             errorNo = 415;
+            errorParam = "format";
             errorMsg = "Currently, jpg is the only implemented format.";
           }
         }
         else {
             errorNo = 400;
+            errorParam = "format";
             errorMsg = "Format must be one of: jpg, tif, png, gif, jp2 or pdf."
                        " You have entered: " + format;
         }
@@ -502,6 +530,7 @@ void IIIF::run( Session* session, const std::string& argument ){
     //TOO MUCH PARAMETERS, tell it to user and show him his request
     if( !errorNo && izer.hasMoreTokens() ){
       errorNo = 400;
+      errorParam = "unknown";
       errorMsg = "Inserted query has more parameters. "
                  "Syntax should be {identifier}/{region}/{size}/{rotation}/{quality}{.format} "
                  "You have entered: " + argument;
@@ -509,6 +538,7 @@ void IIIF::run( Session* session, const std::string& argument ){
     //NOT ENOUGH PARAMETERS
     if( !errorNo && numOfTokens < 4 ){
       errorNo = 400;
+      errorParam = "unknown";
       errorMsg = "Inserted query has not enough parameters. "
                  "Syntax should be {identifier}/{region}/{size}/{rotation}/{quality}{.format} "
                  "You have entered: " + argument;
@@ -532,14 +562,19 @@ void IIIF::run( Session* session, const std::string& argument ){
       statusMsg = "Not implemented";//501
     }
     char str[1024];
+    string errorXmlRespond = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
+                             "<error xmlns=\"http://library.stanford.edu/iiif/image-api/ns/\">\n"
+                                "<parameter>" + errorParam + "</parameter>\n"
+                                "<text>" + errorMsg + "</text>\n"
+                             "</error>";
     snprintf( str, 1024,
         "Server: iipsrv/%s\r\n"
         "Cache-Control: no-cache\r\n"
-        "Content-Type: text/plain\r\n"
+        "Content-Type: text/xml\r\n"//specification specifically requires text/xml (not application/xml)
         "Status: %d %s\r\n"
         "\r\n"
         "%s",
-      VERSION, errorNo, statusMsg.c_str(), (statusMsg + ": " + errorMsg).c_str() );
+        VERSION, errorNo, statusMsg.c_str(), errorXmlRespond.c_str() );
     session->out->printf((const char*) str);
     session->out->flush();
 

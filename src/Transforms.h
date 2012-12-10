@@ -77,6 +77,6 @@ void filter_interpolate_bilinear( RawTile& in, unsigned int w, unsigned int h );
     @param angle angle of rotation - currently only rotations by 90, 180 and 270 degrees
     are suported, for other values, no rotation will occur
 */
-void filter_rotate( RawTile& in, double angle );
+void filter_rotate( RawTile& in, float angle );
 
 #endif
