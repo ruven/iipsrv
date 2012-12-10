@@ -2,7 +2,7 @@
   IIIF Request Command Handler Class Member Function
   Author: Michal Becak
 
-    Copyright (C) 2000-2011 Ruven Pillay.
+    Copyright (C) 2012 Klokan Technologies GmbH (http://www.klokantech.com/).
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
