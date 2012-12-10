@@ -65,6 +65,7 @@ void JTL::run( Session* session, const std::string& argument ){
   if( (*session->image)->getColourSpace() == CIELAB ) ct = UNCOMPRESSED;
   else if( (*session->image)->getNumBitsPerPixel() > 8 ) ct = UNCOMPRESSED;
   else if( session->view->getContrast() != 1.0 ) ct = UNCOMPRESSED;
+  else if( session->view->getRotation() != 0.0 ) ct = UNCOMPRESSED;
   else if( session->view->shaded ) ct = UNCOMPRESSED;
   else ct = JPEG;
 
@@ -119,6 +120,16 @@ void JTL::run( Session* session, const std::string& argument ){
 
   // Apply any contrast adjustments and/or clipping to 8bit from 16bit
   filter_contrast( rawtile, session->view->getContrast(), (*session->image)->max, (*session->image)->min );
+
+
+  // Apply rotation
+  if( session->view->getRotation() != 0.0 ){
+    float rotation = session->view->getRotation();
+    if( session->loglevel >= 3 ){
+      *(session->logfile) << "JTL :: Rotating image by " << rotation << " degrees" << endl; 
+    }
+    filter_rotate( rawtile, rotation );
+  }
 
 
   // Compress to JPEG

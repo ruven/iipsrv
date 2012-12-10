@@ -73,7 +73,7 @@ void filter_shade( RawTile& in, int h_angle, int v_angle ){
 
     dot_product = dot_product * 255.0;
     if( dot_product < 0 ) dot_product = 0.0;
-    
+
     buffer[k++] = (unsigned char) dot_product;
   }
 
@@ -335,8 +335,9 @@ void filter_contrast( RawTile& in, float c, std::vector<float>& max, std::vector
     }
 
     // Replace original buffer with new
-    if( in.bpc == 32 ) delete[] (float*) in.data;
-    else delete[] (unsigned short*) in.data;
+    if( in.bpc == 32 && in.sampleType == FLOAT ) delete[] (float*) in.data;
+    else if( in.bpc == 32 && in.sampleType == FIXEDPOINT ) delete[] (unsigned int*) in.data;
+    else if( in.bpc == 16 ) delete[] (unsigned short*) in.data;
 
     in.data = buffer;
     in.bpc = 8;
@@ -357,7 +358,8 @@ void filter_gamma( RawTile& in, float g, std::vector<float>& max, std::vector<fl
 
     int c = (int)( n % in.channels );
 
-    if( in.bpc == 32 ) v = (float)((float*)in.data)[n];
+    if( in.bpc == 32 && in.sampleType == FLOAT ) v = (float)((float*)in.data)[n];
+    else if( in.bpc == 32 && in.sampleType == FIXEDPOINT ) v = (float)((unsigned int*)in.data)[n];
     else if( in.bpc == 16 ) v = (float)((unsigned short*)in.data)[n];
     else v = (float)((unsigned char*)in.data)[n];
 
@@ -371,9 +373,89 @@ void filter_gamma( RawTile& in, float g, std::vector<float>& max, std::vector<fl
     if( v < min[c] ) v = min[c];
     else if( v > max[c] ) v = max[c];
 
-    if( in.bpc == 32 ) ((float*)in.data)[n] = (float) v;
+    if( in.bpc == 32 && in.sampleType == FLOAT ) ((float*)in.data)[n] = (float) v;
+    else if( in.bpc == 32 && in.sampleType == FIXEDPOINT ) ((unsigned int*)in.data)[n] = (float) v;
     else if( in.bpc == 16 ) ((unsigned short*)in.data)[n] = (unsigned short) v;
     else v = ((unsigned char*)in.data)[n] = (unsigned char) v;
   }
 
+}
+
+
+
+// Rotation function
+void filter_rotate( RawTile& in, float angle ){
+
+  // Currently implemented only for rectangular rotations
+  if( (int)angle % 90 == 0 && (int)angle % 360 != 0 ){
+
+    // Intialize our counter and data buffer
+    unsigned int n = 0;
+    void* buffer = NULL;
+
+    // Allocate memory for our temporary buffer
+    if(in.bpc == 8) buffer = new unsigned char[in.width*in.height*in.channels];
+    else if(in.bpc == 16) buffer = new unsigned short[in.width*in.height*in.channels];
+    else if(in.bpc == 32 && in.sampleType == FIXEDPOINT ) buffer = new unsigned int[in.width*in.height*in.channels];
+    else if(in.bpc == 32 && in.sampleType == FLOAT ) buffer = new float[in.width*in.height*in.channels];
+
+    // Rotate 90
+    if( (int) angle % 360 == 90 ){
+      for( unsigned int i=0; i < in.width; i++ ){
+	for( unsigned int j=in.height; j>0; j-- ){
+	  unsigned int index = (in.width*j + i)*in.channels;
+	  for( int k=0; k < in.channels; k++ ){
+	    if(in.bpc == 8) ((unsigned char*)buffer)[n++] = ((unsigned char*)in.data)[index+k];
+	    else if(in.bpc == 16) ((unsigned short*)buffer)[n++] = ((unsigned short*)in.data)[index+k];
+	    else if(in.bpc == 32 && in.sampleType == FIXEDPOINT) ((unsigned int*)buffer)[n++] = ((unsigned int*)in.data)[index+k];
+	    else if(in.bpc == 32 && in.sampleType == FLOAT ) ((float*)buffer)[n++] = ((float*)in.data)[index+k];
+	  }
+	}
+      }
+    }
+
+    // Rotate 270
+    else if( (int) angle % 360 == 270 ){
+      for( int i=in.width; i>0; i-- ){
+	for( int j=0; j < in.height; j++ ){
+	  unsigned int index = (in.width*j + i)*in.channels;
+	  for( int k=0; k < in.channels; k++ ){
+	    if(in.bpc == 8) ((unsigned char*)buffer)[n++] = ((unsigned char*)in.data)[index+k];
+	    else if(in.bpc == 16) ((unsigned short*)buffer)[n++] = ((unsigned short*)in.data)[index+k];
+	    else if(in.bpc == 32 && in.sampleType == FIXEDPOINT ) ((unsigned int*)buffer)[n++] = ((unsigned int*)in.data)[index+k];
+	    else if(in.bpc == 32 && in.sampleType == FLOAT ) ((float*)buffer)[n++] = ((float*)in.data)[index+k];
+	  }
+	}
+      }
+    }
+
+    // Rotate 180
+    else if( (int) angle % 360 == 180 ){
+      for( unsigned int i=(in.width*in.height)-1; i > 0; i-- ){
+	unsigned index = i * in.channels;
+	for( int k=0; k < in.channels; k++ ){
+	  if(in.bpc == 8) ((unsigned char*)buffer)[n++]  = ((unsigned char*)in.data)[index+k];
+	  else if(in.bpc == 16) ((unsigned short*)buffer)[n++] = ((unsigned short*)in.data)[index+k];
+	  else if(in.bpc == 32 && in.sampleType == FIXEDPOINT) ((unsigned int*)buffer)[n++] = ((unsigned int*)in.data)[index+k];
+	  else if(in.bpc == 32 && in.sampleType == FLOAT ) ((float*)buffer)[n++] = ((float*)in.data)[index+k];
+	}
+      }
+    }
+
+    // Delete old data buffer
+    if( in.bpc == 8 ) delete[] (unsigned char*) in.data;
+    else if( in.bpc == 16 ) delete[] (unsigned short*) in.data;
+    else if( in.bpc == 32 && in.sampleType == FIXEDPOINT ) delete[] (unsigned int*) in.data;
+    else if( in.bpc == 32 && in.sampleType == FLOAT ) delete[] (float*) in.data;
+
+    // Assign new data to Rawtile
+    in.data = buffer;
+
+    // For 90 and 270 rotation swap width and height
+    if( (int)angle % 180 == 90 ){
+      unsigned int tmp = in.height;
+      in.height = in.width;
+      in.width = tmp;
+    }
+  }
 }

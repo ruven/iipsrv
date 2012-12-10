@@ -50,6 +50,7 @@ class View{
   unsigned int requested_height;              /// Height requested by HEI command
   float contrast;                             /// Contrast adjustment requested by CNT command
   float gamma;                                /// Gamma adjustment requested by GAM command
+  float rotation;                             /// Rotation requested by ROT command
 
 
   /// Internal function to calculate the resolution associated with a width
@@ -193,10 +194,18 @@ class View{
   bool viewPortSet();
 
   /// Set gamma
+  /** @param g gamma value */
   void setGamma( float g ){ gamma = g; };
 
   /// Get gamma
   float getGamma(){ return gamma; };
+
+  /// Set rotation
+  /** @param r angle of rotation in degrees */
+  void setRotation( float r ){ rotation = r; };
+
+  /// Get rotation
+  float getRotation(){ return rotation; };
 
 };
 
