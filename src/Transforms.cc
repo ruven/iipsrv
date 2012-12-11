@@ -197,7 +197,12 @@ void filter_LAB2sRGB( RawTile& in ){
 // Resize image using nearest neighbour interpolation
 void filter_interpolate_nearestneighbour( RawTile& in, unsigned int resampled_width, unsigned int resampled_height ){
 
-  unsigned char* buf = (unsigned char*) in.data; // Assume 8bit data
+  void *buf;
+  if( in.bpc == 8 ) buf = (unsigned char*) in.data;
+  else if( in.bpc == 16 ) buf = (unsigned short*) in.data;
+  else if( in.bpc == 32 && in.sampleType == FIXEDPOINT ) buf = (unsigned int*) in.data;
+  else if( in.bpc == 32 && in.sampleType == FLOATINGPOINT ) buf = (float*) in.data;
+
   int channels = in.channels;
   unsigned int width = in.width;
   unsigned int height = in.height;
@@ -217,7 +222,18 @@ void filter_interpolate_nearestneighbour( RawTile& in, unsigned int resampled_wi
 
       unsigned int resampled_index = (i + j*resampled_width)*channels;
       for( int k=0; k<in.channels; k++ ){
-	buf[resampled_index+k] = buf[pyramid_index+k];
+	if( in.bpc == 8 ){
+	  ((unsigned char*)buf)[resampled_index+k] = ((unsigned char*)buf)[pyramid_index+k];
+	}
+	else if( in.bpc == 16 ){
+	  ((unsigned short*)buf)[resampled_index+k] = ((unsigned short*)buf)[pyramid_index+k];
+	}
+	else if( in.bpc == 32 && in.sampleType == FIXEDPOINT ){
+	  ((unsigned int*)buf)[resampled_index+k] = ((unsigned int*)buf)[pyramid_index+k];
+	}
+	else if( in.bpc == 32 && in.sampleType == FLOATINGPOINT ){
+	  ((float*)buf)[resampled_index+k] = ((float*)buf)[pyramid_index+k];
+	}
       }
     }
   }
@@ -234,7 +250,12 @@ void filter_interpolate_nearestneighbour( RawTile& in, unsigned int resampled_wi
 //  - Floating point implementation which benchmarks about 2.5x slower than nearest neighbour
 void filter_interpolate_bilinear( RawTile& in, unsigned int resampled_width, unsigned int resampled_height ){
 
-  unsigned char* buf = (unsigned char*) in.data; // Assume 8bit data
+  void *buf;
+  if( in.bpc == 8 ) buf = (unsigned char*) in.data;
+  else if( in.bpc == 16 ) buf = (unsigned short*) in.data;
+  else if( in.bpc == 32 && in.sampleType == FIXEDPOINT ) buf = (unsigned int*) in.data;
+  else if( in.bpc == 32 && in.sampleType == FLOATINGPOINT ) buf = (float*) in.data;
+
   int channels = in.channels;
   unsigned int width = in.width;
   unsigned int height = in.height;
@@ -275,12 +296,37 @@ void filter_interpolate_bilinear( RawTile& in, unsigned int resampled_width, uns
 	// If we are exactly coincident with a bounding box pixel, use that pixel value.
 	// This should only ever occur on the top left p11 pixel.
 	// Otherwise perform our full interpolation
-	if( resampled_index == p11 ) buf[resampled_index+k] = buf[p11+k];
+	if( resampled_index == p11 ){
+	  if( in.bpc == 8 ) ((unsigned char*)buf)[resampled_index+k] = ((unsigned char*)buf)[p11+k];
+	  else if( in.bpc == 16 ) ((unsigned short*)buf)[resampled_index+k] = ((unsigned short*)buf)[p11+k];
+	  else if( in.bpc == 32 && in.sampleType == FIXEDPOINT ) ((unsigned int*)buf)[resampled_index+k] = ((unsigned int*)buf)[p11+k];
+	  else if( in.bpc == 32 && in.sampleType == FLOATINGPOINT ) ((float*)buf)[resampled_index+k] = ((float*)buf)[p11+k];
+	}
 	else{
-	  float tx = ((float)buf[p11+k])*a + ((float)buf[p21+k])*b;
-	  float ty = ((float)buf[p12+k])*a + ((float)buf[p22+k])*b;
-	  unsigned char r = (unsigned char)( c*tx + d*ty );
-	  buf[resampled_index+k] = r;
+	  if( in.bpc == 8 ){
+	    float tx = ((float)((unsigned char*)buf)[p11+k])*a + ((float)((unsigned char*)buf)[p21+k])*b;
+	    float ty = ((float)((unsigned char*)buf)[p12+k])*a + ((float)((unsigned char*)buf)[p22+k])*b;
+	    unsigned char r = (unsigned char)( c*tx + d*ty );
+	    ((unsigned char*)buf)[resampled_index+k] = r;
+	  }
+	  else if( in.bpc == 16 ){
+	    float tx = ((float)((unsigned short*)buf)[p11+k])*a + ((float)((unsigned short*)buf)[p21+k])*b;
+	    float ty = ((float)((unsigned short*)buf)[p12+k])*a + ((float)((unsigned short*)buf)[p22+k])*b;
+	    unsigned short r = (unsigned short)( c*tx + d*ty );
+	    ((unsigned short*)buf)[resampled_index+k] = r;
+	  }
+	  else if( in.bpc == 32 && in.sampleType == FIXEDPOINT ){
+	    float tx = ((float)((unsigned int*)buf)[p11+k])*a + ((float)((unsigned int*)buf)[p21+k])*b;
+	    float ty = ((float)((unsigned int*)buf)[p12+k])*a + ((float)((unsigned int*)buf)[p22+k])*b;
+	    unsigned int r = (unsigned int)( c*tx + d*ty );
+	    ((unsigned int*)buf)[resampled_index+k] = r;
+	  }
+	  else if( in.bpc == 32 && in.sampleType == FLOATINGPOINT ){
+	    float tx = ((float)((float*)buf)[p11+k])*a + ((float)((float*)buf)[p21+k])*b;
+	    float ty = ((float)((float*)buf)[p12+k])*a + ((float)((float*)buf)[p22+k])*b;
+	    float r = (float)( c*tx + d*ty );
+	    ((float*)buf)[resampled_index+k] = r;
+	  }
 	}
       }
     }
@@ -335,7 +381,7 @@ void filter_contrast( RawTile& in, float c, std::vector<float>& max, std::vector
     }
 
     // Replace original buffer with new
-    if( in.bpc == 32 && in.sampleType == FLOAT ) delete[] (float*) in.data;
+    if( in.bpc == 32 && in.sampleType == FLOATINGPOINT ) delete[] (float*) in.data;
     else if( in.bpc == 32 && in.sampleType == FIXEDPOINT ) delete[] (unsigned int*) in.data;
     else if( in.bpc == 16 ) delete[] (unsigned short*) in.data;
 
@@ -358,7 +404,7 @@ void filter_gamma( RawTile& in, float g, std::vector<float>& max, std::vector<fl
 
     int c = (int)( n % in.channels );
 
-    if( in.bpc == 32 && in.sampleType == FLOAT ) v = (float)((float*)in.data)[n];
+    if( in.bpc == 32 && in.sampleType == FLOATINGPOINT ) v = (float)((float*)in.data)[n];
     else if( in.bpc == 32 && in.sampleType == FIXEDPOINT ) v = (float)((unsigned int*)in.data)[n];
     else if( in.bpc == 16 ) v = (float)((unsigned short*)in.data)[n];
     else v = (float)((unsigned char*)in.data)[n];
@@ -373,7 +419,7 @@ void filter_gamma( RawTile& in, float g, std::vector<float>& max, std::vector<fl
     if( v < min[c] ) v = min[c];
     else if( v > max[c] ) v = max[c];
 
-    if( in.bpc == 32 && in.sampleType == FLOAT ) ((float*)in.data)[n] = (float) v;
+    if( in.bpc == 32 && in.sampleType == FLOATINGPOINT ) ((float*)in.data)[n] = (float) v;
     else if( in.bpc == 32 && in.sampleType == FIXEDPOINT ) ((unsigned int*)in.data)[n] = (float) v;
     else if( in.bpc == 16 ) ((unsigned short*)in.data)[n] = (unsigned short) v;
     else v = ((unsigned char*)in.data)[n] = (unsigned char) v;
@@ -397,7 +443,7 @@ void filter_rotate( RawTile& in, float angle ){
     if(in.bpc == 8) buffer = new unsigned char[in.width*in.height*in.channels];
     else if(in.bpc == 16) buffer = new unsigned short[in.width*in.height*in.channels];
     else if(in.bpc == 32 && in.sampleType == FIXEDPOINT ) buffer = new unsigned int[in.width*in.height*in.channels];
-    else if(in.bpc == 32 && in.sampleType == FLOAT ) buffer = new float[in.width*in.height*in.channels];
+    else if(in.bpc == 32 && in.sampleType == FLOATINGPOINT ) buffer = new float[in.width*in.height*in.channels];
 
     // Rotate 90
     if( (int) angle % 360 == 90 ){
@@ -408,7 +454,7 @@ void filter_rotate( RawTile& in, float angle ){
 	    if(in.bpc == 8) ((unsigned char*)buffer)[n++] = ((unsigned char*)in.data)[index+k];
 	    else if(in.bpc == 16) ((unsigned short*)buffer)[n++] = ((unsigned short*)in.data)[index+k];
 	    else if(in.bpc == 32 && in.sampleType == FIXEDPOINT) ((unsigned int*)buffer)[n++] = ((unsigned int*)in.data)[index+k];
-	    else if(in.bpc == 32 && in.sampleType == FLOAT ) ((float*)buffer)[n++] = ((float*)in.data)[index+k];
+	    else if(in.bpc == 32 && in.sampleType == FLOATINGPOINT ) ((float*)buffer)[n++] = ((float*)in.data)[index+k];
 	  }
 	}
       }
@@ -423,7 +469,7 @@ void filter_rotate( RawTile& in, float angle ){
 	    if(in.bpc == 8) ((unsigned char*)buffer)[n++] = ((unsigned char*)in.data)[index+k];
 	    else if(in.bpc == 16) ((unsigned short*)buffer)[n++] = ((unsigned short*)in.data)[index+k];
 	    else if(in.bpc == 32 && in.sampleType == FIXEDPOINT ) ((unsigned int*)buffer)[n++] = ((unsigned int*)in.data)[index+k];
-	    else if(in.bpc == 32 && in.sampleType == FLOAT ) ((float*)buffer)[n++] = ((float*)in.data)[index+k];
+	    else if(in.bpc == 32 && in.sampleType == FLOATINGPOINT ) ((float*)buffer)[n++] = ((float*)in.data)[index+k];
 	  }
 	}
       }
@@ -437,7 +483,7 @@ void filter_rotate( RawTile& in, float angle ){
 	  if(in.bpc == 8) ((unsigned char*)buffer)[n++]  = ((unsigned char*)in.data)[index+k];
 	  else if(in.bpc == 16) ((unsigned short*)buffer)[n++] = ((unsigned short*)in.data)[index+k];
 	  else if(in.bpc == 32 && in.sampleType == FIXEDPOINT) ((unsigned int*)buffer)[n++] = ((unsigned int*)in.data)[index+k];
-	  else if(in.bpc == 32 && in.sampleType == FLOAT ) ((float*)buffer)[n++] = ((float*)in.data)[index+k];
+	  else if(in.bpc == 32 && in.sampleType == FLOATINGPOINT ) ((float*)buffer)[n++] = ((float*)in.data)[index+k];
 	}
       }
     }
@@ -446,7 +492,7 @@ void filter_rotate( RawTile& in, float angle ){
     if( in.bpc == 8 ) delete[] (unsigned char*) in.data;
     else if( in.bpc == 16 ) delete[] (unsigned short*) in.data;
     else if( in.bpc == 32 && in.sampleType == FIXEDPOINT ) delete[] (unsigned int*) in.data;
-    else if( in.bpc == 32 && in.sampleType == FLOAT ) delete[] (float*) in.data;
+    else if( in.bpc == 32 && in.sampleType == FLOATINGPOINT ) delete[] (float*) in.data;
 
     // Assign new data to Rawtile
     in.data = buffer;

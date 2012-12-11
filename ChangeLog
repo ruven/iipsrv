@@ -1,3 +1,20 @@
+11/12/2012:
+	- Changed FLOAT enum type to FLOATINGPOINT to avoid VC++ compiler error.
+	- Implemented 16 and 32bit versions of interpolation functions.
+
+
+10/12/2012:
+	- Cleanup to 32 bit code
+	- New command to set dynamically the min and max for 32 bit float
+	- Addition of rotation function for 90,180,270 degree rotations
+	- Fixes to autoconf
+
+
+30/10/2012:
+	- Autoconf cleanup. Removed unneccesary autoconf files: should now use
+	  autogen.sh script first before ./configure
+
+
 18/10/2012:
 	- Fix to imageCache delete in FIF.cc - thanks to Michal Becak.
 

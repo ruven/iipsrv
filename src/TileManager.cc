@@ -358,7 +358,7 @@ RawTile TileManager::getRegion( unsigned int res, int seq, int ang, int layers, 
   if( bpp == 8 ) region.data = new unsigned char[width*height*channels];
   else if( bpp == 16 ) region.data = new unsigned short[width*height*channels];
   else if( bpp == 32 && sampleType == FIXEDPOINT ) region.data = new int[width*height*channels];
-  else if( bpp == 32 && sampleType == FLOAT ) region.data = new float[width*height*channels];
+  else if( bpp == 32 && sampleType == FLOATINGPOINT ) region.data = new float[width*height*channels];
 
   unsigned int current_height = 0;
 
@@ -462,7 +462,7 @@ RawTile TileManager::getRegion( unsigned int res, int seq, int ang, int layers, 
 	  unsigned int* buf = (unsigned int*) region.data;
 	  memcpy( &buf[buffer_index], &ptr[inx], dst_tile_width*channels*4 );
 	}
-	else if( bpp == 32 && sampleType == FLOAT ){
+	else if( bpp == 32 && sampleType == FLOATINGPOINT ){
 	  float* ptr = (float*) rawtile.data;
 	  float* buf = (float*) region.data;
 	  memcpy( &buf[buffer_index], &ptr[inx], dst_tile_width*channels*4 );

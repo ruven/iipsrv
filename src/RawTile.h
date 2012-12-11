@@ -37,7 +37,7 @@ enum ColourSpaces { GREYSCALE, sRGB, CIELAB };
 enum CompressionType { UNCOMPRESSED, JPEG, DEFLATE, PNG };
 
 /// Sample Types
-enum SampleType { FIXEDPOINT, FLOAT };
+enum SampleType { FIXEDPOINT, FLOATINGPOINT };
 
 
 /// Class to represent a single image tile
@@ -128,7 +128,7 @@ class RawTile{
     if( data && memoryManaged ){
       switch( bpc ){
       case 32:
-        if( sampleType == FLOAT ) delete[] (float*) data;
+        if( sampleType == FLOATINGPOINT ) delete[] (float*) data;
         else delete[] (unsigned int*) data;
         break;
       case 16:
@@ -163,7 +163,7 @@ class RawTile{
 
     switch( bpc ){
       case 32:
-	if( sampleType == FLOAT ) data = new float[dataLength/4];
+	if( sampleType == FLOATINGPOINT ) data = new float[dataLength/4];
 	else data = new unsigned int[dataLength/4];
 	break;
       case 16:
@@ -202,7 +202,7 @@ class RawTile{
 
     switch( bpc ){
       case 32:
-	if( sampleType == FLOAT ) data = new float[dataLength/4];
+	if( sampleType == FLOATINGPOINT ) data = new float[dataLength/4];
 	else data = new int[dataLength/4];
 	break;
       case 16:
