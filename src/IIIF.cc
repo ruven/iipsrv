@@ -165,7 +165,7 @@ void IIIF::run( Session* session, const std::string& argument ){
         bool isPCT = false;
         if (regionString.substr(0,4) == "pct:"){
           isPCT = true;
-          regionString = regionString.substr(3,string::npos);
+          regionString = regionString.substr(4,string::npos);
         }
 
         // we will tokenize region (x,y,width,height)
