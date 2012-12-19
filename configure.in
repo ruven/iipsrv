@@ -226,9 +226,14 @@ AC_CHECK_HEADERS( png.h,
 		PNG=false )
 )
 
+# Disable PNG for now
+PNG=false
+
 if test "x${PNG}" = xtrue; then
 	AM_CONDITIONAL([ENABLE_PNG], [true])
 	AC_DEFINE(HAVE_PNG)
+else
+	AM_CONDITIONAL([ENABLE_PNG], [false])
 fi
 
 
