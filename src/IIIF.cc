@@ -219,9 +219,10 @@ void IIIF::run( Session* session, const std::string& argument ){
           else {
             reqRegionWidth = strtol(reqRegionTemp.c_str(), &conversionChecker, 10);
           }
+          if(reqRegionWidth > width - reqRegionX) reqRegionWidth = width - reqRegionX;
 
           if (conversionChecker == reqRegionTemp || *conversionChecker != NULL
-            || reqRegionWidth <= 0 || reqRegionWidth > width){
+            || reqRegionWidth <= 0){
             errorNo = 400; //bad request
             errorParam = "region";
             errorMsg = "Region WIDTH coordinate is wrong: " + reqRegionTemp;
@@ -238,9 +239,10 @@ void IIIF::run( Session* session, const std::string& argument ){
           else {
             reqRegionHeight = strtol(reqRegionTemp.c_str(), &conversionChecker, 10);
           }
+          if(reqRegionHeight > height- reqRegionY) reqRegionHeight = height - reqRegionY;
 
           if (conversionChecker == reqRegionTemp || *conversionChecker != NULL
-            || reqRegionHeight <= 0 || reqRegionHeight > height){
+            || reqRegionHeight <= 0){
             errorNo = 400; //bad request
             errorParam = "region";
             errorMsg = "Region HEIGHT coordinate is wrong: " + reqRegionTemp;
@@ -300,6 +302,9 @@ void IIIF::run( Session* session, const std::string& argument ){
         else{
           reqSizeWidth = (int) round((reqRegionWidth * sizePercentage)/(double)100);
           reqSizeHeight = (int) round((reqRegionHeight * sizePercentage)/(double)100);
+          //put hard limit for pct command, because it can round very little values to zero and send corrupted
+          if(reqSizeWidth < 1) reqSizeWidth = 1;
+          if(reqSizeHeight < 1) reqSizeHeight = 1;
         }
       }
 
