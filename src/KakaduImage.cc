@@ -83,12 +83,11 @@ void KakaduImage::openImage() throw (string)
   // Open the JPX or JP2 file
   try{
     src.open( filename.c_str(), true );
+    if( jpx_input.open( &src, false ) != 1 ) throw 1;
   }
   catch (...){
     throw string( "Kakadu :: Unable to open '"+filename+"'"); // Rethrow the exception
   }
-
-  if( jpx_input.open( &src, false ) != 1 ) throw string( "Kakadu :: Error opening '"+filename+"'" );
 
   // Get our JPX codestream
   jpx_stream = jpx_input.access_codestream(0);
