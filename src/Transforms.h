@@ -25,6 +25,14 @@
 #include <vector>
 #include "RawTile.h"
 
+/// Function to apply colormap to gray images
+///   based on the routine colormap.cpp in Imagin Raytracer by Olivier Ferrand
+///   http://www.imagin-raytracer.org
+/** @param in tile data to be converted
+    @param cmap color map to apply.
+*/
+enum cmap_type { HOT, COLD, JET, BLUE, GREEN, RED };
+void filter_cmap( RawTile& in, enum cmap_type cmap, float min, float max );
 
 
 /// Hillshading function to simulate raking light images
