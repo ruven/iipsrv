@@ -111,7 +111,7 @@ void filter_shade( RawTile& in, int h_angle, int v_angle, std::vector<float>& ma
     float dot_product;
     dot_product = (s_x*o_x) + (s_y*o_y) + (s_z*o_z);
 
-    dot_product = dot_product * 65535.0;
+    dot_product = dot_product * max[0];
     if( dot_product < 0 ) dot_product = 0.0;
 
     if( in.bpc == 8 ) ((unsigned char*)buffer)[k++] = (unsigned char) dot_product;
