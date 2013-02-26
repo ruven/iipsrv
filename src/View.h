@@ -25,6 +25,8 @@
 
 #include <cstddef>
 
+#include "Transforms.h"
+
 //include round function for MSVC compiler
 #if _MSC_VER
 #include "../windows/Time.h"
@@ -67,6 +69,8 @@ class View{
   int yangle;                                  /// Vertical View
   bool shaded;                                 /// Whether to use shading view
   int shade[3];                                /// Shading incident light angles (x,y,z)
+  bool cmapped;                                /// Whether to modify colormap
+  enum cmap_type cmap;                         /// colormap
   int max_layers;			       /// Maximum number of quality layers allowed
   int layers;			               /// Number of quality layers
 
@@ -80,6 +84,7 @@ class View{
     contrast = 1.0; gamma = 1.0;
     xangle = 0; yangle = 90;
     shaded = false; shade[0] = 0; shade[1] = 0; shade[2] = 0;
+    cmapped = false;
     max_layers = 0; layers = 0;
   };
 
