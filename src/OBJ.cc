@@ -53,9 +53,9 @@ void OBJ::run( Session* s, const std::string& a )
   }
   else if( argument == "iip-server" ) iip_server();
   // IIP optional commands
-  else if( argument == "iip-opt-comm" ) session->response->addResponse( "IIP-opt-comm:CVT CNT QLT JTL JTLS WID HEI RGN SHD" );
+  else if( argument == "iip-opt-comm" ) session->response->addResponse( "IIP-opt-comm:CVT CNT QLT JTL JTLS WID HEI RGN MINMAX SHD CMP" );
   // IIP optional objects
-  else if( argument == "iip-opt-obj" ) session->response->addResponse( "IIP-opt-obj:Horizontal-views Vertical-views Tile-size Bits-per-channel" );
+  else if( argument == "iip-opt-obj" ) session->response->addResponse( "IIP-opt-obj:Horizontal-views Vertical-views Tile-size Bits-per-channel Min-Max-sample-values" );
   // Resolution-number
   else if( argument == "resolution-number" ) resolution_number();
   // Max-size
@@ -68,6 +68,8 @@ void OBJ::run( Session* s, const std::string& a )
   else if( argument == "vertical-views" ) vertical_views();
   // Horizontal-views
   else if( argument == "horizontal-views" ) horizontal_views();
+  // Minimum and maximum provided by TIFF tags
+  else if( argument == "min-max-sample-values" ) min_max_values();
 
   // Colorspace
   /* The request can have a suffix, which we don't need, so do a
@@ -218,6 +220,29 @@ void OBJ::horizontal_views(){
   session->response->addResponse( tmp );
 }
 
+void OBJ::min_max_values(){
+
+  checkImage();
+  unsigned int n = (*session->image)->getNumChannels();
+  string tmp = "Min-Max-sample-values:";
+  char val[10];
+  float minimum, maximum;
+  for (int i=0; i<n ; i++) {
+    minimum = (*session->image)->getMinValue(i);
+    maximum = (*session->image)->getMaxValue(i);
+    snprintf( val, 10, " %f ", minimum );
+    tmp += val;
+    snprintf( val, 10, " %f ", maximum );
+    tmp += val;
+  }
+  // Chop off the final space
+  tmp.resize( tmp.length() - 1 );
+  session->response->addResponse( tmp );
+  if( session->loglevel >= 2 ){
+    *(session->logfile) << "OBJ :: Min-Max-sample-values handler returning " << tmp << endl;
+  }
+
+}
 
 void OBJ::colorspace( std::string arg ){
 

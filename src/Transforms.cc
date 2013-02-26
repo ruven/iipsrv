@@ -37,10 +37,9 @@ static const float _sRGB[3][3] = { {  3.240479, -1.537150, -0.498535 },
 
 
 // Hillshading function
-void filter_shade( RawTile& in, int h_angle, int v_angle ){
+void filter_shade( RawTile& in, int h_angle, int v_angle, std::vector<float>& max, std::vector<float>& min ){
 
-  unsigned char* buffer = new unsigned char[in.width*in.height];
-
+  float o_x, o_y, o_z;
   // Incident light angle
   float a = (h_angle * 2 * 3.14159) / 360.0;
   // We assume a hypotenous of 1.0
@@ -58,27 +57,77 @@ void filter_shade( RawTile& in, int h_angle, int v_angle ){
   s_y = s_y / s_norm;
   s_z = s_z / s_norm;
 
-  unsigned char* ptr = (unsigned char*) in.data;
+  void *ptr, *buffer;
+  unsigned int ndata = in.dataLength * 8 / in.bpc;
+  if( in.bpc == 8 )
+    { ptr = (unsigned char*) in.data;
+      buffer = new unsigned char[in.width*in.height];
+      for ( int c=0; c<in.channels; c++) {
+        max[c] = 255.;
+        min[c] = 0.; }
+    }
+  else if( in.bpc == 16 ) 
+    { ptr = (unsigned short*) in.data;
+      buffer = new unsigned short[in.width*in.height];
+      for ( int c=0; c<in.channels; c++) {
+        max[c] = 65535.;
+        min[c] = 0.; }
+    }
+   else if( in.bpc == 32 && in.sampleType == FIXEDPOINT )
+    { ptr = (unsigned int*) in.data;
+      buffer = new unsigned int[in.width*in.height]; }
+  else if( in.bpc == 32 && in.sampleType == FLOATINGPOINT )
+    { ptr = (float*) in.data;
+      buffer = new float[in.width*in.height]; }
+
   unsigned int k = 0;
 
-  for( int n=0; n<in.dataLength; n+=3 ){
-
-    float o_x = (float) - (ptr[n]-128.0) / 128.0;
-    float o_y = (float) - (ptr[n+1]-128.0) / 128.0;
-    float o_z = (float) - (ptr[n+2]-128.0) / 128.0;
+  for( int n=0; n<ndata; n+=3 ){
+    if( in.bpc == 8 ) {
+      if( ((unsigned char*)ptr)[n] == 0 && ((unsigned char*)ptr)[n+1] == 0 && ((unsigned char*)ptr)[n+2] == 0 ) { o_x = 0; o_y = 0; o_z = 0; }
+      else {
+        o_x = (float) - ((float)((unsigned char*)ptr)[n]-(max[0]-min[0])/2) / ((max[0]-min[0])/2);
+        o_y = (float) - ((float)((unsigned char*)ptr)[n+1]-(max[1]-min[1])/2) / ((max[1]-min[1])/2);
+        o_z = (float) - ((float)((unsigned char*)ptr)[n+2]-(max[2]-min[2])/2) / ((max[2]-min[2])/2); }}
+    else if( in.bpc == 16 ) {
+      if( ((unsigned short*)ptr)[n] == 0 && ((unsigned short*)ptr)[n+1] == 0 && ((unsigned short*)ptr)[n+2] == 0 ) { o_x = 0; o_y = 0; o_z = 0; }
+      else {
+        o_x = (float) - ((float)((unsigned short*)ptr)[n]-(max[0]-min[0])/2) / ((max[0]-min[0])/2);
+        o_y = (float) - ((float)((unsigned short*)ptr)[n+1]-(max[1]-min[1])/2) / ((max[1]-min[1])/2);
+        o_z = (float) - ((float)((unsigned short*)ptr)[n+2]-(max[2]-min[2])/2) / ((max[2]-min[2])/2); }}
+    else if( in.bpc == 32 && in.sampleType == FIXEDPOINT ) {
+      if( ((unsigned int*)ptr)[n] == 0 && ((unsigned int*)ptr)[n+1] == 0 && ((unsigned int*)ptr)[n+2] == 0 ) { o_x = 0; o_y = 0; o_z = 0; }
+      else {
+        o_x = (float) - ((float)((unsigned int*)ptr)[n]-(max[0]-min[0])/2) / ((max[0]-min[0])/2);
+        o_y = (float) - ((float)((unsigned int*)ptr)[n+1]-(max[1]-min[1])/2) / ((max[1]-min[1])/2);
+        o_z = (float) - ((float)((unsigned int*)ptr)[n+2]-(max[2]-min[2])/2) / ((max[2]-min[2])/2); }}
+    else if( in.bpc == 32 && in.sampleType == FLOATINGPOINT ) {
+      if( ((float*)ptr)[n] == 0 && ((float*)ptr)[n+1] == 0 && ((float*)ptr)[n+2] == 0 ) { o_x = 0; o_y = 0; o_z = 0; }
+      else {
+        o_x = (float) - ((float)((float*)ptr)[n]-(max[0]-min[0])/2) / ((max[0]-min[0])/2);
+        o_y = (float) - ((float)((float*)ptr)[n+1]-(max[1]-min[1])/2) / ((max[1]-min[1])/2);
+        o_z = (float) - ((float)((float*)ptr)[n+2]-(max[2]-min[2])/2) / ((max[2]-min[2])/2); }}
 
     float dot_product;
-    if( ptr[n] == 0 && ptr[n+1] == 0 && ptr[n+2] == 0 ) dot_product = 0.0;
-    else dot_product = (s_x*o_x) + (s_y*o_y) + (s_z*o_z);
+    dot_product = (s_x*o_x) + (s_y*o_y) + (s_z*o_z);
 
-    dot_product = dot_product * 255.0;
+    dot_product = dot_product * 65535.0;
     if( dot_product < 0 ) dot_product = 0.0;
 
-    buffer[k++] = (unsigned char) dot_product;
+    if( in.bpc == 8 ) ((unsigned char*)buffer)[k++] = (unsigned char) dot_product;
+    else if( in.bpc == 16 ) ((unsigned short*)buffer)[k++] = (unsigned short) dot_product;
+    else if( in.bpc == 32 && in.sampleType == FIXEDPOINT ) ((unsigned int*)buffer)[k++] = (unsigned int) dot_product;
+    else if( in.bpc == 32 && in.sampleType == FLOATINGPOINT ) ((float*)buffer)[k++] = (float) dot_product;
   }
 
-  delete[](unsigned char*) in.data;
-  in.data = (void*) buffer;
+
+  // Delete old data buffer
+  if( in.bpc == 8 ) delete[] (unsigned char*) in.data;
+  else if( in.bpc == 16 ) delete[] (unsigned short*) in.data;
+  else if( in.bpc == 32 && in.sampleType == FIXEDPOINT ) delete[] (unsigned int*) in.data;
+  else if( in.bpc == 32 && in.sampleType == FLOATINGPOINT ) delete[] (float*) in.data;
+
+  in.data = buffer;
   in.channels = 1;
   in.dataLength = in.width * in.height;
 
@@ -191,6 +240,126 @@ void filter_LAB2sRGB( RawTile& in ){
     ((unsigned char*)in.data)[n+1] = q[1];
     ((unsigned char*)in.data)[n+2] = q[2];
   }
+}
+
+// Colormap function
+void filter_cmap( RawTile& in, enum cmap_type cmap, float min, float max ){
+
+  int i;
+  float value, outv[3], div, minimum, maximum;
+  unsigned out_chan = 3;
+  unsigned int ndata = in.dataLength * 8 / in.bpc;
+  unsigned int k = 0;
+
+  float max3=1./3.;
+  float max4=1./4.;
+  float c1=144./255.;
+
+  void *buf;
+  void *buffer;
+  if( in.bpc == 8 )
+    { buf = (unsigned char*) in.data;
+      buffer = new unsigned char[in.width*in.height*out_chan];
+      minimum = 0.;
+      maximum = 255.; }
+  else if( in.bpc == 16 ) 
+    { buf = (unsigned short*) in.data;
+      buffer = new unsigned short[in.width*in.height*out_chan];
+      minimum = 0.;
+      maximum = 65535.; }
+
+  else if( in.bpc == 32 && in.sampleType == FIXEDPOINT )
+    { buf = (unsigned int*) in.data;
+      buffer = new unsigned int[in.width*in.height*out_chan];
+      minimum = min;
+      maximum = max; }
+
+  else if( in.bpc == 32 && in.sampleType == FLOATINGPOINT ) 
+    { buf = (float*) in.data;
+      buffer = new float[in.width*in.height*out_chan];
+      minimum = min;
+      maximum = max; }
+
+  div = ( maximum - minimum );
+
+  for( int n=0; n<ndata; n++ ){
+      if( in.bpc == 8 ) value =  (float) (((unsigned char*)buf)[n] - minimum) / div;
+      else if( in.bpc == 16 ) value =  (float) (((unsigned short*)buf)[n] - minimum) / div;
+      else if( in.bpc == 32 && in.sampleType == FIXEDPOINT ) value =  (float) (((unsigned int*)buf)[n] - minimum) / div;
+      else if( in.bpc == 32 && in.sampleType == FLOATINGPOINT ) value =  (float) (((float*)buf)[n] - minimum) / div;
+
+    switch(cmap){
+    case HOT:
+      if(value>1.)
+        { outv[0]=outv[1]=outv[2]=1.; }
+      else if(value<0)
+        { outv[0]=outv[1]=outv[2]=0.; }
+      else if(value<max3)
+        { outv[0]=value/max3; outv[1]=outv[2]=0.; }
+      else if(value<2*max3)
+        { outv[0]=1.; outv[1]=(value-max3)/max3; outv[2]=0.; }
+      else if(value<1.)
+        { outv[0]=outv[1]=1.; outv[2]=(value-2*max3)/max3; }
+      else { outv[0]=outv[1]=outv[2]=1.; }
+        break;
+    case COLD:
+      if(value>1.)
+        { outv[0]=outv[1]=outv[2]=1.; }
+      else if(value<0)
+        { outv[0]=outv[1]=outv[2]=0.; }
+      else if(value<max3)
+        { outv[0]=outv[1]=0.; outv[2]=value/max3; }
+      else if(value<2*max3)
+        { outv[0]=0.; outv[1]=(value-max3)/max3; outv[2]=1.; }
+      else if(value<1.)
+        { outv[0]=(value-2*max3)/max3; outv[1]=outv[2]=1.; }
+      else {outv[0]=outv[1]=outv[2]=1.;}
+        break;
+    case JET:
+      if(value>1.)
+        { outv[0]=outv[1]=outv[2]=1.; }
+      else if(value<0)
+        { outv[0]=outv[1]=outv[2]=0.; }
+      else if(value<max4)
+        { outv[0]=outv[1]=0.; outv[2]=(c1+(1.-c1)*value/max4); }
+      else if(value<2*max4)
+        { outv[0]=0.; outv[1]=(value-max4)/max4; outv[2]=1.; }
+      else if(value<3*max4)
+        { outv[0]=(value-2*max4)/max4; outv[1]=1.; outv[2]=1.-outv[0]; }
+      else if(value<1.)
+        { outv[0]=1.; outv[1]=(1-(value-3*max4)/max4); outv[2]=0.; }
+      else { outv[0]=1.; outv[1]=outv[2]=0.; }
+        break;
+    case BLUE:
+        outv[0]=outv[1]=0; outv[2]=value;
+      break;
+    case GREEN:
+        outv[0]=0.; outv[1]=value; outv[2]=0.;
+      break;
+    case RED:
+        outv[0]=value; outv[1]=outv[2]=0.;
+      break;
+    default:
+      break;
+    };
+
+    for (int i = 0; i<3; i++) {
+      if( in.bpc == 8 ) ((unsigned char*)buffer)[k++] = (unsigned char) (maximum*outv[i]);
+      else if( in.bpc == 16 ) ((unsigned short*)buffer)[k++] = (unsigned short) (maximum*outv[i]);
+      else if( in.bpc == 32 && in.sampleType == FIXEDPOINT ) ((unsigned int*)buffer)[k++] = (unsigned int) (div*outv[i]+minimum);
+      else if( in.bpc == 32 && in.sampleType == FLOATINGPOINT ) ((float*)buffer)[k++] = (float) (div*outv[i]+minimum);
+    }
+  }
+
+  // Delete old data buffer
+  if( in.bpc == 8 ) delete[] (unsigned char*) in.data;
+  else if( in.bpc == 16 ) delete[] (unsigned short*) in.data;
+  else if( in.bpc == 32 && in.sampleType == FIXEDPOINT ) delete[] (unsigned int*) in.data;
+  else if( in.bpc == 32 && in.sampleType == FLOATINGPOINT ) delete[] (float*) in.data;
+
+  in.data = buffer;
+  in.channels = out_chan;
+  in.dataLength = in.width * in.height * out_chan;
 }
 
 
@@ -410,10 +579,12 @@ void filter_gamma( RawTile& in, float g, std::vector<float>& max, std::vector<fl
     else v = (float)((unsigned char*)in.data)[n];
 
     // Normalize our data
-    v = (v - min[c]) / max[c] - min[c];
+    v = (v - min[c]) / (max[c] - min[c]);
+    if (v<0.0) v = 0.0;
+    else if (v>1.0) v = 1.0;
 
     // Perform gamma correction
-    v = max[c] * powf( v, g );
+    v = (max[c] - min[c]) * powf( v, g ) + min[c];
 
     // Limit to our allowed data range
     if( v < min[c] ) v = min[c];

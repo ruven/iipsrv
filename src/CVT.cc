@@ -172,8 +172,7 @@ void CVT::run( Session* session, const std::string& a ){
 #endif
 
     // Get our requested region from our TileManager
-    TileManager tilemanager( session->tileCache, *session->image, session->watermark, session->jpeg, session->logfile, session->
-loglevel );
+    TileManager tilemanager( session->tileCache, *session->image, session->watermark, session->jpeg, session->logfile, session->loglevel );
     RawTile complete_image = tilemanager.getRegion( requested_res,
 						    session->view->xangle, session->view->yangle,
 						    session->view->getLayers(),
@@ -203,12 +202,22 @@ loglevel );
     }
 
 
+    // Apply color mapping if requested
+    if( session->view->cmapped ){
+      if( session->loglevel >= 3 ){
+	*(session->logfile) << "CVT :: Applying color map" << endl;
+      }
+      filter_cmap( complete_image, session->view->cmap, (*session->image)->min[0], (*session->image)->max[0]);
+      // Don't forget to reset our channels variable as this is used later
+      channels = 3;
+    }
+
     // Apply hill shading if requested
     if( session->view->shaded ){
       if( session->loglevel >= 3 ){
 	*(session->logfile) << "CVT :: Applying hill-shading" << endl;
       }
-      filter_shade( complete_image, session->view->shade[0], session->view->shade[1] );
+      filter_shade( complete_image, session->view->shade[0], session->view->shade[1], (*session->image)->max, (*session->image)->min );
       // Don't forget to reset our channels variable as hill shades are greyscale and this variable is used later
       channels = 1;
     }
@@ -222,11 +231,6 @@ loglevel );
       }
       filter_gamma( complete_image, gamma, (*session->image)->max, (*session->image)->min );
     }
-
-
-    // Apply any contrast adjustments and/or clipping to 8bit from 16bit or 32bit
-    filter_contrast( complete_image, session->view->getContrast(), (*session->image)->max, (*session->image)->min );
-
 
     // Resize our image as requested. Use the interpolation method requested in the server configuration.
     //  - Use bilinear interpolation by default
@@ -274,6 +278,8 @@ loglevel );
       }
     }
 
+    // Apply any contrast adjustments and/or clipping to 8bit from 16bit or 32bit
+    filter_contrast( complete_image, session->view->getContrast(), (*session->image)->max, (*session->image)->min );
 
     // Initialise our JPEG compression object
     session->jpeg->InitCompression( complete_image, resampled_height );
