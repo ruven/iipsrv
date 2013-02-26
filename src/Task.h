@@ -161,6 +161,7 @@ class OBJ : public Task {
   void bits_per_channel();
   void horizontal_views();
   void vertical_views();
+  void min_max_values();
   void metadata( std::string field );
 
 };
@@ -284,6 +285,11 @@ class SHD : public Task {
   void run( Session* session, const std::string& argument );
 };
 
+/// Colormap Command
+class CMP : public Task {
+ public:
+  void run( Session* session, const std::string& argument );
+};
 
 /// Zoomify Request Command
 class Zoomify : public Task {

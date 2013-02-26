@@ -98,13 +98,20 @@ void JTL::run( Session* session, const std::string& argument ){
     }
   }
 
+    // Apply color mapping if requested
+    if( session->view->cmapped ){
+      if( session->loglevel >= 3 ){
+	*(session->logfile) << "JTL :: Applying color map" << endl;
+      }
+      filter_cmap( rawtile, session->view->cmap, (*session->image)->min[0], (*session->image)->max[0]);
+    }
 
   // Apply hill shading if requested
   if( session->view->shaded ){
     if( session->loglevel >= 3 ){
       *(session->logfile) << "JTL :: Applying hill-shading" << endl;
     }
-    filter_shade( rawtile, session->view->shade[0], session->view->shade[1] );
+    filter_shade( rawtile, session->view->shade[0], session->view->shade[1], (*session->image)->max, (*session->image)->min );
   }
 
 
@@ -117,11 +124,6 @@ void JTL::run( Session* session, const std::string& argument ){
     filter_gamma( rawtile, gamma, (*session->image)->max, (*session->image)->min );
   }
 
-
-  // Apply any contrast adjustments and/or clipping to 8bit from 16bit
-  filter_contrast( rawtile, session->view->getContrast(), (*session->image)->max, (*session->image)->min );
-
-
   // Apply rotation
   if( session->view->getRotation() != 0.0 ){
     float rotation = session->view->getRotation();
@@ -131,6 +133,8 @@ void JTL::run( Session* session, const std::string& argument ){
     filter_rotate( rawtile, rotation );
   }
 
+  // Apply any contrast adjustments and/or clipping to 8bit from 16bit
+  filter_contrast( rawtile, session->view->getContrast(), (*session->image)->max, (*session->image)->min );
 
   // Compress to JPEG
   if( ct == UNCOMPRESSED ){

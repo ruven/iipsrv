@@ -55,6 +55,7 @@ Task* Task::factory( const string& t ){
   else if( type == "icc" ) return new ICC;
   else if( type == "cvt" ) return new CVT;
   else if( type == "shd" ) return new SHD;
+  else if( type == "cmp" ) return new CMP;
   else if( type == "zoomify" ) return new Zoomify;
   else if( type == "spectra" ) return new SPECTRA;
   else if( type == "lyr" ) return new LYR;
@@ -301,6 +302,27 @@ void SHD::run( Session* session, const std::string& argument ){
 						   << values[0] << "," << values[1]  << endl;
 }
 
+void CMP::run( Session* session, const std::string& argument ){
+
+  /* The argument is the colormap type: available colormaps are
+     HOT, COLD, JET, BLUE, GREEN, RED
+  */
+
+  string ctype = argument.c_str();
+  transform( ctype.begin(), ctype.end(), ctype.begin(), ::tolower );
+
+  if( session->loglevel >= 2 ) *(session->logfile) << "CMP handler reached" << endl;
+  if( session->loglevel >= 3 ) *(session->logfile) << "CMP :: requested colormap is " << ctype << endl;
+  session->view->cmapped = true;
+
+  if (ctype=="hot") session->view->cmap = HOT;
+  else if (ctype=="cold") session->view->cmap = COLD;
+  else if (ctype=="jet") session->view->cmap = JET;
+  else if (ctype=="blue") session->view->cmap = BLUE;
+  else if (ctype=="green") session->view->cmap = GREEN;
+  else if (ctype=="red") session->view->cmap = RED;
+  else session->view->cmapped = false;
+}
 
 void LYR::run( Session* session, const std::string& argument ){
 

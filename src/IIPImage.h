@@ -180,6 +180,12 @@ class IIPImage {
   /// Return the number of channels for this image
   unsigned int getNumChannels() { return channels; };
 
+  /// Return the minimum sample value for each channel
+  float getMinValue( int n=0 ) { return min[n]; };
+
+  /// Return the minimum sample value for each channel
+  float getMaxValue( int n=0 ) { return max[n]; };
+
   /// Return the sample format type
   SampleType getSampleType(){ return sampleType; };
 
