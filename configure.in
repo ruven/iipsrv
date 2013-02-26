@@ -92,7 +92,6 @@ AC_SEARCH_LIBS(gzopen, z)
 AC_CHECK_HEADERS( libmemcached/memcached.h,
 	AC_SEARCH_LIBS( memcached_create,
 		memcached,
-#		AC_DEFINE(HAVE_MEMCACHED),
 		MEMCACHED=true;AC_DEFINE(HAVE_MEMCACHED),
 		MEMCACHED=false )
 )

@@ -430,7 +430,7 @@ void filter_gamma( RawTile& in, float g, std::vector<float>& max, std::vector<fl
 
 
 // Rotation function
-void filter_rotate( RawTile& in, float angle ){
+void filter_rotate( RawTile& in, float angle=0.0 ){
 
   // Currently implemented only for rectangular rotations
   if( (int)angle % 90 == 0 && (int)angle % 360 != 0 ){

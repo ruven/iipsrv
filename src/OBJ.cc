@@ -136,6 +136,14 @@ void OBJ::max_size(){
   checkImage();
   int x = (*session->image)->getImageWidth();
   int y = (*session->image)->getImageHeight();
+
+  // For 90 and 270 rotation swap width and height
+  if( (int)((session->view)->getRotation()) % 180 == 90 ){
+    unsigned int tmp = x;
+    x = y;
+    y = tmp;
+  }
+
   if( session->loglevel >= 2 ){
     *(session->logfile) << "OBJ :: Max-size is " << x << " " << y << endl;
   }
