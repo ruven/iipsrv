@@ -217,7 +217,7 @@ void CVT::run( Session* session, const std::string& a ){
       if( session->loglevel >= 3 ){
 	*(session->logfile) << "CVT :: Applying hill-shading" << endl;
       }
-      filter_shade( complete_image, session->view->shade[0], session->view->shade[1] );
+      filter_shade( complete_image, session->view->shade[0], session->view->shade[1], (*session->image)->max, (*session->image)->min );
       // Don't forget to reset our channels variable as hill shades are greyscale and this variable is used later
       channels = 1;
     }

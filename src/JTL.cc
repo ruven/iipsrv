@@ -111,7 +111,7 @@ void JTL::run( Session* session, const std::string& argument ){
     if( session->loglevel >= 3 ){
       *(session->logfile) << "JTL :: Applying hill-shading" << endl;
     }
-    filter_shade( rawtile, session->view->shade[0], session->view->shade[1] );
+    filter_shade( rawtile, session->view->shade[0], session->view->shade[1], (*session->image)->max, (*session->image)->min );
   }
 
 

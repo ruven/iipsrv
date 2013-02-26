@@ -40,7 +40,7 @@ void filter_cmap( RawTile& in, enum cmap_type cmap, float min, float max );
     @param h_angle angle in the horizontal plane from  12 o'clock in degrees
     @param v_angle angle in the vertical plane in degrees. 0 is flat, 90 pointing directly down.
 */
-void filter_shade( RawTile& in, int h_angle, int v_angle );
+void filter_shade( RawTile& in, int h_angle, int v_angle, std::vector<float>& max, std::vector<float>& min );
 
 
 /// Convert from CIELAB to sRGB colour space
