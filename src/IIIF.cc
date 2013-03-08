@@ -1,22 +1,22 @@
 /*
-  IIIF Request Command Handler Class Member Function
-  Author: Michal Becak
+IIIF Request Command Handler Class Member Function
+Author: Michal Becak
 
-    Copyright (C) 2012 Klokan Technologies GmbH (http://www.klokantech.com/).
+Copyright (C) 2012 Klokan Technologies GmbH (http://www.klokantech.com/).
 
-    This program is free software; you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation; either version 2 of the License, or
-    (at your option) any later version.
+This program is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation; either version 2 of the License, or
+(at your option) any later version.
 
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
 
-    You should have received a copy of the GNU General Public License
-    along with this program; if not, write to the Free Software
-    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
 #include <algorithm>
@@ -33,9 +33,9 @@
 
 using namespace std;
 
-  // The argument is in the form {identifier}/{region}/{size}/{rotation}/{quality}{.format}
-  // eg. filename.jp2/full/full/0/native.jpg
-  // or in the form {identifier}/info{.xml/.json} eg. filename.jp2/info.xml
+// The argument is in the form {identifier}/{region}/{size}/{rotation}/{quality}{.format}
+// eg. filename.jp2/full/full/0/native.jpg
+// or in the form {identifier}/info{.xml/.json} eg. filename.jp2/info.xml
 
 void IIIF::run( Session* session, const std::string& argument ){
 
@@ -71,17 +71,17 @@ void IIIF::run( Session* session, const std::string& argument ){
       for( int i = 0; i < 3; i++) {
         positionTmp = argument.substr(0,positionTmp).find_last_of("/");
       }
-    if(positionTmp > 0){
-      filename = argument.substr(0,positionTmp);
-      params = argument.substr(positionTmp + 1, string::npos);
-    }
-    else{
-      errorNo = 400; //BAD REQUEST
-      errorParam = "unknown";
-      errorMsg = "Not enough parameters. Syntax of info request is filename/info.xml, filename/info.json or "
-                 "filename/info.json?callback=nameOfCallbackFunction. "
-                 "Syntax of image request is {identifier}/{region}/{size}/{rotation}/{quality}{.format} "
-                 "You have entered: " + argument;
+      if(positionTmp > 0){
+        filename = argument.substr(0,positionTmp);
+        params = argument.substr(positionTmp + 1, string::npos);
+      }
+      else{
+        errorNo = 400; //BAD REQUEST
+        errorParam = "unknown";
+        errorMsg = "Not enough parameters. Syntax of info request is filename/info.xml, filename/info.json or "
+          "filename/info.json?callback=nameOfCallbackFunction. "
+          "Syntax of image request is {identifier}/{region}/{size}/{rotation}/{quality}{.format} "
+          "You have entered: " + argument;
       }
     }
   }
@@ -89,9 +89,9 @@ void IIIF::run( Session* session, const std::string& argument ){
     errorNo = 400; //BAD REQUEST
     errorParam = "unknown";
     errorMsg = "Not enough parameters. Syntax of info request is filename/info.xml, filename/info.json or "
-               "filename/info.json?callback=nameOfCallbackFunction. "
-               "Syntax of image request is {identifier}/{region}/{size}/{rotation}/{quality}{.format} "
-               "You have entered: " + argument;;
+      "filename/info.json?callback=nameOfCallbackFunction. "
+      "Syntax of image request is {identifier}/{region}/{size}/{rotation}/{quality}{.format} "
+      "You have entered: " + argument;;
   }
 
   if( !errorNo ){
@@ -134,7 +134,7 @@ void IIIF::run( Session* session, const std::string& argument ){
       errorNo = 400; // bad request
       errorParam = "unknown";
       errorMsg = "Wrong info request. Syntax is filename/info.xml, filename/info.json or "
-                 "filename/info.json?callback=nameOfCallbackFunction. You have entered: " + argument;
+        "filename/info.json?callback=nameOfCallbackFunction. You have entered: " + argument;
     }
   }
 
@@ -184,9 +184,9 @@ void IIIF::run( Session* session, const std::string& argument ){
           //check if inserted value is valid
           if (conversionChecker == reqRegionTemp || *conversionChecker != NULL
             || reqRegionX < 0 || reqRegionX > width - 1){
-            errorNo = 400; //bad request
-            errorParam = "region";
-            errorMsg = "Region X coordinate is wrong: " + reqRegionTemp;
+              errorNo = 400; //bad request
+              errorParam = "region";
+              errorMsg = "Region X coordinate is wrong: " + reqRegionTemp;
           }
           numOfSubtokens++;
         }
@@ -203,9 +203,9 @@ void IIIF::run( Session* session, const std::string& argument ){
 
           if (conversionChecker == reqRegionTemp || *conversionChecker != NULL
             || reqRegionY < 0 || reqRegionY > height - 1){
-            errorNo = 400; //bad request
-            errorParam = "region";
-            errorMsg = "Region Y coordinate is wrong: " + reqRegionTemp;
+              errorNo = 400; //bad request
+              errorParam = "region";
+              errorMsg = "Region Y coordinate is wrong: " + reqRegionTemp;
           }
           numOfSubtokens++;
         }
@@ -223,9 +223,9 @@ void IIIF::run( Session* session, const std::string& argument ){
 
           if (conversionChecker == reqRegionTemp || *conversionChecker != NULL
             || reqRegionWidth <= 0){
-            errorNo = 400; //bad request
-            errorParam = "region";
-            errorMsg = "Region WIDTH coordinate is wrong: " + reqRegionTemp;
+              errorNo = 400; //bad request
+              errorParam = "region";
+              errorMsg = "Region WIDTH coordinate is wrong: " + reqRegionTemp;
           }
           numOfSubtokens++;
         }
@@ -243,9 +243,9 @@ void IIIF::run( Session* session, const std::string& argument ){
 
           if (conversionChecker == reqRegionTemp || *conversionChecker != NULL
             || reqRegionHeight <= 0){
-            errorNo = 400; //bad request
-            errorParam = "region";
-            errorMsg = "Region HEIGHT coordinate is wrong: " + reqRegionTemp;
+              errorNo = 400; //bad request
+              errorParam = "region";
+              errorMsg = "Region HEIGHT coordinate is wrong: " + reqRegionTemp;
           }
           numOfSubtokens++;
         }
@@ -297,7 +297,7 @@ void IIIF::run( Session* session, const std::string& argument ){
           errorNo = 400; //bad request
           errorParam = "size";
           errorMsg = "Size percentage must be number between 1 and 400, you have entered: "
-                    + sizeString.substr(pctPos,string::npos);
+            + sizeString.substr(pctPos,string::npos);
         }
         else{
           reqSizeWidth = (int) round((reqRegionWidth * sizePercentage)/(double)100);
@@ -328,7 +328,7 @@ void IIIF::run( Session* session, const std::string& argument ){
           errorNo = 400; //bad request
           errorParam = "size";
           errorMsg = "Not right amount of size parameters. You must insert {width,height} or {width,} or {,height}. "
-                     "You have entered: " + sizeString;
+            "You have entered: " + sizeString;
         }
 
         string sizeToken;
@@ -343,7 +343,7 @@ void IIIF::run( Session* session, const std::string& argument ){
               errorNo = 400; //bad request
               errorParam = "size";
               errorMsg = "You requested image that fits into specific width and height, but did't specified width."
-                         "You have entered: " + sizeString;
+                "You have entered: " + sizeString;
             }
             isBlankWidth = true;
           }
@@ -355,7 +355,7 @@ void IIIF::run( Session* session, const std::string& argument ){
               errorNo = 400; //bad request
               errorParam = "size";
               errorMsg = "Size width must be positive integer between 1 and 4x width of the original image."
-                         "You have entered: " + sizeToken;
+                "You have entered: " + sizeToken;
             }
           }
         }
@@ -370,13 +370,13 @@ void IIIF::run( Session* session, const std::string& argument ){
               errorNo = 400; //bad request
               errorParam = "size";
               errorMsg = "You requested image that fits into specific width and height, but did't specified height."
-                         "You have entered: " + sizeString;
+                "You have entered: " + sizeString;
             }
             if( isBlankWidth ){
               errorNo = 400; //bad request
               errorParam = "size";
               errorMsg = "You must enter at least one of width or height (,height or width,)."
-                         "You have entered: " + sizeString;
+                "You have entered: " + sizeString;
             }
             else {
               reqSizeHeight = (int) round(reqSizeWidth / aspectRatio); //w = h * ar, h = w / ar, ar = w / h
@@ -390,7 +390,7 @@ void IIIF::run( Session* session, const std::string& argument ){
               errorNo = 400; //bad request
               errorParam = "size";
               errorMsg = "Size height must be positive integer between 1 and 4x height of the original image."
-                         "You have entered: " + sizeToken;
+                "You have entered: " + sizeToken;
             }
             if( isBlankWidth ) {
               reqSizeWidth = (int) round(reqSizeHeight * aspectRatio); //w = h * ar, h = w / ar, ar = w / h
@@ -425,7 +425,7 @@ void IIIF::run( Session* session, const std::string& argument ){
 
       if( errorNo ){
         errorMsg += " Size format is: full or width,height or width, or ,heigh or pct:x or !width,height. "
-                    "Your full request is: " + argument;
+          "Your full request is: " + argument;
       }
 
       numOfTokens++;
@@ -446,7 +446,7 @@ void IIIF::run( Session* session, const std::string& argument ){
           errorNo = 400;
           errorParam = "rotation";
           errorMsg = "Rotation parameter must be decimal number between 0 and 360. "
-                     "You have entered: " + rotationString;
+            "You have entered: " + rotationString;
       }
 
       //check if converted value is supported
@@ -455,7 +455,7 @@ void IIIF::run( Session* session, const std::string& argument ){
           errorNo = 501;
           errorParam = "rotation";
           errorMsg = "Currently implemented rotation angles are 0, 90, 180 and 270 degrees. "
-                     "You have entered: " + rotationString;
+            "You have entered: " + rotationString;
       }
       numOfTokens++;
 
@@ -484,41 +484,41 @@ void IIIF::run( Session* session, const std::string& argument ){
 
       if( quality == "native" || quality == "color" || quality == "grey" || quality == "bitonal" ||
         (qualityNum >= 0 && qualityNum <= 100 && *conversionChecker == NULL && conversionChecker != quality) ) {
-        // if one of unsupported formats
-        if ( quality == "color" && quality == "grey" || quality == "bitonal" ){
-          errorNo = 501;
-          errorParam = "quality";
-          errorMsg = "Currently implemented quality parameters are native or number "
-            "between 0 and 100, that implies quality of jpg (0 means best compression, 100 means best quality)";
-        }
-        // if value for jpeg quality is 0, set it to 1 (lowest reasonable value)
-        else if ( quality != "native" && qualityNum == 0 ){
-          qualityNum = 1;
-        }
+          // if one of unsupported formats
+          if ( quality == "color" && quality == "grey" || quality == "bitonal" ){
+            errorNo = 501;
+            errorParam = "quality";
+            errorMsg = "Currently implemented quality parameters are native or number "
+              "between 0 and 100, that implies quality of jpg (0 means best compression, 100 means best quality)";
+          }
+          // if value for jpeg quality is 0, set it to 1 (lowest reasonable value)
+          else if ( quality != "native" && qualityNum == 0 ){
+            qualityNum = 1;
+          }
       }
       else {
-          errorNo = 400;
-          errorParam = "quality";
-          errorMsg = "Quality parameter must be one of: native, color, grey, bitonal or number between 0 and 100, "
-                     "that represents quality of jpg (0 means best compression, 100 means best quality)."
-                     " You have entered: " + quality;
+        errorNo = 400;
+        errorParam = "quality";
+        errorMsg = "Quality parameter must be one of: native, color, grey, bitonal or number between 0 and 100, "
+          "that represents quality of jpg (0 means best compression, 100 means best quality)."
+          " You have entered: " + quality;
       }
 
       // if not jpg format, write appropriate error
       if( !errorNo ){
         if( format == "jpg" || format == "tif" || format == "png" || format == "gif"
           || format == "jp2" || format == "pdf" ) {
-          if( format != "jpg" ){
-            errorNo = 415;
-            errorParam = "format";
-            errorMsg = "Currently, jpg is the only implemented format.";
-          }
+            if( format != "jpg" ){
+              errorNo = 415;
+              errorParam = "format";
+              errorMsg = "Currently, jpg is the only implemented format.";
+            }
         }
         else {
-            errorNo = 400;
-            errorParam = "format";
-            errorMsg = "Format must be one of: jpg, tif, png, gif, jp2 or pdf."
-                       " You have entered: " + format;
+          errorNo = 400;
+          errorParam = "format";
+          errorMsg = "Format must be one of: jpg, tif, png, gif, jp2 or pdf."
+            " You have entered: " + format;
         }
       }
       numOfTokens++;
@@ -537,19 +537,19 @@ void IIIF::run( Session* session, const std::string& argument ){
       errorNo = 400;
       errorParam = "unknown";
       errorMsg = "Inserted query has more parameters. "
-                 "Syntax should be {identifier}/{region}/{size}/{rotation}/{quality}{.format} "
-                 "You have entered: " + argument;
+        "Syntax should be {identifier}/{region}/{size}/{rotation}/{quality}{.format} "
+        "You have entered: " + argument;
     }
     //NOT ENOUGH PARAMETERS
     if( !errorNo && numOfTokens < 4 ){
       errorNo = 400;
       errorParam = "unknown";
       errorMsg = "Inserted query has not enough parameters. "
-                 "Syntax should be {identifier}/{region}/{size}/{rotation}/{quality}{.format} "
-                 "You have entered: " + argument;
+        "Syntax should be {identifier}/{region}/{size}/{rotation}/{quality}{.format} "
+        "You have entered: " + argument;
     }
-    }
-    //END OF PARSING OF INPUT PARAMETERS
+  }
+  //END OF PARSING OF INPUT PARAMETERS
 
   //WRITE FIRST PARSING ERROR
   if( errorNo ){
@@ -568,18 +568,18 @@ void IIIF::run( Session* session, const std::string& argument ){
     }
     char str[1024];
     string errorXmlRespond = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
-                             "<error xmlns=\"http://library.stanford.edu/iiif/image-api/ns/\">\n"
-                                "<parameter>" + errorParam + "</parameter>\n"
-                                "<text>" + errorMsg + "</text>\n"
-                             "</error>";
+      "<error xmlns=\"http://library.stanford.edu/iiif/image-api/ns/\">\n"
+      "<parameter>" + errorParam + "</parameter>\n"
+      "<text>" + errorMsg + "</text>\n"
+      "</error>";
     snprintf( str, 1024,
-        "Server: iipsrv/%s\r\n"
-        "Cache-Control: no-cache\r\n"
-        "Content-Type: text/xml\r\n"//specification specifically requires text/xml (not application/xml)
-        "Status: %d %s\r\n"
-        "\r\n"
-        "%s",
-        VERSION, errorNo, statusMsg.c_str(), errorXmlRespond.c_str() );
+      "Server: iipsrv/%s\r\n"
+      "Cache-Control: no-cache\r\n"
+      "Content-Type: text/xml\r\n"//specification specifically requires text/xml (not application/xml)
+      "Status: %d %s\r\n"
+      "\r\n"
+      "%s",
+      VERSION, errorNo, statusMsg.c_str(), errorXmlRespond.c_str() );
     session->out->printf((const char*) str);
     session->out->flush();
 
@@ -592,14 +592,14 @@ void IIIF::run( Session* session, const std::string& argument ){
   if( suffix == "info.xml" || suffix == "info.json" ){
     if( session->loglevel >= 3 ){
       *(session->logfile) << "IIIF :: " << suffix << " request for " << (*session->image)->getImagePath() << endl;
-      }
     }
+  }
   else {
     if( session->loglevel >= 3 ){
-        *(session->logfile) << "IIIF :: image request for " << (*session->image)->getImagePath()
-          << " with arguments: region - " << reqRegionX << "," << reqRegionY << ","
-          << reqRegionWidth << "," << reqRegionHeight << ", size - " << reqSizeWidth << "," << reqSizeHeight
-          << ", rotation - " << rotation << ", quality - " << quality << ", format - " << format << endl;
+      *(session->logfile) << "IIIF :: image request for " << (*session->image)->getImagePath()
+        << " with arguments: region - " << reqRegionX << "," << reqRegionY << ","
+        << reqRegionWidth << "," << reqRegionHeight << ", size - " << reqSizeWidth << "," << reqSizeHeight
+        << ", rotation - " << rotation << ", quality - " << quality << ", format - " << format << endl;
     }
   }
 
@@ -630,12 +630,12 @@ void IIIF::run( Session* session, const std::string& argument ){
 
     char str[1024];
     snprintf( str, 1024,
-        "Server: iipsrv/%s\r\n"
-        "Content-Type: application/xml\r\n"
-        "Cache-Control: max-age=%d\r\n"
-        "Last-Modified: %s\r\n"
-        "\r\n"
-        "%s",
+      "Server: iipsrv/%s\r\n"
+      "Content-Type: application/xml\r\n"
+      "Cache-Control: max-age=%d\r\n"
+      "Last-Modified: %s\r\n"
+      "\r\n"
+      "%s",
       VERSION, MAX_AGE,(*session->image)->getTimestamp().c_str(), xmlStringStream.str().c_str() );
 
     session->out->printf( (const char*) str );
@@ -674,12 +674,12 @@ void IIIF::run( Session* session, const std::string& argument ){
 
     char str[1024];
     snprintf( str, 1024,
-        "Server: iipsrv/%s\r\n"
-        "Content-Type: application/%s\r\n"
-        "Cache-Control: max-age=%d\r\n"
-        "Last-Modified: %s\r\n"
-        "\r\n"
-        "%s",
+      "Server: iipsrv/%s\r\n"
+      "Content-Type: application/%s\r\n"
+      "Cache-Control: max-age=%d\r\n"
+      "Last-Modified: %s\r\n"
+      "\r\n"
+      "%s",
       VERSION, jsonMime.c_str(), MAX_AGE,(*session->image)->getTimestamp().c_str(), jsonStringStream.str().c_str() );
     session->out->printf( (const char*) str );
     session->response->setImageSent();
@@ -688,6 +688,27 @@ void IIIF::run( Session* session, const std::string& argument ){
 
   // IMAGE REQUEST (all requests other than info requests are considered image requests)
   else {
+
+    //magic - adjusting region to fit rounding of IIIF although IIPImage is truncating
+    double magicConstant = reqRegionWidth / (double) reqSizeWidth;
+    if(reqRegionWidth % reqSizeWidth >= reqSizeWidth*0.5){
+      reqRegionWidth += (int) round(magicConstant*0.5);
+      *(session->logfile) << "IIIF :: Adjusting Region - New ReqRegWid:" << reqRegionWidth << endl;
+    }
+    if(reqRegionX % (int) round(magicConstant) > 0){
+      reqRegionX += (int) round(magicConstant*0.5);
+      *(session->logfile) << "IIIF :: Adjusting Region - New ReqRegX:" << reqRegionX << endl;
+    }
+
+    magicConstant = reqRegionHeight / (double) reqSizeHeight;
+    if(reqRegionHeight % reqSizeHeight >= reqSizeHeight*0.5){
+      reqRegionHeight += (int) round(magicConstant*0.5);
+      *(session->logfile) << "IIIF :: Adjusting Region - New ReqRegHei:" << reqRegionHeight << endl;
+    }
+    if(reqRegionY % (int) round(magicConstant) > 0){
+      reqRegionY += (int) round(magicConstant*0.5);
+      *(session->logfile) << "IIIF :: Adjusting Region - New ReqRegY:" << reqRegionY << endl;
+    }
 
     session->view->setImageSize( width, height );
     session->view->setMaxResolutions( numResolutions );
@@ -719,27 +740,28 @@ void IIIF::run( Session* session, const std::string& argument ){
 
     char str[1024];
     snprintf( str, 1024,
-    "Server: iipsrv/%s\r\n"
-    "Cache-Control: max-age=%d\r\n"
-    "Last-Modified: %s\r\n"
-    "Content-Type: image/jpeg\r\n"
-    "Content-Disposition: inline;filename=\"%s.jpg\"\r\n"
-    "\r\n",
+      "Server: iipsrv/%s\r\n"
+      "Cache-Control: max-age=%d\r\n"
+      "Last-Modified: %s\r\n"
+      "Content-Type: image/jpeg\r\n"
+      "Content-Disposition: inline;filename=\"%s.jpg\"\r\n"
+      "\r\n",
       VERSION, MAX_AGE, (*session->image)->getTimestamp().c_str(), basename.c_str() );
 
     session->out->printf( (const char*) str );
 #endif
 
 
-  // *** GET REQUESTED REGION ***
+    // *** GET REQUESTED REGION ***
 
-  // Get our requested region from our TileManager
+    // Get our requested region from our TileManager
     TileManager tilemanager( session->tileCache, *session->image, session->watermark, session->jpeg, session->logfile,
-                session->loglevel );
+      session->loglevel );
 
+    
     RawTile complete_image = tilemanager.getRegion( requested_res, session->view->xangle, session->view->yangle,
-                session->view->getLayers(), session->view->getViewLeft(), session->view->getViewTop(),
-              session->view->getViewWidth(), session->view->getViewHeight() );
+      session->view->getLayers(), session->view->getViewLeft(), session->view->getViewTop(),
+      session->view->getViewWidth(), session->view->getViewHeight() );
 
     if( session->loglevel >= 4 ){
       *(session->logfile) << "IIIF :: Requested region retrieved, requested resolution: "<< requested_res
@@ -752,12 +774,12 @@ void IIIF::run( Session* session, const std::string& argument ){
     if( (*session->image)->getColourSpace() == CIELAB ){
       Timer cielab_timer;
       if( session->loglevel >= 3 ){
-      *(session->logfile) << "IIIF :: Converting from CIELAB->sRGB" << endl;
-      cielab_timer.start();
+        *(session->logfile) << "IIIF :: Converting from CIELAB->sRGB" << endl;
+        cielab_timer.start();
       }
       filter_LAB2sRGB( complete_image );
       if( session->loglevel >= 3 ){
-      *(session->logfile) << "IIIF :: CIELAB->sRGB conversion in " << cielab_timer.getTime()
+        *(session->logfile) << "IIIF :: CIELAB->sRGB conversion in " << cielab_timer.getTime()
           << " microseconds" << endl;
       }
     }
@@ -770,6 +792,7 @@ void IIIF::run( Session* session, const std::string& argument ){
       if( session->loglevel >= 5 ){
         *(session->logfile) << "Resizing is required." << endl;
       }
+      
       Timer interpolation_timer;
       string interpolation_type;
       if( session->loglevel >= 5 ){
@@ -777,23 +800,22 @@ void IIIF::run( Session* session, const std::string& argument ){
       }
       unsigned int interpolation = Environment::getInterpolation();
       switch( interpolation ){
-        case 0:
-          interpolation_type = "nearest neighbour";
-          filter_interpolate_nearestneighbour( complete_image, reqSizeWidth, reqSizeHeight );
-          break;
-        default:
-          interpolation_type = "bilinear";
-          filter_interpolate_bilinear( complete_image, reqSizeWidth, reqSizeHeight );
-          break;
+      case 0:
+        interpolation_type = "nearest neighbour";
+        filter_interpolate_nearestneighbour( complete_image, reqSizeWidth, reqSizeHeight );
+        break;
+      default:
+        interpolation_type = "bilinear";
+        filter_interpolate_bilinear( complete_image, reqSizeWidth, reqSizeHeight );
+        break;
       }
 
       if( session->loglevel >= 5 ){
         *(session->logfile) << "IIIF :: Resizing using " << interpolation_type << " interpolation in "
-            << interpolation_timer.getTime() << " microseconds, new width: "<< reqSizeWidth
-            << ", new height:" << reqSizeHeight << endl;
+          << interpolation_timer.getTime() << " microseconds, new width: "<< reqSizeWidth
+          << ", new height:" << reqSizeHeight << endl;
       }
     }//END OF RESIZING
-
 
     // *** ROTATE IMAGE ***
     if((int)rotation % 360 != 0){
@@ -816,21 +838,61 @@ void IIIF::run( Session* session, const std::string& argument ){
           << rotationTimer.getTime() << " microseconds" << endl;
       }
     }//END OF ROTATION
-
+    
 
     // *** SEND RESULT ***
 
-      //set quality if specified in request
+    //set quality if specified in request
     if( qualityNum ){
       session->jpeg->setQuality(qualityNum);
     }
     // Initialise our JPEG compression object
-      session->jpeg->InitCompression( complete_image, reqSizeHeight );
-      int len = session->jpeg->getHeaderSize();
+    session->jpeg->InitCompression( complete_image, reqSizeHeight );
+    int len = session->jpeg->getHeaderSize();
 
-      if( session->out->putStr( (const char*) session->jpeg->getHeader(), len ) != len ){
+    if( session->out->putStr( (const char*) session->jpeg->getHeader(), len ) != len ){
+      if( session->loglevel >= 1 ){
+        *(session->logfile) << "IIIF :: Error writing jpeg header" << endl;
+      }
+    }
+
+    // Flush our block of data
+    if( session->out->flush() == -1 ) {
+      if( session->loglevel >= 1 ){
+        *(session->logfile) << "IIIF :: Error flushing jpeg data" << endl;
+      }
+    }
+
+    // Send out the data per strip of fixed height.
+    // Allocate enough memory for this plus an extra 16k for instances where compressed
+    // data is greater than uncompressed
+    unsigned int strip_height = 128;
+    unsigned char* output = new unsigned char[reqSizeWidth*complete_image.channels*strip_height+16536];
+    int strips = (reqSizeHeight/strip_height) + (reqSizeHeight % strip_height == 0 ? 0 : 1);
+
+    for( int n=0; n<strips; n++ ){
+
+      // Get the starting index for this strip of data
+      unsigned char* input = &((unsigned char*)complete_image.data)[n*strip_height*reqSizeWidth*complete_image.channels];
+
+      // The last strip may have a different height
+      if( (n==strips-1) && (reqSizeHeight%strip_height!=0) ) strip_height = reqSizeHeight % strip_height;
+
+      if( session->loglevel >= 3 ){
+        *(session->logfile) << "IIIF :: About to JPEG compress strip with height " << strip_height << endl;
+      }
+
+      // Compress the strip
+      len = session->jpeg->CompressStrip( input, output, strip_height );
+
+      if( session->loglevel >= 3 ){
+        *(session->logfile) << "IIIF :: Compressed data strip length is " << len << endl;
+      }
+
+      // Send this strip out to the client
+      if( len != session->out->putStr( (const char*) output, len ) ){
         if( session->loglevel >= 1 ){
-          *(session->logfile) << "IIIF :: Error writing jpeg header" << endl;
+          *(session->logfile) << "IIIF :: Error writing jpeg strip data: " << len << endl;
         }
       }
 
@@ -841,73 +903,33 @@ void IIIF::run( Session* session, const std::string& argument ){
         }
       }
 
-      // Send out the data per strip of fixed height.
-      // Allocate enough memory for this plus an extra 16k for instances where compressed
-      // data is greater than uncompressed
-      unsigned int strip_height = 128;
-      unsigned char* output = new unsigned char[reqSizeWidth*complete_image.channels*strip_height+16536];
-      int strips = (reqSizeHeight/strip_height) + (reqSizeHeight % strip_height == 0 ? 0 : 1);
+    }//END OF FOR
 
-      for( int n=0; n<strips; n++ ){
+    // Finish off the image compression
+    len = session->jpeg->Finish( output );
 
-        // Get the starting index for this strip of data
-      unsigned char* input = &((unsigned char*)complete_image.data)[n*strip_height*reqSizeWidth*complete_image.channels];
-
-        // The last strip may have a different height
-        if( (n==strips-1) && (reqSizeHeight%strip_height!=0) ) strip_height = reqSizeHeight % strip_height;
-
-        if( session->loglevel >= 3 ){
-          *(session->logfile) << "IIIF :: About to JPEG compress strip with height " << strip_height << endl;
-        }
-
-        // Compress the strip
-        len = session->jpeg->CompressStrip( input, output, strip_height );
-
-        if( session->loglevel >= 3 ){
-          *(session->logfile) << "IIIF :: Compressed data strip length is " << len << endl;
-        }
-
-        // Send this strip out to the client
-        if( len != session->out->putStr( (const char*) output, len ) ){
-          if( session->loglevel >= 1 ){
-            *(session->logfile) << "IIIF :: Error writing jpeg strip data: " << len << endl;
-          }
-        }
-
-        // Flush our block of data
-        if( session->out->flush() == -1 ) {
-          if( session->loglevel >= 1 ){
-            *(session->logfile) << "IIIF :: Error flushing jpeg data" << endl;
-          }
-        }
-
-      }//END OF FOR
-
-      // Finish off the image compression
-      len = session->jpeg->Finish( output );
-
-      if( session->out->putStr( (const char*) output, len ) != len ){
-        if( session->loglevel >= 1 ){
-          *(session->logfile) << "IIIF :: Error writing jpeg EOI markers" << endl;
-        }
+    if( session->out->putStr( (const char*) output, len ) != len ){
+      if( session->loglevel >= 1 ){
+        *(session->logfile) << "IIIF :: Error writing jpeg EOI markers" << endl;
       }
-
-      delete[] output;
-
-      if( session->out->flush()  == -1 ) {
-        if( session->loglevel >= 1 ){
-          *(session->logfile) << "IIIF :: Error flushing jpeg tile" << endl;
-        }
-      }
-
-      // Inform our response object that we have sent something to the client
-      session->response->setImageSent();
-
-    }//END OF IMAGE REQUEST
-
-    // Total IIIF response time
-    if( session->loglevel >= 2 ){
-      *(session->logfile) << "IIIF :: Total command time " << command_timer.getTime() << " microseconds" << endl;
     }
+
+    delete[] output;
+
+    if( session->out->flush()  == -1 ) {
+      if( session->loglevel >= 1 ){
+        *(session->logfile) << "IIIF :: Error flushing jpeg tile" << endl;
+      }
+    }
+
+    // Inform our response object that we have sent something to the client
+    session->response->setImageSent();
+
+  }//END OF IMAGE REQUEST
+
+  // Total IIIF response time
+  if( session->loglevel >= 2 ){
+    *(session->logfile) << "IIIF :: Total command time " << command_timer.getTime() << " microseconds" << endl;
+  }
 
 }

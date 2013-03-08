@@ -480,7 +480,7 @@ void filter_rotate( RawTile& in, float angle ){
 
     // Rotate 270
     else if( (int) angle % 360 == 270 ){
-      for( int i=in.width; i>0; i-- ){
+      for( int i=in.width - 1; i>=0; i-- ){
 	for( int j=0; j < in.height; j++ ){
 	  unsigned int index = (in.width*j + i)*in.channels;
 	  for( int k=0; k < in.channels; k++ ){
@@ -495,14 +495,14 @@ void filter_rotate( RawTile& in, float angle ){
 
     // Rotate 180
     else if( (int) angle % 360 == 180 ){
-      for( unsigned int i=(in.width*in.height)-1; i > 0; i-- ){
-	unsigned index = i * in.channels;
-	for( int k=0; k < in.channels; k++ ){
-	  if(in.bpc == 8) ((unsigned char*)buffer)[n++]  = ((unsigned char*)in.data)[index+k];
-	  else if(in.bpc == 16) ((unsigned short*)buffer)[n++] = ((unsigned short*)in.data)[index+k];
-	  else if(in.bpc == 32 && in.sampleType == FIXEDPOINT) ((unsigned int*)buffer)[n++] = ((unsigned int*)in.data)[index+k];
-	  else if(in.bpc == 32 && in.sampleType == FLOATPOINT ) ((float*)buffer)[n++] = ((float*)in.data)[index+k];
-	}
+      for( int i=(in.width*in.height)-1; i >= 0; i-- ){
+        unsigned int index = i * in.channels;
+        for( int k=0; k < in.channels; k++ ){
+          if(in.bpc == 8) ((unsigned char*)buffer)[n++]  = ((unsigned char*)in.data)[index+k];
+          else if(in.bpc == 16) ((unsigned short*)buffer)[n++] = ((unsigned short*)in.data)[index+k];
+          else if(in.bpc == 32 && in.sampleType == FIXEDPOINT) ((unsigned int*)buffer)[n++] = ((unsigned int*)in.data)[index+k];
+          else if(in.bpc == 32 && in.sampleType == FLOATPOINT ) ((float*)buffer)[n++] = ((float*)in.data)[index+k];
+        }
       }
     }
 
