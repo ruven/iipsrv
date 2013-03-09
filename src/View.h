@@ -1,7 +1,7 @@
 /*
     Image View Parameters
 
-    Copyright (C) 2003-2012 Ruven Pillay.
+    Copyright (C) 2003-2013 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -75,6 +75,7 @@ class View{
   enum cmap_type cmap;                         /// colormap
   int max_layers;			       /// Maximum number of quality layers allowed
   int layers;			               /// Number of quality layers
+  ColourSpaces colourspace;                    /// Requested colourspace
 
 
   /// Constructor
@@ -89,6 +90,7 @@ class View{
     cmapped = false;
     max_layers = 0; layers = 0;
     rotation = 0.0;
+    colourspace = NONE;
   };
 
 

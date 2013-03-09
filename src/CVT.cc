@@ -1,7 +1,7 @@
 /*
     IIP CVT Command Handler Class Member Function
 
-    Copyright (C) 2006-2012 Ruven Pillay.
+    Copyright (C) 2006-2013 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -212,6 +212,7 @@ void CVT::run( Session* session, const std::string& a ){
       channels = 3;
     }
 
+
     // Apply hill shading if requested
     if( session->view->shaded ){
       if( session->loglevel >= 3 ){
@@ -222,15 +223,6 @@ void CVT::run( Session* session, const std::string& a ){
       channels = 1;
     }
 
-
-    // Apply any gamma correction
-    if( session->view->getGamma() != 1.0 ){
-      float gamma = session->view->getGamma();
-      if( session->loglevel >= 3 ){
-        *(session->logfile) << "CVT :: Applying gamma of " << gamma << endl; 
-      }
-      filter_gamma( complete_image, gamma, (*session->image)->max, (*session->image)->min );
-    }
 
     // Resize our image as requested. Use the interpolation method requested in the server configuration.
     //  - Use bilinear interpolation by default
@@ -258,7 +250,21 @@ void CVT::run( Session* session, const std::string& a ){
     }
 
 
-    // Apply rotation
+    // Apply any gamma correction
+    if( session->view->getGamma() != 1.0 ){
+      float gamma = session->view->getGamma();
+      if( session->loglevel >= 3 ){
+        *(session->logfile) << "CVT :: Applying gamma of " << gamma << endl; 
+      }
+      filter_gamma( complete_image, gamma, (*session->image)->max, (*session->image)->min );
+    }
+
+
+    // Apply any contrast adjustments and/or clipping to 8bit from 16bit or 32bit
+    filter_contrast( complete_image, session->view->getContrast(), (*session->image)->max, (*session->image)->min );
+
+
+    // Apply rotation - can apply this safely after gamma and contrast adjustment
     if( session->view->getRotation() != 0.0 ){
       Timer rotation_timer;
       if( session->loglevel >= 5 ){
@@ -278,8 +284,6 @@ void CVT::run( Session* session, const std::string& a ){
       }
     }
 
-    // Apply any contrast adjustments and/or clipping to 8bit from 16bit or 32bit
-    filter_contrast( complete_image, session->view->getContrast(), (*session->image)->max, (*session->image)->min );
 
     // Initialise our JPEG compression object
     session->jpeg->InitCompression( complete_image, resampled_height );

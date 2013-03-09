@@ -1,7 +1,7 @@
 /*
     Image Transforms
 
-    Copyright (C) 2004-2012 Ruven Pillay.
+    Copyright (C) 2004-2013 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -86,6 +86,12 @@ void filter_interpolate_bilinear( RawTile& in, unsigned int w, unsigned int h );
     are suported, for other values, no rotation will occur
 */
 void filter_rotate( RawTile& in, float angle );
+
+
+/// Convert image to grayscale
+/** @param in input image */
+void filter_greyscale( RawTile& in );
+
 
 
 #endif

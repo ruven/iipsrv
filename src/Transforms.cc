@@ -2,7 +2,7 @@
 
 /*  IIP fcgi server module - image processing routines
 
-    Copyright (C) 2004-2012 Ruven Pillay.
+    Copyright (C) 2004-2013 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -675,4 +675,34 @@ void filter_rotate( RawTile& in, float angle=0.0 ){
       in.width = tmp;
     }
   }
+}
+
+
+// Convert colour to grayscale using the conversion formula:
+//   Luminance = 0.2126*R + 0.7152*G + 0.0722*B
+// Note that we don't linearize before converting
+void filter_greyscale( RawTile& rawtile ){
+
+  if( rawtile.bpc != 8 || rawtile.channels != 3 ) return;
+
+  unsigned int np = rawtile.width * rawtile.height;
+  unsigned char* buffer = new unsigned char[rawtile.width * rawtile.height];
+
+  // Calculate using fixed-point arithmetic
+  //  - benchmarks to around 25% faster than floating point
+  unsigned int n = 0;
+  for( unsigned int i=0; i<np; i++ ){
+    unsigned char R = ((unsigned char*)rawtile.data)[n++];
+    unsigned char G = ((unsigned char*)rawtile.data)[n++];
+    unsigned char B = ((unsigned char*)rawtile.data)[n++];
+    buffer[i] = (unsigned char)( ( 1254097*R + 2462056*G + 478151*B ) >> 22 );
+  }
+
+  // Delete our old data buffer and instead point to our grayscale data
+  delete[] (unsigned char*) rawtile.data;
+  rawtile.data = (void*) buffer;
+
+  // Update our number of channels and data length
+  rawtile.channels = 1;
+  rawtile.dataLength = np;
 }

@@ -1,7 +1,7 @@
 /*
     IIP JTLS Command Handler Class Member Function
 
-    Copyright (C) 2006-2012 Ruven Pillay.
+    Copyright (C) 2006-2013 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -14,13 +14,14 @@
     GNU General Public License for more details.
 
     You should have received a copy of the GNU General Public License
-    along with this program; if not, write to the Free Software
-    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+    along with this program; if not, write to the Free Software Foundation,
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
 #include "Task.h"
 #include "Transforms.h"
 
+#include <cmath>
 #include <sstream>
 
 using namespace std;
@@ -50,6 +51,25 @@ void JTL::run( Session* session, const std::string& argument ){
 
   delimitter = argument.find( "," );
   tile = atoi( argument.substr( delimitter + 1, argument.length() ).c_str() );
+
+
+  // If we have requested a rotation, remap the tile index to rotated coordinates
+  if( (int)((session->view)->getRotation()) % 360 == 90 ){
+
+  }
+  else if( (int)((session->view)->getRotation()) % 360 == 270 ){
+
+  }
+  else if( (int)((session->view)->getRotation()) % 360 == 180 ){
+    int num_res = (*session->image)->getNumResolutions();
+    unsigned int im_width = (*session->image)->image_widths[num_res-resolution-1];
+    unsigned int im_height = (*session->image)->image_heights[num_res-resolution-1];
+    unsigned int tw = (*session->image)->getTileWidth();
+    //    unsigned int th = (*session->image)->getTileHeight();
+    int ntiles = (int) ceil( (double)im_width/tw ) * (int) ceil( (double)im_height/tw );
+    tile = ntiles - tile - 1;
+  }
+
 
   //Sanity check
   if( (resolution<0) || (tile<0) ){
@@ -98,13 +118,15 @@ void JTL::run( Session* session, const std::string& argument ){
     }
   }
 
-    // Apply color mapping if requested
-    if( session->view->cmapped ){
-      if( session->loglevel >= 3 ){
-	*(session->logfile) << "JTL :: Applying color map" << endl;
-      }
-      filter_cmap( rawtile, session->view->cmap, (*session->image)->min[0], (*session->image)->max[0]);
+
+  // Apply color mapping if requested
+  if( session->view->cmapped ){
+    if( session->loglevel >= 3 ){
+      *(session->logfile) << "JTL :: Applying color map" << endl;
     }
+    filter_cmap( rawtile, session->view->cmap, (*session->image)->min[0], (*session->image)->max[0]);
+  }
+
 
   // Apply hill shading if requested
   if( session->view->shaded ){
@@ -112,6 +134,14 @@ void JTL::run( Session* session, const std::string& argument ){
       *(session->logfile) << "JTL :: Applying hill-shading" << endl;
     }
     filter_shade( rawtile, session->view->shade[0], session->view->shade[1], (*session->image)->max, (*session->image)->min );
+  }
+
+
+  // Convert to greyscale if requested
+  if( (*session->image)->getColourSpace() == sRGB && session->view->colourspace == GREYSCALE ){
+    if( session->loglevel >= 3 ){
+      *(session->logfile) << "JTL :: Converting to greyscale" << endl;
+    }
   }
 
 
@@ -124,7 +154,12 @@ void JTL::run( Session* session, const std::string& argument ){
     filter_gamma( rawtile, gamma, (*session->image)->max, (*session->image)->min );
   }
 
-  // Apply rotation
+
+  // Apply any contrast adjustments and/or clipping to 8bit from 16 or 32 bit
+  filter_contrast( rawtile, session->view->getContrast(), (*session->image)->max, (*session->image)->min );
+
+
+  // Apply rotation - can apply this safely after gamma and contrast adjustment
   if( session->view->getRotation() != 0.0 ){
     float rotation = session->view->getRotation();
     if( session->loglevel >= 3 ){
@@ -133,8 +168,6 @@ void JTL::run( Session* session, const std::string& argument ){
     filter_rotate( rawtile, rotation );
   }
 
-  // Apply any contrast adjustments and/or clipping to 8bit from 16bit
-  filter_contrast( rawtile, session->view->getContrast(), (*session->image)->max, (*session->image)->min );
 
   // Compress to JPEG
   if( ct == UNCOMPRESSED ){

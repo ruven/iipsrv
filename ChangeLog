@@ -1,3 +1,11 @@
+23/02/2013:
+	- Gamma correction fixed, minmax commands added, colormap commands added (Chiara Marmo)
+
+
+30/01/2013:
+	- Fix to prevent crashing on malformed JPEG2000 files.
+
+
 11/12/2012:
 	- Changed FLOAT enum type to FLOATINGPOINT to avoid VC++ compiler error.
 	- Implemented 16 and 32bit versions of interpolation functions.
