@@ -1,3 +1,11 @@
+09/03/2013:
+	- Updated copyright message in header to new Free Software Foundation address.
+
+
+08/03/2013:
+	- Added greyscale conversion support via new filter_greyscale transform function.
+
+
 23/02/2013:
 	- Gamma correction fixed, minmax commands added, colormap commands added (Chiara Marmo)
 
