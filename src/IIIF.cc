@@ -690,22 +690,27 @@ void IIIF::run( Session* session, const std::string& argument ){
   else {
 
     //magic - adjusting region to fit rounding of IIIF although IIPImage is truncating
+    //magicConstant corresponds to scale factor of requested quality layer
     double magicConstant = reqRegionWidth / (double) reqSizeWidth;
-    if(reqRegionWidth % reqSizeWidth >= reqSizeWidth*0.5){
+    //there will be used 1 quality layer, so scaling factor will be same for height and width, the lesser one
+    if (reqRegionHeight / (double) reqSizeHeight < magicConstant) magicConstant = reqRegionHeight / (double) reqSizeHeight;
+
+    if(reqSizeWidth > 0 && reqRegionWidth % reqSizeWidth >= reqSizeWidth*0.5){
       reqRegionWidth += (int) round(magicConstant*0.5);
       *(session->logfile) << "IIIF :: Adjusting Region - New ReqRegWid:" << reqRegionWidth << endl;
     }
-    if(reqRegionX % (int) round(magicConstant) > 0){
+
+    if(round(magicConstant) > 0 && reqRegionX % (int) round(magicConstant) > 0){
       reqRegionX += (int) round(magicConstant*0.5);
       *(session->logfile) << "IIIF :: Adjusting Region - New ReqRegX:" << reqRegionX << endl;
     }
 
-    magicConstant = reqRegionHeight / (double) reqSizeHeight;
-    if(reqRegionHeight % reqSizeHeight >= reqSizeHeight*0.5){
+    if(reqSizeHeight > 0 && reqRegionHeight % reqSizeHeight >= reqSizeHeight*0.5){
       reqRegionHeight += (int) round(magicConstant*0.5);
       *(session->logfile) << "IIIF :: Adjusting Region - New ReqRegHei:" << reqRegionHeight << endl;
     }
-    if(reqRegionY % (int) round(magicConstant) > 0){
+
+    if(round(magicConstant) > 0 && reqRegionY % (int) round(magicConstant) > 0){
       reqRegionY += (int) round(magicConstant*0.5);
       *(session->logfile) << "IIIF :: Adjusting Region - New ReqRegY:" << reqRegionY << endl;
     }
@@ -757,7 +762,6 @@ void IIIF::run( Session* session, const std::string& argument ){
     // Get our requested region from our TileManager
     TileManager tilemanager( session->tileCache, *session->image, session->watermark, session->jpeg, session->logfile,
       session->loglevel );
-
     
     RawTile complete_image = tilemanager.getRegion( requested_res, session->view->xangle, session->view->yangle,
       session->view->getLayers(), session->view->getViewLeft(), session->view->getViewTop(),
