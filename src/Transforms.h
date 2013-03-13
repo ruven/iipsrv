@@ -32,7 +32,7 @@
     @param cmap color map to apply.
 */
 enum cmap_type { HOT, COLD, JET, BLUE, GREEN, RED };
-void filter_cmap( RawTile& in, enum cmap_type cmap, float min, float max );
+void filter_cmap( RawTile& in, enum cmap_type cmap, float max, float min );
 
 
 /// Hillshading function to simulate raking light images

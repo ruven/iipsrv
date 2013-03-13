@@ -103,7 +103,7 @@ void JTL::run( Session* session, const std::string& argument ){
       if( session->loglevel >= 3 ){
 	*(session->logfile) << "JTL :: Applying color map" << endl;
       }
-      filter_cmap( rawtile, session->view->cmap, (*session->image)->min[0], (*session->image)->max[0]);
+      filter_cmap( rawtile, session->view->cmap, (*session->image)->max[0], (*session->image)->min[0]);
     }
 
   // Apply hill shading if requested

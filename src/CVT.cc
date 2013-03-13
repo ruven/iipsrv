@@ -207,7 +207,7 @@ void CVT::run( Session* session, const std::string& a ){
       if( session->loglevel >= 3 ){
 	*(session->logfile) << "CVT :: Applying color map" << endl;
       }
-      filter_cmap( complete_image, session->view->cmap, (*session->image)->min[0], (*session->image)->max[0]);
+      filter_cmap( complete_image, session->view->cmap, (*session->image)->max[0], (*session->image)->min[0]);
       // Don't forget to reset our channels variable as this is used later
       channels = 3;
     }
