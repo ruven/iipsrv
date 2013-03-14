@@ -264,6 +264,24 @@ void CVT::run( Session* session, const std::string& a ){
     filter_contrast( complete_image, session->view->getContrast(), (*session->image)->max, (*session->image)->min );
 
 
+    // Convert to greyscale if requested
+    if( (*session->image)->getColourSpace() == sRGB && session->view->colourspace == GREYSCALE ){
+
+      Timer greyscale_timer;
+      if( session->loglevel >= 5 ){
+	greyscale_timer.start();
+      }
+
+      filter_greyscale( complete_image );
+      channels = 1;
+
+      if( session->loglevel >= 5 ){
+	*(session->logfile) << "CVT :: Converting to greyscale in "
+			    << greyscale_timer.getTime() << " microseconds" << endl;
+      }
+    }
+
+
     // Apply rotation - can apply this safely after gamma and contrast adjustment
     if( session->view->getRotation() != 0.0 ){
       Timer rotation_timer;

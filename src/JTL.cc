@@ -71,7 +71,7 @@ void JTL::run( Session* session, const std::string& argument ){
   }
 
 
-  //Sanity check
+  // Sanity check
   if( (resolution<0) || (tile<0) ){
     ostringstream error;
     error << "JTL :: Invalid resolution/tile number: " << resolution << "," << tile; 
@@ -137,14 +137,6 @@ void JTL::run( Session* session, const std::string& argument ){
   }
 
 
-  // Convert to greyscale if requested
-  if( (*session->image)->getColourSpace() == sRGB && session->view->colourspace == GREYSCALE ){
-    if( session->loglevel >= 3 ){
-      *(session->logfile) << "JTL :: Converting to greyscale" << endl;
-    }
-  }
-
-
   // Apply any gamma correction
   if( session->view->getGamma() != 1.0 ){
     float gamma = session->view->getGamma();
@@ -157,6 +149,15 @@ void JTL::run( Session* session, const std::string& argument ){
 
   // Apply any contrast adjustments and/or clipping to 8bit from 16 or 32 bit
   filter_contrast( rawtile, session->view->getContrast(), (*session->image)->max, (*session->image)->min );
+
+
+  // Convert to greyscale if requested
+  if( (*session->image)->getColourSpace() == sRGB && session->view->colourspace == GREYSCALE ){
+    if( session->loglevel >= 3 ){
+      *(session->logfile) << "JTL :: Converting to greyscale" << endl;
+    }
+    filter_greyscale( rawtile );
+  }
 
 
   // Apply rotation - can apply this safely after gamma and contrast adjustment

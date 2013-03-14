@@ -16,7 +16,7 @@ FEATURES:
 * High performance with inbuilt configurable cache
 * Support for gigapixel images
 * Dynamic JPEG export of whole or regions of images at any resolution
-* 16 bit image support
+* 8, 16 and 32 bit image support
 * CIELAB support with automatic CIELAB->sRGB colour space conversion
 * JPEG2000 support
 * Supports Zoomify and DeepZoom protocols
