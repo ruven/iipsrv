@@ -1,3 +1,9 @@
+
+14/03/2013:
+	- Fix to gamma conversion - thanks Chiara Marmo
+	- Update to greyscale conversion code
+
+
 09/03/2013:
 	- Updated copyright message in header to new Free Software Foundation address.
 

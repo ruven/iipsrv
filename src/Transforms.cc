@@ -111,7 +111,7 @@ void filter_shade( RawTile& in, int h_angle, int v_angle, std::vector<float>& ma
     float dot_product;
     dot_product = (s_x*o_x) + (s_y*o_y) + (s_z*o_z);
 
-    dot_product = dot_product * 65535.0;
+    dot_product = dot_product * max[0];
     if( dot_product < 0 ) dot_product = 0.0;
 
     if( in.bpc == 8 ) ((unsigned char*)buffer)[k++] = (unsigned char) dot_product;
@@ -243,7 +243,7 @@ void filter_LAB2sRGB( RawTile& in ){
 }
 
 // Colormap function
-void filter_cmap( RawTile& in, enum cmap_type cmap, float min, float max ){
+void filter_cmap( RawTile& in, enum cmap_type cmap, float max, float min ){
 
   int i;
   float value, outv[3], div, minimum, maximum;
@@ -540,7 +540,7 @@ void filter_contrast( RawTile& in, float c, std::vector<float>& max, std::vector
       if( in.bpc == 32 ){
 	int ch = (int)( n % in.channels );
 	contrast = c * 256.0 / (max[ch]-min[ch]);
-	v = ((float*)in.data)[n] * contrast;
+	v = (((float*)in.data)[n]-min[ch]) * contrast ;
       }
       else v = ((unsigned short*)in.data)[n] * contrast;
 
@@ -568,6 +568,8 @@ void filter_gamma( RawTile& in, float g, std::vector<float>& max, std::vector<fl
   float v;
   unsigned int np = in.width * in.height * in.channels;
 
+  if( g == 1.0 ) return;
+
   // Loop through our pixels
   for( unsigned int n=0; n<np; n++ ){
 
@@ -580,15 +582,14 @@ void filter_gamma( RawTile& in, float g, std::vector<float>& max, std::vector<fl
 
     // Normalize our data
     v = (v - min[c]) / (max[c] - min[c]);
-    if (v<0.0) v = 0.0;
-    else if (v>1.0) v = 1.0;
 
     // Perform gamma correction
-    v = (max[c] - min[c]) * powf( v, g ) + min[c];
+    v = powf( v, g );
 
     // Limit to our allowed data range
-    if( v < min[c] ) v = min[c];
-    else if( v > max[c] ) v = max[c];
+    if( v < 0. ) v = 0.;
+    else if( v > 1. ) v = 1.;
+    v = (max[c] - min[c]) * v + min[c];
 
     if( in.bpc == 32 && in.sampleType == FLOATINGPOINT ) ((float*)in.data)[n] = (float) v;
     else if( in.bpc == 32 && in.sampleType == FIXEDPOINT ) ((unsigned int*)in.data)[n] = (float) v;
