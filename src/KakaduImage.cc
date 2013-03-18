@@ -354,12 +354,16 @@ void KakaduImage::process( unsigned int res, int layers, int xoffset, int yoffse
 
   // Handle virtual resolutions
   if( res < virtual_levels ){
-    unsigned int factor = 2*(virtual_levels-res);
+    int factor = (int) pow(2.0,(int)(virtual_levels - res));
+
     xoffset *= factor;
     yoffset *= factor;
     tw *= factor;
     th *= factor;
-    vipsres = numResolutions - 1 - (virtual_levels-res);
+    vipsres = numResolutions - 1 - virtual_levels;
+    //adjust dimensions in nonvirtual layer if needed
+    if(xoffset + tw > image_widths[vipsres]) tw = image_widths[vipsres] - xoffset;
+    if(yoffset + th > image_heights[vipsres]) th = image_heights[vipsres] - yoffset;
   }
 
   // Set the number of layers to half of the number of detected layers if we have not set the
@@ -469,7 +473,6 @@ void KakaduImage::process( unsigned int res, int layers, int xoffset, int yoffse
 	continues = decompressor.pull_stripe( (kdu_byte*) stripe_buffer, stripe_heights, NULL, NULL, NULL );
       }
 
-
 #ifdef DEBUG
       logfile << "Kakadu :: stripe pulled" << endl;
 #endif
@@ -508,9 +511,8 @@ void KakaduImage::process( unsigned int res, int layers, int xoffset, int yoffse
 #ifdef DEBUG
       logfile << "Kakadu :: resizing tile to virtual resolution" << endl;
 #endif
-
       unsigned int n = 0;
-      unsigned int factor = 2*(virtual_levels-res);
+      unsigned int factor = pow(2.0,(int)(virtual_levels-res));
       for( unsigned int j=0; j<th; j+=factor ){
 	for( unsigned int i=0; i<tw; i+=factor ){
 	  for( unsigned int k=0; k<channels; k++ ){
