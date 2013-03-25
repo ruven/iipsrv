@@ -694,25 +694,82 @@ void IIIF::run( Session* session, const std::string& argument ){
     double magicConstant = reqRegionWidth / (double) reqSizeWidth;
     //there will be used 1 quality layer, so scaling factor will be same for height and width, the lesser one
     if (reqRegionHeight / (double) reqSizeHeight < magicConstant) magicConstant = reqRegionHeight / (double) reqSizeHeight;
+    int cropLeft = 0;
+    int cropRight = 0;
+    int cropTop = 0;
+    int cropBottom = 0;
 
-    if(reqSizeWidth > 0 && reqRegionWidth % reqSizeWidth >= reqSizeWidth*0.5){
-      reqRegionWidth += (int) round(magicConstant*0.5);
-      *(session->logfile) << "IIIF :: Adjusting Region - New ReqRegWid:" << reqRegionWidth << endl;
+
+    //for smaller size than original
+    if(magicConstant > 1){
+      if(reqSizeWidth > 0 && reqRegionWidth % reqSizeWidth >= reqSizeWidth*0.5){
+        reqRegionWidth += (int) round(magicConstant*0.5);
+        *(session->logfile) << "IIIF :: Adjusting Region - New ReqRegWid:" << reqRegionWidth << endl;
+      }
+
+      if(round(magicConstant) > 0 && reqRegionX % (int) round(magicConstant) > 0){
+        reqRegionX += (int) round(magicConstant*0.5);
+        *(session->logfile) << "IIIF :: Adjusting Region - New ReqRegX:" << reqRegionX << endl;
+      }
+
+      if(reqSizeHeight > 0 && reqRegionHeight % reqSizeHeight >= reqSizeHeight*0.5){
+        reqRegionHeight += (int) round(magicConstant*0.5);
+        *(session->logfile) << "IIIF :: Adjusting Region - New ReqRegHei:" << reqRegionHeight << endl;
+      }
+
+      if(round(magicConstant) > 0 && reqRegionY % (int) round(magicConstant) > 0){
+        reqRegionY += (int) round(magicConstant*0.5);
+        *(session->logfile) << "IIIF :: Adjusting Region - New ReqRegY:" << reqRegionY << endl;
+      }
     }
+    //for bigger size than original
+    else if(magicConstant < 1){
+      //pixelRatio - ratio between original pixel and scaled pixel, unit means how many pixels are added
+      int pixelWidthRatio, pixelHeightRatio, unitX, unitY;
 
-    if(round(magicConstant) > 0 && reqRegionX % (int) round(magicConstant) > 0){
-      reqRegionX += (int) round(magicConstant*0.5);
-      *(session->logfile) << "IIIF :: Adjusting Region - New ReqRegX:" << reqRegionX << endl;
-    }
+      //for 150, 250 and 350% ask 2 pixels instead of 1 for higher precision
+      if(reqSizeWidth/(double)reqRegionWidth - reqSizeWidth/reqRegionWidth > 0.3
+        && reqSizeWidth/(double)reqRegionWidth  - reqSizeWidth/reqRegionWidth < 0.7){
+        pixelWidthRatio = round(2*(reqSizeWidth/(double)reqRegionWidth));
+        unitX = 2;
+      }
+      else{
+        pixelWidthRatio = round(reqSizeWidth/(double)reqRegionWidth);
+        unitX = 1;
+      }
+      //the same for vertical resize
+      if(reqSizeHeight/(double)reqRegionHeight - reqSizeHeight/reqRegionHeight > 0.3
+        && reqSizeHeight/(double)reqRegionHeight - reqSizeHeight/reqRegionHeight < 0.7){
+        pixelHeightRatio = round(2*(reqSizeHeight/(double)reqRegionHeight));
+        unitY = 2;
+      }
+      else{
+        pixelHeightRatio = round(reqSizeHeight/(double)reqRegionHeight);
+        unitY = 1;
+      }
 
-    if(reqSizeHeight > 0 && reqRegionHeight % reqSizeHeight >= reqSizeHeight*0.5){
-      reqRegionHeight += (int) round(magicConstant*0.5);
-      *(session->logfile) << "IIIF :: Adjusting Region - New ReqRegHei:" << reqRegionHeight << endl;
-    }
-
-    if(round(magicConstant) > 0 && reqRegionY % (int) round(magicConstant) > 0){
-      reqRegionY += (int) round(magicConstant*0.5);
-      *(session->logfile) << "IIIF :: Adjusting Region - New ReqRegY:" << reqRegionY << endl;
+      if(reqRegionX  - unitX >= 0){
+        reqRegionX -= unitX;
+        reqRegionWidth += unitX;
+        reqSizeWidth += pixelWidthRatio;
+        cropLeft = pixelWidthRatio;
+      }
+      if(reqRegionY  - unitY >= 0){
+        reqRegionY -= unitY;
+        reqRegionHeight += unitY;
+        reqSizeHeight += pixelHeightRatio;
+        cropTop = pixelHeightRatio;
+      }
+      if(reqRegionWidth  + cropLeft + unitX <= width){
+        reqRegionWidth += unitX;
+        reqSizeWidth += pixelWidthRatio;
+        cropRight = pixelWidthRatio;
+      }
+      if(reqRegionHeight  + cropTop + unitY <= height){
+        reqRegionHeight += unitX;
+        reqSizeHeight += pixelHeightRatio;
+        cropBottom = pixelHeightRatio;
+      }
     }
 
     session->view->setImageSize( width, height );
@@ -820,6 +877,24 @@ void IIIF::run( Session* session, const std::string& argument ){
           << ", new height:" << reqSizeHeight << endl;
       }
     }//END OF RESIZING
+
+    // *** CROP IMAGE ***
+    if(cropBottom || cropLeft || cropRight || cropTop){
+      Timer crop_timer;
+      if( session->loglevel >= 5 ){
+        crop_timer.start();
+      }
+
+      filter_crop( complete_image, cropLeft, cropTop, cropRight, cropBottom );
+      reqSizeWidth = reqSizeWidth - cropLeft - cropRight;
+      reqSizeHeight = reqSizeHeight - cropTop - cropBottom;
+
+      if( session->loglevel >= 5 ){
+        *(session->logfile) << "IIIF :: Cropping in "
+          << crop_timer.getTime() << " microseconds, cropped by: "<< cropLeft
+          << "," << cropTop << "," << cropRight << "," << cropBottom <<endl;
+      }
+    }//END OF CROPPING
 
     // *** ROTATE IMAGE ***
     if((int)rotation % 360 != 0){

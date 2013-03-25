@@ -272,7 +272,6 @@ void filter_interpolate_nearestneighbour( RawTile& in, unsigned int resampled_wi
 // Resize image using bilinear interpolation
 //  - Floating point implementation which benchmarks about 2.5x slower than nearest neighbour
 void filter_interpolate_bilinear( RawTile& in, unsigned int resampled_width, unsigned int resampled_height ){
-
   unsigned char* data8;
   unsigned short* data16;
   unsigned int* data32;
@@ -300,8 +299,8 @@ void filter_interpolate_bilinear( RawTile& in, unsigned int resampled_width, uns
     buf32 = new unsigned int[resampled_width*resampled_height*channels];
   }
 
-  float x_ratio = (width - 1) / (float) resampled_width;
-  float y_ratio = (height- 1) / (float) resampled_height;
+  float x_ratio = (width) / (float) resampled_width;
+  float y_ratio = (height) / (float) resampled_height;
   int a,b,c,d,index,x,y;
   int offset = 0;
   float x_diff, y_diff;
@@ -314,13 +313,17 @@ void filter_interpolate_bilinear( RawTile& in, unsigned int resampled_width, uns
 		  index = x + y*width;
 
 		  for(int k = 0; k < channels; k++) {
+        //for upscaling - edges are computed only from existing pixels
+        if(y_ratio > 1 && i == resampled_height -1) y_diff = 0;
+        if(x_ratio > 1 && j == resampled_width - 1) x_diff = 0;
+
         if(in.bpc == 8){
 			    a = data8[(index)*channels + k];
 			    b = data8[(index+1)*channels + k];
 			    c = data8[(index+width)*channels + k];
 			    d = data8[(index + width + 1)*channels + k];
-			    color8 = (unsigned char) (a*(1-x_diff)*(1-y_diff) + b*(x_diff)*(1-y_diff) + c*(1-x_diff)*(y_diff) + d*(x_diff)*(y_diff));
-			    buf8[offset++] = color8;
+          color8 = (unsigned char) (a*(1-x_diff)*(1-y_diff) + b*(x_diff)*(1-y_diff) + c*(1-x_diff)*(y_diff) + d*(x_diff)*(y_diff));
+          buf8[offset++] = color8;
         }
         else if(in.bpc == 16){
 			    a = data16[(index)*channels + k];
@@ -522,4 +525,25 @@ void filter_rotate( RawTile& in, float angle ){
       in.width = tmp;
     }
   }
+}
+
+void filter_crop( RawTile& in, int left, int top, int right, int bottom ){
+
+  unsigned int n = 0;
+  //Cropping
+  for( int i=top; i < in.height - bottom; i++ ){
+    unsigned int index1 = i * in.width;
+    for ( int j=left; j < in.width - right; j++ ){
+      unsigned int index = index1 + j;
+      for( int k=0; k < in.channels; k++ ){
+        if(in.bpc == 8) ((unsigned char*)in.data)[n++]  = ((unsigned char*)in.data)[index+k];
+        else if(in.bpc == 16) ((unsigned short*)in.data)[n++] = ((unsigned short*)in.data)[index+k];
+        else if(in.bpc == 32 && in.sampleType == FIXEDPOINT) ((unsigned int*)in.data)[n++] = ((unsigned int*)in.data)[index+k];
+        else if(in.bpc == 32 && in.sampleType == FLOATPOINT ) ((float*)in.data)[n++] = ((float*)in.data)[index+k];
+      }
+    }
+  }
+  //adjust dimensions
+  in.height = in.height - top - bottom;
+  in.width = in.width - left - right;
 }
