@@ -301,43 +301,67 @@ void filter_interpolate_bilinear( RawTile& in, unsigned int resampled_width, uns
 
   float x_ratio = (width) / (float) resampled_width;
   float y_ratio = (height) / (float) resampled_height;
+  bool edgeY, edgeX;
   int a,b,c,d,index,x,y;
   int offset = 0;
   float x_diff, y_diff;
   for(int i = 0; i < resampled_height; i++){
 	  y = (int)(y_ratio * i);
 	  y_diff = (y_ratio * i) - y;
+    //if we come to edge, remember it, so we don't call unexisting pixels
+    if(y == height - 1) {
+      edgeY = true;
+      y_diff = 0;
+    }
+    else{
+      edgeY = false;
+    }
+
 	  for(int j = 0; j < resampled_width; j++){
 		  x = (int)(x_ratio * j);
       x_diff = (x_ratio * j) - x;
 		  index = x + y*width;
+      //if we come to edge, remember it, so we don't call unexisting pixels
+      if(x == width - 1){
+        edgeX = true;
+        x_diff = 0;
+      }
+      else{
+        edgeX = false;
+      }
 
 		  for(int k = 0; k < channels; k++) {
-        //for upscaling - edges are computed only from existing pixels
-        if(y_ratio > 1 && i == resampled_height -1) y_diff = 0;
-        if(x_ratio > 1 && j == resampled_width - 1) x_diff = 0;
 
         if(in.bpc == 8){
 			    a = data8[(index)*channels + k];
-			    b = data8[(index+1)*channels + k];
-			    c = data8[(index+width)*channels + k];
-			    d = data8[(index + width + 1)*channels + k];
+          if (!edgeX) b = data8[(index+1)*channels + k];
+          else b = 0;
+          if(!edgeY) c = data8[(index+width)*channels + k];
+          else c = 0;
+          if(!edgeX && !edgeY) d = data8[(index + width + 1)*channels + k];
+          else d = 0;
           color8 = (unsigned char) (a*(1-x_diff)*(1-y_diff) + b*(x_diff)*(1-y_diff) + c*(1-x_diff)*(y_diff) + d*(x_diff)*(y_diff));
           buf8[offset++] = color8;
         }
         else if(in.bpc == 16){
 			    a = data16[(index)*channels + k];
-			    b = data16[(index+1)*channels + k];
-			    c = data16[(index+width)*channels + k];
-			    d = data16[(index + width + 1)*channels + k];
+			    if (!edgeX) b = data16[(index+1)*channels + k];
+          else b = 0;
+          if(!edgeY) c = data16[(index+width)*channels + k];
+          else c = 0;
+          if(!edgeX && !edgeY) d = data16[(index + width + 1)*channels + k];
+          else d = 0;
 			    color16 = (unsigned char) (a*(1-x_diff)*(1-y_diff) + b*(x_diff)*(1-y_diff) + c*(1-x_diff)*(y_diff) + d*(x_diff)*(y_diff));
 			    buf16[offset++] = color16;
         }
         else if(in.bpc == 32){
 			    a = data32[(index)*channels + k];
-			    b = data32[(index+1)*channels + k];
-			    c = data32[(index+width)*channels + k];
-			    d = data32[(index + width + 1)*channels + k];
+			    if (!edgeX) b = data32[(index+1)*channels + k];
+          else b = 0;
+          if(!edgeY) c = data32[(index+width)*channels + k];
+          else c = 0;
+          if(!edgeX && !edgeY) d = data32[(index + width + 1)*channels + k];
+          else d = 0;
 			    color32 = (unsigned char) (a*(1-x_diff)*(1-y_diff) + b*(x_diff)*(1-y_diff) + c*(1-x_diff)*(y_diff) + d*(x_diff)*(y_diff));
 			    buf32[offset++] = color32;
         }
