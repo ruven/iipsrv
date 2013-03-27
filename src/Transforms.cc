@@ -534,7 +534,7 @@ void filter_crop( RawTile& in, int left, int top, int right, int bottom ){
   for( int i=top; i < in.height - bottom; i++ ){
     unsigned int index1 = i * in.width;
     for ( int j=left; j < in.width - right; j++ ){
-      unsigned int index = index1 + j;
+      unsigned int index = (index1 + j)*in.channels;
       for( int k=0; k < in.channels; k++ ){
         if(in.bpc == 8) ((unsigned char*)in.data)[n++]  = ((unsigned char*)in.data)[index+k];
         else if(in.bpc == 16) ((unsigned short*)in.data)[n++] = ((unsigned short*)in.data)[index+k];

@@ -730,21 +730,21 @@ void IIIF::run( Session* session, const std::string& argument ){
       //for 150, 250 and 350% ask 2 pixels instead of 1 for higher precision
       if(reqSizeWidth/(double)reqRegionWidth - reqSizeWidth/reqRegionWidth > 0.3
         && reqSizeWidth/(double)reqRegionWidth  - reqSizeWidth/reqRegionWidth < 0.7){
-        pixelWidthRatio = round(2*(reqSizeWidth/(double)reqRegionWidth));
+        pixelWidthRatio = (int) round(2*(reqSizeWidth/(double)reqRegionWidth));
         unitX = 2;
       }
       else{
-        pixelWidthRatio = round(reqSizeWidth/(double)reqRegionWidth);
+        pixelWidthRatio = (int) round(reqSizeWidth/(double)reqRegionWidth);
         unitX = 1;
       }
       //the same for vertical resize
       if(reqSizeHeight/(double)reqRegionHeight - reqSizeHeight/reqRegionHeight > 0.3
         && reqSizeHeight/(double)reqRegionHeight - reqSizeHeight/reqRegionHeight < 0.7){
-        pixelHeightRatio = round(2*(reqSizeHeight/(double)reqRegionHeight));
+        pixelHeightRatio = (int) round(2*(reqSizeHeight/(double)reqRegionHeight));
         unitY = 2;
       }
       else{
-        pixelHeightRatio = round(reqSizeHeight/(double)reqRegionHeight);
+        pixelHeightRatio = (int) round(reqSizeHeight/(double)reqRegionHeight);
         unitY = 1;
       }
 
