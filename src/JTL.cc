@@ -69,6 +69,23 @@ void JTL::run( Session* session, const std::string& argument ){
   else if( session->view->shaded ) ct = UNCOMPRESSED;
   else ct = JPEG;
 
+  //next block cares about jpeg 2000 difference of ceiling image dimensions (tiff truncates it)
+  //there may exist small (1px) tile on the right edge, that viewer doesn't know about
+  //so we must adjust requested tile numbers in that case
+  unsigned int tw = (*session->image)->getTileWidth();
+  unsigned int width = (*session->image)->getImageWidth();
+  int differenceOfResolutions = (*session->image)->getNumResolutions() - 1 - resolution;
+  int divideFactor = std::pow(2.0, differenceOfResolutions);
+  int rowSize =  std::ceil((width/divideFactor) / (double)tw);
+  int resolutionWidth = (*session->image)->image_widths[differenceOfResolutions-1];
+  //adjusting is needed only if size of tier computed by viewer (truncated) is dividable by tile width
+  // and real width of this resolution is higher than computed, also don't adjust anything for full size
+  if(width/divideFactor % tw == 0 && resolutionWidth > width/divideFactor && divideFactor > 1){
+    if (tile >= rowSize){
+      tile += tile / rowSize; //move tile by 1 for every row
+    }
+  }
+
   RawTile rawtile = tilemanager.getTile( resolution, tile, session->view->xangle,
 					 session->view->yangle, session->view->getLayers(), ct );
 
