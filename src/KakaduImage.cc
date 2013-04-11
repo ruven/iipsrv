@@ -7,7 +7,7 @@
     Culture of the Czech Republic.
 
 
-    Copyright (C) 2009-2012 IIPImage.
+    Copyright (C) 2009-2013 IIPImage.
     Authors: Ruven Pillay & Petr Pridal
 
     This program is free software; you can redistribute it and/or modify
@@ -46,14 +46,13 @@ unsigned int get_nprocs_conf(){
   int returnCode = sysctlbyname("hw.ncpu", &numProcessors, &size, NULL, 0);
   if( returnCode != 0 ) return 1;
   else return (unsigned int)numProcessors;
-
 }
 #define NPROCS
 #endif
 
 
 #include "Timer.h"
-//#define DEBUG 1
+#define DEBUG 1
 
 
 using namespace std;
@@ -138,15 +137,24 @@ void KakaduImage::loadImageInfo( int seq, int ang ) throw(string)
   numResolutions = codestream.get_min_dwt_levels();
   bpp = codestream.get_bit_depth(0,true);
 
-  // Loop through each resolution and get the image dimensions
+  unsigned int w = layer_size.x;
+  unsigned int h = layer_size.y;
+
+  // Loop through each resolution and calculate the image dimensions - 
+  // We calculate ourselves rather than relying on get_dims() to force a similar
+  // behaviour to TIFF with resolutions at floor(x/2) rather than Kakadu's default ceil(x/2) 
   for( unsigned int c=1; c<numResolutions; c++ ){
-   codestream.apply_input_restrictions(0,0,c,1,NULL,KDU_WANT_OUTPUT_COMPONENTS );
-   kdu_dims layers;
-   codestream.get_dims(0,layers,true);
-   image_widths.push_back(layers.size.x);
-   image_heights.push_back(layers.size.y);
+    //    codestream.apply_input_restrictions(0,0,c,1,NULL,KDU_WANT_OUTPUT_COMPONENTS);
+    //    kdu_dims layers;
+    //    codestream.get_dims(0,layers,true);
+    //    image_widths.push_back(layers.size.x);
+    //    image_heights.push_back(layers.size.y);
+    w = floor( w/2.0 );
+    h = floor( h/2.0 );
+    image_widths.push_back(w);
+    image_heights.push_back(h);
 #ifdef DEBUG
-   logfile << "Kakadu :: Resolution : " << layers.size.x << "x" << layers.size.y << std::endl;
+    logfile << "Kakadu :: Resolution : " << w << "x" << h << std::endl;
 #endif
   }
 
@@ -155,14 +163,12 @@ void KakaduImage::loadImageInfo( int seq, int ang ) throw(string)
   // kdu_region_decompressor function is able to handle the downsampling for us for one extra level.
   // Extra downsampling has to be done ourselves
   unsigned int n = 1;
-  unsigned int w = image_widths[0];
-  unsigned int h = image_heights[0];
+  w = image_widths[0];
+  h = image_heights[0];
   while( (w>tile_width) || (h>tile_height) ){
     n++;
-    // We use ceil() rather than floor() because Kakadu generates it's resolutions in this way
-    // TIFFs resolutions, on the other hand, are floor()
-    w = ceil( w/2.0 );
-    h = ceil( h/2.0 );
+    w = floor( w/2.0 );
+    h = floor( h/2.0 );
     if( n > numResolutions ){
       image_widths.push_back(w);
       image_heights.push_back(h);
@@ -194,9 +200,24 @@ void KakaduImage::loadImageInfo( int seq, int ang ) throw(string)
   kdu_tile kt = codestream.open_tile(kdu_coords(0,0),NULL);
   max_layers = codestream.get_max_tile_layers();
 #ifdef DEBUG
+  string cs;
+  switch( j2k_colour.get_space() ){
+    case JP2_sRGB_SPACE:
+      cs = "JP2_sRGB_SPACE";
+      break;
+    case JP2_sLUM_SPACE:
+      cs =  "JP2_sLUM_SPACE";
+      break;
+    case JP2_CIELab_SPACE:
+      cs = "JP2_CIELab_SPACE";
+      break;
+    default:
+      cs = j2k_colour.get_space();
+      break;
+  }
   logfile << "Kakadu :: " << bpp << " bit data" << endl
 	  << "Kakadu :: " << channels << " channels" << endl
-	  << "Kakadu :: colour space " << j2k_colour.get_space() << endl
+	  << "Kakadu :: colour space: " << cs << endl
 	  << "Kakadu :: " << max_layers << " quality layers detected" << endl;
 #endif
   kt.close();
@@ -270,19 +291,14 @@ RawTile KakaduImage::getTile( int seq, int ang, unsigned int res, int layers, un
     throw tile_no.str();
   }
 
-
   // Alter the tile size if it's in the last column
-  bool edge_x = false;
   if( ( tile % ntlx == ntlx - 1 ) && ( rem_x != 0 ) ) {
     tw = rem_x;
-    edge_x = true;
   }
 
   // Alter the tile size if it's in the bottom row
-  bool edge_y = false;
   if( ( tile / ntlx == ntly - 1 ) && rem_y != 0 ) {
     th = rem_y;
-    edge_y = true;
   }
 
 
@@ -420,7 +436,8 @@ void KakaduImage::process( unsigned int res, int layers, int xoffset, int yoffse
 
   try{
 
-    codestream.apply_input_restrictions( 0, 0, vipsres, layers, &image_dims, KDU_WANT_OUTPUT_COMPONENTS );
+    // Note that we set max channels rather than leave the default to strip off alpha channels
+    codestream.apply_input_restrictions( 0, channels, vipsres, layers, &image_dims, KDU_WANT_OUTPUT_COMPONENTS );
 
     decompressor.start( codestream, false, true, env_ref, NULL );
 
@@ -466,9 +483,11 @@ void KakaduImage::process( unsigned int res, int layers, int xoffset, int yoffse
 
       decompressor.get_recommended_stripe_heights( comp_dims.size.y,
 						   1024, stripe_heights, NULL );
+
       if( bpp == 16 ){
-	bool s = false;
-	continues = decompressor.pull_stripe( (kdu_int16*) stripe_buffer, stripe_heights, NULL, NULL, NULL, NULL, &s );
+	// Set these to false to get unsigned 16 bit values
+	bool s[3] = {false,false,false};
+	continues = decompressor.pull_stripe( (kdu_int16*) stripe_buffer, stripe_heights, NULL, NULL, NULL, NULL, s );
       }
       else if( bpp == 8 ){
 	continues = decompressor.pull_stripe( (kdu_byte*) stripe_buffer, stripe_heights, NULL, NULL, NULL );
@@ -492,7 +511,7 @@ void KakaduImage::process( unsigned int res, int layers, int xoffset, int yoffse
 
       memcpy( b2, b1, tw * stripe_heights[0] * channels * bpp/8 );
 
-      // Advance our buffer pointer
+      // Advance our output buffer pointer
       index += tw * stripe_heights[0] * channels;
 
 #ifdef DEBUG
