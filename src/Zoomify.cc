@@ -80,7 +80,7 @@ void Zoomify::run( Session* session, const std::string& argument ){
   unsigned int discard = 0;
 
   for( n=0; n<numResolutions; n++ ){
-    if( (*session->image)->image_widths[n] < tw && (*session->image)->image_heights[n] < tw ){
+    if( floor(width / pow(2.0, (double) n)) <= tw  && floor(height / pow(2.0, (double) n)) <= tw ){
       discard++;
     }
   }
