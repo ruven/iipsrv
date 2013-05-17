@@ -583,6 +583,10 @@ void filter_gamma( RawTile& in, float g, std::vector<float>& max, std::vector<fl
     // Normalize our data
     v = (v - min[c]) / (max[c] - min[c]);
 
+    // Limit to our allowed data range
+    if( v < 0. ) v = 0.;
+    else if( v > 1. ) v = 1.;
+
     // Perform gamma correction
     v = powf( v, g );
 
