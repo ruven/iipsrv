@@ -143,14 +143,14 @@ void TPTImage::loadImageInfo( int seq, int ang ) throw(string)
   TIFFGetFieldDefaulted( tiff, TIFFTAG_SMINSAMPLEVALUE, sminvalue );
   TIFFGetFieldDefaulted( tiff, TIFFTAG_SMAXSAMPLEVALUE, smaxvalue );
   for( int i=0; i<channels; i++ ){
-    if( smaxvalue[i] == 0.0 ){
+    if( (float)smaxvalue[i] == 0.0 ){
       // Set default values if values not included in header
       if( bpp == 8 ) smaxvalue[i] = 255.0;
       else if( bpp == 16 ) smaxvalue[i] = 65535.0;
       else if( bpp == 32 && sampleType == FIXEDPOINT ) smaxvalue[i] = 4294967295.0;
     }
     min.push_back( (float)sminvalue[i] );
-    max.push_back( smaxvalue[i] );
+    max.push_back( (float)smaxvalue[i] );
   }
 
 }

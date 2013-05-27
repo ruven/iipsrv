@@ -260,39 +260,52 @@ void filter_cmap( RawTile& in, enum cmap_type cmap, float max, float min ){
   if( in.bpc == 8 )
     { buf = (unsigned char*) in.data;
       buffer = new unsigned char[in.width*in.height*out_chan];
-      minimum = 0.;
-      maximum = 255.; }
+    }
   else if( in.bpc == 16 ) 
     { buf = (unsigned short*) in.data;
       buffer = new unsigned short[in.width*in.height*out_chan];
-      minimum = 0.;
-      maximum = 65535.; }
+    }
 
   else if( in.bpc == 32 && in.sampleType == FIXEDPOINT )
     { buf = (unsigned int*) in.data;
       buffer = new unsigned int[in.width*in.height*out_chan];
-      minimum = min;
-      maximum = max; }
+    }
 
   else if( in.bpc == 32 && in.sampleType == FLOATINGPOINT ) 
     { buf = (float*) in.data;
       buffer = new float[in.width*in.height*out_chan];
-      minimum = min;
-      maximum = max; }
+    }
 
+  minimum = min;
+  maximum = max;
   div = ( maximum - minimum );
 
   for( int n=0; n<ndata; n++ ){
-      if( in.bpc == 8 ) value =  (float) (((unsigned char*)buf)[n] - minimum) / div;
-      else if( in.bpc == 16 ) value =  (float) (((unsigned short*)buf)[n] - minimum) / div;
-      else if( in.bpc == 32 && in.sampleType == FIXEDPOINT ) value =  (float) (((unsigned int*)buf)[n] - minimum) / div;
-      else if( in.bpc == 32 && in.sampleType == FLOATINGPOINT ) value =  (float) (((float*)buf)[n] - minimum) / div;
-
+      if( in.bpc == 8 ) {
+        if( (std::isfinite(((unsigned char*)buf)[n])) )
+	  value =  (float) (((unsigned char*)buf)[n] - minimum) / div;
+        else value = 0.;
+      }
+      else if( in.bpc == 16 ) { 
+        if( (std::isfinite(((unsigned short*)buf)[n])) )
+	  value =  (float) (((unsigned short*)buf)[n] - minimum) / div;
+        else value = 0.;
+      }
+      else if( in.bpc == 32 && in.sampleType == FIXEDPOINT ) {
+        if( (std::isfinite(((unsigned int*)buf)[n])) )
+          value =  (float) (((unsigned int*)buf)[n] - minimum) / div;
+        else value = 0.;
+      }
+      else if( in.bpc == 32 && in.sampleType == FLOATINGPOINT ) {
+        if( (std::isfinite(((float*)buf)[n])) )
+          value =  (float) (((float*)buf)[n] - minimum) / div;
+        else value = 0.;
+      }
     switch(cmap){
     case HOT:
       if(value>1.)
         { outv[0]=outv[1]=outv[2]=1.; }
-      else if(value<0)
+      else if(value<=0)
         { outv[0]=outv[1]=outv[2]=0.; }
       else if(value<max3)
         { outv[0]=value/max3; outv[1]=outv[2]=0.; }
@@ -305,7 +318,7 @@ void filter_cmap( RawTile& in, enum cmap_type cmap, float max, float min ){
     case COLD:
       if(value>1.)
         { outv[0]=outv[1]=outv[2]=1.; }
-      else if(value<0)
+      else if(value<=0)
         { outv[0]=outv[1]=outv[2]=0.; }
       else if(value<max3)
         { outv[0]=outv[1]=0.; outv[2]=value/max3; }
@@ -318,7 +331,7 @@ void filter_cmap( RawTile& in, enum cmap_type cmap, float max, float min ){
     case JET:
       if(value>1.)
         { outv[0]=outv[1]=outv[2]=1.; }
-      else if(value<0)
+      else if(value<=0)
         { outv[0]=outv[1]=outv[2]=0.; }
       else if(value<max4)
         { outv[0]=outv[1]=0.; outv[2]=(c1+(1.-c1)*value/max4); }
@@ -346,7 +359,7 @@ void filter_cmap( RawTile& in, enum cmap_type cmap, float max, float min ){
     for (int i = 0; i<3; i++) {
       if( in.bpc == 8 ) ((unsigned char*)buffer)[k++] = (unsigned char) (maximum*outv[i]);
       else if( in.bpc == 16 ) ((unsigned short*)buffer)[k++] = (unsigned short) (maximum*outv[i]);
-      else if( in.bpc == 32 && in.sampleType == FIXEDPOINT ) ((unsigned int*)buffer)[k++] = (unsigned int) (div*outv[i]+minimum);
+      else if( in.bpc == 32 && in.sampleType == FIXEDPOINT ) ((unsigned int*)buffer)[k++] = (unsigned int) (maximum*outv[i]);
       else if( in.bpc == 32 && in.sampleType == FLOATINGPOINT ) ((float*)buffer)[k++] = (float) (div*outv[i]+minimum);
     }
   }
@@ -516,6 +529,12 @@ void filter_contrast( RawTile& in, float c, std::vector<float>& max, std::vector
 
   unsigned char* buffer;
 
+  if ( in.channels != max.size() )
+    for (int n=0; n<in.channels; n++) {
+      max.push_back(max[0]);
+      min.push_back(min[0]);
+    }
+
   // 8-bit case first
   if( in.bpc == 8 ){
     if( c == 1.0 ) return;
@@ -533,13 +552,12 @@ void filter_contrast( RawTile& in, float c, std::vector<float>& max, std::vector
     // Allocate new 8 bit buffer for tile
     buffer = new unsigned char[np];
 
-    if( in.bpc == 16 ) contrast = c/256.0;
-
     for( unsigned int n=0; n<np; n++ ){
 
+      int ch = (int)( n % in.channels );
+      contrast = c * 256.0 / (max[ch]-min[ch]);
+
       if( in.bpc == 32 ){
-	int ch = (int)( n % in.channels );
-	contrast = c * 256.0 / (max[ch]-min[ch]);
 	v = (((float*)in.data)[n]-min[ch]) * contrast ;
       }
       else v = ((unsigned short*)in.data)[n] * contrast;
