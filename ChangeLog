@@ -1,3 +1,7 @@
+12/06/2013:
+	- Extra checks for malformed images in KakaduImage.cc.
+
+
 11/04/2013:
 	- Several fixes to Kakadu.cc. To force resolution levels to be floor(x/2) rather than the default
 	  ceil(x/2) to match how TIFF resolutions are created. Also modification to force 16 bit

@@ -52,7 +52,7 @@ unsigned int get_nprocs_conf(){
 
 
 #include "Timer.h"
-#define DEBUG 1
+//#define DEBUG 1
 
 
 using namespace std;
@@ -90,11 +90,15 @@ void KakaduImage::openImage() throw (string)
 
   // Get our JPX codestream
   jpx_stream = jpx_input.access_codestream(0);
+  if( !jpx_stream.exists() ) throw string( "Kakadu :: No codestream in file '"+filename+"'"); // Throw exception
 
   // Open the underlying JPEG2000 codestream
   input = NULL;
   input = jpx_stream.open_stream();
+
+  // Create codestream
   codestream.create(input);
+  if( !codestream.exists() ) throw string( "Kakadu :: Unable to create codestream for '"+filename+"'"); // Throw exception
 
   // Set up the cache size and allow restarting
   //codestream.augment_cache_threshold(1024);
@@ -154,7 +158,7 @@ void KakaduImage::loadImageInfo( int seq, int ang ) throw(string)
     image_widths.push_back(w);
     image_heights.push_back(h);
 #ifdef DEBUG
-    logfile << "Kakadu :: Resolution : " << w << "x" << h << std::endl;
+    logfile << "Kakadu :: Resolution : " << w << "x" << h << endl;
 #endif
   }
 
@@ -395,6 +399,9 @@ void KakaduImage::process( unsigned int res, int layers, int xoffset, int yoffse
   kdu_dims image_dims, canvas_dims;
   canvas_dims.pos = kdu_coords( xoffset, yoffset );
   canvas_dims.size = kdu_coords( tw, th );
+
+  // Check our codestream status - throw exception for malformed codestreams
+  if( !codestream.exists() ) throw string( "Kakadu :: Malformed JPEG2000 - unable to access codestream");
 
   // Apply our resolution restrictions to calculate the rendering zone on the highest resolution
   // canvas
