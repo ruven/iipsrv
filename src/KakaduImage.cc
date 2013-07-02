@@ -64,20 +64,19 @@ extern std::ofstream logfile;
 
 void KakaduImage::openImage() throw (string)
 {
-
-  if( isSet ) return;
-
   string filename = getFileName( currentX, currentY );
 
-  // Check if our image has been modified
-  updateTimestamp(filename);
+  // Update our timestamp
+  updateTimestamp( filename );
 
   // Set our error handlers
   kdu_customize_warnings(&pretty_cout);
   kdu_customize_errors(&pretty_cerr);
 
+#ifdef DEBUG
   Timer timer;
   timer.start();
+#endif
 
   // Open the JPX or JP2 file
   try{
@@ -106,8 +105,8 @@ void KakaduImage::openImage() throw (string)
   codestream.set_persistent();
   //  codestream.enable_restart();
 
-  loadImageInfo( currentX, currentY );
-  isSet = true;
+  // Load our metadata if not already loaded
+  if( bpp == 0 ) loadImageInfo( currentX, currentY );
 
 #ifdef DEBUG
   logfile << "Kakadu :: openImage() :: " << timer.getTime() << " microseconds" << endl;
@@ -237,6 +236,7 @@ void KakaduImage::loadImageInfo( int seq, int ang ) throw(string)
     else max.push_back( 255.0 );
   }
 
+  isSet = true;
 }
 
 
@@ -253,7 +253,6 @@ void KakaduImage::closeImage()
 
   // Close our JP2 family and JPX files
   src.close();
-
   jpx_input.close();
 
 #ifdef DEBUG
@@ -311,7 +310,7 @@ RawTile KakaduImage::getTile( int seq, int ang, unsigned int res, int layers, un
   int yoffset = (unsigned int) floor((double)(tile/ntlx)) * tile_height;
 
 #ifdef DEBUG
-  logfile << "Kakadu :: Tile size: " << tw << "x" << th << " @" << channels << endl;
+  logfile << "Kakadu :: Tile size: " << tw << "x" << th << "@" << channels << endl;
 #endif
 
 

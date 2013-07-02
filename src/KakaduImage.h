@@ -132,7 +132,7 @@ class KakaduImage : public IIPImage {
   /// Constructor
   KakaduImage():IIPImage() {
     tile_width = TILESIZE; tile_height = TILESIZE;
-    numResolutions = 0; virtual_levels = 0;
+    virtual_levels = 0;
   };
 
   /// Constructor
@@ -140,16 +140,35 @@ class KakaduImage : public IIPImage {
    */
   KakaduImage( const std::string& path ): IIPImage( path ) {
     tile_width = TILESIZE; tile_height = TILESIZE;
-    numResolutions = 0; virtual_levels = 0;
+    virtual_levels = 0;
   };
 
   /// Copy Constructor
+  /** @param image Kakadu object
+   */
+  KakaduImage( const KakaduImage& image ): IIPImage( image ) {
+    virtual_levels = image.virtual_levels;
+  };
+
+  /// Constructor from IIPImage object
   /** @param image IIPImage object
    */
   KakaduImage( const IIPImage& image ): IIPImage( image ) {
     tile_width = TILESIZE; tile_height = TILESIZE;
-    numResolutions = 0; virtual_levels = 0;
+    virtual_levels = 0;
   };
+
+  /// Assignment Operator 
+  /** @param TPTImage object 
+   */ 
+  KakaduImage& operator = ( const KakaduImage& image ) {
+    if( this != &image ){
+      closeImage();
+      IIPImage::operator=(image);
+    }
+    return *this;
+  }
+
 
   /// Destructor
   ~KakaduImage() { closeImage(); };
@@ -161,10 +180,10 @@ class KakaduImage : public IIPImage {
   /// Overloaded function for loading TIFF image information
   /** @param x horizontal sequence angle
       @param y vertical sequence angle
-  */
+   */
   void loadImageInfo( int x, int y ) throw (std::string);
 
-  /// Overloaded function for closing a TIFF image
+  /// Overloaded function for closing a JPEG2000 image
   void closeImage();
 
   /// Return whether this image type directly handles region decoding
@@ -176,7 +195,7 @@ class KakaduImage : public IIPImage {
       @param r resolution
       @param l number of quality layers to decode
       @param t tile number
-  */
+   */
   RawTile getTile( int x, int y, unsigned int r, int l, unsigned int t ) throw (std::string);
 
   /// Overloaded function for returning a region for a given angle and resolution
@@ -190,7 +209,7 @@ class KakaduImage : public IIPImage {
       @param w width of region
       @param h height of region
       @param b buffer to fill
-  */
+   */
   RawTile getRegion( int ha, int va, unsigned int r, int l, int x, int y, unsigned int w, unsigned int h ) throw (std::string);
 
 

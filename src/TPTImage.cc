@@ -30,8 +30,6 @@ using namespace std;
 
 void TPTImage::openImage() throw (string)
 {
-//   tiff = NULL;
-//   tile_buf = NULL;
 
   // Insist that the tiff and tile_buf be non-NULL
   if( tiff || tile_buf ){
@@ -40,29 +38,22 @@ void TPTImage::openImage() throw (string)
 
   string filename = getFileName( currentX, currentY );
 
-  // Check if our image has been modified
-  updateTimestamp(filename);
-
+  // Update our timestamp
+  updateTimestamp( filename );
 
   // Try to open and allocate a buffer
   if( ( tiff = TIFFOpen( filename.c_str(), "r" ) ) == NULL ){
     throw string( "tiff open failed for: " + filename );
   }
-  loadImageInfo( currentX, currentY );
+
+  // Load our metadata if not already loaded
+  if( bpp == 0 ) loadImageInfo( currentX, currentY );
 
   // Insist on a tiled image
-  if( (tile_width == 0) && (tile_height == 0) )
+  if( (tile_width == 0) && (tile_height == 0) ){
     throw string( "TIFF image is not tiled" );
+  }
 
-  // Also get some metadata
-  char *tmp = NULL;
-  int count;
-  if( TIFFGetField( tiff, TIFFTAG_ARTIST, &tmp ) ) metadata["author"] = tmp;
-  if( TIFFGetField( tiff, TIFFTAG_COPYRIGHT, &tmp ) ) metadata["copyright"] = tmp;
-  if( TIFFGetField( tiff, TIFFTAG_DATETIME, &tmp ) ) metadata["create-dtm"] = tmp;
-  if( TIFFGetField( tiff, TIFFTAG_IMAGEDESCRIPTION, &tmp ) ) metadata["subject"] = tmp;
-  if( TIFFGetField( tiff, TIFFTAG_SOFTWARE, &tmp ) ) metadata["app-name"] = tmp;
-  if( TIFFGetField( tiff, TIFFTAG_XMLPACKET, &count, &tmp ) ) metadata["xmp"] = string(tmp,count);
   isSet = true;
 
 }
@@ -76,6 +67,7 @@ void TPTImage::loadImageInfo( int seq, int ang ) throw(string)
   double sminvalue[4], smaxvalue[4];
   unsigned int w, h;
   string filename;
+  char *tmp = NULL;
 
   // If we are currently working on a different sequence number, then
   //  close and reload the image.
@@ -152,6 +144,14 @@ void TPTImage::loadImageInfo( int seq, int ang ) throw(string)
     min.push_back( (float)sminvalue[i] );
     max.push_back( (float)smaxvalue[i] );
   }
+
+  // Also get some basic metadata
+  if( TIFFGetField( tiff, TIFFTAG_ARTIST, &tmp ) ) metadata["author"] = tmp;
+  if( TIFFGetField( tiff, TIFFTAG_COPYRIGHT, &tmp ) ) metadata["copyright"] = tmp;
+  if( TIFFGetField( tiff, TIFFTAG_DATETIME, &tmp ) ) metadata["create-dtm"] = tmp;
+  if( TIFFGetField( tiff, TIFFTAG_IMAGEDESCRIPTION, &tmp ) ) metadata["subject"] = tmp;
+  if( TIFFGetField( tiff, TIFFTAG_SOFTWARE, &tmp ) ) metadata["app-name"] = tmp;
+  if( TIFFGetField( tiff, TIFFTAG_XMLPACKET, &count, &tmp ) ) metadata["xmp"] = string(tmp,count);
 
 }
 

@@ -65,7 +65,7 @@ void CVT::run( Session* session, const std::string& a ){
 
 
     // Reload info in case we are dealing with a sequence
-    (*session->image)->loadImageInfo( session->view->xangle, session->view->yangle );
+    //(*session->image)->loadImageInfo( session->view->xangle, session->view->yangle );
 
     // Calculate the number of tiles at the requested resolution
     unsigned int im_width = (*session->image)->getImageWidth();

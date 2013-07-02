@@ -1,3 +1,12 @@
+02/07/2013:
+        - Optimizations to FIF.cc. Unnecessary file header reading is now avoided as top
+          level IIPImage class cache fully utilized. Cleanup of constructor code of IIPImage,
+          TPTImage and KakaduImage code. Significant speed up to requests of cached images.
+        - Modification to if_modified_since code in FIF.cc, to avoid repeatedly resetting the
+          timezone environment variable to UTC when checking timestamps, which is a relatively
+          slow process. This is now set once globally in Main.cc and set back on main exit.
+
+
 12/06/2013:
 	- Extra checks for malformed images in KakaduImage.cc.
 

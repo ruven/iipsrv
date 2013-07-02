@@ -1,6 +1,6 @@
 // Tiled Pyramidal Tiff class interface
 
-/*  IIP Tiled Pyramidal TIFF Class
+/*  IIPImage Tiled Pyramidal TIFF Class
 
     Copyright (C) 2000-2013 Ruven Pillay.
 
@@ -29,9 +29,9 @@
 #include <tiffio.h>
 
 
-/// Image class for Tiled Pyramidal Images: Inherits from IIPImage. Uses libtiff.
 
 
+/// Image class for Tiled Pyramidal Images: Inherits from IIPImage. Uses libtiff
 class TPTImage : public IIPImage {
 
  private:
@@ -39,13 +39,7 @@ class TPTImage : public IIPImage {
   /// Pointer to the TIFF library struct
   TIFF *tiff;
 
-  /// Tile data buffer
-  /** The buffer for reading tiles from the
-      image - assuming a constant tile size,
-      then this could probably be shared for
-      all images, but keep here now for
-      simplicity.
-   */
+  /// Tile data buffer pointer
   tdata_t tile_buf;
 
 
@@ -54,26 +48,40 @@ class TPTImage : public IIPImage {
   /// Constructor
   TPTImage():IIPImage() { 
     tiff = NULL; tile_buf = NULL; 
-    tile_width = 0; tile_height = 0;
-    numResolutions = 0;
   };
 
   /// Constructor
-  /** \param path image path
+  /** @param path image path
    */
   TPTImage( const std::string& path ): IIPImage( path ) { 
     tiff = NULL; tile_buf = NULL; 
-    tile_width = 0; tile_height = 0;
-    numResolutions = 0;
   };
 
   /// Copy Constructor
-  /** \param image IIPImage object
+  /** @param image IIPImage object
+   */
+  TPTImage( const TPTImage& image ): IIPImage( image ) {
+    tiff = NULL; tile_buf = NULL;
+  };
+
+  /// Assignment Operator
+  /** @param TPTImage object
+   */
+  TPTImage& operator = ( const TPTImage& image ) {
+    if( this != &image ){
+      closeImage();
+      IIPImage::operator=(image);
+      tiff = image.tiff;
+      tile_buf = image.tile_buf;
+    }
+    return *this;
+  }
+
+  /// Construct from an IIPImage object
+  /** @param image IIPImage object
    */
   TPTImage( const IIPImage& image ): IIPImage( image ) {
     tiff = NULL; tile_buf = NULL; 
-    tile_width = 0; tile_height = 0;
-    numResolutions = 0;
   };
 
   /// Destructor
@@ -83,8 +91,8 @@ class TPTImage : public IIPImage {
   void openImage() throw (std::string);
 
   /// Overloaded function for loading TIFF image information
-  /** \param x horizontal sequence angle
-      \param y vertical sequence angle
+  /** @param x horizontal sequence angle
+      @param y vertical sequence angle
    */
   void loadImageInfo( int x, int y ) throw (std::string);
 
@@ -92,16 +100,15 @@ class TPTImage : public IIPImage {
   void closeImage();
 
   /// Overloaded function for getting a particular tile
-  /** \param x horizontal sequence angle
-      \param y vertical sequence angle
-      \param r resolution
-      \param l quality layers
-      \param t tile number
+  /** @param x horizontal sequence angle
+      @param y vertical sequence angle
+      @param r resolution
+      @param l quality layers
+      @param t tile number
    */
   RawTile getTile( int x, int y, unsigned int r, int l, unsigned int t ) throw (std::string);
 
 };
-
 
 
 #endif

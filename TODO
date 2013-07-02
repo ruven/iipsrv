@@ -10,5 +10,4 @@ TODO:
 * Look into using malloc_usable_size to trace real allocated space
 * Lanczos, bilinear etc interpolation for CVT
 * Copy EXIF, IPTC data for CVT exports
-* Optimize FIF code for very large files
 * Rewrite JPEG writer code for better buffered output

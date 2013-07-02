@@ -38,7 +38,6 @@ RawTile TileManager::getNewTile( int resolution, int tile, int xangle, int yangl
 
 
   RawTile ttt;
-  int len = 0;
 
   // Get our raw tile from the IIPImage image object
   ttt = image->getTile( xangle, yangle, resolution, layers, tile );
@@ -83,7 +82,7 @@ RawTile TileManager::getNewTile( int resolution, int tile, int xangle, int yangl
     // Do our JPEG compression iff we have an 8 bit per channel image
     if( ttt.bpc == 8 ){
       if( loglevel >=2 ) compression_timer.start();
-      len = jpeg->Compress( ttt );
+      jpeg->Compress( ttt );
       if( loglevel >= 2 ) *logfile << "TileManager :: JPEG Compression Time: "
 				   << compression_timer.getTime() << " microseconds" << endl;
     }

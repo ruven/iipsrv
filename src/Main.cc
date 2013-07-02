@@ -72,7 +72,7 @@ using namespace std;
 int loglevel;
 ofstream logfile;
 unsigned long IIPcount;
-
+char *tz = NULL;
 
 
 
@@ -81,6 +81,11 @@ unsigned long IIPcount;
 void IIPSignalHandler( int signal )
 {
   if( loglevel >= 1 ){
+
+    // Reset our time zone environment
+    if(tz) setenv("TZ", tz, 1);
+    else unsetenv("TZ");
+    tzset();
 
     time_t current_time = time( NULL );
     char *date = ctime( &current_time );
@@ -154,6 +159,13 @@ int main( int argc, char *argv[] )
     }
 
   }
+
+
+  // Set our environment to UTC as all file modification times are GMT,
+  // but save our current state to allow us to reset before quitting
+  tz = getenv("TZ");
+  setenv("TZ","",1);
+  tzset();
 
 
 

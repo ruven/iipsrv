@@ -79,35 +79,52 @@ IIPImage::IIPImage( const IIPImage& image )
   verticalAnglesList = image.verticalAnglesList;
   image_widths = image.image_widths;
   image_heights = image.image_heights;
+  tile_width = image.tile_width;
+  tile_height = image.tile_height;
+  numResolutions = image.numResolutions;
   bpp = image.bpp;
   channels = image.channels;
+  sampleType = image.sampleType;
+  colourspace = image.colourspace;
   isSet = image.isSet;
   currentX = image.currentX;
   currentY = image.currentY;
   metadata = image.metadata;
   timestamp = image.timestamp;
+  min = image.min;
+  max = image.max;
 }
 
 
 
-const IIPImage& IIPImage::operator = ( const IIPImage& image )
+// Assignment constructor
+IIPImage& IIPImage::operator = ( const IIPImage& image )
 {
-  imagePath = image.imagePath;
-  isFile = image.isFile;
-  type = image.type;
-  fileSystemPrefix = image.fileSystemPrefix;
-  fileNamePattern = image.fileNamePattern;
-  horizontalAnglesList = image.horizontalAnglesList;
-  verticalAnglesList = image.verticalAnglesList;
-  image_widths = image.image_widths;
-  image_heights = image.image_heights;
-  bpp = image.bpp;
-  channels = image.channels;
-  isSet = image.isSet;
-  currentX = image.currentX;
-  currentY = image.currentY;
-  metadata = image.metadata;
-  timestamp = image.timestamp;
+  if( this != &image ){
+    imagePath = image.imagePath;
+    isFile = image.isFile;
+    type = image.type;
+    fileSystemPrefix = image.fileSystemPrefix;
+    fileNamePattern = image.fileNamePattern;
+    horizontalAnglesList = image.horizontalAnglesList;
+    verticalAnglesList = image.verticalAnglesList;
+    image_widths = image.image_widths;
+    image_heights = image.image_heights;
+    tile_width = image.tile_width;
+    tile_height = image.tile_height;
+    numResolutions = image.numResolutions;
+    bpp = image.bpp;
+    channels = image.channels;
+    sampleType = image.sampleType;
+    colourspace = image.colourspace;
+    isSet = image.isSet;
+    currentX = image.currentX;
+    currentY = image.currentY;
+    metadata = image.metadata;
+    timestamp = image.timestamp;
+    min = image.min;
+    max = image.max;
+  }
   return *this;
 }  
 
@@ -136,7 +153,7 @@ void IIPImage::testImageType()
 
     if( glob( filename.c_str(), 0, NULL, &gdat ) != 0 ){
       globfree( &gdat );
-      string message = path + string( " is neither a file or part of an image sequence" );
+      string message = path + string( " is neither a file nor part of an image sequence" );
       throw message;
     }
     if( gdat.gl_pathc != 1 ){
@@ -167,6 +184,7 @@ void IIPImage::testImageType()
 }
 
 
+
 void IIPImage::updateTimestamp( const string& path ) throw(string)
 {
   // Get a modification time for our image
@@ -180,16 +198,18 @@ void IIPImage::updateTimestamp( const string& path ) throw(string)
 }
 
 
+
 const std::string IIPImage::getTimestamp()
 {
   tm *t;
   const time_t tm1 = timestamp;
   t = gmtime( &tm1 );
-  char strt[128];
-  strftime( strt, 128, "%a, %d %b %Y %H:%M:%S GMT", t );
+  char strt[64];
+  strftime( strt, 64, "%a, %d %b %Y %H:%M:%S GMT", t );
 
   return string(strt);
 }
+
 
 
 void IIPImage::measureVerticalAngles()
@@ -283,7 +303,6 @@ void IIPImage::Initialise()
   }
 
 }
-
 
 
 

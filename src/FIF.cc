@@ -28,6 +28,8 @@
 #include "KakaduImage.h"
 #endif
 
+#define MAXIMAGECACHE 500  // Max number of items in image cache
+
 
 // If necessary, define missing setenv and unsetenv functions
 #ifndef HAVE_SETENV
@@ -53,7 +55,7 @@ using namespace std;
 
 
 
-// Internal utility function
+// Internal utility function to decode hex values
 static char hexToChar( char first, char second ){
   int digit;
   digit = (first >= 'A' ? ((first & 0xDF) - 'A') + 10 : (first - '0'));
@@ -72,9 +74,8 @@ void FIF::run( Session* session, const string& src ){
   if( session->loglevel >= 2 ) command_timer.start();
 
 
-  // The argument is a URL path, which may contain spaces or other characters
-  // encoded URL form.
-  // So, first decode this path (implementation taken from GNU cgicc: http://www.cgicc.org)
+  // The argument is a URL path, which may contain spaces or other hex encoded characters.
+  // So, first decode and filter this path (implementation taken from GNU cgicc: http://www.cgicc.org)
 
   string argument;
   string::const_iterator iter;
@@ -126,6 +127,7 @@ void FIF::run( Session* session, const string& src ){
   }
 
 
+  // Create our IIPImage object
   IIPImage test;
 
   // Get our image pattern variable
@@ -133,44 +135,36 @@ void FIF::run( Session* session, const string& src ){
 
   // Get our image pattern variable
   string filename_pattern = Environment::getFileNamePattern();
-  
 
-
-  // Put the image opening into a try block so that we can set
-  // a meaningful error
+  // Put the image setup into a try block as object creation can throw an exception
   try{
 
-    // TODO: Try to use a reference to this list, so that we can
-    //  keep track of the current sequence between runs
-
+    // Check whether cache is empty
     if( session->imageCache->empty() ){
-
       if( session->loglevel >= 1 ) *(session->logfile) << "FIF :: Image cache initialisation" << endl;
       test = IIPImage( argument );
       test.setFileNamePattern( filename_pattern );
       test.setFileSystemPrefix( filesystem_prefix );
       test.Initialise();
-
-      (*session->imageCache)[argument] = test;
     }
-
+    // If not, look up our object
     else{
-
+      // Cache Hit
       if( session->imageCache->find(argument) != session->imageCache->end() ){
 	test = (*session->imageCache)[ argument ];
 	if( session->loglevel >= 2 ){
 	  *(session->logfile) << "FIF :: Image cache hit. Number of elements: " << session->imageCache->size() << endl;
 	}
       }
+      // Cache Miss
       else{
 	if( session->loglevel >= 2 ) *(session->logfile) << "FIF :: Image cache miss" << endl;
 	test = IIPImage( argument );
 	test.setFileNamePattern( filename_pattern );
 	test.setFileSystemPrefix( filesystem_prefix );
 	test.Initialise();
-	// Delete items if our list of images is too long. Arbitrarily set the max to 500.
-	if( session->imageCache->size() >= 250 ) session->imageCache->erase( session->imageCache->begin() );
-	(*session->imageCache)[argument] = test;
+	// Delete items if our list of images is too long.
+	if( session->imageCache->size() >= MAXIMAGECACHE ) session->imageCache->erase( session->imageCache->begin() );
       }
     }
 
@@ -232,21 +226,25 @@ void FIF::run( Session* session, const string& src ){
     */
 
 
+    // Open image, update timestamp and add it to our cache
+    (*session->image)->openImage();
+    (*session->imageCache)[argument] = *(*session->image);
+
+
     if( session->loglevel >= 3 ){
       *(session->logfile) << "FIF :: Created image" << endl;
     }
 
 
-    (*session->image)->openImage();
+    // Set the timestamp for the reply
     session->response->setLastModified( (*session->image)->getTimestamp() );
 
     if( session->loglevel >= 2 ){
       *(session->logfile) << "FIF :: Image dimensions are " << (*session->image)->getImageWidth()
 			  << " x " << (*session->image)->getImageHeight() << endl;
-      tm *t;
-      t = gmtime( &(*session->image)->timestamp );
-      char strt[128];
-      strftime( strt, 128, "%a, %d %b %Y %H:%M:%S GMT", t );
+      tm *t = gmtime( &(*session->image)->timestamp );
+      char strt[64];
+      strftime( strt, 64, "%a, %d %b %Y %H:%M:%S GMT", t );
       *(session->logfile) << "FIF :: Image timestamp: " << strt << endl;
     }
 
@@ -258,37 +256,31 @@ void FIF::run( Session* session, const string& src ){
   }
 
 
-  // Check whether we have had an if modified since header. If so, compare to our image timestamp
+  // Check whether we have had an if_modified_since header. If so, compare to our image timestamp
   if( session->headers.find("HTTP_IF_MODIFIED_SINCE") != session->headers.end() ){
 
-      tm mod_t;
-      strptime( (session->headers)["HTTP_IF_MODIFIED_SINCE"].c_str(), "%a, %d %b %Y %H:%M:%S GMT", &mod_t );
-      time_t t;
+    tm mod_t;
+    time_t t;
 
-      // Use POSIX cross-platform mktime() function to generate a timestamp. However, we need to reset
-      // our timezone temporarily to UTC for this to work properly
-      char *tz = getenv("TZ");
-      setenv("TZ","",1);
-      tzset();
-      t = mktime(&mod_t);
-      if(tz) setenv("TZ", tz, 1);
-      else unsetenv("TZ");
-      tzset();
+    strptime( (session->headers)["HTTP_IF_MODIFIED_SINCE"].c_str(), "%a, %d %b %Y %H:%M:%S %Z", &mod_t );
 
-      if( (*session->image)->timestamp <= t ){
+    // Use POSIX cross-platform mktime() function to generate a timestamp.
+    // This needs UTC, but to avoid a slow TZ environment reset for each request, we set this once globally in Main.cc
+    t = mktime(&mod_t);
+    if( (session->loglevel >= 1) && (t == -1) ) *(session->logfile) << "FIF :: Error creating timestamp" << endl;
 
-	if( session->loglevel >= 2 ){
-	  *(session->logfile)	<< "FIF :: Unmodified content" << endl;
-	  *(session->logfile)	<< "FIF :: Total command time " << command_timer.getTime() << " microseconds" << endl;
-	}
-
-	throw( 304 );
+    if( (*session->image)->timestamp <= t ){
+      if( session->loglevel >= 2 ){
+	*(session->logfile) << "FIF :: Unmodified content" << endl;
+	*(session->logfile) << "FIF :: Total command time " << command_timer.getTime() << " microseconds" << endl;
       }
-      else{
-	if( session->loglevel >= 2 ){
-	  *(session->logfile)	<< "FIF :: Content modified" << endl;
-	}
+      throw( 304 );
+    }
+    else{
+      if( session->loglevel >= 2 ){
+	*(session->logfile) << "FIF :: Content modified" << endl;
       }
+    }
   }
 
   // Reset our angle values

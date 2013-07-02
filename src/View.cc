@@ -152,22 +152,22 @@ bool View::viewPortSet() {
 
 unsigned int View::getViewLeft(){
   // Scale up our view to a real pixel value
-  unsigned int l = (unsigned int) (width * view_left);
+  unsigned int l = (unsigned int) round(width * view_left);
   return l;
 }
 
 
 unsigned int View::getViewTop(){
   // Scale up our view to a real pixel value
-  unsigned int t = (unsigned int) (height * view_top );
+  unsigned int t = (unsigned int) round(height * view_top );
   return t;
 }
 
 
 unsigned int View::getViewWidth(){
   // Scale up our viewport, then make sure our size is not too large or too small
-  unsigned int w = (unsigned int) (width * view_width);
-  unsigned int left = (unsigned int) (width * view_left);
+  unsigned int w = (unsigned int) round(width * view_width);
+  unsigned int left = (unsigned int) round(width * view_left);
   if( (w + left) > width ) w = width - left;
   if( w < min_size ) w = min_size;
   return w;
@@ -176,8 +176,8 @@ unsigned int View::getViewWidth(){
 
 unsigned int View::getViewHeight(){
   // Scale up our viewport, then make sure our size is not too large or too small
-  unsigned int h = (unsigned int) (height * view_height);
-  unsigned int top = (unsigned int) (height * view_top );
+  unsigned int h = (unsigned int) round(height * view_height);
+  unsigned int top = (unsigned int) round(height * view_top );
   if( (h + top) > height ) h = height - top;
   if( h < min_size ) h = min_size;
   return h;
