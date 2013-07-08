@@ -92,10 +92,14 @@ AC_SEARCH_LIBS(gzopen, z)
 AC_CHECK_HEADERS( libmemcached/memcached.h,
 	AC_SEARCH_LIBS( memcached_create,
 		memcached,
-		MEMCACHED=true;AC_DEFINE(HAVE_MEMCACHED),
-		MEMCACHED=false )
+		MEMCACHED=true,
+		MEMCACHED=false,
+		-lpthread )
 )
-
+if test "x${MEMCACHED}" = xtrue; then
+	AC_DEFINE(HAVE_MEMCACHED)
+	LIBS="$LIBS -lpthread"
+fi
 #************************************************************
 
 

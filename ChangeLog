@@ -1,3 +1,7 @@
+08/07/2013:
+	- Fix to configure.in for libmemcached configuration problem on Fedora.
+
+
 02/07/2013:
         - Optimizations to FIF.cc. Unnecessary file header reading is now avoided as top
           level IIPImage class cache fully utilized. Cleanup of constructor code of IIPImage,
