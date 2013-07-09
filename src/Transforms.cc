@@ -78,41 +78,55 @@ void filter_shade( RawTile& in, int h_angle, int v_angle, std::vector<float>& ma
       buffer = new unsigned int[in.width*in.height]; }
   else if( in.bpc == 32 && in.sampleType == FLOATINGPOINT )
     { ptr = (float*) in.data;
-      buffer = new float[in.width*in.height]; }
+      buffer = new float[in.width*in.height];
+      for ( int c=0; c<in.channels; c++) {
+        max[c] = 1;
+        min[c] = 0.; }
+    }
 
   unsigned int k = 0;
 
   for( int n=0; n<ndata; n+=3 ){
     if( in.bpc == 8 ) {
       if( ((unsigned char*)ptr)[n] == 0 && ((unsigned char*)ptr)[n+1] == 0 && ((unsigned char*)ptr)[n+2] == 0 ) { o_x = 0; o_y = 0; o_z = 0; }
+      else if( !(std::isfinite(((unsigned char*)ptr)[n])) || !(std::isfinite(((unsigned char*)ptr)[n+1])) || !(std::isfinite(((unsigned char*)ptr)[n+2])) )
+	{ o_x = 0; o_y = 0; o_z = 0; }
       else {
         o_x = (float) - ((float)((unsigned char*)ptr)[n]-(max[0]-min[0])/2) / ((max[0]-min[0])/2);
         o_y = (float) - ((float)((unsigned char*)ptr)[n+1]-(max[1]-min[1])/2) / ((max[1]-min[1])/2);
         o_z = (float) - ((float)((unsigned char*)ptr)[n+2]-(max[2]-min[2])/2) / ((max[2]-min[2])/2); }}
     else if( in.bpc == 16 ) {
       if( ((unsigned short*)ptr)[n] == 0 && ((unsigned short*)ptr)[n+1] == 0 && ((unsigned short*)ptr)[n+2] == 0 ) { o_x = 0; o_y = 0; o_z = 0; }
+      else if( !(std::isfinite(((unsigned short*)ptr)[n])) || !(std::isfinite(((unsigned short*)ptr)[n+1])) || !(std::isfinite(((unsigned short*)ptr)[n+2])) )
+	{ o_x = 0; o_y = 0; o_z = 0; }
       else {
         o_x = (float) - ((float)((unsigned short*)ptr)[n]-(max[0]-min[0])/2) / ((max[0]-min[0])/2);
         o_y = (float) - ((float)((unsigned short*)ptr)[n+1]-(max[1]-min[1])/2) / ((max[1]-min[1])/2);
         o_z = (float) - ((float)((unsigned short*)ptr)[n+2]-(max[2]-min[2])/2) / ((max[2]-min[2])/2); }}
     else if( in.bpc == 32 && in.sampleType == FIXEDPOINT ) {
       if( ((unsigned int*)ptr)[n] == 0 && ((unsigned int*)ptr)[n+1] == 0 && ((unsigned int*)ptr)[n+2] == 0 ) { o_x = 0; o_y = 0; o_z = 0; }
+      else if( !(std::isfinite(((unsigned int*)ptr)[n])) || !(std::isfinite(((unsigned int*)ptr)[n+1])) || !(std::isfinite(((unsigned int*)ptr)[n+2])) )
+	{ o_x = 0; o_y = 0; o_z = 0; }
       else {
         o_x = (float) - ((float)((unsigned int*)ptr)[n]-(max[0]-min[0])/2) / ((max[0]-min[0])/2);
         o_y = (float) - ((float)((unsigned int*)ptr)[n+1]-(max[1]-min[1])/2) / ((max[1]-min[1])/2);
         o_z = (float) - ((float)((unsigned int*)ptr)[n+2]-(max[2]-min[2])/2) / ((max[2]-min[2])/2); }}
     else if( in.bpc == 32 && in.sampleType == FLOATINGPOINT ) {
       if( ((float*)ptr)[n] == 0 && ((float*)ptr)[n+1] == 0 && ((float*)ptr)[n+2] == 0 ) { o_x = 0; o_y = 0; o_z = 0; }
+      else if( !(std::isfinite(((float*)ptr)[n])) || !(std::isfinite(((float*)ptr)[n+1])) || !(std::isfinite(((float*)ptr)[n+2])) )
+	{ o_x = 0; o_y = 0; o_z = 0; }
       else {
         o_x = (float) - ((float)((float*)ptr)[n]-(max[0]-min[0])/2) / ((max[0]-min[0])/2);
         o_y = (float) - ((float)((float*)ptr)[n+1]-(max[1]-min[1])/2) / ((max[1]-min[1])/2);
-        o_z = (float) - ((float)((float*)ptr)[n+2]-(max[2]-min[2])/2) / ((max[2]-min[2])/2); }}
+        o_z = (float) - ((float)((float*)ptr)[n+2]-(max[2]-min[2])/2) / ((max[2]-min[2])/2); }
+    }
 
     float dot_product;
     dot_product = (s_x*o_x) + (s_y*o_y) + (s_z*o_z);
 
-    dot_product = dot_product * max[0];
-    if( dot_product < 0 ) dot_product = 0.0;
+    dot_product = 0.5 * dot_product * (max[0]-min[0]) + min[0];
+    if( dot_product < min[0] ) dot_product = min[0];
+    if( dot_product > max[0] ) dot_product = max[0];
 
     if( in.bpc == 8 ) ((unsigned char*)buffer)[k++] = (unsigned char) dot_product;
     else if( in.bpc == 16 ) ((unsigned short*)buffer)[k++] = (unsigned short) dot_product;
