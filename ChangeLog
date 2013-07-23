@@ -1,5 +1,6 @@
 23/07/2013:
 	- Fix to KakaduImage.cc to enable correct handling of bilevel images.
+	- Fix to quality layer decoding - variables moved directly into IIPImage class
 
 
 08/07/2013:

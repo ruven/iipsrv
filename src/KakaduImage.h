@@ -101,11 +101,8 @@ class KakaduImage : public IIPImage {
   /// Kakadu decompressor object
   kdu_stripe_decompressor decompressor;
 
-  // Tile or Strip region
+  /// Tile or Strip region
   kdu_dims comp_dims;
-
-  // Quality layers
-  unsigned int max_layers;
 
   /// Number of levels that don't physically exist
   unsigned int virtual_levels;

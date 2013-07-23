@@ -45,6 +45,7 @@ IIPImage::IIPImage()
   isFile = false;
   bpp = 0;
   channels = 0;
+  quality_layers = 0;
   isSet = false;
   currentX = 0;
   currentY = 90;
@@ -58,6 +59,7 @@ IIPImage::IIPImage ( const string& p )
   isFile = false;
   bpp = 0;
   channels = 0;
+  quality_layers = 0;
   isSet = false;
   currentX = 0;
   currentY = 90;
@@ -85,6 +87,7 @@ IIPImage::IIPImage( const IIPImage& image )
   bpp = image.bpp;
   channels = image.channels;
   sampleType = image.sampleType;
+  quality_layers = image.quality_layers;
   colourspace = image.colourspace;
   isSet = image.isSet;
   currentX = image.currentX;
@@ -116,6 +119,7 @@ IIPImage& IIPImage::operator = ( const IIPImage& image )
     bpp = image.bpp;
     channels = image.channels;
     sampleType = image.sampleType;
+    quality_layers = image.quality_layers;
     colourspace = image.colourspace;
     isSet = image.isSet;
     currentX = image.currentX;

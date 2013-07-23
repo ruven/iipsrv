@@ -107,6 +107,9 @@ class IIPImage {
   /// The min and max sample value for each channel
   std::vector <float> min, max;
 
+  /// Quality layers
+  unsigned int quality_layers;
+
   /// Indicate whether we have opened and initialised some paramters for this image
   bool isSet;
 

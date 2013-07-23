@@ -201,7 +201,7 @@ void KakaduImage::loadImageInfo( int seq, int ang ) throw(string)
 
   // Get the number of quality layers - must first open a tile, however
   kdu_tile kt = codestream.open_tile(kdu_coords(0,0),NULL);
-  max_layers = codestream.get_max_tile_layers();
+  quality_layers = codestream.get_max_tile_layers();
 #ifdef DEBUG
   string cs;
   switch( j2k_colour.get_space() ){
@@ -221,7 +221,7 @@ void KakaduImage::loadImageInfo( int seq, int ang ) throw(string)
   logfile << "Kakadu :: " << bpp << " bit data" << endl
 	  << "Kakadu :: " << channels << " channels" << endl
 	  << "Kakadu :: colour space: " << cs << endl
-	  << "Kakadu :: " << max_layers << " quality layers detected" << endl;
+	  << "Kakadu :: " << quality_layers << " quality layers detected" << endl;
 #endif
   kt.close();
 
@@ -262,8 +262,10 @@ void KakaduImage::closeImage()
 RawTile KakaduImage::getTile( int seq, int ang, unsigned int res, int layers, unsigned int tile ) throw (string)
 {
 
-  // Scale 1 bit images up to 8 bit
-  unsigned int obpp = (bpp==1)? 8 : bpp;
+  // Scale up our output bit depth to the nearest factor of 8
+  unsigned obpp = bpp;
+  if( bpp <= 16 && bpp > 8 ) obpp = 16;
+  else if( bpp <= 8 ) obpp = 8;
 
 #ifdef DEBUG
   Timer timer;
@@ -347,8 +349,10 @@ RawTile KakaduImage::getTile( int seq, int ang, unsigned int res, int layers, un
 // Get an entire region and not just a tile
 RawTile KakaduImage::getRegion( int seq, int ang, unsigned int res, int layers, int x, int y, unsigned int w, unsigned int h ) throw (string)
 {
-  // Scale 1 bit images up to 8 bit
-  unsigned int obpp = (bpp==1)? 8 : bpp;
+  // Scale up our output bit depth to the nearest factor of 8
+  unsigned int obpp = bpp;
+  if( bpp <= 16 && bpp > 8 ) obpp = 16;
+  else if( bpp <= 8 ) obpp = 8;
 
 #ifdef DEBUG
   Timer timer;
@@ -379,8 +383,10 @@ RawTile KakaduImage::getRegion( int seq, int ang, unsigned int res, int layers, 
 // Main processing function
 void KakaduImage::process( unsigned int res, int layers, int xoffset, int yoffset, unsigned int tw, unsigned int th, void *d ) throw (string)
 {
-  // Scale 1 bit images up to 8 bit
-  unsigned int obpp = (bpp==1)? 8 : bpp;
+  // Scale up our output bit depth to the nearest factor of 8
+  unsigned int obpp = bpp;
+  if( bpp <= 16 && bpp > 8 ) obpp = 16;
+  else if( bpp <= 8 ) obpp = 8;
 
   int vipsres = ( numResolutions - 1 ) - res;
 
@@ -396,8 +402,8 @@ void KakaduImage::process( unsigned int res, int layers, int xoffset, int yoffse
 
   // Set the number of layers to half of the number of detected layers if we have not set the
   // layers parameter manually. If layers is set to less than 0, use all layers.
-  if( layers < 0 ) layers = max_layers;
-  else if( layers == 0 ) layers = ceil( max_layers/2.0 );
+  if( layers < 0 ) layers = quality_layers;
+  else if( layers == 0 ) layers = ceil( quality_layers/2.0 );
 
   // Also make sure we have at least 1 layer
   if( layers < 1 ) layers = 1;
@@ -499,7 +505,7 @@ void KakaduImage::process( unsigned int res, int layers, int xoffset, int yoffse
       decompressor.get_recommended_stripe_heights( comp_dims.size.y,
 						   1024, stripe_heights, NULL );
 
-      if( bpp == 16 ){
+      if( obpp == 16 ){
 	// Set these to false to get unsigned 16 bit values
 	bool s[3] = {false,false,false};
 	continues = decompressor.pull_stripe( (kdu_int16*) stripe_buffer, stripe_heights, NULL, NULL, NULL, NULL, s );
@@ -608,8 +614,8 @@ void KakaduImage::process( unsigned int res, int layers, int xoffset, int yoffse
 // Delete our buffers
 void KakaduImage::delete_buffer( void* buffer ){
   if( buffer ){
-    if( bpp == 16 ) delete[] (kdu_uint16*) buffer;
-    else if( bpp==8 || bpp==1 ) delete[] (kdu_byte*) buffer;
+    if( bpp <= 16 && bpp > 8 ) delete[] (kdu_uint16*) buffer;
+    else if( bpp<=8 ) delete[] (kdu_byte*) buffer;
   }
 
 
