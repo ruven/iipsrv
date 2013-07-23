@@ -1,3 +1,7 @@
+23/07/2013:
+	- Fix to KakaduImage.cc to enable correct handling of bilevel images.
+
+
 08/07/2013:
 	- Fix to configure.in for libmemcached configuration problem on Fedora.
 
