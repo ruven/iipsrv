@@ -114,11 +114,11 @@ void SPECTRA::run( Session* session, const std::string& argument ){
     // Handle depending on bit depth
     if( rawtile.bpc == 8 ){
       ptr = (unsigned char*) (rawtile.data);
-      reflectance = static_cast<float>((float)((unsigned char*)ptr)[index]);
+      reflectance = static_cast<float>((float)((unsigned char*)ptr)[index]) / 255.0;
     }
     else if( rawtile.bpc == 16 ){
       ptr = (unsigned short*) (rawtile.data);
-      reflectance = static_cast<float>((float)((unsigned short*)ptr)[index]);
+      reflectance = static_cast<float>((float)((unsigned short*)ptr)[index]) / 65535.0;
     }
     else if( rawtile.bpc == 32 ){
       if( rawtile.sampleType == FIXEDPOINT ) {

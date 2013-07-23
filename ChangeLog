@@ -1,6 +1,7 @@
 23/07/2013:
 	- Fix to KakaduImage.cc to enable correct handling of bilevel images.
 	- Fix to quality layer decoding - variables moved directly into IIPImage class
+	- Scaling of 8 and 16 bit spectral data to normalized 0.0->1.0 float in SPECTRA.cc
 
 
 08/07/2013:
