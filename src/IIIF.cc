@@ -111,6 +111,8 @@ void IIIF::run( Session* session, const std::string& argument ){
   if( !errorNo ){
     // Load image info
     (*session->image)->loadImageInfo( session->view->xangle, session->view->yangle );
+    //SOLVE IDENTIFIER PARAMETER - throw away url encoding
+    filename = (*session->image)->getImagePath();
 
     // Get the information about image, that can be shown in info.xml or json
     width = (*session->image)->getImageWidth();
@@ -144,9 +146,6 @@ void IIIF::run( Session* session, const std::string& argument ){
     int numOfTokens = 0;
     //conversionChecker to detect failure of conversion from string to int or double
     char * conversionChecker;
-
-    //SOLVE IDENTIFIER PARAMETER - throw away url encoding
-    filename = (*session->image)->getImagePath();
 
     //SOLVE REGION PARAMETER (full; x,y,w,h; pct:x,y,w,h)
     if( !errorNo && izer.hasMoreTokens() ) {
@@ -566,13 +565,13 @@ void IIIF::run( Session* session, const std::string& argument ){
     else{
       statusMsg = "Not implemented";//501
     }
-    char str[1024];
+    char str[2048];
     string errorXmlRespond = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
       "<error xmlns=\"http://library.stanford.edu/iiif/image-api/ns/\">\n"
       "<parameter>" + errorParam + "</parameter>\n"
       "<text>" + errorMsg + "</text>\n"
       "</error>";
-    snprintf( str, 1024,
+    snprintf( str, 2048,
       "Server: iipsrv/%s\r\n"
       "Cache-Control: no-cache\r\n"
       "Content-Type: text/xml\r\n"//specification specifically requires text/xml (not application/xml)
@@ -605,10 +604,35 @@ void IIIF::run( Session* session, const std::string& argument ){
 
   // INFO.XML OUPUT
   if( suffix == "info.xml" ){
+    // XML encoding of filename
+    string escapedFilename = "";
+    for (int i = 0; i < filename.length(); i++){
+      char c = filename[i];
+      switch(c){
+        case '&':
+          escapedFilename += "&#38;";
+          break;
+        case '<':
+          escapedFilename += "&#60;";
+          break;
+        case '>':
+          escapedFilename += "&#62;";
+          break;
+        case '"':
+          escapedFilename += "&#34;";
+          break;
+        case '\'':
+          escapedFilename += "&#39;";
+          break;
+        default:
+          escapedFilename += c;
+      }
+    }
+
     std::stringstream xmlStringStream;
     xmlStringStream << "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" << endl;
     xmlStringStream << "<info xmlns=\"http://library.stanford.edu/iiif/image-api/ns/\">" << endl;
-    xmlStringStream << "<identifier>" << filename << "</identifier>" << endl;
+    xmlStringStream << "<identifier>" << escapedFilename << "</identifier>" << endl;
     xmlStringStream << "<width>" << width << "</width>" << endl;
     xmlStringStream << "<height>" << height << "</height>" << endl;
     xmlStringStream << "<scale_factors>" << endl;
@@ -628,8 +652,8 @@ void IIIF::run( Session* session, const std::string& argument ){
     xmlStringStream << "<profile>http://library.stanford.edu/iiif/image-api/compliance.html#level1</profile>" << endl;
     xmlStringStream << "</info>";
 
-    char str[1024];
-    snprintf( str, 1024,
+    char str[2048];
+    snprintf( str, 2048,
       "Server: iipsrv/%s\r\n"
       "Content-Type: application/xml\r\n"
       "Cache-Control: max-age=%d\r\n"
@@ -644,12 +668,28 @@ void IIIF::run( Session* session, const std::string& argument ){
   }
   // INFO.JSON OUTPUT
   else if( suffix.substr(0,9) == "info.json" ){
+    // JSON encoding of filename
+    string escapedFilename = "";
+    for (int i = 0; i < filename.length(); i++){
+      char c = filename[i];
+      switch(c){
+        case '\\':
+          escapedFilename += "\\\\";
+          break;
+        case '"':
+          escapedFilename += "\\\"";
+          break;
+        default:
+          escapedFilename += c;
+      }
+    }
+
     std::stringstream jsonStringStream;
     if( suffix.length() > 19 ){
       jsonStringStream << suffix.substr(19,string::npos) << "(";
     }
     jsonStringStream << "{" << endl;
-    jsonStringStream << "\"identifier\" : \"" << filename << "\"," << endl;
+    jsonStringStream << "\"identifier\" : \"" << escapedFilename << "\"," << endl;
     jsonStringStream << "\"width\" : " << width << "," << endl;
     jsonStringStream << "\"height\" : " << height << "," << endl;
     //sf 1 is always present, it is original image
@@ -672,8 +712,8 @@ void IIIF::run( Session* session, const std::string& argument ){
     if( suffix.length() > 19 )  jsonMime = "javascript";
     else jsonMime = "json";
 
-    char str[1024];
-    snprintf( str, 1024,
+    char str[2048];
+    snprintf( str, 2048,
       "Server: iipsrv/%s\r\n"
       "Content-Type: application/%s\r\n"
       "Cache-Control: max-age=%d\r\n"
@@ -800,8 +840,8 @@ void IIIF::run( Session* session, const std::string& argument ){
     int pos = filename.rfind(separator)+1;
     string basename = filename.substr( pos, filename.rfind(".")-pos );
 
-    char str[1024];
-    snprintf( str, 1024,
+    char str[2048];
+    snprintf( str, 2048,
       "Server: iipsrv/%s\r\n"
       "Cache-Control: max-age=%d\r\n"
       "Last-Modified: %s\r\n"
