@@ -241,7 +241,8 @@ void FIF::run( Session* session, const string& src ){
 
     if( session->loglevel >= 2 ){
       *(session->logfile) << "FIF :: Image dimensions are " << (*session->image)->getImageWidth()
-			  << " x " << (*session->image)->getImageHeight() << endl;
+			  << " x " << (*session->image)->getImageHeight() << endl
+			  << "FIF :: Image bit depth: " << (*session->image)->bpp << " bits per pixel" << endl;
       tm *t = gmtime( &(*session->image)->timestamp );
       char strt[64];
       strftime( strt, 64, "%a, %d %b %Y %H:%M:%S GMT", t );

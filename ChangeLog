@@ -1,3 +1,8 @@
+31/07/2013:
+	- Fix to JTL.cc and TPTImage.cc for multispectral sequences consisting of images of
+	  different bit depths.
+
+
 23/07/2013:
 	- Fix to KakaduImage.cc to enable correct handling of bilevel images.
 	- Fix to quality layer decoding - variables moved directly into IIPImage class

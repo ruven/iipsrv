@@ -69,17 +69,8 @@ void TPTImage::loadImageInfo( int seq, int ang ) throw(string)
   string filename;
   char *tmp = NULL;
 
-  // If we are currently working on a different sequence number, then
-  //  close and reload the image.
-  if( (currentX != seq) || (currentY != ang) ){
-    closeImage();
-    filename = getFileName( seq, ang );
-    if( ( tiff = TIFFOpen( filename.c_str(), "r" ) ) == NULL ){
-      throw string( "tiff open failed for:" + filename );
-    }
-    currentX = seq;
-    currentY = ang;
-  }
+  currentX = seq;
+  currentY = ang;
 
   // Get the tile and image sizes
   TIFFGetField( tiff, TIFFTAG_TILEWIDTH, &tile_width );
@@ -119,13 +110,13 @@ void TPTImage::loadImageInfo( int seq, int ang ) throw(string)
   if( colour == PHOTOMETRIC_CIELAB ) colourspace = CIELAB;
   else if( colour == PHOTOMETRIC_MINISBLACK ) colourspace = GREYSCALE;
   else if( colour == PHOTOMETRIC_PALETTE ){
-    // Watch out for colourmapped images. There are stored as 1 sample per pixel,
+    // Watch out for colourmapped images. These are stored as 1 sample per pixel,
     // but are decoded to 3 channels by libtiff, so declare them as sRGB
     colourspace = sRGB;
     channels = 3;
   }
   else if( colour == PHOTOMETRIC_YCBCR ){
-    // JPEG encoded tiles can be subsampled YCbCr encoded. Ask to decode of these to RGB
+    // JPEG encoded tiles can be subsampled YCbCr encoded. Ask to decode these to RGB
     TIFFSetField( tiff, TIFFTAG_JPEGCOLORMODE, JPEGCOLORMODE_RGB );
     colourspace = sRGB;
   }
@@ -134,8 +125,11 @@ void TPTImage::loadImageInfo( int seq, int ang ) throw(string)
   // Get the max and min values for our data type - required for floats
   TIFFGetFieldDefaulted( tiff, TIFFTAG_SMINSAMPLEVALUE, sminvalue );
   TIFFGetFieldDefaulted( tiff, TIFFTAG_SMAXSAMPLEVALUE, smaxvalue );
+  min.clear();
+  max.clear();
   for( int i=0; i<channels; i++ ){
     if( (float)smaxvalue[i] == 0.0 ){
+      sminvalue[i] = 0.0;
       // Set default values if values not included in header
       if( bpp == 8 ) smaxvalue[i] = 255.0;
       else if( bpp == 16 ) smaxvalue[i] = 65535.0;
@@ -203,7 +197,7 @@ RawTile TPTImage::getTile( int seq, int ang, unsigned int res, int layers, unsig
 
   // Reload our image information in case the tile size etc is different
   if( (currentX != seq) || (currentY != ang) ){
-    loadImageInfo( currentX, currentY );
+    loadImageInfo( seq, ang );
   }
 
 
