@@ -1,3 +1,8 @@
+06/08/2013:
+	- Moved setenv/unsetenv function definitions to Main.cc where they are now needed following
+	  movement of timezone setting code there.
+
+
 31/07/2013:
 	- Fix to JTL.cc and TPTImage.cc for multispectral sequences consisting of images of
 	  different bit depths.

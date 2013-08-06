@@ -56,7 +56,23 @@
 #endif
 
 
-
+// If necessary, define missing setenv and unsetenv functions
+#ifndef HAVE_SETENV
+static void setenv(char *n, char *v, int x) {
+  char buf[256];
+  snprintf(buf,sizeof(buf),"%s=%s",n,v);
+  putenv(buf);
+}
+static void unsetenv(char *env_name) {
+  extern char **environ;
+  char **cc;
+  int l;
+  l=strlen(env_name);
+  for (cc=environ;*cc!=NULL;cc++) {
+    if (strncmp(env_name,*cc,l)==0 && ((*cc)[l]=='='||(*cc)[l]=='\0')) break;
+  } for (; *cc != NULL; cc++) *cc=cc[1];
+}
+#endif
 
 
 //#define DEBUG 1
