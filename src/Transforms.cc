@@ -246,7 +246,8 @@ void filter_LAB2sRGB( RawTile& in ){
 
   // Parallelize code using OpenMP
 #pragma omp parallel for
-  for( unsigned long n=0; n<np; n+=in.channels ){
+  unsigned int nstep = in.channels;
+  for( unsigned long n=0; n<np; n+=nstep ){
     unsigned char* ptr = (unsigned char*) in.data;
     unsigned char q[3];
     LAB2sRGB( &ptr[n], &q[0] );

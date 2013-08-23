@@ -38,6 +38,7 @@ void JTL::run( Session* session, const std::string& argument ){
   session = session;
 
   int resolution, tile;
+  Timer function_timer;
 
 
   // Time this command
@@ -108,16 +109,15 @@ void JTL::run( Session* session, const std::string& argument ){
   // Convert CIELAB to sRGB
   if( (*session->image)->getColourSpace() == CIELAB ){
 
-    Timer cielab_timer;
     if( session->loglevel >= 4 ){
       *(session->logfile) << "JTL :: Converting from CIELAB->sRGB" << endl;
-      cielab_timer.start();
+      function_timer.start();
     }
 
     filter_LAB2sRGB( rawtile );
 
     if( session->loglevel >= 4 ){
-      *(session->logfile) << "JTL :: CIELAB->sRGB conversion in " << cielab_timer.getTime() << " microseconds" << endl;
+      *(session->logfile) << "JTL :: CIELAB->sRGB conversion in " << function_timer.getTime() << " microseconds" << endl;
     }
   }
 
@@ -145,8 +145,12 @@ void JTL::run( Session* session, const std::string& argument ){
     float gamma = session->view->getGamma();
     if( session->loglevel >= 3 ){
       *(session->logfile) << "JTL :: Applying gamma of " << gamma << endl;
+      function_timer.start();
     }
     filter_gamma( rawtile, gamma, (*session->image)->max, (*session->image)->min );
+    if( session->loglevel >= 3 ){
+      *(session->logfile) << "JTL :: Gamma applied in " << function_timer.getTime() << " microseconds" << endl;
+    }
   }
 
 
@@ -154,8 +158,12 @@ void JTL::run( Session* session, const std::string& argument ){
   float contrast = session->view->getContrast();
   if( session->loglevel >= 3 ){
     *(session->logfile) << "JTL :: Applying contrast of " << contrast << endl;
+    function_timer.start();
   }
   filter_contrast( rawtile, contrast, (*session->image)->max, (*session->image)->min );
+  if( session->loglevel >= 3 ){
+    *(session->logfile) << "JTL :: Conversion to 8 bit applied in " << function_timer.getTime() << " microseconds" << endl;
+  }
 
 
   // Convert to greyscale if requested
