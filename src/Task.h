@@ -305,6 +305,13 @@ class SPECTRA : public Task {
 };
 
 
+/// SPECTRA Request Command
+class PFL : public Task {
+ public:
+  void run( Session* session, const std::string& argument );
+};
+
+
 /// Quality Layers Command
 class LYR : public Task {
  public:
@@ -314,6 +321,13 @@ class LYR : public Task {
 
 /// DeepZoom Request Command
 class DeepZoom : public Task {
+ public:
+  void run( Session* session, const std::string& argument );
+};
+
+
+/// IIIF Request Command
+class IIIF : public Task {
  public:
   void run( Session* session, const std::string& argument );
 };

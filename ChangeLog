@@ -1,3 +1,8 @@
+28/08/2013:
+	- Added PFL command for obtaining raw X profiles of data. Syntax
+	  is <resolution>:<x1>,<y1>-<x2>,<y2>. Only horizontal profiles are supported so far.
+
+
 23/08/2013:
 	- Fix to OpenMP code in Transform.cc for compatibility with Intel compiler - thanks
 	  Emmanuel Bertin.
