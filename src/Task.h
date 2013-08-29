@@ -325,12 +325,4 @@ class DeepZoom : public Task {
   void run( Session* session, const std::string& argument );
 };
 
-
-/// IIIF Request Command
-class IIIF : public Task {
- public:
-  void run( Session* session, const std::string& argument );
-};
-
-
 #endif
