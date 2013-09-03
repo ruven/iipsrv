@@ -1,3 +1,7 @@
+03/09/2013:
+	- Updated PFL command to also handle multi-spectral data.
+
+
 02/09/2013:
 	- Modified PFL command to use JSON and implemented vertical profiles.
 

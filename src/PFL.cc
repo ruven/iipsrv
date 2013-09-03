@@ -93,52 +93,86 @@ void PFL::run( Session* session, const std::string& argument ){
     width = 1;
     height = 1;
   }
+  unsigned long length = width * height;
 
 
   // Create our tilemanager object
   TileManager tilemanager( session->tileCache, *session->image, session->watermark, session->jpeg, session->logfile, session->loglevel );
 
-  // Get the region of data for this line profile
-  RawTile rawtile = tilemanager.getRegion( resolution, session->view->xangle, session->view->yangle, session->view->getLayers(), x1, y1, width, height );
+
+  // Use our horizontal views function to get a list of available spectral images
+  list <int> views = (*session->image)->getHorizontalViewsList();
+  list <int> :: const_iterator i;
+  unsigned int n = views.size();
 
 
   // Put the results into a string stream
-  std::ostringstream profile;
+  ostringstream profile;
   profile.precision(6);
 
-  // Loop through our pixels
-  for( unsigned int i=0; i<width*height; i++ ){
+  // Insert our opening braces
+  profile << "{\n\t\"profile\": ";
+  if( n > 1 ) profile << "{\n";
 
-    float intensity;
-    void *ptr;
+  unsigned int k = 0;
 
-    // Handle depending on bit depth
-    if( rawtile.bpc == 8 ){
-      ptr = (unsigned char*) (rawtile.data);
-      intensity = (float)((unsigned char*)ptr)[i];
-    }
-    else if( rawtile.bpc == 16 ){
-      ptr = (unsigned short*) (rawtile.data);
-      intensity = (float)((unsigned short*)ptr)[i];
-    }
-    else if( rawtile.bpc == 32 ){
-      if( rawtile.sampleType == FIXEDPOINT ) {
-        ptr = (unsigned int*) rawtile.data;
-        intensity = (float)((unsigned int*)ptr)[i];
+  // Loop through our spectral bands
+  for( i = views.begin(); i != views.end(); i++ ){
+
+    int wavelength = *i;
+
+    // Add our opening brackets and prefix with the wavelenth if we have multi-spectral data
+    if( n > 1 ) profile << "\t\t" << wavelength << ": ";
+    profile << "[";
+
+    // Get the region of data for this wavelength and line profile
+    RawTile rawtile = tilemanager.getRegion( resolution, wavelength, session->view->yangle, session->view->getLayers(), x1, y1, width, height );
+
+
+    // Loop through our pixels
+    for( unsigned int j=0; j<length; j++ ){
+
+      float intensity;
+      void *ptr;
+
+      // Handle depending on bit depth
+      if( rawtile.bpc == 8 ){
+	ptr = (unsigned char*) (rawtile.data);
+	intensity = (float)((unsigned char*)ptr)[j];
       }
-      else{
-        ptr = (float*) rawtile.data;
-        intensity = (float)((float*)ptr)[i];
+      else if( rawtile.bpc == 16 ){
+	ptr = (unsigned short*) (rawtile.data);
+	intensity = (float)((unsigned short*)ptr)[j];
       }
+      else if( rawtile.bpc == 32 ){
+	if( rawtile.sampleType == FIXEDPOINT ){
+	  ptr = (unsigned int*) rawtile.data;
+	  intensity = (float)((unsigned int*)ptr)[j];
+	}
+	else{
+	  ptr = (float*) rawtile.data;
+	  intensity = (float)((float*)ptr)[j];
+	}
+      }
+
+      if( rawtile.sampleType == FLOATINGPOINT ) profile << fixed;
+      profile << intensity;
+      if( j < length-1 ) profile << ",";
+
     }
 
-    if( rawtile.sampleType == FLOATINGPOINT ) profile << fixed;
-    profile << intensity;
-    if( i < width-1 ) profile << ",";
+    // Don't add trailing commas to the final sequence
+    if( k++ < n-1 ) profile << "],\n";
+    else profile << "]\n";
 
   }
 
+  // Add our closing braces
+  if( n > 1 ) profile << "\t}\n";
+  profile << "}";
 
+
+  // Send out our JSON header
 #ifndef DEBUG
   char str[1024];
   snprintf( str, 1024,
@@ -153,17 +187,13 @@ void PFL::run( Session* session, const std::string& argument ){
   session->out->flush();
 #endif
 
-  // Send out as JSON
-  session->out->printf( "{\n\t\"profile\": [" );
+  // Send the data itself
   session->out->printf( profile.str().c_str() );
-  session->out->printf( "]\n}" );
   session->out->flush();
-
-  if( session->loglevel >= 5 ) (*session->logfile) << "PFL :: " << profile.str().c_str() << endl;
 
   if( session->out->flush() == -1 ) {
     if( session->loglevel >= 1 ){
-      *(session->logfile) << "PFL :: Error flushing jpeg tile" << endl;
+      *(session->logfile) << "PFL :: Error flushing JSON" << endl;
     }
   }
 
