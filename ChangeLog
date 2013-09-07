@@ -1,3 +1,8 @@
+07/09/2013:
+	- Modified PFL to handle single points as well as profiles. Thus syntax for single
+	  points: PFL=<resolution>:<x>,<y> and for profiles PFL=<resolution>:<x1>,<y1>-<x2>,<y2>
+
+
 03/09/2013:
 	- Updated PFL command to also handle multi-spectral data.
 

@@ -58,12 +58,20 @@ void PFL::run( Session* session, const std::string& argument ){
   delimitter = arg.find( "-" );
   y1 = atoi( arg.substr(0,delimitter).c_str() );
 
-  arg = arg.substr( delimitter + 1, arg.length() );
-  delimitter = arg.find( "," );
-  x2 = atoi( arg.substr(0,delimitter).c_str() );
+  if( delimitter == -1 ){
+    (*session->logfile) << "PFL :: Single point requested" << endl;
+    x2 = x1;
+    y2 = y1;
+  }
+  else{
+    arg = arg.substr( delimitter + 1, arg.length() );
+    delimitter = arg.find( "," );
+    x2 = atoi( arg.substr(0,delimitter).c_str() );
 
-  arg = arg.substr( delimitter + 1, arg.length() );
-  y2 = atoi( arg.substr(0,arg.length()).c_str() );
+    arg = arg.substr( delimitter + 1, arg.length() );
+    y2 = atoi( arg.substr(0,arg.length()).c_str() );
+  }
+
 
   if( session->loglevel >= 5 ){ 
     (*session->logfile) << "PFL :: Resolution: " << resolution
