@@ -121,16 +121,6 @@ void JTL::run( Session* session, const std::string& argument ){
     }
   }
 
-
-  // Apply color mapping if requested
-  if( session->view->cmapped ){
-    if( session->loglevel >= 3 ){
-      *(session->logfile) << "JTL :: Applying color map" << endl;
-    }
-    filter_cmap( rawtile, session->view->cmap, (*session->image)->max[0], (*session->image)->min[0] );
-  }
-
-
   // Apply hill shading if requested
   if( session->view->shaded ){
     if( session->loglevel >= 3 ){
@@ -138,7 +128,6 @@ void JTL::run( Session* session, const std::string& argument ){
     }
     filter_shade( rawtile, session->view->shade[0], session->view->shade[1], (*session->image)->max, (*session->image)->min );
   }
-
 
   // Apply any gamma correction
   if( session->view->getGamma() != 1.0 ){
@@ -153,6 +142,13 @@ void JTL::run( Session* session, const std::string& argument ){
     }
   }
 
+  // Apply color mapping if requested
+  if( session->view->cmapped ){
+    if( session->loglevel >= 3 ){
+      *(session->logfile) << "JTL :: Applying color map" << endl;
+    }
+    filter_cmap( rawtile, session->view->cmap, (*session->image)->max[0], (*session->image)->min[0] );
+  }
 
   // Apply any contrast adjustments and/or clipping to 8bit from 16 or 32 bit
   float contrast = session->view->getContrast();

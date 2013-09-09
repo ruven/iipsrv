@@ -344,9 +344,7 @@ void filter_cmap( RawTile& in, enum cmap_type cmap, float max, float min ){
       else {outv[0]=outv[1]=outv[2]=1.;}
         break;
     case JET:
-      if(value>1.)
-        { outv[0]=outv[1]=outv[2]=1.; }
-      else if(value<=0)
+      if(value<=0)
         { outv[0]=outv[1]=outv[2]=0.; }
       else if(value<max4)
         { outv[0]=outv[1]=0.; outv[2]=(c1+(1.-c1)*value/max4); }
@@ -355,7 +353,7 @@ void filter_cmap( RawTile& in, enum cmap_type cmap, float max, float min ){
       else if(value<3*max4)
         { outv[0]=(value-2*max4)/max4; outv[1]=1.; outv[2]=1.-outv[0]; }
       else if(value<1.)
-        { outv[0]=1.; outv[1]=(1-(value-3*max4)/max4); outv[2]=0.; }
+        { outv[0]=1.; outv[1]=(1-(value-3*max4)/max4); outv[2]=1.; }
       else { outv[0]=1.; outv[1]=outv[2]=0.; }
         break;
     case BLUE:
