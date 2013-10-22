@@ -78,13 +78,13 @@ void JTL::run( Session* session, const std::string& argument ){
     throw error.str();
   }
 
-
   TileManager tilemanager( session->tileCache, *session->image, session->watermark, session->jpeg, session->logfile, session->loglevel );
 
   CompressionType ct;
   if( (*session->image)->getNumBitsPerPixel() > 8 ) ct = UNCOMPRESSED;
   else if( (*session->image)->getColourSpace() == CIELAB ) ct = UNCOMPRESSED;
   else if( session->view->getContrast() != 1.0 ) ct = UNCOMPRESSED;
+  else if( session->view->getGamma() != 1.0 ) ct = UNCOMPRESSED;
   else if( session->view->getRotation() != 0.0 ) ct = UNCOMPRESSED;
   else if( session->view->shaded ) ct = UNCOMPRESSED;
   else ct = JPEG;
@@ -121,12 +121,19 @@ void JTL::run( Session* session, const std::string& argument ){
     }
   }
 
+  // Apply normalization and float conversion
+  if( session->loglevel >= 3 ){
+    *(session->logfile) << "JTL :: Normalizing and converting to float" << endl;
+  }
+
+  filter_normalize( rawtile, (*session->image)->max, (*session->image)->min );
+
   // Apply hill shading if requested
   if( session->view->shaded ){
     if( session->loglevel >= 3 ){
       *(session->logfile) << "JTL :: Applying hill-shading" << endl;
     }
-    filter_shade( rawtile, session->view->shade[0], session->view->shade[1], (*session->image)->max, (*session->image)->min );
+    filter_shade( rawtile, session->view->shade[0], session->view->shade[1] );
   }
 
   // Apply any gamma correction
@@ -136,7 +143,7 @@ void JTL::run( Session* session, const std::string& argument ){
       *(session->logfile) << "JTL :: Applying gamma of " << gamma << endl;
       function_timer.start();
     }
-    filter_gamma( rawtile, gamma, (*session->image)->max, (*session->image)->min );
+    filter_gamma( rawtile, gamma);
     if( session->loglevel >= 3 ){
       *(session->logfile) << "JTL :: Gamma applied in " << function_timer.getTime() << " microseconds" << endl;
     }
@@ -147,7 +154,7 @@ void JTL::run( Session* session, const std::string& argument ){
     if( session->loglevel >= 3 ){
       *(session->logfile) << "JTL :: Applying color map" << endl;
     }
-    filter_cmap( rawtile, session->view->cmap, (*session->image)->max[0], (*session->image)->min[0] );
+    filter_cmap( rawtile, session->view->cmap );
   }
 
   // Apply any contrast adjustments and/or clipping to 8bit from 16 or 32 bit
@@ -156,7 +163,7 @@ void JTL::run( Session* session, const std::string& argument ){
     *(session->logfile) << "JTL :: Applying contrast of " << contrast << endl;
     function_timer.start();
   }
-  filter_contrast( rawtile, contrast, (*session->image)->max, (*session->image)->min );
+  filter_contrast( rawtile, contrast );
   if( session->loglevel >= 3 ){
     *(session->logfile) << "JTL :: Conversion to 8 bit applied in " << function_timer.getTime() << " microseconds" << endl;
   }

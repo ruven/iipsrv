@@ -25,6 +25,13 @@
 #include <vector>
 #include "RawTile.h"
 
+/// Function to create normalized array
+/** @param in tile data to be adjusted
+    @param min : vector of minima
+    @param max : vector of maxima
+*/
+void filter_normalize( RawTile& in, std::vector<float>& max, std::vector<float>& min );
+
 /// Function to apply colormap to gray images
 ///   based on the routine colormap.cpp in Imagin Raytracer by Olivier Ferrand
 ///   http://www.imagin-raytracer.org
@@ -32,7 +39,7 @@
     @param cmap color map to apply.
 */
 enum cmap_type { HOT, COLD, JET, BLUE, GREEN, RED };
-void filter_cmap( RawTile& in, enum cmap_type cmap, float max, float min );
+void filter_cmap( RawTile& in, enum cmap_type cmap );
 
 
 /// Hillshading function to simulate raking light images
@@ -40,7 +47,7 @@ void filter_cmap( RawTile& in, enum cmap_type cmap, float max, float min );
     @param h_angle angle in the horizontal plane from  12 o'clock in degrees
     @param v_angle angle in the vertical plane in degrees. 0 is flat, 90 pointing directly down.
 */
-void filter_shade( RawTile& in, int h_angle, int v_angle, std::vector<float>& max, std::vector<float>& min );
+void filter_shade( RawTile& in, int h_angle, int v_angle );
 
 
 /// Convert from CIELAB to sRGB colour space
@@ -52,16 +59,14 @@ void filter_LAB2sRGB( RawTile& in );
 /** @param in tile data to be adjusted
     @param c contrast value
 */
-void filter_contrast( RawTile& in, float c, std::vector<float>& max, std::vector<float>& min );
+void filter_contrast( RawTile& in, float c );
 
 
 /// Apply a gamma correction
 /** @param in tile input data
     @param g gamma
-    @param max list of max values
-    @param min list of min values
 */
-void filter_gamma( RawTile& in, float g, std::vector<float>& max, std::vector<float>& min );
+void filter_gamma( RawTile& in, float g );
 
 
 /// Resize image using nearest neighbour interpolation
