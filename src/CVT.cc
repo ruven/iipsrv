@@ -201,26 +201,36 @@ void CVT::run( Session* session, const std::string& a ){
       }
     }
 
-
-    // Apply color mapping if requested
-    if( session->view->cmapped ){
-      if( session->loglevel >= 3 ){
-	*(session->logfile) << "CVT :: Applying color map" << endl;
-      }
-      filter_cmap( complete_image, session->view->cmap, (*session->image)->max[0], (*session->image)->min[0]);
-      // Don't forget to reset our channels variable as this is used later
-      channels = 3;
-    }
-
+    // Apply normalization and float conversion
+    filter_normalize( complete_image, (*session->image)->max, (*session->image)->min );
 
     // Apply hill shading if requested
     if( session->view->shaded ){
       if( session->loglevel >= 3 ){
 	*(session->logfile) << "CVT :: Applying hill-shading" << endl;
       }
-      filter_shade( complete_image, session->view->shade[0], session->view->shade[1], (*session->image)->max, (*session->image)->min );
+      filter_shade( complete_image, session->view->shade[0], session->view->shade[1] );
       // Don't forget to reset our channels variable as hill shades are greyscale and this variable is used later
       channels = 1;
+    }
+
+    // Apply any gamma correction
+    if( session->view->getGamma() != 1.0 ){
+      float gamma = session->view->getGamma();
+      if( session->loglevel >= 3 ){
+        *(session->logfile) << "CVT :: Applying gamma of " << gamma << endl; 
+      }
+      filter_gamma( complete_image, gamma );
+    }
+
+    // Apply color mapping if requested
+    if( session->view->cmapped ){
+      if( session->loglevel >= 3 ){
+	*(session->logfile) << "CVT :: Applying color map" << endl;
+      }
+      filter_cmap( complete_image, session->view->cmap );
+      // Don't forget to reset our channels variable as this is used later
+      channels = 3;
     }
 
 
@@ -249,19 +259,8 @@ void CVT::run( Session* session, const std::string& a ){
       }
     }
 
-
-    // Apply any gamma correction
-    if( session->view->getGamma() != 1.0 ){
-      float gamma = session->view->getGamma();
-      if( session->loglevel >= 3 ){
-        *(session->logfile) << "CVT :: Applying gamma of " << gamma << endl; 
-      }
-      filter_gamma( complete_image, gamma, (*session->image)->max, (*session->image)->min );
-    }
-
-
     // Apply any contrast adjustments and/or clipping to 8bit from 16bit or 32bit
-    filter_contrast( complete_image, session->view->getContrast(), (*session->image)->max, (*session->image)->min );
+    filter_contrast( complete_image, session->view->getContrast() );
 
 
     // Convert to greyscale if requested

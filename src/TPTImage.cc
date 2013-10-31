@@ -64,7 +64,8 @@ void TPTImage::loadImageInfo( int seq, int ang ) throw(string)
   tdir_t current_dir;
   int count;
   uint16 colour, samplesperpixel, bitspersample, sampleformat;
-  double sminvalue[4], smaxvalue[4];
+  double sminvalue[4] = {0.0};
+  double smaxvalue[4] = {0.0};
   unsigned int w, h;
   string filename;
   char *tmp = NULL;

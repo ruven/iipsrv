@@ -194,9 +194,11 @@ void Zoomify::run( Session* session, const std::string& argument ){
     }
   }
 
+  // Apply normalization and float conversion
+  filter_normalize( rawtile, (*session->image)->max, (*session->image)->min );
 
-  // Apply any contrast adjustments and/or clipping to 8bit from 16bit
-  filter_contrast( rawtile, session->view->getContrast(), (*session->image)->max, (*session->image)->min );
+  // Apply any contrast adjustments and/or clipping to 8bit
+  filter_contrast( rawtile, session->view->getContrast() );
 
 
   // Compress to JPEG
