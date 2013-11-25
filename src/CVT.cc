@@ -223,6 +223,14 @@ void CVT::run( Session* session, const std::string& a ){
       filter_gamma( complete_image, gamma );
     }
 
+    // Apply inversion if requested
+    if( session->view->inverted ){
+      if( session->loglevel >= 3 ){
+	*(session->logfile) << "CVT :: Applying inversion" << endl;
+      }
+      filter_inv( complete_image );
+    }
+
     // Apply color mapping if requested
     if( session->view->cmapped ){
       if( session->loglevel >= 3 ){
@@ -232,7 +240,6 @@ void CVT::run( Session* session, const std::string& a ){
       // Don't forget to reset our channels variable as this is used later
       channels = 3;
     }
-
 
     // Resize our image as requested. Use the interpolation method requested in the server configuration.
     //  - Use bilinear interpolation by default

@@ -87,6 +87,8 @@ void JTL::run( Session* session, const std::string& argument ){
   else if( session->view->getGamma() != 1.0 ) ct = UNCOMPRESSED;
   else if( session->view->getRotation() != 0.0 ) ct = UNCOMPRESSED;
   else if( session->view->shaded ) ct = UNCOMPRESSED;
+  else if( session->view->cmapped ) ct = UNCOMPRESSED;
+  else if( session->view->inverted ) ct = UNCOMPRESSED;
   else ct = JPEG;
 
   RawTile rawtile = tilemanager.getTile( resolution, tile, session->view->xangle,
@@ -147,6 +149,14 @@ void JTL::run( Session* session, const std::string& argument ){
     if( session->loglevel >= 3 ){
       *(session->logfile) << "JTL :: Gamma applied in " << function_timer.getTime() << " microseconds" << endl;
     }
+  }
+
+  // Apply inversion if requested
+  if( session->view->inverted ){
+    if( session->loglevel >= 3 ){
+      *(session->logfile) << "JTL :: Applying inversion" << endl;
+    }
+    filter_inv( rawtile );
   }
 
   // Apply color mapping if requested

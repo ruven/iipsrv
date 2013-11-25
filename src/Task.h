@@ -291,6 +291,12 @@ class CMP : public Task {
   void run( Session* session, const std::string& argument );
 };
 
+/// Inversion Command
+class INV : public Task {
+ public:
+  void run( Session* session, const std::string& argument );
+};
+
 /// Zoomify Request Command
 class Zoomify : public Task {
  public:

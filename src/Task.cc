@@ -56,6 +56,7 @@ Task* Task::factory( const string& t ){
   else if( type == "cvt" ) return new CVT;
   else if( type == "shd" ) return new SHD;
   else if( type == "cmp" ) return new CMP;
+  else if( type == "inv" ) return new INV;
   else if( type == "zoomify" ) return new Zoomify;
   else if( type == "spectra" ) return new SPECTRA;
   else if( type == "pfl" ) return new PFL;
@@ -323,6 +324,12 @@ void CMP::run( Session* session, const std::string& argument ){
   else if (ctype=="green") session->view->cmap = GREEN;
   else if (ctype=="red") session->view->cmap = RED;
   else session->view->cmapped = false;
+}
+
+void INV::run( Session* session, const std::string& argument ){
+
+  if( session->loglevel >= 2 ) *(session->logfile) << "INV handler reached" << endl;
+  session->view->inverted = true;
 }
 
 void LYR::run( Session* session, const std::string& argument ){

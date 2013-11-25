@@ -73,6 +73,7 @@ class View{
   int shade[3];                                /// Shading incident light angles (x,y,z)
   bool cmapped;                                /// Whether to modify colormap
   enum cmap_type cmap;                         /// colormap
+  bool inverted;                               /// Whether to invert colormap
   int max_layers;			       /// Maximum number of quality layers allowed
   int layers;			               /// Number of quality layers
   ColourSpaces colourspace;                    /// Requested colourspace
@@ -87,7 +88,7 @@ class View{
     contrast = 1.0; gamma = 1.0;
     xangle = 0; yangle = 90;
     shaded = false; shade[0] = 0; shade[1] = 0; shade[2] = 0;
-    cmapped = false;
+    cmapped = false; inverted = false;
     max_layers = 0; layers = 0;
     rotation = 0.0;
     colourspace = NONE;
