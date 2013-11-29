@@ -64,38 +64,34 @@ void filter_normalize( RawTile& in, std::vector<float>& max, std::vector<float>&
    if( in.bpc == 32 && in.sampleType == FLOATINGPOINT ) {
       fptr = (float*)in.data;
       // Loop through our pixels for floating values 
+#pragma ivdep
       for( unsigned int n=c; n<np; n+=nc ){
         normdata[n] = std::isfinite(fptr[n])? (fptr[n] - minc) * invdiffc : 0.0;
       }
     } else if( in.bpc == 32 && in.sampleType == FIXEDPOINT ) {
       uiptr = (unsigned int*)in.data;
       // Loop through our pixels for uint values 
+#pragma ivdep
       for( unsigned int n=c; n<np; n+=nc ){
         normdata[n] = (uiptr[n] - minc) * invdiffc;
       }
     } else if( in.bpc == 16 ) {
       usptr = (unsigned short*)in.data;
       // Loop through our unsigned short pixels
+#pragma ivdep
       for( unsigned int n=c; n<np; n+=nc ){
         normdata[n] = (usptr[n] - minc) * invdiffc;
       }
     } else {
       ucptr = (unsigned char*)in.data;
       // Loop through our unsigned char pixels
+#pragma ivdep
       for( unsigned int n=c; n<np; n+=nc ){
         normdata[n] = (ucptr[n] - minc) * invdiffc;
       }
     }
   }
 
-/*
-  // Saturate pixel values on both ends (this section may be removed later on)
-  for( unsigned int n=c; n<np; n++ ){
-    v = normdata[n];
-    if( v < 0. ) normdata[n] = 0.;
-    else if( v > 1. ) normdata[n] = 1.;
-  }
-*/
   if(! (in.bpc == 32 && in.sampleType == FLOATINGPOINT) ) {
     delete[] (float*) in.data;
     in.data = normdata;
@@ -281,83 +277,98 @@ void filter_LAB2sRGB( RawTile& in ){
 void filter_cmap( RawTile& in, enum cmap_type cmap ){
 
   int i;
-  float value, outv[3];
+  float value;
   unsigned out_chan = 3;
-  unsigned int ndata = in.dataLength * 8 / in.bpc;
+  unsigned int ndata = in.dataLength * 8 / in.bpc / in.channels;
   unsigned int k = 0;
 
-  float max3=1./3.;
-  float max4=1./4.;
-  float c1=144./255.;
+  const float max3=1./3.;
+  const float max8=1./8.;
 
   float *fptr = (float*)in.data;
-  float *buffer = new float[in.width*in.height*out_chan];
+  float *outptr = new float[ndata*out_chan];
+  float *outv = outptr;
 
-  for( int n=0; n<ndata; n++ ){
-    value = fptr[n];
-    switch(cmap){
+  switch(cmap){
     case HOT:
-      if(value>1.)
-        { outv[0]=outv[1]=outv[2]=1.; }
-      else if(value<=0)
-        { outv[0]=outv[1]=outv[2]=0.; }
-      else if(value<max3)
-        { outv[0]=value/max3; outv[1]=outv[2]=0.; }
-      else if(value<2*max3)
-        { outv[0]=1.; outv[1]=(value-max3)/max3; outv[2]=0.; }
-      else if(value<1.)
-        { outv[0]=outv[1]=1.; outv[2]=(value-2*max3)/max3; }
-      else { outv[0]=outv[1]=outv[2]=1.; }
-        break;
+#pragma ivdep
+      for( int n=0; n<ndata; n++, outv+=3 ){
+        value = fptr[n];
+        if(value>1.)
+          { outv[0]=outv[1]=outv[2]=1.; }
+        else if(value<=0.)
+          { outv[0]=outv[1]=outv[2]=0.; }
+        else if(value<max3)
+          { outv[0]=3.*value; outv[1]=outv[2]=0.; }
+        else if(value<2*max3)
+          { outv[0]=1.; outv[1]=3.*value-1.; outv[2]=0.; }
+        else if(value<1.)
+          { outv[0]=outv[1]=1.; outv[2]=3.*value-2.; }
+        else { outv[0]=outv[1]=outv[2]=1.; }
+      }
+      break;
     case COLD:
-      if(value>1.)
-        { outv[0]=outv[1]=outv[2]=1.; }
-      else if(value<=0)
-        { outv[0]=outv[1]=outv[2]=0.; }
-      else if(value<max3)
-        { outv[0]=outv[1]=0.; outv[2]=value/max3; }
-      else if(value<2*max3)
-        { outv[0]=0.; outv[1]=(value-max3)/max3; outv[2]=1.; }
-      else if(value<1.)
-        { outv[0]=(value-2*max3)/max3; outv[1]=outv[2]=1.; }
-      else {outv[0]=outv[1]=outv[2]=1.;}
-        break;
+#pragma ivdep
+      for( int n=0; n<ndata; n++, outv+=3 ){
+        value = fptr[n];
+        if(value>1.)
+          { outv[0]=outv[1]=outv[2]=1.; }
+        else if(value<=0.)
+          { outv[0]=outv[1]=outv[2]=0.; }
+        else if(value<max3)
+          { outv[0]=outv[1]=0.; outv[2]=3.*value; }
+        else if(value<2.*max3)
+          { outv[0]=0.; outv[1]=3.*value-1.; outv[2]=1.; }
+        else if(value<1.)
+          { outv[0]=3.*value-2.; outv[1]=outv[2]=1.; }
+        else {outv[0]=outv[1]=outv[2]=1.;}
+      }
+      break;
     case JET:
-      if(value<=0)
-        { outv[0]=outv[1]=outv[2]=0.; }
-      else if(value<max4)
-        { outv[0]=outv[1]=0.; outv[2]=(c1+(1.-c1)*value/max4); }
-      else if(value<2*max4)
-        { outv[0]=0.; outv[1]=(value-max4)/max4; outv[2]=1.; }
-      else if(value<3*max4)
-        { outv[0]=(value-2*max4)/max4; outv[1]=1.; outv[2]=1.-outv[0]; }
-      else if(value<1.)
-        { outv[0]=1.; outv[1]=(1-(value-3*max4)/max4); outv[2]=1.; }
-      else { outv[0]=1.; outv[1]=outv[2]=0.; }
-        break;
-    case BLUE:
-        outv[0]=outv[1]=0; outv[2]=value;
-      break;
-    case GREEN:
-        outv[0]=0.; outv[1]=value; outv[2]=0.;
-      break;
-    case RED:
-        outv[0]=value; outv[1]=outv[2]=0.;
+#pragma ivdep
+      for( int n=0; n<ndata; n++, outv+=3 ){
+        value = fptr[n];
+        if(value<0.)
+          { outv[0]=outv[1]=outv[2]=0.; }
+        else if(value<max8)
+          { outv[0]=outv[1]=0.; outv[2]= 4.*value + 0.5; }
+        else if(value<3.*max8)
+          { outv[0]=0.; outv[1]= 4.*value - 0.5; outv[2]=1.; }
+        else if(value<5.*max8)
+          { outv[0]= 4*value - 1.5; outv[1]=1.; outv[2]= 2.5 - 4.*value; }
+        else if(value<7.*max8)
+          { outv[0]= 1.; outv[1]= 3.5 -4.*value; outv[2]= 0; }
+        else if(value<1.)
+          { outv[0]= 4.5-4.*value; outv[1]= outv[2]= 0.; }
+        else { outv[0]=0.5; outv[1]=outv[2]=0.; }
+      }
       break;
     default:
       break;
     };
 
-    for (int i = 0; i<3; i++) buffer[k++] = outv[i];
-  }
 
   // Delete old data buffer
   delete[] (float*) in.data;
-  in.data = buffer;
+  in.data = outptr;
   in.channels = out_chan;
-  in.dataLength = in.width * in.height * out_chan * in.bpc / 8;
+  in.dataLength = ndata * out_chan * in.bpc / 8;
 }
 
+// Inversion function
+void filter_inv( RawTile& in ){
+  float* infptr;
+  unsigned int np = in.dataLength * 8 / in.bpc;
+
+  infptr = (float*)in.data;
+
+  // Loop through our pixels for floating values 
+#pragma ivdep
+  for(int n=np; n--;) {
+    float v = *infptr;
+    *(infptr++) = 1. - v;
+  }
+}
 
 // Resize image using nearest neighbour interpolation
 void filter_interpolate_nearestneighbour( RawTile& in, unsigned int resampled_width, unsigned int resampled_height ){
@@ -472,6 +483,7 @@ void filter_contrast( RawTile& in, float c ){
 
   float* infptr = (float*)in.data;
 
+#pragma ivdep
   for( unsigned int n=0; n<np; n++ ){
     float v = infptr[n] * 255.0 * c;
     buffer[n] = (unsigned char) (v<255.0) ? (v<0.0? 0.0 : v) : 255.0;
@@ -489,7 +501,6 @@ void filter_contrast( RawTile& in, float c ){
 void filter_gamma( RawTile& in, float g ){
 
   float* infptr;
-  float v;
   unsigned int np = in.dataLength * 8 / in.bpc;
 
   if( g == 1.0 ) return;
@@ -497,9 +508,10 @@ void filter_gamma( RawTile& in, float g ){
   infptr = (float*)in.data;
 
   // Loop through our pixels for floating values 
-  for( unsigned int n=0; n<np; n++ ){
-    v = infptr[n];
-    infptr[n] = powf(v<0.0? 0.0 : v, g );
+#pragma ivdep
+  for(int n=np; n--;){
+    float v = *infptr;
+    *(infptr++) = powf(v<0.0? 0.0 : v, g );
   }
 }
 

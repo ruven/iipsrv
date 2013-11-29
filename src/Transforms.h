@@ -41,6 +41,11 @@ void filter_normalize( RawTile& in, std::vector<float>& max, std::vector<float>&
 enum cmap_type { HOT, COLD, JET, BLUE, GREEN, RED };
 void filter_cmap( RawTile& in, enum cmap_type cmap );
 
+/// Function to invert colormaps
+/** @param in tile data to be adjusted
+*/
+void filter_inv( RawTile& in );
+
 
 /// Hillshading function to simulate raking light images
 /** @param in tile input data containing normal vectors at each point
