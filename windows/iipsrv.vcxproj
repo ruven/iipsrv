@@ -185,6 +185,7 @@
     <ClCompile Include="..\src\KakaduImage.cc" />
     <ClCompile Include="..\src\Main.cc" />
     <ClCompile Include="..\src\OBJ.cc" />
+    <ClCompile Include="..\src\PFL.cc" />
     <ClCompile Include="..\src\SPECTRA.cc" />
     <ClCompile Include="..\src\Task.cc" />
     <ClCompile Include="..\src\TIL.cc" />

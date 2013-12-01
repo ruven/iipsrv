@@ -35,6 +35,8 @@ time_t timegm(struct tm*);
 char *strptime(const char*, const char*, struct tm*);
 int gettimeofday(struct timeval*, struct timezone*);
 double round(double);
+// Missing isfinite
+static inline bool isfinite(double a) { return _finite(a); }
 
 #endif
 #endif
