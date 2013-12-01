@@ -1,7 +1,7 @@
 /*
     IIP Command Handler Member Functions
 
-    Copyright (C) 2006-2007 Ruven Pillay.
+    Copyright (C) 2006-2012 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -14,8 +14,8 @@
     GNU General Public License for more details.
 
     You should have received a copy of the GNU General Public License
-    along with this program; if not, write to the Free Software
-    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+    along with this program; if not, write to the Free Software Foundation,
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
 
@@ -41,12 +41,15 @@ Task* Task::factory( const string& t ){
   else if( type == "fif" ) return new FIF;
   else if( type == "qlt" ) return new QLT;
   else if( type == "sds" ) return new SDS;
+  else if( type == "minmax" ) return new MINMAX;
   else if( type == "cnt" ) return new CNT;
   else if( type == "gam" ) return new GAM;
   else if( type == "wid" ) return new WID;
   else if( type == "hei" ) return new HEI;
   else if( type == "rgn" ) return new RGN;
+  else if( type == "rot" ) return new ROT;
   else if( type == "til" ) return new TIL;
+//  else if( type == "ptl" ) return new PTL;
   else if( type == "jtl" ) return new JTL;
   else if( type == "jtls" ) return new JTLS;
   else if( type == "icc" ) return new ICC;
@@ -108,6 +111,30 @@ void SDS::run( Session* session, const std::string& argument ){
   if( session->loglevel >= 2 ) *(session->logfile) << "SDS :: set to " << session->view->xangle << ", "
 						   << session->view->yangle << endl;
 
+}
+
+
+void MINMAX::run( Session* session, const std::string& argument ){
+
+  if( session->loglevel >= 3 ) *(session->logfile) << "MINMAX handler reached" << endl;
+
+  // Parse the argument list
+  int delimitter = argument.find( "," );
+  string tmp = argument.substr( 0, delimitter );
+  int nchan = atoi( tmp.c_str() ) - 1;
+  string arg2 = argument.substr( delimitter + 1, argument.length() );
+
+  delimitter = arg2.find( "," );
+  tmp = arg2.substr( 0, delimitter );
+  (*(session->image))->min[nchan] = atof( tmp.c_str() );
+  string arg3 = arg2.substr( delimitter + 1, arg2.length() );
+
+  delimitter = arg3.find( "," );
+  tmp = arg3.substr( 0, delimitter );
+  (*(session->image))->max[nchan] = atof( tmp.c_str() );
+
+  if( session->loglevel >= 2 ) *(session->logfile) << "MINMAX :: set to " << (*(session->image))->min[nchan] << ", "
+						   << (*(session->image))->max[nchan] << " for channel " << nchan << endl;
 }
 
 
@@ -188,6 +215,17 @@ void RGN::run( Session* session, const std::string& argument ){
 			<< region[1] << ", " << region[2] << ", " << region[3] << endl;
   }
 
+}
+
+
+void ROT::run( Session* session, const std::string& argument ){
+
+  float rotation = (float) atof( argument.c_str() );
+
+  if( session->loglevel >= 2 ) *(session->logfile) << "ROT handler reached" << endl;
+  if( session->loglevel >= 3 ) *(session->logfile) << "ROT :: requested rotation is " << rotation << " degrees" << endl;
+
+  session->view->setRotation( rotation );
 }
 
 

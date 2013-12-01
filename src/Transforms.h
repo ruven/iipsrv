@@ -72,4 +72,21 @@ void filter_interpolate_nearestneighbour( RawTile& in, unsigned int w, unsigned 
 void filter_interpolate_bilinear( RawTile& in, unsigned int w, unsigned int h );
 
 
+/// Rotate image - currently only by 90, 180 or 270 degrees, other values will do nothing
+/** @param in tile input data
+    @param angle angle of rotation - currently only rotations by 90, 180 and 270 degrees
+    are suported, for other values, no rotation will occur
+*/
+void filter_rotate( RawTile& in, float angle );
+
+
+/// Crop image - removes given number of pixels from given sides
+/** @param in tile input data
+    @param left amount of deleted pixels on left side
+    @param top amount of deleted pixels from top
+    @param right amount of deleted pixels on right side
+    @param bottom amount of deleted pixels from the bottom
+*/
+void filter_crop( RawTile& in, int left, int top, int right, int bottom );
+
 #endif

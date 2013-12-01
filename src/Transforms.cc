@@ -73,7 +73,7 @@ void filter_shade( RawTile& in, int h_angle, int v_angle ){
 
     dot_product = dot_product * 255.0;
     if( dot_product < 0 ) dot_product = 0.0;
-    
+
     buffer[k++] = (unsigned char) dot_product;
   }
 
@@ -197,11 +197,29 @@ void filter_LAB2sRGB( RawTile& in ){
 // Resize image using nearest neighbour interpolation
 void filter_interpolate_nearestneighbour( RawTile& in, unsigned int resampled_width, unsigned int resampled_height ){
   
-  unsigned char* data = (unsigned char*) in.data; // Assume 8bit data
+  unsigned char* data8;
+  unsigned short* data16;
+  unsigned int* data32;
+  unsigned char* buf8;
+  unsigned short* buf16;
+  unsigned int* buf32;
+
   unsigned int channels = (unsigned int) in.channels;
   unsigned int width = in.width;
   unsigned int height = in.height;
-  unsigned char* buf = new unsigned char[resampled_width*resampled_height*channels];
+
+  if(in.bpc == 8){
+    data8 = (unsigned char*) in.data;
+    buf8 = new unsigned char[resampled_width*resampled_height*channels];
+  }
+  if(in.bpc == 16){
+    data16 = (unsigned short*) in.data;
+    buf16 = new unsigned short[resampled_width*resampled_height*channels];
+  }
+  if(in.bpc == 32){
+    data32 = (unsigned int*) in.data;
+    buf32 = new unsigned int[resampled_width*resampled_height*channels];
+  }
 
   // Calculate our scale
   unsigned int xscale = (width << 16) / resampled_width;
@@ -218,15 +236,33 @@ void filter_interpolate_nearestneighbour( RawTile& in, unsigned int resampled_wi
       unsigned int resampled_index = (i + j*resampled_width)*channels;
 
       for( int k=0; k<in.channels; k++ ){
-        buf[resampled_index+k] = data[pyramid_index+k];
+        if(in.bpc == 8){
+          buf8[resampled_index+k] = data8[pyramid_index+k];
+        }
+        else if(in.bpc == 16){
+          buf16[resampled_index+k] = data16[pyramid_index+k];
+        }
+        else if(in.bpc == 32){
+          buf32[resampled_index+k] = data32[pyramid_index+k];
+        }
       }
     }
   }
 
   // Correctly set our Rawtile info
-  if( in.memoryManaged ) delete[] in.data;
-  in.data = buf;
-  in.memoryManaged = true;
+  if( in.memoryManaged && (in.bpc == 8 || in.bpc == 16 || in.bpc == 32) ) delete[] in.data;
+  if(in.bpc == 8){
+    in.data = buf8;
+    in.memoryManaged = true;
+  }
+  else if(in.bpc == 16){
+    in.data = buf16;
+    in.memoryManaged = true;
+  }
+  else if(in.bpc == 32){
+    in.data = buf32;
+    in.memoryManaged = true;
+  }
   in.width = resampled_width;
   in.height = resampled_height;
   in.dataLength = resampled_width * resampled_height * channels * in.bpc/8;
@@ -236,40 +272,115 @@ void filter_interpolate_nearestneighbour( RawTile& in, unsigned int resampled_wi
 // Resize image using bilinear interpolation
 //  - Floating point implementation which benchmarks about 2.5x slower than nearest neighbour
 void filter_interpolate_bilinear( RawTile& in, unsigned int resampled_width, unsigned int resampled_height ){
+  unsigned char* data8;
+  unsigned short* data16;
+  unsigned int* data32;
+  unsigned char* buf8;
+  unsigned short* buf16;
+  unsigned int* buf32;
+  unsigned char color8;
+  unsigned short color16;
+  unsigned int color32;
 
-  unsigned char* data = (unsigned char*) in.data; // Assume 8bit data
   int channels = in.channels;
   int width = in.width;
   int height = in.height;
-  unsigned char* buf = new unsigned char[resampled_width*resampled_height*channels];
 
-  float x_ratio = (width - 1) / (float) resampled_width;
-  float y_ratio = (height- 1) / (float) resampled_height;
+  if(in.bpc == 8){
+    data8 = (unsigned char*) in.data;
+    buf8 = new unsigned char[resampled_width*resampled_height*channels];
+  }
+  if(in.bpc == 16){
+    data16 = (unsigned short*) in.data;
+    buf16 = new unsigned short[resampled_width*resampled_height*channels];
+  }
+  if(in.bpc == 32){
+    data32 = (unsigned int*) in.data;
+    buf32 = new unsigned int[resampled_width*resampled_height*channels];
+  }
+
+  float x_ratio = (width) / (float) resampled_width;
+  float y_ratio = (height) / (float) resampled_height;
+  bool edgeY, edgeX;
   int a,b,c,d,index,x,y;
   int offset = 0;
   float x_diff, y_diff;
-  unsigned char color;
   for(int i = 0; i < resampled_height; i++){
 	  y = (int)(y_ratio * i);
 	  y_diff = (y_ratio * i) - y;
+    //if we come to edge, remember it, so we don't call unexisting pixels
+    if(y == height - 1) {
+      edgeY = true;
+      y_diff = 0;
+    }
+    else{
+      edgeY = false;
+    }
+
 	  for(int j = 0; j < resampled_width; j++){
 		  x = (int)(x_ratio * j);
-          x_diff = (x_ratio * j) - x;
+      x_diff = (x_ratio * j) - x;
 		  index = x + y*width;
+      //if we come to edge, remember it, so we don't call unexisting pixels
+      if(x == width - 1){
+        edgeX = true;
+        x_diff = 0;
+      }
+      else{
+        edgeX = false;
+      }
 
 		  for(int k = 0; k < channels; k++) {
-			a = data[(index)*channels + k];
-			b = data[(index+1)*channels + k];
-			c = data[(index+width)*channels + k];
-			d = data[(index + width + 1)*channels + k];
-			color = (unsigned char) (a*(1-x_diff)*(1-y_diff) + b*(x_diff)*(1-y_diff) + c*(1-x_diff)*(y_diff) + d*(x_diff)*(y_diff));
-			buf[offset++] = color;
+
+        if(in.bpc == 8){
+			    a = data8[(index)*channels + k];
+          if (!edgeX) b = data8[(index+1)*channels + k];
+          else b = 0;
+          if(!edgeY) c = data8[(index+width)*channels + k];
+          else c = 0;
+          if(!edgeX && !edgeY) d = data8[(index + width + 1)*channels + k];
+          else d = 0;
+          color8 = (unsigned char) (a*(1-x_diff)*(1-y_diff) + b*(x_diff)*(1-y_diff) + c*(1-x_diff)*(y_diff) + d*(x_diff)*(y_diff));
+          buf8[offset++] = color8;
+        }
+        else if(in.bpc == 16){
+			    a = data16[(index)*channels + k];
+			    if (!edgeX) b = data16[(index+1)*channels + k];
+          else b = 0;
+          if(!edgeY) c = data16[(index+width)*channels + k];
+          else c = 0;
+          if(!edgeX && !edgeY) d = data16[(index + width + 1)*channels + k];
+          else d = 0;
+			    color16 = (unsigned char) (a*(1-x_diff)*(1-y_diff) + b*(x_diff)*(1-y_diff) + c*(1-x_diff)*(y_diff) + d*(x_diff)*(y_diff));
+			    buf16[offset++] = color16;
+        }
+        else if(in.bpc == 32){
+			    a = data32[(index)*channels + k];
+			    if (!edgeX) b = data32[(index+1)*channels + k];
+          else b = 0;
+          if(!edgeY) c = data32[(index+width)*channels + k];
+          else c = 0;
+          if(!edgeX && !edgeY) d = data32[(index + width + 1)*channels + k];
+          else d = 0;
+			    color32 = (unsigned char) (a*(1-x_diff)*(1-y_diff) + b*(x_diff)*(1-y_diff) + c*(1-x_diff)*(y_diff) + d*(x_diff)*(y_diff));
+			    buf32[offset++] = color32;
+        }
 		  }
 	  }
   }
-  if( in.memoryManaged ) delete[] in.data;
-  in.data = buf;
-  in.memoryManaged = true;
+  if( in.memoryManaged && (in.bpc == 8 || in.bpc == 16 || in.bpc == 32) ) delete[] in.data;
+  if(in.bpc == 8){
+    in.data = buf8;
+    in.memoryManaged = true;
+  }
+  else if(in.bpc == 16){
+    in.data = buf16;
+    in.memoryManaged = true;
+  }
+  else if(in.bpc == 32){
+    in.data = buf32;
+    in.memoryManaged = true;
+  }
   in.width = resampled_width;
   in.height = resampled_height;
   in.dataLength = resampled_width * resampled_height * channels * in.bpc/8;
@@ -317,8 +428,9 @@ void filter_contrast( RawTile& in, float c, std::vector<float>& max, std::vector
     }
 
     // Replace original buffer with new
-    if( in.bpc == 32 ) delete[] (float*) in.data;
-    else delete[] (unsigned short*) in.data;
+    if( in.bpc == 32 && in.sampleType == FLOATPOINT ) delete[] (float*) in.data;
+    else if( in.bpc == 32 && in.sampleType == FIXEDPOINT ) delete[] (unsigned int*) in.data;
+    else if( in.bpc == 16 ) delete[] (unsigned short*) in.data;
 
     in.data = buffer;
     in.bpc = 8;
@@ -339,7 +451,8 @@ void filter_gamma( RawTile& in, float g, std::vector<float>& max, std::vector<fl
 
     int c = (int)( n % in.channels );
 
-    if( in.bpc == 32 ) v = (float)((float*)in.data)[n];
+    if( in.bpc == 32 && in.sampleType == FLOATPOINT ) v = (float)((float*)in.data)[n];
+    else if( in.bpc == 32 && in.sampleType == FIXEDPOINT ) v = (float)((unsigned int*)in.data)[n];
     else if( in.bpc == 16 ) v = (float)((unsigned short*)in.data)[n];
     else v = (float)((unsigned char*)in.data)[n];
 
@@ -353,9 +466,108 @@ void filter_gamma( RawTile& in, float g, std::vector<float>& max, std::vector<fl
     if( v < min[c] ) v = min[c];
     else if( v > max[c] ) v = max[c];
 
-    if( in.bpc == 32 ) ((float*)in.data)[n] = (float) v;
+    if( in.bpc == 32 && in.sampleType == FLOATPOINT ) ((float*)in.data)[n] = (float) v;
+    else if( in.bpc == 32 && in.sampleType == FIXEDPOINT ) ((unsigned int*)in.data)[n] = (float) v;
     else if( in.bpc == 16 ) ((unsigned short*)in.data)[n] = (unsigned short) v;
     else v = ((unsigned char*)in.data)[n] = (unsigned char) v;
   }
 
+}
+
+// Rotation function
+void filter_rotate( RawTile& in, float angle ){
+
+  // Currently implemented only for rectangular rotations
+  if( (int)angle % 90 == 0 && (int)angle % 360 != 0 ){
+
+    // Intialize our counter and data buffer
+    unsigned int n = 0;
+    void* buffer = NULL;
+
+    // Allocate memory for our temporary buffer
+    if(in.bpc == 8) buffer = new unsigned char[in.width*in.height*in.channels];
+    else if(in.bpc == 16) buffer = new unsigned short[in.width*in.height*in.channels];
+    else if(in.bpc == 32 && in.sampleType == FIXEDPOINT ) buffer = new unsigned int[in.width*in.height*in.channels];
+    else if(in.bpc == 32 && in.sampleType == FLOATPOINT ) buffer = new float[in.width*in.height*in.channels];
+
+    // Rotate 90
+	  if ((int) angle % 360 == 90){
+      for (int i = in.width; i > 0; i--){
+        for (int j = in.height; j > 0; j--){
+          unsigned int index = (in.width * j - i )*in.channels;
+          for(int k = 0; k < in.channels; k++){
+            if(in.bpc == 8) ((unsigned char*)buffer)[n++] = ((unsigned char*)in.data)[index+k];
+	          else if(in.bpc == 16) ((unsigned short*)buffer)[n++] = ((unsigned short*)in.data)[index+k];
+	          else if(in.bpc == 32 && in.sampleType == FIXEDPOINT ) ((unsigned int*)buffer)[n++] = ((unsigned int*)in.data)[index+k];
+	          else if(in.bpc == 32 && in.sampleType == FLOATPOINT ) ((float*)buffer)[n++] = ((float*)in.data)[index+k];
+			    }
+        }
+      }
+    }    
+
+    // Rotate 270
+    else if( (int) angle % 360 == 270 ){
+      for( int i=in.width - 1; i>=0; i-- ){
+	for( int j=0; j < in.height; j++ ){
+	  unsigned int index = (in.width*j + i)*in.channels;
+	  for( int k=0; k < in.channels; k++ ){
+	    if(in.bpc == 8) ((unsigned char*)buffer)[n++] = ((unsigned char*)in.data)[index+k];
+	    else if(in.bpc == 16) ((unsigned short*)buffer)[n++] = ((unsigned short*)in.data)[index+k];
+	    else if(in.bpc == 32 && in.sampleType == FIXEDPOINT ) ((unsigned int*)buffer)[n++] = ((unsigned int*)in.data)[index+k];
+	    else if(in.bpc == 32 && in.sampleType == FLOATPOINT ) ((float*)buffer)[n++] = ((float*)in.data)[index+k];
+	  }
+	}
+      }
+    }
+
+    // Rotate 180
+    else if( (int) angle % 360 == 180 ){
+      for( int i=(in.width*in.height)-1; i >= 0; i-- ){
+        unsigned int index = i * in.channels;
+        for( int k=0; k < in.channels; k++ ){
+          if(in.bpc == 8) ((unsigned char*)buffer)[n++]  = ((unsigned char*)in.data)[index+k];
+          else if(in.bpc == 16) ((unsigned short*)buffer)[n++] = ((unsigned short*)in.data)[index+k];
+          else if(in.bpc == 32 && in.sampleType == FIXEDPOINT) ((unsigned int*)buffer)[n++] = ((unsigned int*)in.data)[index+k];
+          else if(in.bpc == 32 && in.sampleType == FLOATPOINT ) ((float*)buffer)[n++] = ((float*)in.data)[index+k];
+        }
+      }
+    }
+
+    // Delete old data buffer
+    if( in.bpc == 8 ) delete[] (unsigned char*) in.data;
+    else if( in.bpc == 16 ) delete[] (unsigned short*) in.data;
+    else if( in.bpc == 32 && in.sampleType == FIXEDPOINT ) delete[] (unsigned int*) in.data;
+    else if( in.bpc == 32 && in.sampleType == FLOATPOINT ) delete[] (float*) in.data;
+
+    // Assign new data to Rawtile
+    in.data = buffer;
+
+    // For 90 and 270 rotation swap width and height
+    if( (int)angle % 180 == 90 ){
+      unsigned int tmp = in.height;
+      in.height = in.width;
+      in.width = tmp;
+    }
+  }
+}
+
+void filter_crop( RawTile& in, int left, int top, int right, int bottom ){
+
+  unsigned int n = 0;
+  //Cropping
+  for( int i=top; i < in.height - bottom; i++ ){
+    unsigned int index1 = i * in.width;
+    for ( int j=left; j < in.width - right; j++ ){
+      unsigned int index = (index1 + j)*in.channels;
+      for( int k=0; k < in.channels; k++ ){
+        if(in.bpc == 8) ((unsigned char*)in.data)[n++]  = ((unsigned char*)in.data)[index+k];
+        else if(in.bpc == 16) ((unsigned short*)in.data)[n++] = ((unsigned short*)in.data)[index+k];
+        else if(in.bpc == 32 && in.sampleType == FIXEDPOINT) ((unsigned int*)in.data)[n++] = ((unsigned int*)in.data)[index+k];
+        else if(in.bpc == 32 && in.sampleType == FLOATPOINT ) ((float*)in.data)[n++] = ((float*)in.data)[index+k];
+      }
+    }
+  }
+  //adjust dimensions
+  in.height = in.height - top - bottom;
+  in.width = in.width - left - right;
 }

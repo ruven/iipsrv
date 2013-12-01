@@ -1,1 +1,0 @@
-demo file can be downloaded from url: http://help.oldmapsonline.org/jpeg2000/demo.jp2

@@ -102,7 +102,8 @@ void TPTImage::loadImageInfo( int seq, int ang ) throw(string)
   // We have to do this conversion explicitly to avoid problems on Mac OS X
   channels = (unsigned int) samplesperpixel;
   bpp = (unsigned int) bitspersample;
-  sampleType = (sampleformat==3) ? _FLOAT : _FIXED;
+
+  sampleType = (sampleformat==3) ? FLOATPOINT : FIXEDPOINT;
 
   // Check for the no. of resolutions in the pyramidal image
   current_dir = TIFFCurrentDirectory( tiff );
@@ -143,11 +144,13 @@ void TPTImage::loadImageInfo( int seq, int ang ) throw(string)
   TIFFGetFieldDefaulted( tiff, TIFFTAG_SMINSAMPLEVALUE, sminvalue );
   TIFFGetFieldDefaulted( tiff, TIFFTAG_SMAXSAMPLEVALUE, smaxvalue );
   for( int i=0; i<channels; i++ ){
-    min.push_back( (float)sminvalue[i] );
-    if( bpp < 32 ){
-      if( bpp == 16 ) smaxvalue[i] = 65535.0;
-      else smaxvalue[i] = 255.0;
+    if( smaxvalue[i] == 0.0 ){
+      // Set default values if values not included in header
+      if( bpp == 8 ) smaxvalue[i] = 255.0;
+      else if( bpp == 16 ) smaxvalue[i] = 65535.0;
+      else if( bpp == 32 && sampleType == FIXEDPOINT ) smaxvalue[i] = 4294967295.0;
     }
+    min.push_back( (float)sminvalue[i] );
     max.push_back( smaxvalue[i] );
   }
 

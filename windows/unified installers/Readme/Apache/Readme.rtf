@@ -1,0 +1,95 @@
+{\rtf1\ansi\ansicpg1250\deff0\nouicompat\deflang1051\deflangfe1051\deftab708{\fonttbl{\f0\fswiss\fprq2\fcharset238 Calibri;}{\f1\fswiss\fprq2 Calibri;}}
+{\colortbl ;\red255\green0\blue0;\red0\green0\blue255;}
+{\*\generator Riched20 6.2.9200}{\*\mmathPr\mnaryLim0\mdispDef1\mwrapIndent1440 }\viewkind4\uc1 
+\pard\keep\widctlpar\sa200\b\f0\fs36\lang1029 IIPImage JPEG2000\b0\par
+\fs22 This Readme file includes information about IIPImage with support of JPEG2000 images, information about usage, advanced configuration and troubleshooting of installation and uninstallation problems.\par
+
+\pard\keep\widctlpar\sb240\sa200\b\i\fs24 1. What is IIPImage:\par
+
+\pard\widctlpar\sa200\sl276\slmult1\b0\i0\fs22 IIPImage is a light-weight client-server system for fast and efficient online viewing and zooming of ultra high-resolution JPEG2000 and TIFF images. It is designed to be bandwidth and memory efficient and usable over a slow Internet connection even on gigapixel size images. The IIPImage server is compatible with a large number of client-side viewers. You can use either pure web viewers (written only in HTML/JavaScript) or plugin-based viewers using Adobe Flash, Silverlight or Java. Even applications such as Seadragon for Apple iPhone or Google Earth for Mac/Linux/Windows can display your image distributed with IIPimage software.\par
+
+\pard\keep\widctlpar\sa200\b Anybody who wants stunning online presentations of scanned documents, paintings, maps, books, newspapers or other high-resolution images can use the free IIPImage software to publish the images to the web directly from JPEG2000 or TIFF files.\par
+\b0 IIPImage streams images to the user through either the IIP protocol (Internet Imaging Protocol) to one of the native clients or also in the latest releases via the Zoomify or Deep Zoom tile protocol. \par
+Any Zoomify or Deep Zoom compatible viewer can, therefore, be used for easy online panning and zooming of the published images.\par
+\cf1\b\fs24 Neither the distribution nor the use of this application should be for financial return!\par
+\cf0\b0\fs22 IIPImage is available for free, under an open source license (GNU GPL). It is FastCGI-based and can be embedded in most web servers. JPEG2000 support has been enabled via the Kakadu JPEG2000 library, which provides one of the fastest implementations of the JPEG2000 ISO standard and is redistributable \cf1\b for non-commercial use only\cf0\b0 .\par
+
+\pard\keep\widctlpar\sb240\b\i\fs24 2.Usage: \par
+\i0\fs22 2.1 How to convert my images into JPEG2000?\par
+
+\pard\keep\widctlpar\b0 There are many tools able to convert existing images into .JP2 format. One is included with installation. To convert files into jp2 format with attached application \ldblquote JPEG2000 Transcoder\rdblquote , do the following:\par
+
+\pard 
+{\pntext\f0 1.\tab}{\*\pn\pnlvlbody\pnf0\pnindent0\pnstart1\pndec{\pntxta.}}
+\keep\widctlpar\fi-360\li720 Start application, you will see graphic interface.\par
+{\pntext\f0 2.\tab}Choose files (one or more) you wish to convert to jp2 format.\par
+{\pntext\f0 3.\tab}Choose output directory, where you want store your images. In default, it is set to IIPImage Images directory\par
+{\pntext\f0 4.\tab}Choose most suitable profile for your needs, detailed information is visible in Profile Information text box. You can add your own profiles by modifying file configuration.ini in application directory.\par
+{\pntext\f0 5.\tab}Click Transcode button\par
+
+\pard\keep\widctlpar You can find more detailed manual also in application menu under Help -> How to use transcoder. Please note that attached application is for non-commercial use.\par
+Also you can use for batch processing freely available tools distributed with the Kakadu JPEG2000 Library: for encoding (kdu_compress), transcoding (kdu_transcode), viewing with metadata and file structure display (kdu_show):\par
+You can download them for free for Windows, Mac and Linux at: {{\field{\*\fldinst{HYPERLINK http://www.kakadusoftware.com/ }}{\fldrslt{http://www.kakadusoftware.com/\ul0\cf0}}}}\f0\fs22\par
+Please read the documentation attached to these tools.\par
+
+\pard\keep\widctlpar\sb240\b 2.2 How can I view my JPEG2000 image in browser with IIPImage?\par
+
+\pard\keep\widctlpar\b0  Copy image that you want to folder Images in your virtual directory, you have created during Installation, you can find shortcut to this folder also in Start menu. In default settings folder is in Public Documents folder accessible through Documents.\par
+Then start browser and put there address to index.html, again shortcut can be find in Start menu. \par
+In default address is {{\field{\*\fldinst{HYPERLINK http://localhost/imageserver/index.html }}{\fldrslt{http://localhost/imageserver/index.html\ul0\cf0}}}}\f0\fs22 , but word imageserver may vary depending on how you named your virtual directory.  You should now see the demo image.\par
+For your own image put at the end of url address ?image=nameOfImage. So with default settings and your image named MyImage.jp2, you should put something like this: http://localhost/imageserver/index.html?image=MyImage.jp2\par
+
+\pard\keep\widctlpar\sb240\sa200\b\i\fs24 3. Advanced configuration of server: \par
+
+\pard\keep\widctlpar\sa200\b0\i0\fs22 If you want configure startup variables click Start button, write inetmgr, press enter and then click on FastCGI Settings button. Choose appropriate item and click Edit. Then click on Environment variables and put there settings from this list. \par
+
+\pard\keep\widctlpar Startup variables (all optional):\par
+
+\pard\keep\widctlpar\sb240\sa200\b LOGFILE\b0  The log file the module will (attempt) to write to. If no value is given, no log will be written. Make sure the server process has write access to this directory. Paths with spaces in them may not work correctly.\par
+
+\pard\keep\widctlpar\sa200\b VERBOSITY\b0  The level of logging. 0 means no logging, 1 is minimal logging, 2 lots of debugging stuff and 3 even more debugging stuff and 6 a very large amount indeed.  Logging is only enabled if LOGFILE has also been defined.\par
+\b JPEG_QUALITY\b0   The default JPEG quality factor for compression when the client does not specify one. The value should be between 1 (highest level of compression) and 100 (highest image quality). The default is 75.\par
+\b MAX_IMAGE_CACHE_SIZE\b0  Max image cache size to be held in RAM in MB. This is a cache of the compressed JPEG image tiles requested by the client. The default is 10MB.\par
+\b FILESYSTEM_PREFIX\b0  This is a prefix automatically added by the server to the beginning of each file system path. This can be useful for security reasons to limit access to certain sub-directories. For example, with a prefix of  \ldblquote /home/images/\rdblquote  set on the server, a request by a client for \ldblquote image.tif\rdblquote  will point to the path \ldblquote /home/images/image.tif\rdblquote .  Any reverse directory path component such as ../ is also filtered out. No default value.\tab\par
+\b MAX_CVT\b0  Limits the maximum image dimensions in pixels (the WID or HEI commands) allowable for dynamic JPEG export via the CVT command. This prevents huge requests from overloading the server. The default is 5000.\par
+\b MAX_LAYERS\b0  The maximum number of quality layers the client is allowed to decode for images that support progressive quality encoding, such as JPEG2000. Ignored for other file formats. The default is 1.\par
+
+\pard\keep\widctlpar\b FILENAME_PATTERN\b0  Pattern that follows the name stem for a multispectral or 3D panoramic image sequence. eg: \ldblquote _pyr_\rdblquote  for FZ1_pyr_000_090.tif. In this example, just supply FZ1 to the FIF command. The \ldblquote 000\f1\u8243?\f0  indicates the vertical angle and \ldblquote 090\f1\u8243?\f0  the horizontal. This is only relevant to such multiple image sources. The default is \ldblquote _pyr_\rdblquote .\par
+
+\pard\keep\widctlpar\sa200\b WATERMARK\b0  (iipsrv-0.9.9 or later) TIFF image to use as watermark file. This image should be not be bigger the tile size used for TIFF tiling. If bigger, it will simply be cropped to the tile size. If smaller, the watermark will be positioned randomly within the available space. The image can be either colour or grayscale. See this section on watermarking for more information on how to create and use watermarks with iipsrv.\par
+\b WATERMARK_PROBABILITY \b0 (iipsrv-0.9.9 or later) The probability that a particular tile will have a watermark applied to it. 0 means never, 1 means always.\par
+\b WATERMARK_OPACITY\b0  (iipsrv-0.9.9 or later) The opacity (between 0 and 1) applied to the watermark image.\par
+\b MEMCACHED_SERVERS\b0  (iipsrv-0.9.9 or later) A comma-delimitted list of memcached servers with optional port numbers. For example: \ldblquote localhost,192.168.0.1:8888,192.168.0.2\f1\u8243?\f0 .\par
+\b MEMCACHED_TIMEOUT\b0  (iipsrv-0.9.9 or later) Time in seconds that cache remains fresh. Default is 86400 seconds (24 hours).\par
+\b DECODER_MODULES\b0  Comma separated list of external modules for decoding other image formats. This is only necessary if you have activated --enable-modules for ./configure and written your own image format handler(s).\par
+
+\pard\keep\widctlpar\par
+
+\pard\keep\widctlpar\sa200\b\i\fs24 4. TROUBLESHOOTING:\par
+
+\pard\keep\widctlpar\i0\fs22 a)  Installation: \par
+\b0 Installation with default settings of apache server should be successful, but as with everything always can arise some problem. Please uninstall iipImage and Apache server and try to install it again, with default settings (only Next clicking), before you will continue finding problem.\par
+\tab\par
+\b Advanced troubleshooting: \par
+\b0 If your application is not working, check following things:\par
+
+\pard 
+{\pntext\f0 1.\tab}{\*\pn\pnlvlbody\pnf0\pnindent0\pnstart1\pndec{\pntxta.}}
+\keep\widctlpar\fi-360\li720 Type in browser this url and press enter: http://localhost/\par
+
+\pard\keep\widctlpar\li708 You should see blank page with bold sentence \ldblquote It works!\rdblquote . If you don\rquote t see this sentence there is some problem with your apache server. Check that there is no conflict with other servers (e.g. IIS), if not, try to start apache server from \ldblquote Monitor Apache Servers\rdblquote  application in Start menu. If it can\rquote t be started, there is some problem with file <ApacheDir>\\conf\\httpd.conf,  <ApacheDir>\\conf\\extra\\httpd-iipimage.conf or <ApacheDir>\\modules\\mod_fcgid.so. Try to reinstall iipimage and apache to repair the problem if you are not familiar with apache configuration files.\par
+
+\pard\keep\widctlpar\fi-360\li720 2.\tab If the page above appeared  (\ldblquote It works!\rdblquote ), type in browser url: {{\field{\*\fldinst{HYPERLINK http://localhost/fcgi-bin/iipsrv.fcgi }}{\fldrslt{http://localhost/fcgi-bin/iipsrv.fcgi\ul0\cf0}}}}\f0\fs22  \par
+
+\pard\keep\widctlpar\li720 You should see blank page with writing \ldblquote Internet Imaging Protocol Server\rdblquote  with version number, homepage and author\rquote s name.\par
+In this case there may be problem with apache configuration in <ApacheDir>\\conf\\extra\\httpd-iipimage.conf or with application itself.\par
+You may try rename iipsrv.fcgi in application directory to iipsrv.exe and try to run it (double click). If it will start in console without any error, problem is with high probability in the apache configuration file mentioned before. Rename it back to iipsrv.fcgi and try to repair configuration file httpd-iipimage.conf if you are familiar with apache server.\par
+You may use this tutorial to assist you: {{\field{\*\fldinst{HYPERLINK http://iipimage.sourceforge.net/2008/06/how-to-install-iipimageserver-on-your-windows-computer-using-apache-22-in-11-easy-steps/ }}{\fldrslt{http://iipimage.sourceforge.net/2008/06/how-to-install-iipimageserver-on-your-windows-computer-using-apache-22-in-11-easy-steps/\ul0\cf0}}}}\f0\fs22\par
+Note that Options must be ExecCGI and directories should be something as C:\\iipimageserver\par
+(it is hidden junction point on your system drive)\par
+
+\pard\keep\widctlpar\tab\par
+\b b) Uninstallation: \par
+\b0 After uninstallation of iipImage you must uninstall apache server, if you haven\rquote t done so yet, before new installation of iipImage. Go to Control Panel -> Add or remove programs -> Apache HTTP Server 2.2.22 and remove it.\par
+}
+ 

@@ -1,7 +1,7 @@
 /*
     IIP Generic Task Class
 
-    Copyright (C) 2006-2007 Ruven Pillay.
+    Copyright (C) 2006-2012 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -14,8 +14,8 @@
     GNU General Public License for more details.
 
     You should have received a copy of the GNU General Public License
-    along with this program; if not, write to the Free Software
-    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+    along with this program; if not, write to the Free Software Foundation,
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
 
@@ -35,6 +35,9 @@
 #include "Writer.h"
 #include "Cache.h"
 #include "Watermark.h"
+#ifdef HAVE_PNG
+#include "PNGCompressor.h"
+#endif
 
 
 // Define our http header cache max age
@@ -82,6 +85,9 @@ typedef std::map<const std::string,IIPImage> imageCacheMapType;
 struct Session {
   IIPImage **image;
   JPEGCompressor* jpeg;
+#ifdef HAVE_PNG
+  PNGCompressor* png;
+#endif
   View* view;
   IIPResponse* response;
   Watermark* watermark;
@@ -174,6 +180,13 @@ class SDS : public Task {
 };
 
 
+/// MINMAX Command
+class MINMAX : public Task {
+ public:
+  void run( Session* session, const std::string& argument );
+};
+
+
 /// Contrast Command
 class CNT : public Task {
  public:
@@ -209,11 +222,25 @@ class RGN : public Task {
 };
 
 
+/// ROT Rotation Command
+class ROT : public Task {
+ public:
+  void run( Session* session, const std::string& argument );
+};
+
+
 /// FIF Command
 class FIF : public Task {
  public:
   void run( Session* session, const std::string& argument );
 };
+
+
+/// PNG Tile Command
+/*class PTL : public Task {
+ public:
+  void run( Session* session, const std::string& argument );
+};*/
 
 
 /// JPEG Tile Command
