@@ -1,11 +1,11 @@
 /*
     IIP FCGI server module - Main loop.
 
-    Copyright (C) 2000-2011 Ruven Pillay
+    Copyright (C) 2000-2013 Ruven Pillay
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
-    the Free Software Foundation; either version 2 of the License, or
+    the Free Software Foundation; either version 3 of the License, or
     (at your option) any later version.
 
     This program is distributed in the hope that it will be useful,
@@ -14,8 +14,8 @@
     GNU General Public License for more details.
 
     You should have received a copy of the GNU General Public License
-    along with this program; if not, write to the Free Software
-    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+    along with this program; if not, write to the Free Software Foundation,
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
 
@@ -56,7 +56,23 @@
 #endif
 
 
-
+// If necessary, define missing setenv and unsetenv functions
+#ifndef HAVE_SETENV
+static void setenv(char *n, char *v, int x) {
+  char buf[256];
+  snprintf(buf,sizeof(buf),"%s=%s",n,v);
+  putenv(buf);
+}
+static void unsetenv(char *env_name) {
+  extern char **environ;
+  char **cc;
+  int l;
+  l=strlen(env_name);
+  for (cc=environ;*cc!=NULL;cc++) {
+    if (strncmp(env_name,*cc,l)==0 && ((*cc)[l]=='='||(*cc)[l]=='\0')) break;
+  } for (; *cc != NULL; cc++) *cc=cc[1];
+}
+#endif
 
 
 //#define DEBUG 1
@@ -72,7 +88,7 @@ using namespace std;
 int loglevel;
 ofstream logfile;
 unsigned long IIPcount;
-
+char *tz = NULL;
 
 
 
@@ -81,6 +97,11 @@ unsigned long IIPcount;
 void IIPSignalHandler( int signal )
 {
   if( loglevel >= 1 ){
+
+    // Reset our time zone environment
+    if(tz) setenv("TZ", tz, 1);
+    else unsetenv("TZ");
+    tzset();
 
     time_t current_time = time( NULL );
     char *date = ctime( &current_time );
@@ -154,6 +175,13 @@ int main( int argc, char *argv[] )
     }
 
   }
+
+
+  // Set our environment to UTC as all file modification times are GMT,
+  // but save our current state to allow us to reset before quitting
+  tz = getenv("TZ");
+  setenv("TZ","",1);
+  tzset();
 
 
 

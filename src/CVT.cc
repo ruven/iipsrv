@@ -1,7 +1,7 @@
 /*
     IIP CVT Command Handler Class Member Function
 
-    Copyright (C) 2006-2012 Ruven Pillay.
+    Copyright (C) 2006-2013 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -65,7 +65,7 @@ void CVT::run( Session* session, const std::string& a ){
 
 
     // Reload info in case we are dealing with a sequence
-    (*session->image)->loadImageInfo( session->view->xangle, session->view->yangle );
+    //(*session->image)->loadImageInfo( session->view->xangle, session->view->yangle );
 
     // Calculate the number of tiles at the requested resolution
     unsigned int im_width = (*session->image)->getImageWidth();
@@ -172,8 +172,7 @@ void CVT::run( Session* session, const std::string& a ){
 #endif
 
     // Get our requested region from our TileManager
-    TileManager tilemanager( session->tileCache, *session->image, session->watermark, session->jpeg, session->logfile, session->
-loglevel );
+    TileManager tilemanager( session->tileCache, *session->image, session->watermark, session->jpeg, session->logfile, session->loglevel );
     RawTile complete_image = tilemanager.getRegion( requested_res,
 						    session->view->xangle, session->view->yangle,
 						    session->view->getLayers(),
@@ -202,6 +201,8 @@ loglevel );
       }
     }
 
+    // Apply normalization and float conversion
+    filter_normalize( complete_image, (*session->image)->max, (*session->image)->min );
 
     // Apply hill shading if requested
     if( session->view->shaded ){
@@ -213,20 +214,32 @@ loglevel );
       channels = 1;
     }
 
-
     // Apply any gamma correction
     if( session->view->getGamma() != 1.0 ){
       float gamma = session->view->getGamma();
       if( session->loglevel >= 3 ){
         *(session->logfile) << "CVT :: Applying gamma of " << gamma << endl; 
       }
-      filter_gamma( complete_image, gamma, (*session->image)->max, (*session->image)->min );
+      filter_gamma( complete_image, gamma );
     }
 
+    // Apply inversion if requested
+    if( session->view->inverted ){
+      if( session->loglevel >= 3 ){
+	*(session->logfile) << "CVT :: Applying inversion" << endl;
+      }
+      filter_inv( complete_image );
+    }
 
-    // Apply any contrast adjustments and/or clipping to 8bit from 16bit or 32bit
-    filter_contrast( complete_image, session->view->getContrast(), (*session->image)->max, (*session->image)->min );
-
+    // Apply color mapping if requested
+    if( session->view->cmapped ){
+      if( session->loglevel >= 3 ){
+	*(session->logfile) << "CVT :: Applying color map" << endl;
+      }
+      filter_cmap( complete_image, session->view->cmap );
+      // Don't forget to reset our channels variable as this is used later
+      channels = 3;
+    }
 
     // Resize our image as requested. Use the interpolation method requested in the server configuration.
     //  - Use bilinear interpolation by default
@@ -250,6 +263,48 @@ loglevel );
       if( session->loglevel >= 5 ){
 	*(session->logfile) << "CVT :: Resizing using " << interpolation_type << " interpolation in "
 			    << interpolation_timer.getTime() << " microseconds" << endl;
+      }
+    }
+
+    // Apply any contrast adjustments and/or clipping to 8bit from 16bit or 32bit
+    filter_contrast( complete_image, session->view->getContrast() );
+
+
+    // Convert to greyscale if requested
+    if( (*session->image)->getColourSpace() == sRGB && session->view->colourspace == GREYSCALE ){
+
+      Timer greyscale_timer;
+      if( session->loglevel >= 5 ){
+	greyscale_timer.start();
+      }
+
+      filter_greyscale( complete_image );
+      channels = 1;
+
+      if( session->loglevel >= 5 ){
+	*(session->logfile) << "CVT :: Converting to greyscale in "
+			    << greyscale_timer.getTime() << " microseconds" << endl;
+      }
+    }
+
+
+    // Apply rotation - can apply this safely after gamma and contrast adjustment
+    if( session->view->getRotation() != 0.0 ){
+      Timer rotation_timer;
+      if( session->loglevel >= 5 ){
+	rotation_timer.start();
+      }
+
+      float rotation = session->view->getRotation();
+      filter_rotate( complete_image, rotation );
+
+      // For 90 and 270 rotation swap width and height
+      resampled_width = complete_image.width;
+      resampled_height = complete_image.height;
+
+      if( session->loglevel >= 5 ){
+        *(session->logfile) << "CVT :: Rotating image by " << rotation << " degrees in "
+			    << rotation_timer.getTime() << " microseconds" << endl; 
       }
     }
 

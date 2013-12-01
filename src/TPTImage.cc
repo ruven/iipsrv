@@ -2,11 +2,11 @@
 
 /*  IIP Server: Tiled Pyramidal TIFF handler
 
-    Copyright (C) 2000-2012 Ruven Pillay.
+    Copyright (C) 2000-2013 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
-    the Free Software Foundation; either version 2 of the License, or
+    the Free Software Foundation; either version 3 of the License, or
     (at your option) any later version.
 
     This program is distributed in the hope that it will be useful,
@@ -30,8 +30,6 @@ using namespace std;
 
 void TPTImage::openImage() throw (string)
 {
-//   tiff = NULL;
-//   tile_buf = NULL;
 
   // Insist that the tiff and tile_buf be non-NULL
   if( tiff || tile_buf ){
@@ -40,29 +38,22 @@ void TPTImage::openImage() throw (string)
 
   string filename = getFileName( currentX, currentY );
 
-  // Check if our image has been modified
-  updateTimestamp(filename);
-
+  // Update our timestamp
+  updateTimestamp( filename );
 
   // Try to open and allocate a buffer
   if( ( tiff = TIFFOpen( filename.c_str(), "r" ) ) == NULL ){
     throw string( "tiff open failed for: " + filename );
   }
-  loadImageInfo( currentX, currentY );
+
+  // Load our metadata if not already loaded
+  if( bpp == 0 ) loadImageInfo( currentX, currentY );
 
   // Insist on a tiled image
-  if( (tile_width == 0) && (tile_height == 0) )
+  if( (tile_width == 0) && (tile_height == 0) ){
     throw string( "TIFF image is not tiled" );
+  }
 
-  // Also get some metadata
-  char *tmp = NULL;
-  int count;
-  if( TIFFGetField( tiff, TIFFTAG_ARTIST, &tmp ) ) metadata["author"] = tmp;
-  if( TIFFGetField( tiff, TIFFTAG_COPYRIGHT, &tmp ) ) metadata["copyright"] = tmp;
-  if( TIFFGetField( tiff, TIFFTAG_DATETIME, &tmp ) ) metadata["create-dtm"] = tmp;
-  if( TIFFGetField( tiff, TIFFTAG_IMAGEDESCRIPTION, &tmp ) ) metadata["subject"] = tmp;
-  if( TIFFGetField( tiff, TIFFTAG_SOFTWARE, &tmp ) ) metadata["app-name"] = tmp;
-  if( TIFFGetField( tiff, TIFFTAG_XMLPACKET, &count, &tmp ) ) metadata["xmp"] = string(tmp,count);
   isSet = true;
 
 }
@@ -73,21 +64,14 @@ void TPTImage::loadImageInfo( int seq, int ang ) throw(string)
   tdir_t current_dir;
   int count;
   uint16 colour, samplesperpixel, bitspersample, sampleformat;
-  double sminvalue[4], smaxvalue[4];
+  double sminvalue[4] = {0.0};
+  double smaxvalue[4] = {0.0};
   unsigned int w, h;
   string filename;
+  char *tmp = NULL;
 
-  // If we are currently working on a different sequence number, then
-  //  close and reload the image.
-  if( (currentX != seq) || (currentY != ang) ){
-    closeImage();
-    filename = getFileName( seq, ang );
-    if( ( tiff = TIFFOpen( filename.c_str(), "r" ) ) == NULL ){
-      throw string( "tiff open failed for:" + filename );
-    }
-    currentX = seq;
-    currentY = ang;
-  }
+  currentX = seq;
+  currentY = ang;
 
   // Get the tile and image sizes
   TIFFGetField( tiff, TIFFTAG_TILEWIDTH, &tile_width );
@@ -102,8 +86,7 @@ void TPTImage::loadImageInfo( int seq, int ang ) throw(string)
   // We have to do this conversion explicitly to avoid problems on Mac OS X
   channels = (unsigned int) samplesperpixel;
   bpp = (unsigned int) bitspersample;
-
-  sampleType = (sampleformat==3) ? FLOATPOINT : FIXEDPOINT;
+  sampleType = (sampleformat==3) ? FLOATINGPOINT : FIXEDPOINT;
 
   // Check for the no. of resolutions in the pyramidal image
   current_dir = TIFFCurrentDirectory( tiff );
@@ -128,13 +111,13 @@ void TPTImage::loadImageInfo( int seq, int ang ) throw(string)
   if( colour == PHOTOMETRIC_CIELAB ) colourspace = CIELAB;
   else if( colour == PHOTOMETRIC_MINISBLACK ) colourspace = GREYSCALE;
   else if( colour == PHOTOMETRIC_PALETTE ){
-    // Watch out for colourmapped images. There are stored as 1 sample per pixel,
+    // Watch out for colourmapped images. These are stored as 1 sample per pixel,
     // but are decoded to 3 channels by libtiff, so declare them as sRGB
     colourspace = sRGB;
     channels = 3;
   }
   else if( colour == PHOTOMETRIC_YCBCR ){
-    // JPEG encoded tiles can be subsampled YCbCr encoded. Ask to decode of these to RGB
+    // JPEG encoded tiles can be subsampled YCbCr encoded. Ask to decode these to RGB
     TIFFSetField( tiff, TIFFTAG_JPEGCOLORMODE, JPEGCOLORMODE_RGB );
     colourspace = sRGB;
   }
@@ -143,16 +126,27 @@ void TPTImage::loadImageInfo( int seq, int ang ) throw(string)
   // Get the max and min values for our data type - required for floats
   TIFFGetFieldDefaulted( tiff, TIFFTAG_SMINSAMPLEVALUE, sminvalue );
   TIFFGetFieldDefaulted( tiff, TIFFTAG_SMAXSAMPLEVALUE, smaxvalue );
+  min.clear();
+  max.clear();
   for( int i=0; i<channels; i++ ){
-    if( smaxvalue[i] == 0.0 ){
+    if( (float)smaxvalue[i] == 0.0 ){
+      sminvalue[i] = 0.0;
       // Set default values if values not included in header
       if( bpp == 8 ) smaxvalue[i] = 255.0;
       else if( bpp == 16 ) smaxvalue[i] = 65535.0;
       else if( bpp == 32 && sampleType == FIXEDPOINT ) smaxvalue[i] = 4294967295.0;
     }
     min.push_back( (float)sminvalue[i] );
-    max.push_back( smaxvalue[i] );
+    max.push_back( (float)smaxvalue[i] );
   }
+
+  // Also get some basic metadata
+  if( TIFFGetField( tiff, TIFFTAG_ARTIST, &tmp ) ) metadata["author"] = tmp;
+  if( TIFFGetField( tiff, TIFFTAG_COPYRIGHT, &tmp ) ) metadata["copyright"] = tmp;
+  if( TIFFGetField( tiff, TIFFTAG_DATETIME, &tmp ) ) metadata["create-dtm"] = tmp;
+  if( TIFFGetField( tiff, TIFFTAG_IMAGEDESCRIPTION, &tmp ) ) metadata["subject"] = tmp;
+  if( TIFFGetField( tiff, TIFFTAG_SOFTWARE, &tmp ) ) metadata["app-name"] = tmp;
+  if( TIFFGetField( tiff, TIFFTAG_XMLPACKET, &count, &tmp ) ) metadata["xmp"] = string(tmp,count);
 
 }
 
@@ -204,7 +198,7 @@ RawTile TPTImage::getTile( int seq, int ang, unsigned int res, int layers, unsig
 
   // Reload our image information in case the tile size etc is different
   if( (currentX != seq) || (currentY != ang) ){
-    loadImageInfo( currentX, currentY );
+    loadImageInfo( seq, ang );
   }
 
 

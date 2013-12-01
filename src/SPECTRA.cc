@@ -1,7 +1,7 @@
 /*
     IIP SPECTRA Command Handler Class Member Function
 
-    Copyright (C) 2009-2011 Ruven Pillay.
+    Copyright (C) 2009-2013 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -14,8 +14,8 @@
     GNU General Public License for more details.
 
     You should have received a copy of the GNU General Public License
-    along with this program; if not, write to the Free Software
-    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+    along with this program; if not, write to the Free Software Foundation,
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
 #include "Task.h"
@@ -106,20 +106,29 @@ void SPECTRA::run( Session* session, const std::string& argument ){
     unsigned int tw = (*session->image)->getTileWidth();
     unsigned int index = y*tw + x;
 
-    unsigned short *usptr;
-    unsigned char *ucptr;
+    void *ptr;
     float reflectance;
 
     if( session->loglevel >= 5 ) (*session->logfile) << "SPECTRA :: " << rawtile.bpc << " bits per channel data" << endl;
 
-    // Handle depending on bit depth and normalize to 0.0->1.0
-    if( rawtile.bpc == 16 ){
-      usptr = (unsigned short*) (rawtile.data);
-      reflectance = static_cast<float>((float)usptr[index]) / 65536.0;
+    // Handle depending on bit depth
+    if( rawtile.bpc == 8 ){
+      ptr = (unsigned char*) (rawtile.data);
+      reflectance = static_cast<float>((float)((unsigned char*)ptr)[index]) / 255.0;
     }
-    else{
-      ucptr = (unsigned char*) rawtile.data;
-      reflectance = static_cast<float>((float)ucptr[index]) / 256.0;
+    else if( rawtile.bpc == 16 ){
+      ptr = (unsigned short*) (rawtile.data);
+      reflectance = static_cast<float>((float)((unsigned short*)ptr)[index]) / 65535.0;
+    }
+    else if( rawtile.bpc == 32 ){
+      if( rawtile.sampleType == FIXEDPOINT ) {
+        ptr = (unsigned int*) rawtile.data;
+        reflectance = static_cast<float>((float)((unsigned int*)ptr)[index]);
+      }
+      else {
+        ptr = (float*) rawtile.data;
+        reflectance = static_cast<float>((float)((float*)ptr)[index]);
+      }
     }
 
     spectrum.push_front( reflectance );

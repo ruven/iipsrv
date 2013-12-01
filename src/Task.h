@@ -1,11 +1,11 @@
 /*
     IIP Generic Task Class
 
-    Copyright (C) 2006-2012 Ruven Pillay.
+    Copyright (C) 2006-2013 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
-    the Free Software Foundation; either version 2 of the License, or
+    the Free Software Foundation; either version 3 of the License, or
     (at your option) any later version.
 
     This program is distributed in the hope that it will be useful,
@@ -161,6 +161,7 @@ class OBJ : public Task {
   void bits_per_channel();
   void horizontal_views();
   void vertical_views();
+  void min_max_values();
   void metadata( std::string field );
 
 };
@@ -284,6 +285,17 @@ class SHD : public Task {
   void run( Session* session, const std::string& argument );
 };
 
+/// Colormap Command
+class CMP : public Task {
+ public:
+  void run( Session* session, const std::string& argument );
+};
+
+/// Inversion Command
+class INV : public Task {
+ public:
+  void run( Session* session, const std::string& argument );
+};
 
 /// Zoomify Request Command
 class Zoomify : public Task {
@@ -294,6 +306,13 @@ class Zoomify : public Task {
 
 /// SPECTRA Request Command
 class SPECTRA : public Task {
+ public:
+  void run( Session* session, const std::string& argument );
+};
+
+
+/// SPECTRA Request Command
+class PFL : public Task {
  public:
   void run( Session* session, const std::string& argument );
 };

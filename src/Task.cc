@@ -1,11 +1,11 @@
 /*
     IIP Command Handler Member Functions
 
-    Copyright (C) 2006-2012 Ruven Pillay.
+    Copyright (C) 2006-2013 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
-    the Free Software Foundation; either version 2 of the License, or
+    the Free Software Foundation; either version 3 of the License, or
     (at your option) any later version.
 
     This program is distributed in the hope that it will be useful,
@@ -55,8 +55,11 @@ Task* Task::factory( const string& t ){
   else if( type == "icc" ) return new ICC;
   else if( type == "cvt" ) return new CVT;
   else if( type == "shd" ) return new SHD;
+  else if( type == "cmp" ) return new CMP;
+  else if( type == "inv" ) return new INV;
   else if( type == "zoomify" ) return new Zoomify;
   else if( type == "spectra" ) return new SPECTRA;
+  else if( type == "pfl" ) return new PFL;
   else if( type == "lyr" ) return new LYR;
   else if( type == "deepzoom" ) return new DeepZoom;
   else if( type == "iiif" ) return new IIIF;
@@ -302,6 +305,33 @@ void SHD::run( Session* session, const std::string& argument ){
 						   << values[0] << "," << values[1]  << endl;
 }
 
+void CMP::run( Session* session, const std::string& argument ){
+
+  /* The argument is the colormap type: available colormaps are
+     HOT, COLD, JET, BLUE, GREEN, RED
+  */
+
+  string ctype = argument.c_str();
+  transform( ctype.begin(), ctype.end(), ctype.begin(), ::tolower );
+
+  if( session->loglevel >= 2 ) *(session->logfile) << "CMP handler reached" << endl;
+  if( session->loglevel >= 3 ) *(session->logfile) << "CMP :: requested colormap is " << ctype << endl;
+  session->view->cmapped = true;
+
+  if (ctype=="hot") session->view->cmap = HOT;
+  else if (ctype=="cold") session->view->cmap = COLD;
+  else if (ctype=="jet") session->view->cmap = JET;
+  else if (ctype=="blue") session->view->cmap = BLUE;
+  else if (ctype=="green") session->view->cmap = GREEN;
+  else if (ctype=="red") session->view->cmap = RED;
+  else session->view->cmapped = false;
+}
+
+void INV::run( Session* session, const std::string& argument ){
+
+  if( session->loglevel >= 2 ) *(session->logfile) << "INV handler reached" << endl;
+  session->view->inverted = true;
+}
 
 void LYR::run( Session* session, const std::string& argument ){
 

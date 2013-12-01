@@ -16,7 +16,7 @@ FEATURES:
 * High performance with inbuilt configurable cache
 * Support for gigapixel images
 * Dynamic JPEG export of whole or regions of images at any resolution
-* 16 bit image support
+* 8, 16 and 32 bit image support
 * CIELAB support with automatic CIELAB->sRGB colour space conversion
 * JPEG2000 support
 * Supports Zoomify and DeepZoom protocols
@@ -148,9 +148,10 @@ MAX_CVT: Limits the maximum image dimensions in pixels (the WID or HEI
 commands) allowable for dynamic JPEG export via the CVT command. This 
 prevents huge requests from overloading the server. The default is 5000.
 
-MAX_LAYERS: The number of quality layers to decode for image that support 
+MAX_LAYERS: The maximum number of quality layers to decode for images that support 
 progressive quality encoding, such as JPEG2000. Ignored for other file 
-formats. The default is 1.
+formats. If not set, half of the available quality layers will be decoded by default.
+If set to -1, all the available layers will be decoded by default.
 
 FILENAME_PATTERN: Pattern that follows the name stem for a 3D or multispectral 
 sequence. eg: "_pyr_" for FZ1_pyr_000_090.tif. The default is "_pyr_". This is 
@@ -373,4 +374,4 @@ fastcgi.server = (
 ---------------------------------------------------------------------------
 Please refer to the project site http://iipimage.sf.net for further details
 ---------------------------------------------------------------------------
-(c) 2000-2012 Ruven Pillay <ruven@users.sourceforge.net>
+(c) 2000-2013 Ruven Pillay <ruven@users.sourceforge.net>

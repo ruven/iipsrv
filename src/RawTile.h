@@ -2,7 +2,7 @@
 
 /*  IIP Image Server
 
-    Copyright (C) 2000-2012 Ruven Pillay.
+    Copyright (C) 2000-2013 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -31,13 +31,13 @@
 
 
 /// Colour spaces - GREYSCALE, sRGB and CIELAB
-enum ColourSpaces { GREYSCALE, sRGB, CIELAB };
+enum ColourSpaces { NONE, GREYSCALE, sRGB, CIELAB };
 
 /// Compression Types
 enum CompressionType { UNCOMPRESSED, JPEG, DEFLATE, PNG };
 
 /// Sample Types
-enum SampleType { FIXEDPOINT, FLOATPOINT };
+enum SampleType { FIXEDPOINT, FLOATINGPOINT };
 
 
 /// Class to represent a single image tile
@@ -69,10 +69,6 @@ class RawTile{
 
   /// Tile timestamp
   time_t timestamp;
-
-
- public:
-
 
   /// Pointer to the image data
   void *data;
@@ -128,7 +124,7 @@ class RawTile{
     if( data && memoryManaged ){
       switch( bpc ){
       case 32:
-        if( sampleType == FLOATPOINT ) delete[] (float*) data;
+        if( sampleType == FLOATINGPOINT ) delete[] (float*) data;
         else delete[] (unsigned int*) data;
         break;
       case 16:
@@ -163,7 +159,7 @@ class RawTile{
 
     switch( bpc ){
       case 32:
-	if( sampleType == FLOATPOINT ) data = new float[dataLength/4];
+	if( sampleType == FLOATINGPOINT ) data = new float[dataLength/4];
 	else data = new unsigned int[dataLength/4];
 	break;
       case 16:
@@ -202,7 +198,7 @@ class RawTile{
 
     switch( bpc ){
       case 32:
-	if( sampleType == FLOATPOINT ) data = new float[dataLength/4];
+	if( sampleType == FLOATINGPOINT ) data = new float[dataLength/4];
 	else data = new int[dataLength/4];
 	break;
       case 16:

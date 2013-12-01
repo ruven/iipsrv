@@ -1,7 +1,7 @@
 /*
     Image View Parameters
 
-    Copyright (C) 2003-2012 Ruven Pillay.
+    Copyright (C) 2003-2013 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -25,10 +25,14 @@
 
 #include <cstddef>
 
+#include "Transforms.h"
+
 //include round function for MSVC compiler
 #if _MSC_VER
 #include "../windows/Time.h"
 #endif
+
+
 
 
 /// Class to intelligently handle Image Transforms
@@ -39,7 +43,7 @@ class View{
  private:
 
   // Resolution independent x,y,w,h region viewport
-  double view_left, view_top, view_width, view_height;
+  double view_left, view_top, view_width, view_height; /// viewport
 
   int resolution;                             /// Requested resolution
   unsigned int max_resolutions;               /// Total available resolutions
@@ -67,8 +71,12 @@ class View{
   int yangle;                                  /// Vertical View
   bool shaded;                                 /// Whether to use shading view
   int shade[3];                                /// Shading incident light angles (x,y,z)
+  bool cmapped;                                /// Whether to modify colormap
+  enum cmap_type cmap;                         /// colormap
+  bool inverted;                               /// Whether to invert colormap
   int max_layers;			       /// Maximum number of quality layers allowed
   int layers;			               /// Number of quality layers
+  ColourSpaces colourspace;                    /// Requested colourspace
 
 
   /// Constructor
@@ -80,7 +88,10 @@ class View{
     contrast = 1.0; gamma = 1.0;
     xangle = 0; yangle = 90;
     shaded = false; shade[0] = 0; shade[1] = 0; shade[2] = 0;
+    cmapped = false; inverted = false;
     max_layers = 0; layers = 0;
+    rotation = 0.0;
+    colourspace = NONE;
   };
 
 
@@ -100,6 +111,7 @@ class View{
 
 
   /// Get the size of the requested width
+  /* @return requested width */
   unsigned int getRequestWidth();
 
 
@@ -112,6 +124,7 @@ class View{
 
 
   /// Get the size of the requested height
+  /* @return requested height */
   unsigned int getRequestHeight();
 
 
@@ -124,10 +137,12 @@ class View{
 
 
   /// Return the requested resolution
+  /* @return requested resolution level */
   unsigned int getResolution();
 
 
   /// Return the scaling required in case our requested width or height is in between available resolutions
+  /* @return scaling factor */
   double getScale();
 
 
@@ -170,27 +185,35 @@ class View{
   int getLayers();
 
   /// Return the contrast adjustment
+  /* @return requested contrast */
   float getContrast(){ return contrast; };
 
   /// Return the image width at our requested resolution
+  /* @return image width */
   unsigned int getImageWidth(){ return width; };
 
   /// Return the image height at our requested resolution
+  /* @return image height */
   unsigned int getImageHeight(){ return height; };
 
   /// Return the left pixel of the viewport
+  /* @return position of left of viewport in pixels */
   unsigned int getViewLeft() ;
 
   /// Return the top pixel of the viewport
+  /* @return position of top of viewport in pixels */
   unsigned int getViewTop();
 
   /// Return the pixel width of the viewport
+  /* @return width of viewport in pixels */
   unsigned int getViewWidth();
 
   /// Return the pixel height of the viewport
+  /* @return height of viewport in pixels */
   unsigned int getViewHeight();
 
   /// Indicate whether the viewport has been set
+  /* @return boolean indicating whether viewport specified */
   bool viewPortSet();
 
   /// Set gamma
@@ -198,6 +221,7 @@ class View{
   void setGamma( float g ){ gamma = g; };
 
   /// Get gamma
+  /* @return requested gamma */
   float getGamma(){ return gamma; };
 
   /// Set rotation
@@ -205,6 +229,7 @@ class View{
   void setRotation( float r ){ rotation = r; };
 
   /// Get rotation
+  /* @return requested rotation angle in degrees */
   float getRotation(){ return rotation; };
 
 };

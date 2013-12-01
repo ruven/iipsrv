@@ -2,11 +2,11 @@
 
 /*  IIP fcgi server module
 
-    Copyright (C) 2000-2011 Ruven Pillay.
+    Copyright (C) 2000-2013 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
-    the Free Software Foundation; either version 2 of the License, or
+    the Free Software Foundation; either version 3 of the License, or
     (at your option) any later version.
 
     This program is distributed in the hope that it will be useful,
@@ -15,8 +15,8 @@
     GNU General Public License for more details.
 
     You should have received a copy of the GNU General Public License
-    along with this program; if not, write to the Free Software
-    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+    along with this program; if not, write to the Free Software Foundation,
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
 
@@ -42,7 +42,8 @@
 /// Main class to handle the pyramidal image source
 /** Provides functions to open, get various information from an image source
     and get individual tiles. This class is the base class for specific image
-    file formats, for example, Tiled Pyramidal TIFF images: TPTImage.h
+    file formats such as Tiled Pyramidal TIFF images via TPTImage.h and
+    JPEG2000 via Kakadu.h
  */
 
 class IIPImage {
@@ -77,15 +78,13 @@ class IIPImage {
   std::list <int> verticalAnglesList;
 
 
-
-  //protected: 
-  public:
+ public:
 
   /// Return the image type e.g. tif
   std::string type;
 
   /// The image pixel dimensions
-  std::vector<unsigned int> image_widths, image_heights;
+  std::vector <unsigned int> image_widths, image_heights;
 
   /// The base tile pixel dimensions
   unsigned int tile_width, tile_height;
@@ -106,7 +105,10 @@ class IIPImage {
   SampleType sampleType;
 
   /// The min and max sample value for each channel
-  std::vector<float> min, max;
+  std::vector <float> min, max;
+
+  /// Quality layers
+  unsigned int quality_layers;
 
   /// Indicate whether we have opened and initialised some paramters for this image
   bool isSet;
@@ -126,11 +128,15 @@ class IIPImage {
   /// Default Constructor
   IIPImage();
 
-  /// Constructer taking the image path as paramter
-  IIPImage( const std::string& );
+  /// Constructer taking the image path as parameter
+  /** @param s image path
+   */
+  IIPImage( const std::string& s );
 
   /// Copy Constructor taking reference to another IIPImage object
-  IIPImage( const IIPImage& );
+  /** @param im IIPImage object
+   */
+  IIPImage( const IIPImage& im );
 
   /// Virtual Destructor
   virtual ~IIPImage() { ; };
@@ -148,8 +154,8 @@ class IIPImage {
   const std::string& getImagePath() { return imagePath; };
 
   /// Return the full file path for a particular horizontal and vertical angle
-  /** \param x horizontal sequence angle
-      \param y vertical sequence angle
+  /** @param x horizontal sequence angle
+      @param y vertical sequence angle
    */
   const std::string getFileName( int x, int y );
 
@@ -157,7 +163,9 @@ class IIPImage {
   const std::string& getImageType() { return type; };
 
   /// Get the image timestamp
-  void updateTimestamp( const std::string& ) throw( std::string );
+  /** @param s file path
+   */
+  void updateTimestamp( const std::string& s ) throw( std::string );
 
   /// Get a HTTP RFC 1123 formatted timestamp
   const std::string getTimestamp();
@@ -180,16 +188,26 @@ class IIPImage {
   /// Return the number of channels for this image
   unsigned int getNumChannels() { return channels; };
 
+  /// Return the minimum sample value for each channel
+  /** @param n channel index
+   */
+  float getMinValue( int n=0 ) { return min[n]; };
+
+  /// Return the minimum sample value for each channel
+  /** @param n channel index
+   */
+  float getMaxValue( int n=0 ) { return max[n]; };
+
   /// Return the sample format type
   SampleType getSampleType(){ return sampleType; };
 
   /// Return the image width in pixels for a given resolution
-  /** \param n resolution number (0 is default and full size image)
+  /** @param n resolution number (0 is default and full size image)
    */
-  unsigned int getImageWidth( int n=0) { return image_widths[n]; };
+  unsigned int getImageWidth( int n=0 ) { return image_widths[n]; };
 
   /// Return the image height in pixels for a given resolution
-  /** \param n resolution number (0 is default and full size image)
+  /** @param n resolution number (0 is default and full size image)
    */
   unsigned int getImageHeight( int n=0 ) { return image_heights[n]; };
 
@@ -203,7 +221,7 @@ class IIPImage {
   ColourSpaces getColourSpace() { return colourspace; };
 
   /// Return image metadata
-  /** \param index metadata field name */
+  /** @param index metadata field name */
   const std::string& getMetadata( const std::string& index ) {
     return metadata[index];
   };
@@ -213,7 +231,7 @@ class IIPImage {
 
   /// Load the appropriate codec module for this image type
   /** Used only for dynamically loading codec modules. Overloaded by DSOImage class.
-      \param module the codec module path
+      @param module the codec module path
    */
   virtual void Load( const std::string& module ) {;};
 
@@ -224,8 +242,8 @@ class IIPImage {
   virtual void openImage() { throw std::string( "IIPImage openImage called" ); };
 
   /// Load information about the image eg. number of channels, tile size etc.
-  /** \param x horizontal sequence angle
-      \param y vertical sequence angle
+  /** @param x horizontal sequence angle
+      @param y vertical sequence angle
    */
   virtual void loadImageInfo( int x, int y ) { ; };
 
@@ -235,31 +253,31 @@ class IIPImage {
 
   /// Return an individual tile for a given angle and resolution
   /** Return a RawTile object: Overloaded by child class.
-      \param h horizontal angle
-      \param v vertical angle
-      \param r resolution
-      \param l quality layers
-      \param t tile number
+      @param h horizontal angle
+      @param v vertical angle
+      @param r resolution
+      @param l quality layers
+      @param t tile number
    */
   virtual RawTile getTile( int h, int v, unsigned int r, int l, unsigned int t ) { return RawTile(); };
 
 
   /// Return a region for a given angle and resolution
   /** Return a RawTile object: Overloaded by child class.
-      \param ha horizontal angle
-      \param va vertical angle
-      \param r resolution
-      \param layers number of layers to decode
-      \param x offset in x direction
-      \param y offset in y direction
-      \param w width of region
-      \param h height of region
-      \param b image buffer
+      @param ha horizontal angle
+      @param va vertical angle
+      @param r resolution
+      @param layers number of layers to decode
+      @param x offset in x direction
+      @param y offset in y direction
+      @param w width of region
+      @param h height of region
+      @param b image buffer
   */
   virtual RawTile getRegion( int ha, int va, unsigned int r, int layers, int x, int y, unsigned int w, unsigned int h ){ return RawTile(); };
 
   /// Assignment operator
-  const IIPImage& operator = ( const IIPImage& );
+  IIPImage& operator = ( const IIPImage& );
 
   /// Comparison equality operator
   friend int operator == ( const IIPImage&, const IIPImage& );
@@ -267,9 +285,7 @@ class IIPImage {
   /// Comparison non-equality operator
   friend int operator != ( const IIPImage&, const IIPImage& );
 
-
 };
-
 
 
 #endif

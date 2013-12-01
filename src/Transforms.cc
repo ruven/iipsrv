@@ -2,7 +2,7 @@
 
 /*  IIP fcgi server module - image processing routines
 
-    Copyright (C) 2004-2012 Ruven Pillay.
+    Copyright (C) 2004-2013 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -35,12 +35,78 @@ static const float _sRGB[3][3] = { {  3.240479, -1.537150, -0.498535 },
 				   { 0.055648, -0.204043, 1.057311 } };
 
 
+// Normalization function
+void filter_normalize( RawTile& in, std::vector<float>& max, std::vector<float>& min ) {
+
+  float *normdata;
+  float v;
+  unsigned int np = in.dataLength * 8 / in.bpc;
+  unsigned int nc = in.channels;
+
+  float* fptr;
+  unsigned int* uiptr;
+  unsigned short* usptr;
+  unsigned char* ucptr; 
+
+  if( in.bpc == 32 && in.sampleType == FLOATINGPOINT ) {
+    normdata = (float*)in.data;
+  } else {
+    normdata = new float[np];
+  }
+
+  for( unsigned int c = 0 ; c<nc ; c++) {
+ 
+    float minc = min[c];
+    float diffc = max[c] - minc;
+    float invdiffc = fabs(diffc) > 1e-30? 1./diffc : 1e30;
+
+   // Normalize our data
+   if( in.bpc == 32 && in.sampleType == FLOATINGPOINT ) {
+      fptr = (float*)in.data;
+      // Loop through our pixels for floating values 
+#pragma ivdep
+      for( unsigned int n=c; n<np; n+=nc ){
+        normdata[n] = std::isfinite(fptr[n])? (fptr[n] - minc) * invdiffc : 0.0;
+      }
+    } else if( in.bpc == 32 && in.sampleType == FIXEDPOINT ) {
+      uiptr = (unsigned int*)in.data;
+      // Loop through our pixels for uint values 
+#pragma ivdep
+      for( unsigned int n=c; n<np; n+=nc ){
+        normdata[n] = (uiptr[n] - minc) * invdiffc;
+      }
+    } else if( in.bpc == 16 ) {
+      usptr = (unsigned short*)in.data;
+      // Loop through our unsigned short pixels
+#pragma ivdep
+      for( unsigned int n=c; n<np; n+=nc ){
+        normdata[n] = (usptr[n] - minc) * invdiffc;
+      }
+    } else {
+      ucptr = (unsigned char*)in.data;
+      // Loop through our unsigned char pixels
+#pragma ivdep
+      for( unsigned int n=c; n<np; n+=nc ){
+        normdata[n] = (ucptr[n] - minc) * invdiffc;
+      }
+    }
+  }
+
+  if(! (in.bpc == 32 && in.sampleType == FLOATINGPOINT) ) {
+    delete[] (float*) in.data;
+    in.data = normdata;
+    in.bpc = 32;
+    in.dataLength = np * in.bpc / 8;
+  }
+
+  return;
+}
+
 
 // Hillshading function
 void filter_shade( RawTile& in, int h_angle, int v_angle ){
 
-  unsigned char* buffer = new unsigned char[in.width*in.height];
-
+  float o_x, o_y, o_z;
   // Incident light angle
   float a = (h_angle * 2 * 3.14159) / 360.0;
   // We assume a hypotenous of 1.0
@@ -58,30 +124,43 @@ void filter_shade( RawTile& in, int h_angle, int v_angle ){
   s_y = s_y / s_norm;
   s_z = s_z / s_norm;
 
-  unsigned char* ptr = (unsigned char*) in.data;
+  float *ptr, *buffer, *infptr;
+
   unsigned int k = 0;
+  unsigned int ndata = in.dataLength * 8 / in.bpc;
 
-  for( int n=0; n<in.dataLength; n+=3 ){
+  infptr= (float*)in.data;
+  // Create new (float) data buffer
+  buffer = new float[ndata];
 
-    float o_x = (float) - (ptr[n]-128.0) / 128.0;
-    float o_y = (float) - (ptr[n+1]-128.0) / 128.0;
-    float o_z = (float) - (ptr[n+2]-128.0) / 128.0;
+  for( int n=0; n<ndata; n+=3 ){
+    if( infptr[n] == 0. && infptr[n+1] == 0. && infptr[n+2] == 0. ) {
+      o_x = o_y = o_z = 0.;
+    }
+    else {
+      o_x = (float) - ((float)infptr[n]-0.5) * 2.;
+      o_y = (float) - ((float)infptr[n+1]-0.5) * 2.;
+      o_z = (float) - ((float)infptr[n+2]-0.5) * 2.;
+    }
+
 
     float dot_product;
-    if( ptr[n] == 0 && ptr[n+1] == 0 && ptr[n+2] == 0 ) dot_product = 0.0;
-    else dot_product = (s_x*o_x) + (s_y*o_y) + (s_z*o_z);
+    dot_product = (s_x*o_x) + (s_y*o_y) + (s_z*o_z);
 
-    dot_product = dot_product * 255.0;
-    if( dot_product < 0 ) dot_product = 0.0;
+    dot_product = 0.5 * dot_product;
+    if( dot_product < 0. ) dot_product = 0.;
+    if( dot_product > 1. ) dot_product = 1.;
 
-    buffer[k++] = (unsigned char) dot_product;
+    buffer[k++] = dot_product;
   }
 
-  delete[](unsigned char*) in.data;
-  in.data = (void*) buffer;
-  in.channels = 1;
-  in.dataLength = in.width * in.height;
 
+  // Delete old data buffer
+  delete[] (float*) in.data;
+
+  in.data = buffer;
+  in.channels = 1;
+  in.dataLength = in.width * in.height * in.bpc / 8;
 }
 
 
@@ -182,8 +261,9 @@ void filter_LAB2sRGB( RawTile& in ){
   unsigned long np = in.width * in.height * in.channels;
 
   // Parallelize code using OpenMP
+  unsigned int nstep = in.channels;
 #pragma omp parallel for
-  for( unsigned long n=0; n<np; n+=in.channels ){
+  for( unsigned long n=0; n<np; n+=nstep ){
     unsigned char* ptr = (unsigned char*) in.data;
     unsigned char q[3];
     LAB2sRGB( &ptr[n], &q[0] );
@@ -193,10 +273,106 @@ void filter_LAB2sRGB( RawTile& in ){
   }
 }
 
+// Colormap function
+void filter_cmap( RawTile& in, enum cmap_type cmap ){
+
+  int i;
+  float value;
+  unsigned out_chan = 3;
+  unsigned int ndata = in.dataLength * 8 / in.bpc / in.channels;
+  unsigned int k = 0;
+
+  const float max3=1./3.;
+  const float max8=1./8.;
+
+  float *fptr = (float*)in.data;
+  float *outptr = new float[ndata*out_chan];
+  float *outv = outptr;
+
+  switch(cmap){
+    case HOT:
+#pragma ivdep
+      for( int n=0; n<ndata; n++, outv+=3 ){
+        value = fptr[n];
+        if(value>1.)
+          { outv[0]=outv[1]=outv[2]=1.; }
+        else if(value<=0.)
+          { outv[0]=outv[1]=outv[2]=0.; }
+        else if(value<max3)
+          { outv[0]=3.*value; outv[1]=outv[2]=0.; }
+        else if(value<2*max3)
+          { outv[0]=1.; outv[1]=3.*value-1.; outv[2]=0.; }
+        else if(value<1.)
+          { outv[0]=outv[1]=1.; outv[2]=3.*value-2.; }
+        else { outv[0]=outv[1]=outv[2]=1.; }
+      }
+      break;
+    case COLD:
+#pragma ivdep
+      for( int n=0; n<ndata; n++, outv+=3 ){
+        value = fptr[n];
+        if(value>1.)
+          { outv[0]=outv[1]=outv[2]=1.; }
+        else if(value<=0.)
+          { outv[0]=outv[1]=outv[2]=0.; }
+        else if(value<max3)
+          { outv[0]=outv[1]=0.; outv[2]=3.*value; }
+        else if(value<2.*max3)
+          { outv[0]=0.; outv[1]=3.*value-1.; outv[2]=1.; }
+        else if(value<1.)
+          { outv[0]=3.*value-2.; outv[1]=outv[2]=1.; }
+        else {outv[0]=outv[1]=outv[2]=1.;}
+      }
+      break;
+    case JET:
+#pragma ivdep
+      for( int n=0; n<ndata; n++, outv+=3 ){
+        value = fptr[n];
+        if(value<0.)
+          { outv[0]=outv[1]=outv[2]=0.; }
+        else if(value<max8)
+          { outv[0]=outv[1]=0.; outv[2]= 4.*value + 0.5; }
+        else if(value<3.*max8)
+          { outv[0]=0.; outv[1]= 4.*value - 0.5; outv[2]=1.; }
+        else if(value<5.*max8)
+          { outv[0]= 4*value - 1.5; outv[1]=1.; outv[2]= 2.5 - 4.*value; }
+        else if(value<7.*max8)
+          { outv[0]= 1.; outv[1]= 3.5 -4.*value; outv[2]= 0; }
+        else if(value<1.)
+          { outv[0]= 4.5-4.*value; outv[1]= outv[2]= 0.; }
+        else { outv[0]=0.5; outv[1]=outv[2]=0.; }
+      }
+      break;
+    default:
+      break;
+    };
+
+
+  // Delete old data buffer
+  delete[] (float*) in.data;
+  in.data = outptr;
+  in.channels = out_chan;
+  in.dataLength = ndata * out_chan * in.bpc / 8;
+}
+
+// Inversion function
+void filter_inv( RawTile& in ){
+  float* infptr;
+  unsigned int np = in.dataLength * 8 / in.bpc;
+
+  infptr = (float*)in.data;
+
+  // Loop through our pixels for floating values 
+#pragma ivdep
+  for(int n=np; n--;) {
+    float v = *infptr;
+    *(infptr++) = 1. - v;
+  }
+}
 
 // Resize image using nearest neighbour interpolation
 void filter_interpolate_nearestneighbour( RawTile& in, unsigned int resampled_width, unsigned int resampled_height ){
-  
+
   unsigned char* data8;
   unsigned short* data16;
   unsigned int* data32;
@@ -306,8 +482,8 @@ void filter_interpolate_bilinear( RawTile& in, unsigned int resampled_width, uns
   int offset = 0;
   float x_diff, y_diff;
   for(int i = 0; i < resampled_height; i++){
-	  y = (int)(y_ratio * i);
-	  y_diff = (y_ratio * i) - y;
+          y = (int)(y_ratio * i);
+          y_diff = (y_ratio * i) - y;
     //if we come to edge, remember it, so we don't call unexisting pixels
     if(y == height - 1) {
       edgeY = true;
@@ -317,10 +493,10 @@ void filter_interpolate_bilinear( RawTile& in, unsigned int resampled_width, uns
       edgeY = false;
     }
 
-	  for(int j = 0; j < resampled_width; j++){
-		  x = (int)(x_ratio * j);
+          for(int j = 0; j < resampled_width; j++){
+                  x = (int)(x_ratio * j);
       x_diff = (x_ratio * j) - x;
-		  index = x + y*width;
+                  index = x + y*width;
       //if we come to edge, remember it, so we don't call unexisting pixels
       if(x == width - 1){
         edgeX = true;
@@ -330,10 +506,10 @@ void filter_interpolate_bilinear( RawTile& in, unsigned int resampled_width, uns
         edgeX = false;
       }
 
-		  for(int k = 0; k < channels; k++) {
+                  for(int k = 0; k < channels; k++) {
 
         if(in.bpc == 8){
-			    a = data8[(index)*channels + k];
+                            a = data8[(index)*channels + k];
           if (!edgeX) b = data8[(index+1)*channels + k];
           else b = 0;
           if(!edgeY) c = data8[(index+width)*channels + k];
@@ -344,29 +520,29 @@ void filter_interpolate_bilinear( RawTile& in, unsigned int resampled_width, uns
           buf8[offset++] = color8;
         }
         else if(in.bpc == 16){
-			    a = data16[(index)*channels + k];
-			    if (!edgeX) b = data16[(index+1)*channels + k];
+                            a = data16[(index)*channels + k];
+                            if (!edgeX) b = data16[(index+1)*channels + k];
           else b = 0;
           if(!edgeY) c = data16[(index+width)*channels + k];
           else c = 0;
           if(!edgeX && !edgeY) d = data16[(index + width + 1)*channels + k];
           else d = 0;
-			    color16 = (unsigned char) (a*(1-x_diff)*(1-y_diff) + b*(x_diff)*(1-y_diff) + c*(1-x_diff)*(y_diff) + d*(x_diff)*(y_diff));
-			    buf16[offset++] = color16;
+                            color16 = (unsigned char) (a*(1-x_diff)*(1-y_diff) + b*(x_diff)*(1-y_diff) + c*(1-x_diff)*(y_diff) + d*(x_diff)*(y_diff));
+                            buf16[offset++] = color16;
         }
         else if(in.bpc == 32){
-			    a = data32[(index)*channels + k];
-			    if (!edgeX) b = data32[(index+1)*channels + k];
+                            a = data32[(index)*channels + k];
+                            if (!edgeX) b = data32[(index+1)*channels + k];
           else b = 0;
           if(!edgeY) c = data32[(index+width)*channels + k];
           else c = 0;
           if(!edgeX && !edgeY) d = data32[(index + width + 1)*channels + k];
           else d = 0;
-			    color32 = (unsigned char) (a*(1-x_diff)*(1-y_diff) + b*(x_diff)*(1-y_diff) + c*(1-x_diff)*(y_diff) + d*(x_diff)*(y_diff));
-			    buf32[offset++] = color32;
+                            color32 = (unsigned char) (a*(1-x_diff)*(1-y_diff) + b*(x_diff)*(1-y_diff) + c*(1-x_diff)*(y_diff) + d*(x_diff)*(y_diff));
+                            buf32[offset++] = color32;
         }
-		  }
-	  }
+                  }
+          }
   }
   if( in.memoryManaged && (in.bpc == 8 || in.bpc == 16 || in.bpc == 32) ) delete[] in.data;
   if(in.bpc == 8){
@@ -386,92 +562,174 @@ void filter_interpolate_bilinear( RawTile& in, unsigned int resampled_width, uns
   in.dataLength = resampled_width * resampled_height * channels * in.bpc/8;
 }
 
-
 // Function to apply a contrast adjustment and clip to 8 bit
-void filter_contrast( RawTile& in, float c, std::vector<float>& max, std::vector<float>& min ){
+void filter_contrast( RawTile& in, float c ){
 
-  unsigned int np = in.width * in.height * in.channels;
+  unsigned int np = in.dataLength * 8 / in.bpc;
 
-  unsigned char* buffer;
+  unsigned char* buffer = new unsigned char[np];
 
-  // 8-bit case first
-  if( in.bpc == 8 ){
-    if( c == 1.0 ) return;
-    buffer = (unsigned char*) in.data;
-    for( unsigned int n=0; n<np; n++ ){
-      float v = (float)(((unsigned char*)in.data)[n]) * c;
-      v = (v<255.0) ? v : 255.0;
-      buffer[n] = (unsigned char) v;
-    }
-  }
-  // 16 and 32 bit images
-  else{
-    float v, contrast;
+  float* infptr = (float*)in.data;
 
-    // Allocate new 8 bit buffer for tile
-    buffer = new unsigned char[np];
-
-    if( in.bpc == 16 ) contrast = c/256.0;
-
-    for( unsigned int n=0; n<np; n++ ){
-
-      if( in.bpc == 32 ){
-	int ch = (int)( n % in.channels );
-	contrast = c * 256.0 / (max[ch]-min[ch]);
-	v = ((float*)in.data)[n] * contrast;
-      }
-      else v = ((unsigned short*)in.data)[n] * contrast;
-
-      v = (v<255.0) ? v : 255.0;
-      v = (v>0.0) ? v : 0;
-      buffer[n] = (unsigned char) v;
-    }
-
-    // Replace original buffer with new
-    if( in.bpc == 32 && in.sampleType == FLOATPOINT ) delete[] (float*) in.data;
-    else if( in.bpc == 32 && in.sampleType == FIXEDPOINT ) delete[] (unsigned int*) in.data;
-    else if( in.bpc == 16 ) delete[] (unsigned short*) in.data;
-
-    in.data = buffer;
-    in.bpc = 8;
-
+#pragma ivdep
+  for( unsigned int n=0; n<np; n++ ){
+    float v = infptr[n] * 255.0 * c;
+    buffer[n] = (unsigned char) (v<255.0) ? (v<0.0? 0.0 : v) : 255.0;
   }
 
+  // Replace original buffer with new
+  delete[] (float*) in.data;
+  in.data = buffer;
+  in.bpc = 8;
+  in.dataLength = np * in.bpc/8;
 }
 
 
 // Gamma correction
-void filter_gamma( RawTile& in, float g, std::vector<float>& max, std::vector<float>& min ){
+void filter_gamma( RawTile& in, float g ){
 
-  float v;
-  unsigned int np = in.width * in.height * in.channels;
+  float* infptr;
+  unsigned int np = in.dataLength * 8 / in.bpc;
 
-  // Loop through our pixels
-  for( unsigned int n=0; n<np; n++ ){
+<<<<<<< HEAD
+    // Replace original buffer with new
+    if( in.bpc == 32 && in.sampleType == FLOATPOINT ) delete[] (float*) in.data;
+    else if( in.bpc == 32 && in.sampleType == FIXEDPOINT ) delete[] (unsigned int*) in.data;
+    else if( in.bpc == 16 ) delete[] (unsigned short*) in.data;
+=======
+  if( g == 1.0 ) return;
+>>>>>>> 3fb67b04d2cfff0cd8b909e3ac6cd0ac739c8226
 
-    int c = (int)( n % in.channels );
+  infptr = (float*)in.data;
 
+  // Loop through our pixels for floating values 
+#pragma ivdep
+  for(int n=np; n--;){
+    float v = *infptr;
+    *(infptr++) = powf(v<0.0? 0.0 : v, g );
+  }
+}
+
+
+// Rotation function
+void filter_rotate( RawTile& in, float angle=0.0 ){
+
+  // Currently implemented only for rectangular rotations
+  if( (int)angle % 90 == 0 && (int)angle % 360 != 0 ){
+
+    // Intialize our counter and data buffer
+    unsigned int n = 0;
+    void* buffer = NULL;
+
+    // Allocate memory for our temporary buffer
+    if(in.bpc == 8) buffer = new unsigned char[in.width*in.height*in.channels];
+    else if(in.bpc == 16) buffer = new unsigned short[in.width*in.height*in.channels];
+    else if(in.bpc == 32 && in.sampleType == FIXEDPOINT ) buffer = new unsigned int[in.width*in.height*in.channels];
+    else if(in.bpc == 32 && in.sampleType == FLOATINGPOINT ) buffer = new float[in.width*in.height*in.channels];
+
+    // Rotate 90
+    if( (int) angle % 360 == 90 ){
+      for( unsigned int i=0; i < in.width; i++ ){
+	for( unsigned int j=in.height; j>0; j-- ){
+	  unsigned int index = (in.width*j + i)*in.channels;
+	  for( int k=0; k < in.channels; k++ ){
+	    if(in.bpc == 8) ((unsigned char*)buffer)[n++] = ((unsigned char*)in.data)[index+k];
+	    else if(in.bpc == 16) ((unsigned short*)buffer)[n++] = ((unsigned short*)in.data)[index+k];
+	    else if(in.bpc == 32 && in.sampleType == FIXEDPOINT) ((unsigned int*)buffer)[n++] = ((unsigned int*)in.data)[index+k];
+	    else if(in.bpc == 32 && in.sampleType == FLOATINGPOINT ) ((float*)buffer)[n++] = ((float*)in.data)[index+k];
+	  }
+	}
+      }
+    }
+
+    // Rotate 270
+    else if( (int) angle % 360 == 270 ){
+      for( int i=in.width; i>0; i-- ){
+	for( int j=0; j < in.height; j++ ){
+	  unsigned int index = (in.width*j + i)*in.channels;
+	  for( int k=0; k < in.channels; k++ ){
+	    if(in.bpc == 8) ((unsigned char*)buffer)[n++] = ((unsigned char*)in.data)[index+k];
+	    else if(in.bpc == 16) ((unsigned short*)buffer)[n++] = ((unsigned short*)in.data)[index+k];
+	    else if(in.bpc == 32 && in.sampleType == FIXEDPOINT ) ((unsigned int*)buffer)[n++] = ((unsigned int*)in.data)[index+k];
+	    else if(in.bpc == 32 && in.sampleType == FLOATINGPOINT ) ((float*)buffer)[n++] = ((float*)in.data)[index+k];
+	  }
+	}
+      }
+    }
+
+    // Rotate 180
+    else if( (int) angle % 360 == 180 ){
+      for( unsigned int i=(in.width*in.height)-1; i > 0; i-- ){
+	unsigned index = i * in.channels;
+	for( int k=0; k < in.channels; k++ ){
+	  if(in.bpc == 8) ((unsigned char*)buffer)[n++]  = ((unsigned char*)in.data)[index+k];
+	  else if(in.bpc == 16) ((unsigned short*)buffer)[n++] = ((unsigned short*)in.data)[index+k];
+	  else if(in.bpc == 32 && in.sampleType == FIXEDPOINT) ((unsigned int*)buffer)[n++] = ((unsigned int*)in.data)[index+k];
+	  else if(in.bpc == 32 && in.sampleType == FLOATINGPOINT ) ((float*)buffer)[n++] = ((float*)in.data)[index+k];
+	}
+      }
+    }
+
+    // Delete old data buffer
+    if( in.bpc == 8 ) delete[] (unsigned char*) in.data;
+    else if( in.bpc == 16 ) delete[] (unsigned short*) in.data;
+    else if( in.bpc == 32 && in.sampleType == FIXEDPOINT ) delete[] (unsigned int*) in.data;
+    else if( in.bpc == 32 && in.sampleType == FLOATINGPOINT ) delete[] (float*) in.data;
+
+    // Assign new data to Rawtile
+    in.data = buffer;
+
+    // For 90 and 270 rotation swap width and height
+    if( (int)angle % 180 == 90 ){
+      unsigned int tmp = in.height;
+      in.height = in.width;
+      in.width = tmp;
+    }
+  }
+}
+
+<<<<<<< HEAD
     if( in.bpc == 32 && in.sampleType == FLOATPOINT ) v = (float)((float*)in.data)[n];
     else if( in.bpc == 32 && in.sampleType == FIXEDPOINT ) v = (float)((unsigned int*)in.data)[n];
     else if( in.bpc == 16 ) v = (float)((unsigned short*)in.data)[n];
     else v = (float)((unsigned char*)in.data)[n];
+=======
+>>>>>>> 3fb67b04d2cfff0cd8b909e3ac6cd0ac739c8226
 
-    // Normalize our data
-    v = (v - min[c]) / max[c] - min[c];
+// Convert colour to grayscale using the conversion formula:
+//   Luminance = 0.2126*R + 0.7152*G + 0.0722*B
+// Note that we don't linearize before converting
+void filter_greyscale( RawTile& rawtile ){
 
-    // Perform gamma correction
-    v = max[c] * powf( v, g );
+  if( rawtile.bpc != 8 || rawtile.channels != 3 ) return;
 
-    // Limit to our allowed data range
-    if( v < min[c] ) v = min[c];
-    else if( v > max[c] ) v = max[c];
+  unsigned int np = rawtile.width * rawtile.height;
+  unsigned char* buffer = new unsigned char[rawtile.width * rawtile.height];
 
+<<<<<<< HEAD
     if( in.bpc == 32 && in.sampleType == FLOATPOINT ) ((float*)in.data)[n] = (float) v;
     else if( in.bpc == 32 && in.sampleType == FIXEDPOINT ) ((unsigned int*)in.data)[n] = (float) v;
     else if( in.bpc == 16 ) ((unsigned short*)in.data)[n] = (unsigned short) v;
     else v = ((unsigned char*)in.data)[n] = (unsigned char) v;
+=======
+  // Calculate using fixed-point arithmetic
+  //  - benchmarks to around 25% faster than floating point
+  unsigned int n = 0;
+  for( unsigned int i=0; i<np; i++ ){
+    unsigned char R = ((unsigned char*)rawtile.data)[n++];
+    unsigned char G = ((unsigned char*)rawtile.data)[n++];
+    unsigned char B = ((unsigned char*)rawtile.data)[n++];
+    buffer[i] = (unsigned char)( ( 1254097*R + 2462056*G + 478151*B ) >> 22 );
+>>>>>>> 3fb67b04d2cfff0cd8b909e3ac6cd0ac739c8226
   }
 
+  // Delete our old data buffer and instead point to our grayscale data
+  delete[] (unsigned char*) rawtile.data;
+  rawtile.data = (void*) buffer;
+
+  // Update our number of channels and data length
+  rawtile.channels = 1;
+  rawtile.dataLength = np;
 }
 
 // Rotation function

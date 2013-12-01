@@ -1,3 +1,104 @@
+07/09/2013:
+	- Modified PFL to handle single points as well as profiles. Thus syntax for single
+	  points: PFL=<resolution>:<x>,<y> and for profiles PFL=<resolution>:<x1>,<y1>-<x2>,<y2>
+
+
+03/09/2013:
+	- Updated PFL command to also handle multi-spectral data.
+
+
+02/09/2013:
+	- Modified PFL command to use JSON and implemented vertical profiles.
+
+
+28/08/2013:
+	- Added PFL command for obtaining raw X profiles of data. Syntax
+	  is <resolution>:<x1>,<y1>-<x2>,<y2>. Only horizontal profiles are supported so far.
+
+
+23/08/2013:
+	- Fix to OpenMP code in Transform.cc for compatibility with Intel compiler - thanks
+	  Emmanuel Bertin.
+	- Addition of extra timing output in JTL.cc
+
+
+06/08/2013:
+	- Moved setenv/unsetenv function definitions to Main.cc where they are now needed following
+	  movement of timezone setting code there.
+
+
+31/07/2013:
+	- Fix to JTL.cc and TPTImage.cc for multispectral sequences consisting of images of
+	  different bit depths.
+
+
+23/07/2013:
+	- Fix to KakaduImage.cc to enable correct handling of bilevel images.
+	- Fix to quality layer decoding - variables moved directly into IIPImage class
+	- Scaling of 8 and 16 bit spectral data to normalized 0.0->1.0 float in SPECTRA.cc
+
+
+08/07/2013:
+	- Fix to configure.in for libmemcached configuration problem on Fedora.
+
+
+02/07/2013:
+        - Optimizations to FIF.cc. Unnecessary file header reading is now avoided as top
+          level IIPImage class cache fully utilized. Cleanup of constructor code of IIPImage,
+          TPTImage and KakaduImage code. Significant speed up to requests of cached images.
+        - Modification to if_modified_since code in FIF.cc, to avoid repeatedly resetting the
+          timezone environment variable to UTC when checking timestamps, which is a relatively
+          slow process. This is now set once globally in Main.cc and set back on main exit.
+
+
+12/06/2013:
+	- Extra checks for malformed images in KakaduImage.cc.
+
+
+11/04/2013:
+	- Several fixes to Kakadu.cc. To force resolution levels to be floor(x/2) rather than the default
+	  ceil(x/2) to match how TIFF resolutions are created. Also modification to force 16 bit
+	  JPEG2000 to unsigned output. And also fix to strip alpha channels from images.
+
+
+14/03/2013:
+	- Fix to gamma conversion - thanks Chiara Marmo
+	- Update to greyscale conversion code
+
+
+09/03/2013:
+	- Updated copyright message in header to new Free Software Foundation address.
+
+
+08/03/2013:
+	- Added greyscale conversion support via new filter_greyscale transform function.
+
+
+23/02/2013:
+	- Gamma correction fixed, minmax commands added, colormap commands added (Chiara Marmo)
+
+
+30/01/2013:
+	- Fix to prevent crashing on malformed JPEG2000 files.
+
+
+11/12/2012:
+	- Changed FLOAT enum type to FLOATINGPOINT to avoid VC++ compiler error.
+	- Implemented 16 and 32bit versions of interpolation functions.
+
+
+10/12/2012:
+	- Cleanup to 32 bit code
+	- New command to set dynamically the min and max for 32 bit float
+	- Addition of rotation function for 90,180,270 degree rotations
+	- Fixes to autoconf
+
+
+30/10/2012:
+	- Autoconf cleanup. Removed unneccesary autoconf files: should now use
+	  autogen.sh script first before ./configure
+
+
 18/10/2012:
 	- Fix to imageCache delete in FIF.cc - thanks to Michal Becak.
 

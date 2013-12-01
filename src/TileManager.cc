@@ -4,7 +4,7 @@
 
 /*  IIP Server: Tile Cache Handler
 
-    Copyright (C) 2005-2012 Ruven Pillay.
+    Copyright (C) 2005-2013 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -38,7 +38,6 @@ RawTile TileManager::getNewTile( int resolution, int tile, int xangle, int yangl
 
 
   RawTile ttt;
-  int len = 0;
 
   // Get our raw tile from the IIPImage image object
   ttt = image->getTile( xangle, yangle, resolution, layers, tile );
@@ -83,7 +82,7 @@ RawTile TileManager::getNewTile( int resolution, int tile, int xangle, int yangl
     // Do our JPEG compression iff we have an 8 bit per channel image
     if( ttt.bpc == 8 ){
       if( loglevel >=2 ) compression_timer.start();
-      len = jpeg->Compress( ttt );
+      jpeg->Compress( ttt );
       if( loglevel >= 2 ) *logfile << "TileManager :: JPEG Compression Time: "
 				   << compression_timer.getTime() << " microseconds" << endl;
     }
@@ -355,11 +354,10 @@ RawTile TileManager::getRegion( unsigned int res, int seq, int ang, int layers, 
   region.sampleType = sampleType;
 
   // Allocate memory for the region
-
   if( bpp == 8 ) region.data = new unsigned char[width*height*channels];
   else if( bpp == 16 ) region.data = new unsigned short[width*height*channels];
   else if( bpp == 32 && sampleType == FIXEDPOINT ) region.data = new int[width*height*channels];
-  else if( bpp == 32 && sampleType == FLOATPOINT ) region.data = new float[width*height*channels];
+  else if( bpp == 32 && sampleType == FLOATINGPOINT ) region.data = new float[width*height*channels];
 
   unsigned int current_height = 0;
 
@@ -463,7 +461,7 @@ RawTile TileManager::getRegion( unsigned int res, int seq, int ang, int layers, 
 	  unsigned int* buf = (unsigned int*) region.data;
 	  memcpy( &buf[buffer_index], &ptr[inx], dst_tile_width*channels*4 );
 	}
-	else if( bpp == 32 && sampleType == FLOATPOINT ){
+	else if( bpp == 32 && sampleType == FLOATINGPOINT ){
 	  float* ptr = (float*) rawtile.data;
 	  float* buf = (float*) region.data;
 	  memcpy( &buf[buffer_index], &ptr[inx], dst_tile_width*channels*4 );
