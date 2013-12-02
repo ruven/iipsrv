@@ -67,7 +67,7 @@ class TPTImage : public IIPImage {
   /// Assignment Operator
   /** @param TPTImage object
    */
-  TPTImage& operator = ( const TPTImage& image ) {
+  TPTImage& operator = ( TPTImage image ) {
     if( this != &image ){
       closeImage();
       IIPImage::operator=(image);

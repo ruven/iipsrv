@@ -158,7 +158,7 @@ class KakaduImage : public IIPImage {
   /// Assignment Operator 
   /** @param TPTImage object 
    */ 
-  KakaduImage& operator = ( const KakaduImage& image ) {
+  KakaduImage& operator = ( KakaduImage image ) {
     if( this != &image ){
       closeImage();
       IIPImage::operator=(image);

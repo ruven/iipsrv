@@ -34,103 +34,43 @@
 #include <cstdio>
 #include <sys/stat.h>
 #include <sstream>
+#include <iostream>
+#include <algorithm>
 
 
 using namespace std;
 
 
 
-IIPImage::IIPImage()
+// Swap function
+void IIPImage::swap( IIPImage& first, IIPImage& second ) // nothrow
 {
-  isFile = false;
-  bpp = 0;
-  channels = 0;
-  quality_layers = 0;
-  isSet = false;
-  currentX = 0;
-  currentY = 90;
-  timestamp = 0;
+  // Swap the members of the two objects
+  std::swap( first.imagePath, second.imagePath );
+  std::swap( first.isFile, second.isFile );
+  std::swap( first.type, second.type );
+  std::swap( first.fileSystemPrefix, second.fileSystemPrefix );
+  std::swap( first.fileNamePattern, second.fileNamePattern );
+  std::swap( first.horizontalAnglesList, second.horizontalAnglesList );
+  std::swap( first.verticalAnglesList, second.verticalAnglesList );
+  std::swap( first.image_widths, second.image_widths );
+  std::swap( first.image_heights, second.image_heights );
+  std::swap( first.tile_width, second.tile_width );
+  std::swap( first.tile_height, second.tile_height );
+  std::swap( first.numResolutions, second.numResolutions );
+  std::swap( first.bpp, second.bpp );
+  std::swap( first.channels, second.channels );
+  std::swap( first.sampleType, second.sampleType );
+  std::swap( first.quality_layers, second.quality_layers );
+  std::swap( first.colourspace, second.colourspace );
+  std::swap( first.isSet, second.isSet );
+  std::swap( first.currentX, second.currentX );
+  std::swap( first.currentY, second.currentY );
+  std::swap( first.metadata, second.metadata );
+  std::swap( first.timestamp, second.timestamp );
+  std::swap( first.min, second.min );
+  std::swap( first.max, second.max );
 }
-
-
-
-IIPImage::IIPImage ( const string& p )
-{
-  isFile = false;
-  bpp = 0;
-  channels = 0;
-  quality_layers = 0;
-  isSet = false;
-  currentX = 0;
-  currentY = 90;
-  timestamp = 0;
-  imagePath = p;
-}
-
-
-
-// Copy constructor
-IIPImage::IIPImage( const IIPImage& image )
-{
-  imagePath = image.imagePath;
-  isFile = image.isFile;
-  type = image.type;
-  fileSystemPrefix = image.fileSystemPrefix;
-  fileNamePattern = image.fileNamePattern;
-  horizontalAnglesList = image.horizontalAnglesList;
-  verticalAnglesList = image.verticalAnglesList;
-  image_widths = image.image_widths;
-  image_heights = image.image_heights;
-  tile_width = image.tile_width;
-  tile_height = image.tile_height;
-  numResolutions = image.numResolutions;
-  bpp = image.bpp;
-  channels = image.channels;
-  sampleType = image.sampleType;
-  quality_layers = image.quality_layers;
-  colourspace = image.colourspace;
-  isSet = image.isSet;
-  currentX = image.currentX;
-  currentY = image.currentY;
-  metadata = image.metadata;
-  timestamp = image.timestamp;
-  min = image.min;
-  max = image.max;
-}
-
-
-
-// Assignment constructor
-IIPImage& IIPImage::operator = ( const IIPImage& image )
-{
-  if( this != &image ){
-    imagePath = image.imagePath;
-    isFile = image.isFile;
-    type = image.type;
-    fileSystemPrefix = image.fileSystemPrefix;
-    fileNamePattern = image.fileNamePattern;
-    horizontalAnglesList = image.horizontalAnglesList;
-    verticalAnglesList = image.verticalAnglesList;
-    image_widths = image.image_widths;
-    image_heights = image.image_heights;
-    tile_width = image.tile_width;
-    tile_height = image.tile_height;
-    numResolutions = image.numResolutions;
-    bpp = image.bpp;
-    channels = image.channels;
-    sampleType = image.sampleType;
-    quality_layers = image.quality_layers;
-    colourspace = image.colourspace;
-    isSet = image.isSet;
-    currentX = image.currentX;
-    currentY = image.currentY;
-    metadata = image.metadata;
-    timestamp = image.timestamp;
-    min = image.min;
-    max = image.max;
-  }
-  return *this;
-}  
 
 
 
