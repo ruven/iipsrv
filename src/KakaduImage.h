@@ -127,37 +127,34 @@ class KakaduImage : public IIPImage {
  public:
 
   /// Constructor
-  KakaduImage():IIPImage() {
+  KakaduImage(): IIPImage(), virtual_levels( 0 ){
     tile_width = TILESIZE; tile_height = TILESIZE;
-    virtual_levels = 0;
   };
 
   /// Constructor
   /** @param path image path
    */
-  KakaduImage( const std::string& path ): IIPImage( path ) {
+  KakaduImage( const std::string& path ): IIPImage( path ), virtual_levels( 0 ){
     tile_width = TILESIZE; tile_height = TILESIZE;
-    virtual_levels = 0;
   };
 
   /// Copy Constructor
   /** @param image Kakadu object
    */
-  KakaduImage( const KakaduImage& image ): IIPImage( image ) {
-    virtual_levels = image.virtual_levels;
+  KakaduImage( const KakaduImage& image ): IIPImage( image ), virtual_levels( image.virtual_levels ){
+    tile_width = image.tile_width; tile_height = image.tile_height;
   };
 
   /// Constructor from IIPImage object
   /** @param image IIPImage object
    */
-  KakaduImage( const IIPImage& image ): IIPImage( image ) {
-    tile_width = TILESIZE; tile_height = TILESIZE;
-    virtual_levels = 0;
+  KakaduImage( const IIPImage& image ): IIPImage( image ), virtual_levels( 0 ){
+    tile_width = image.tile_width; tile_height = image.tile_height;
   };
 
-  /// Assignment Operator 
-  /** @param TPTImage object 
-   */ 
+  /// Assignment Operator
+  /** @param TPTImage object
+   */
   KakaduImage& operator = ( KakaduImage image ) {
     if( this != &image ){
       closeImage();

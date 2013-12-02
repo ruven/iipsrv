@@ -46,23 +46,17 @@ class TPTImage : public IIPImage {
  public:
 
   /// Constructor
-  TPTImage():IIPImage() { 
-    tiff = NULL; tile_buf = NULL; 
-  };
+  TPTImage():IIPImage(), tiff( NULL ), tile_buf( NULL ) {};
 
   /// Constructor
   /** @param path image path
    */
-  TPTImage( const std::string& path ): IIPImage( path ) { 
-    tiff = NULL; tile_buf = NULL; 
-  };
+  TPTImage( const std::string& path ): IIPImage( path ), tiff( NULL ), tile_buf( NULL ) {};
 
   /// Copy Constructor
   /** @param image IIPImage object
    */
-  TPTImage( const TPTImage& image ): IIPImage( image ) {
-    tiff = NULL; tile_buf = NULL;
-  };
+  TPTImage( const TPTImage& image ): IIPImage( image ), tiff( NULL ),tile_buf( NULL ) {};
 
   /// Assignment Operator
   /** @param TPTImage object

@@ -1,6 +1,6 @@
 02/12/2013:
-	- Changes to IIPImage class contstructors to use more efficient member initializer lists,
-	  which are also necessary for compilation with clang compiler.
+	- Changes to IIPImage, TPTImage and KakaduImage class contstructors to use more efficient
+	  member initializer lists, which are also necessary for compilation with clang compiler.
 
 
 25/11/2013:
