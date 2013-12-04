@@ -1,3 +1,8 @@
+04/12/2013:
+	- Updated hash map definitions to try to use unordered_map if available and fall back to
+	  hash_map or map. Now done more cleanly using autoconf detection.
+
+
 02/12/2013:
 	- Changes to IIPImage, TPTImage and KakaduImage class contstructors to use more efficient
 	  member initializer lists, which are also necessary for compilation with clang compiler.

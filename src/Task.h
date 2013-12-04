@@ -40,43 +40,23 @@
 #endif
 
 
-// Define our http header cache max age
+// Define our http header cache max age (24 hours)
 #define MAX_AGE 86400
 
 
-// Use the hashmap extensions if we are using >= gcc 3.1
-#ifdef __GNUC__
 
-#if (__GNUC__ == 3 && __GNUC_MINOR__ >= 1) || (__GNUC__ >= 4)
-#define USE_HASHMAP 1
-#endif
-
-// And the high performance memory pool allocator if >= gcc 3.4
-#if (__GNUC__ == 3 && __GNUC_MINOR__ >= 4) || (__GNUC__ >= 4)
-#define USE_POOL_ALLOCATOR 1
-#endif
-
-#endif
-
-
-
-#ifdef USE_HASHMAP
-#include <ext/hash_map>
-
-#ifdef USE_POOL_ALLOCATOR
+#ifdef HAVE_EXT_POOL_ALLOCATOR
 #include <ext/pool_allocator.h>
-typedef __gnu_cxx::hash_map < const std::string, IIPImage,
+typedef HASHMAP < const std::string, IIPImage,
 			      __gnu_cxx::hash< const std::string >,
 			      std::equal_to< const std::string >,
 			      __gnu_cxx::__pool_alloc< std::pair<const std::string,IIPImage> >
 			      > imageCacheMapType;
 #else
-typedef __gnu_cxx::hash_map <const std::string,IIPImage> imageCacheMapType;
+typedef HASHMAP <const std::string,IIPImage> imageCacheMapType;
 #endif
 
-#else
-typedef std::map<const std::string,IIPImage> imageCacheMapType;
-#endif
+
 
 
 
