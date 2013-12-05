@@ -106,7 +106,7 @@ void SPECTRA::run( Session* session, const std::string& argument ){
     unsigned int index = y*tw + x;
 
     void *ptr;
-    float reflectance;
+    float reflectance = 0.0;
 
     if( session->loglevel >= 5 ) (*session->logfile) << "SPECTRA :: " << rawtile.bpc << " bits per channel data" << endl;
 

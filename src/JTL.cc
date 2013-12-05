@@ -35,7 +35,6 @@ void JTL::run( Session* session, const std::string& argument ){
   */
 
   if( session->loglevel >= 3 ) (*session->logfile) << "JTL handler reached" << endl;
-  session = session;
 
   int resolution, tile;
   Timer function_timer;

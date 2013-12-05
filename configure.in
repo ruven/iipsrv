@@ -38,6 +38,8 @@ AC_LANG_CPLUSPLUS
 AC_CHECK_HEADERS(ext/pool_allocator.h)
 AC_LANG_RESTORE
 
+# Checks for various hash map implementations
+AC_CXX_HEADER_UNORDERED_MAP
 AC_HEADER_TR1_UNORDERED_MAP
 AX_CXX_HAVE_EXT_HASH_MAP
 

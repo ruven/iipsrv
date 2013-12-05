@@ -227,7 +227,7 @@ class IIPImage {
   void setFileNamePattern( const std::string& pattern ) { fileNamePattern = pattern; };
 
   /// Return the number of available resolutions in the image
-  int getNumResolutions() { return numResolutions; };
+  unsigned int getNumResolutions() { return numResolutions; };
 
   /// Return the number of bits per pixel for this image
   unsigned int getNumBitsPerPixel() { return bpp; };

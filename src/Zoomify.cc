@@ -37,7 +37,6 @@ using namespace std;
 void Zoomify::run( Session* session, const std::string& argument ){
 
   if( session->loglevel >= 3 ) (*session->logfile) << "Zoomify handler reached" << endl;
-  session = session;
 
   // Time this command
   if( session->loglevel >= 2 ) command_timer.start();
@@ -127,7 +126,7 @@ void Zoomify::run( Session* session, const std::string& argument ){
   // Get the tile coordinates. Zoomify requests are of the form r-x-y.jpg
   // where r is the resolution number and x and y are the tile coordinates
   Tokenizer izer( suffix, "-" );
-  int resolution, x, y;
+  int resolution=0, x=0, y=0;
   if( izer.hasMoreTokens() ) resolution = atoi( izer.nextToken().c_str() );
   if( izer.hasMoreTokens() ) x = atoi( izer.nextToken().c_str() );
   if( izer.hasMoreTokens() ) y = atoi( izer.nextToken().c_str() );

@@ -35,7 +35,19 @@
 
 
 // Test for available map types. Try to use an efficient hashed map type if possible
-#if defined(HAVE_TR1_UNORDERED_MAP)
+#if defined(HAVE_UNORDERED_MAP)
+#include <unordered_map>
+#define HASHMAP std::unordered_map
+// Need to define the hash function
+namespace std {
+  template<> struct hash< const std::string > {
+    size_t operator()( const std::string& x ) const {
+      return hash< const char* >()( x.c_str() );
+    }
+  };
+}
+
+#elif defined(HAVE_TR1_UNORDERED_MAP)
 #include <tr1/unordered_map>
 #define HASHMAP std::tr1::unordered_map
 // Need to define the hash function
