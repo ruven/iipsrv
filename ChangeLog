@@ -1,3 +1,22 @@
+04/12/2013:
+	- Updated hash map definitions to try to use unordered_map if available and fall back to
+	  hash_map or map. Now done more cleanly using autoconf detection.
+
+
+02/12/2013:
+	- Changes to IIPImage, TPTImage and KakaduImage class contstructors to use more efficient
+	  member initializer lists, which are also necessary for compilation with clang compiler.
+
+
+25/11/2013:
+	- Bug on red/green/blue colormaps fixed. Adding colormap inversion function (Chiara Marmo).
+
+
+22/10/2013:
+	- Bittype compatibility has been completely reviewed. After normalization all processing
+	  is done in float (Chiara Marmo).
+
+
 07/09/2013:
 	- Modified PFL to handle single points as well as profiles. Thus syntax for single
 	  points: PFL=<resolution>:<x>,<y> and for profiles PFL=<resolution>:<x1>,<y1>-<x2>,<y2>

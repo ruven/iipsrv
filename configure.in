@@ -33,10 +33,16 @@ AC_FUNC_MALLOC
 AC_CHECK_LIB(m, log2, AC_DEFINE(HAVE_LOG2))
 AC_CHECK_FUNCS([setenv])
 
+AC_LANG_SAVE
+AC_LANG_CPLUSPLUS
+AC_CHECK_HEADERS(ext/pool_allocator.h)
+AC_LANG_RESTORE
+
+AC_HEADER_TR1_UNORDERED_MAP
+AX_CXX_HAVE_EXT_HASH_MAP
 
 # For our windows build
 AC_CHECK_HEADERS(windows.h)
-
 
 # we want largefile support, if possible
 AC_SYS_LARGEFILE

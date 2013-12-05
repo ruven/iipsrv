@@ -35,7 +35,6 @@ void SPECTRA::run( Session* session, const std::string& argument ){
   */
 
   if( session->loglevel >= 3 ) (*session->logfile) << "SPECTRA handler reached" << endl;
-  session = session;
 
   int resolution, tile, x, y;
 
@@ -145,8 +144,6 @@ void SPECTRA::run( Session* session, const std::string& argument ){
 
 
   session->out->printf( "</spectra>" );
-
-  session->out->printf( "\r\n" );
 
   if( session->out->flush() == -1 ) {
     if( session->loglevel >= 1 ){

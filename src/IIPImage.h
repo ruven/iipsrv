@@ -126,23 +126,70 @@ class IIPImage {
  public:
 
   /// Default Constructor
-  IIPImage();
+  IIPImage()
+   : isFile( false ),
+    bpp( 0 ),
+    channels( 0 ),
+    quality_layers( 0 ),
+    isSet( false ),
+    currentX( 0 ),
+    currentY( 90 ),
+    timestamp( 0 ) {};
 
   /// Constructer taking the image path as parameter
   /** @param s image path
    */
-  IIPImage( const std::string& s );
+  IIPImage( const std::string& s )
+   : imagePath( s ),
+    isFile( false ),
+    bpp( 0 ),
+    channels( 0 ),
+    quality_layers( 0 ),
+    isSet( false ),
+    currentX( 0 ),
+    currentY( 90 ),
+    timestamp( 0 ) {};
 
   /// Copy Constructor taking reference to another IIPImage object
   /** @param im IIPImage object
    */
-  IIPImage( const IIPImage& im );
+  IIPImage( const IIPImage& image )
+   : imagePath( image.imagePath ),
+    fileSystemPrefix( image.fileSystemPrefix ),
+    fileNamePattern( image.fileNamePattern ),
+    isFile( image.isFile ),
+    horizontalAnglesList( image.horizontalAnglesList ),
+    verticalAnglesList( image.verticalAnglesList ),
+    type( image.type ),
+    image_widths( image.image_widths ),
+    image_heights( image.image_heights ),
+    tile_width( image.tile_width ),
+    tile_height( image.tile_height ),
+    colourspace( image.colourspace ),
+    numResolutions( image.numResolutions ),
+    bpp( image.bpp ),
+    channels( image.channels ),
+    sampleType( image.sampleType ),
+    min( image.min ),
+    max( image.max ),
+    quality_layers( image.quality_layers ),
+    isSet( image.isSet ),
+    currentX( image.currentX ),
+    currentY( image.currentY ),
+    metadata( image.metadata ),
+    timestamp( image.timestamp ) {};
 
   /// Virtual Destructor
   virtual ~IIPImage() { ; };
 
   /// Test the image and initialise some parameters
   void Initialise();
+
+  /// Swap function
+  /** @param a Object to copy to
+      @param b Object to copy from
+   */
+  void swap( IIPImage& a, IIPImage& b );
 
   /// Return a list of available vertical angles
   std::list <int> getVerticalViewsList(){ return verticalAnglesList; };
@@ -277,7 +324,11 @@ class IIPImage {
   virtual RawTile getRegion( int ha, int va, unsigned int r, int layers, int x, int y, unsigned int w, unsigned int h ){ return RawTile(); };
 
   /// Assignment operator
-  IIPImage& operator = ( const IIPImage& );
+  /** @param im IIPImage object */
+  IIPImage& operator = ( IIPImage image ){
+    swap( *this, image );
+    return *this;
+  };
 
   /// Comparison equality operator
   friend int operator == ( const IIPImage&, const IIPImage& );

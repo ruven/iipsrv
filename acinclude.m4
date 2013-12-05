@@ -664,3 +664,161 @@ fi
 
 ])
 dnl
+
+
+# AC_HEADER_TR1_UNORDERED_MAP
+AC_DEFUN([AC_HEADER_TR1_UNORDERED_MAP], [
+  AC_CACHE_CHECK(for tr1/unordered_map,
+  ac_cv_cxx_tr1_unordered_map,
+  [AC_LANG_SAVE
+  AC_LANG_CPLUSPLUS
+  AC_TRY_COMPILE([#include <tr1/unordered_map>], [using std::tr1::unordered_map;],
+  ac_cv_cxx_tr1_unordered_map=yes, ac_cv_cxx_tr1_unordered_map=no)
+  AC_LANG_RESTORE
+  ])
+  if test "$ac_cv_cxx_tr1_unordered_map" = yes; then
+    AC_DEFINE(HAVE_TR1_UNORDERED_MAP,,[Define if tr1/unordered_map is present. ])
+  fi
+])
+
+
+# AC_COMPILE_STDCXX_OX
+AC_DEFUN([AC_COMPILE_STDCXX_0X], [
+  AC_CACHE_CHECK(if g++ supports C++0x features without additional flags,
+  ac_cv_cxx_compile_cxx0x_native,
+  [AC_LANG_SAVE
+  AC_LANG_CPLUSPLUS
+  AC_TRY_COMPILE([
+  template <typename T>
+    struct check
+    {
+      static_assert(sizeof(int) <= sizeof(T), "not big enough");
+    };
+
+    typedef check<check<bool>> right_angle_brackets;
+
+    int a;
+    decltype(a) b;
+
+    typedef check<int> check_type;
+    check_type c;
+    check_type&& cr = c;],,
+  ac_cv_cxx_compile_cxx0x_native=yes, ac_cv_cxx_compile_cxx0x_native=no)
+  AC_LANG_RESTORE
+  ])
+
+  AC_CACHE_CHECK(if g++ supports C++0x features with -std=c++0x,
+  ac_cv_cxx_compile_cxx0x_cxx,
+  [AC_LANG_SAVE
+  AC_LANG_CPLUSPLUS
+  ac_save_CXXFLAGS="$CXXFLAGS"
+  CXXFLAGS="$CXXFLAGS -std=c++0x"
+  AC_TRY_COMPILE([
+  template <typename T>
+    struct check
+    {
+      static_assert(sizeof(int) <= sizeof(T), "not big enough");
+    };
+
+    typedef check<check<bool>> right_angle_brackets;
+
+    int a;
+    decltype(a) b;
+
+    typedef check<int> check_type;
+    check_type c;
+    check_type&& cr = c;],,
+  ac_cv_cxx_compile_cxx0x_cxx=yes, ac_cv_cxx_compile_cxx0x_cxx=no)
+  CXXFLAGS="$ac_save_CXXFLAGS"
+  AC_LANG_RESTORE
+  ])
+
+  AC_CACHE_CHECK(if g++ supports C++0x features with -std=gnu++0x,
+  ac_cv_cxx_compile_cxx0x_gxx,
+  [AC_LANG_SAVE
+  AC_LANG_CPLUSPLUS
+  ac_save_CXXFLAGS="$CXXFLAGS"
+  CXXFLAGS="$CXXFLAGS -std=gnu++0x"
+  AC_TRY_COMPILE([
+  template <typename T>
+    struct check
+    {
+      static_assert(sizeof(int) <= sizeof(T), "not big enough");
+    };
+
+    typedef check<check<bool>> right_angle_brackets;
+
+    int a;
+    decltype(a) b;
+
+    typedef check<int> check_type;
+    check_type c;
+    check_type&& cr = c;],,
+  ac_cv_cxx_compile_cxx0x_gxx=yes, ac_cv_cxx_compile_cxx0x_gxx=no)
+  CXXFLAGS="$ac_save_CXXFLAGS"
+  AC_LANG_RESTORE
+  ])
+
+  if test "$ac_cv_cxx_compile_cxx0x_native" = yes ||
+     test "$ac_cv_cxx_compile_cxx0x_cxx" = yes ||
+     test "$ac_cv_cxx_compile_cxx0x_gxx" = yes; then
+    AC_DEFINE(HAVE_STDCXX_0X,,[Define if g++ supports C++0x features. ])
+  fi
+])
+
+
+AU_ALIAS([AC_CXX_HEADER_UNORDERED_MAP], [AX_CXX_HEADER_UNORDERED_MAP])
+AC_DEFUN([AX_CXX_HEADER_UNORDERED_MAP], [
+  AC_CACHE_CHECK(for unordered_map,
+  ax_cv_cxx_unordered_map,
+  [AC_REQUIRE([AC_COMPILE_STDCXX_0X])
+  AC_LANG_SAVE
+  AC_LANG_CPLUSPLUS
+  ac_save_CXXFLAGS="$CXXFLAGS"
+  CXXFLAGS="$CXXFLAGS -std=gnu++0x"
+  AC_TRY_COMPILE([#include <unordered_map>], [using std::unordered_map;],
+  ax_cv_cxx_unordered_map=yes, ax_cv_cxx_unordered_map=no)
+  CXXFLAGS="$ac_save_CXXFLAGS"
+  AC_LANG_RESTORE
+  ])
+  if test "$ax_cv_cxx_unordered_map" = yes; then
+    AC_DEFINE(HAVE_UNORDERED_MAP,,[Define if unordered_map is present. ])
+  fi
+])
+
+
+AU_ALIAS([AC_CXX_NAMESPACES], [AX_CXX_NAMESPACES])
+AC_DEFUN([AX_CXX_NAMESPACES],
+[AC_CACHE_CHECK(whether the compiler implements namespaces,
+ax_cv_cxx_namespaces,
+[AC_LANG_PUSH([C++])
+ AC_COMPILE_IFELSE([AC_LANG_SOURCE([namespace Outer { namespace Inner { int i = 0; }}
+                                   using namespace Outer::Inner; int foo(void) { return i;} ])],
+                   ax_cv_cxx_namespaces=yes, ax_cv_cxx_namespaces=no)
+ AC_LANG_POP
+])
+if test "$ax_cv_cxx_namespaces" = yes; then
+  AC_DEFINE(HAVE_NAMESPACES,,[define if the compiler implements namespaces])
+fi
+])
+
+
+AU_ALIAS([AC_CXX_HAVE_EXT_HASH_MAP], [AX_CXX_HAVE_EXT_HASH_MAP])
+AC_DEFUN([AX_CXX_HAVE_EXT_HASH_MAP],
+[AC_CACHE_CHECK(whether the compiler has ext/hash_map,
+ax_cv_cxx_have_ext_hash_map,
+[AC_REQUIRE([AX_CXX_NAMESPACES])
+  AC_LANG_SAVE
+  AC_LANG_CPLUSPLUS
+  AC_TRY_COMPILE([#include <ext/hash_map>
+#ifdef HAVE_NAMESPACES
+using namespace __gnu_cxx;
+#endif],[hash_map<int, int> t; return 0;],
+  ax_cv_cxx_have_ext_hash_map=yes, ax_cv_cxx_have_ext_hash_map=no)
+  AC_LANG_RESTORE
+])
+if test "$ax_cv_cxx_have_ext_hash_map" = yes; then
+   AC_DEFINE(HAVE_EXT_HASH_MAP,,[define if the compiler has ext/hash_map])
+fi
+])
+
