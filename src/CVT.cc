@@ -309,27 +309,6 @@ void CVT::run( Session* session, const std::string& a ){
     }
 
 
-    // Apply rotation
-    if( session->view->getRotation() != 0.0 ){
-      Timer rotation_timer;
-      if( session->loglevel >= 5 ){
-	rotation_timer.start();
-      }
-
-      float rotation = session->view->getRotation();
-      filter_rotate( complete_image, rotation );
-
-      // For 90 and 270 rotation swap width and height
-      resampled_width = complete_image.width;
-      resampled_height = complete_image.height;
-
-      if( session->loglevel >= 5 ){
-        *(session->logfile) << "CVT :: Rotating image by " << rotation << " degrees in "
-			    << rotation_timer.getTime() << " microseconds" << endl; 
-      }
-    }
-
-
     // Initialise our JPEG compression object
     session->jpeg->InitCompression( complete_image, resampled_height );
 

@@ -885,6 +885,8 @@ void IIIF::run( Session* session, const std::string& argument ){
       }
     }
 
+    // Apply normalization and float conversion
+    filter_normalize( complete_image, (*session->image)->max, (*session->image)->min );
 
     // *** RESIZE IMAGE ***
 
@@ -935,6 +937,9 @@ void IIIF::run( Session* session, const std::string& argument ){
           << "," << cropTop << "," << cropRight << "," << cropBottom <<endl;
       }
     }//END OF CROPPING
+
+    // Convert from float to 8bit RGB
+    filter_contrast( complete_image, 1.0f );
 
     // *** ROTATE IMAGE ***
     if((int)rotation % 360 != 0){

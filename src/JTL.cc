@@ -215,16 +215,6 @@ void JTL::run( Session* session, const std::string& argument ){
   }
 
 
-  // Apply rotation
-  if( session->view->getRotation() != 0.0 ){
-    float rotation = session->view->getRotation();
-    if( session->loglevel >= 3 ){
-      *(session->logfile) << "JTL :: Rotating image by " << rotation << " degrees" << endl; 
-    }
-    filter_rotate( rawtile, rotation );
-  }
-
-
   // Compress to JPEG
   if( ct == UNCOMPRESSED ){
     if( session->loglevel >= 4 ) *(session->logfile) << "JTL :: Compressing UNCOMPRESSED to JPEG" << endl;
