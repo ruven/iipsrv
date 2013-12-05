@@ -40,7 +40,7 @@ void View::calculateResolution( unsigned int dimension,
 
   // Only set this if our requested resolution is smaller than that
   // that has already been set. (better shrink image than upscale)
-  if( max_resolutions - j + 1 >= resolution ) resolution = max_resolutions - j + 1;
+  if( (int)max_resolutions - (int)j + 1 >= resolution ) resolution = (int)max_resolutions - (int)j + 1;
 
   // Make sure our value is possible
   if( resolution > (signed int)(max_resolutions - 1) ) resolution = max_resolutions - 1;

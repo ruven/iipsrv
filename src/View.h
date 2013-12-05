@@ -47,7 +47,7 @@ class View{
 
   int resolution;                             /// Requested resolution
   unsigned int max_resolutions;               /// Total available resolutions
-  unsigned int left, top, width, height;      /// Width and height at requested resolution
+  unsigned int width, height;                 /// Width and height at requested resolution
   unsigned int min_size;                      /// Minimum viewport dimension
   unsigned int max_size;                      /// Maximum viewport dimension
   unsigned int requested_width;               /// Width requested by WID command

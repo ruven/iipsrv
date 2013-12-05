@@ -783,6 +783,7 @@ AC_DEFUN([AX_CXX_HEADER_UNORDERED_MAP], [
   ])
   if test "$ax_cv_cxx_unordered_map" = yes; then
     AC_DEFINE(HAVE_UNORDERED_MAP,,[Define if unordered_map is present. ])
+    AC_SUBST([AM_CXXFLAGS], [-std=gnu++0x])
   fi
 ])
 

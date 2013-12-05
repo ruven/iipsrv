@@ -45,7 +45,6 @@ static const float _sRGB[3][3] = { {  3.240479, -1.537150, -0.498535 },
 void filter_normalize( RawTile& in, std::vector<float>& max, std::vector<float>& min ) {
 
   float *normdata;
-  float v;
   unsigned int np = in.dataLength * 8 / in.bpc;
   unsigned int nc = in.channels;
 
@@ -113,8 +112,10 @@ void filter_normalize( RawTile& in, std::vector<float>& max, std::vector<float>&
 void filter_shade( RawTile& in, int h_angle, int v_angle ){
 
   float o_x, o_y, o_z;
+
   // Incident light angle
   float a = (h_angle * 2 * 3.14159) / 360.0;
+
   // We assume a hypotenous of 1.0
   float s_y = cos(a);
   float s_x = sqrt( 1.0 - s_y*s_y );
@@ -130,7 +131,7 @@ void filter_shade( RawTile& in, int h_angle, int v_angle ){
   s_y = s_y / s_norm;
   s_z = s_z / s_norm;
 
-  float *ptr, *buffer, *infptr;
+  float *buffer, *infptr;
 
   unsigned int k = 0;
   unsigned int ndata = in.dataLength * 8 / in.bpc;
@@ -139,7 +140,7 @@ void filter_shade( RawTile& in, int h_angle, int v_angle ){
   // Create new (float) data buffer
   buffer = new float[ndata];
 
-  for( int n=0; n<ndata; n+=3 ){
+  for( unsigned int n=0; n<ndata; n+=3 ){
     if( infptr[n] == 0. && infptr[n+1] == 0. && infptr[n+2] == 0. ) {
       o_x = o_y = o_z = 0.;
     }
@@ -282,11 +283,9 @@ void filter_LAB2sRGB( RawTile& in ){
 // Colormap function
 void filter_cmap( RawTile& in, enum cmap_type cmap ){
 
-  int i;
   float value;
   unsigned out_chan = 3;
   unsigned int ndata = in.dataLength * 8 / in.bpc / in.channels;
-  unsigned int k = 0;
 
   const float max3=1./3.;
   const float max8=1./8.;
@@ -298,7 +297,7 @@ void filter_cmap( RawTile& in, enum cmap_type cmap ){
   switch(cmap){
     case HOT:
 #pragma ivdep
-      for( int n=0; n<ndata; n++, outv+=3 ){
+      for( int unsigned n=0; n<ndata; n++, outv+=3 ){
         value = fptr[n];
         if(value>1.)
           { outv[0]=outv[1]=outv[2]=1.; }
@@ -315,7 +314,7 @@ void filter_cmap( RawTile& in, enum cmap_type cmap ){
       break;
     case COLD:
 #pragma ivdep
-      for( int n=0; n<ndata; n++, outv+=3 ){
+      for( unsigned int n=0; n<ndata; n++, outv+=3 ){
         value = fptr[n];
         if(value>1.)
           { outv[0]=outv[1]=outv[2]=1.; }
@@ -332,7 +331,7 @@ void filter_cmap( RawTile& in, enum cmap_type cmap ){
       break;
     case JET:
 #pragma ivdep
-      for( int n=0; n<ndata; n++, outv+=3 ){
+      for( unsigned int n=0; n<ndata; n++, outv+=3 ){
         value = fptr[n];
         if(value<0.)
           { outv[0]=outv[1]=outv[2]=0.; }
@@ -657,4 +656,12 @@ void filter_crop( RawTile& in, int left, int top, int right, int bottom ){
   in.height = in.height - top - bottom;
   in.width = in.width - left - right;
   in.dataLength = in.width * in.height * in.channels * in.bpc/8;
+}
+
+
+// Convert colour or multi-channel image
+void filter_twist( RawTile& rawtile, std::vector<float> matrix ){
+
+  
+
 }

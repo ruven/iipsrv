@@ -128,7 +128,7 @@ void TPTImage::loadImageInfo( int seq, int ang ) throw(string)
   TIFFGetFieldDefaulted( tiff, TIFFTAG_SMAXSAMPLEVALUE, smaxvalue );
   min.clear();
   max.clear();
-  for( int i=0; i<channels; i++ ){
+  for( unsigned int i=0; i<channels; i++ ){
     if( (float)smaxvalue[i] == 0.0 ){
       sminvalue[i] = 0.0;
       // Set default values if values not included in header

@@ -1,3 +1,8 @@
+05/12/2013:
+	- Another update to use the ISO C++11 version of unordered_map if available. Plus a bunch
+	  of compiler warning clean-ups.
+
+
 04/12/2013:
 	- Updated hash map definitions to try to use unordered_map if available and fall back to
 	  hash_map or map. Now done more cleanly using autoconf detection.

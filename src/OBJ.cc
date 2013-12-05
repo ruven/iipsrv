@@ -227,7 +227,7 @@ void OBJ::min_max_values(){
   string tmp = "Min-Max-sample-values:";
   char val[10];
   float minimum, maximum;
-  for (int i=0; i<n ; i++) {
+  for( unsigned int i=0; i<n ; i++ ){
     minimum = (*session->image)->getMinValue(i);
     maximum = (*session->image)->getMaxValue(i);
     snprintf( val, 10, " %f ", minimum );

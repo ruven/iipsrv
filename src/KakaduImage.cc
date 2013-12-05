@@ -226,8 +226,8 @@ void KakaduImage::loadImageInfo( int seq, int ang ) throw(string)
   kt.close();
 
   // Get the max and min values for our data type
-  double sminvalue[4], smaxvalue[4];
-  for( int i=0; i<channels; i++ ){
+  //double sminvalue[4], smaxvalue[4];
+  for( unsigned int i=0; i<channels; i++ ){
     min.push_back( 0.0 );
     if( bpp == 16 ) max.push_back( 65535.0 );
     else max.push_back( 255.0 );
