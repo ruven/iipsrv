@@ -128,6 +128,9 @@ void JTL::run( Session* session, const std::string& argument ){
   }
 
   filter_normalize( rawtile, (*session->image)->max, (*session->image)->min );
+  if( session->loglevel >= 3 ){
+    *(session->logfile) << "JTL :: Normalization applied in " << function_timer.getTime() << " microseconds" << endl;
+  }
 
   // Apply hill shading if requested
   if( session->view->shaded ){

@@ -225,14 +225,14 @@ void OBJ::min_max_values(){
   checkImage();
   unsigned int n = (*session->image)->getNumChannels();
   string tmp = "Min-Max-sample-values:";
-  char val[10];
+  char val[24];
   float minimum, maximum;
   for( unsigned int i=0; i<n ; i++ ){
     minimum = (*session->image)->getMinValue(i);
     maximum = (*session->image)->getMaxValue(i);
-    snprintf( val, 10, " %f ", minimum );
+    snprintf( val, 24, " %.9g ", minimum );
     tmp += val;
-    snprintf( val, 10, " %f ", maximum );
+    snprintf( val, 24, " %.9g ", maximum );
     tmp += val;
   }
   // Chop off the final space
