@@ -467,7 +467,8 @@ strptime (const char *buf, const char *fmt, struct tm *timeptr)
 	buf = s;
 	break;
       case 'Z' :
-	abort ();
+	/* glibc has no implementation for this, so we will do the same */
+	break;
       case '\0' :
 	--fmt;
 	/* FALLTHROUGH */
