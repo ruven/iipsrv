@@ -38,7 +38,7 @@ void PFL::run( Session* session, const std::string& argument ){
 
   if( session->loglevel >= 3 ) (*session->logfile) << "PFL handler reached" << endl;
 
-  unsigned int resolution, x1, y1, x2, y2, width, height;
+  int resolution, x1, y1, x2, y2, width, height;
 
 
   // Time this command
@@ -81,9 +81,15 @@ void PFL::run( Session* session, const std::string& argument ){
 
 
   // Make sure we don't request impossible resolutions
-  if( resolution<0 || resolution>=(*session->image)->getNumResolutions() ){
+  if( resolution<0 || resolution>=(int)(*session->image)->getNumResolutions() ){
     ostringstream error;
     error << "PFL :: Invalid resolution number: " << resolution; 
+    throw error.str();
+  }
+  // Or impossible coordinates
+  if( x1<0 || x2<0 || y1<0 || y2<0 ){
+    ostringstream error;
+    error << "PFL :: Invalid coordinates: " << x1 << "," << y1 << "-" << x2 << "," << y2 << endl;
     throw error.str();
   }
 
@@ -136,11 +142,10 @@ void PFL::run( Session* session, const std::string& argument ){
     // Get the region of data for this wavelength and line profile
     RawTile rawtile = tilemanager.getRegion( resolution, wavelength, session->view->yangle, session->view->getLayers(), x1, y1, width, height );
 
-
     // Loop through our pixels
     for( unsigned int j=0; j<length; j++ ){
 
-      float intensity;
+      float intensity = 0.0;
       void *ptr;
 
       // Handle depending on bit depth
