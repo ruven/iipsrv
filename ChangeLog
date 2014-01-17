@@ -1,3 +1,8 @@
+17/01/2013:
+	- Fix to rotation code to have array indices run fully down to zero when counting down.
+	  Thanks to Michal Becak for spotting this.
+
+
 06/12/2013:
 	- Minor fixes to PFL.cc to add extra error checking and eliminate compiler warnings.
 
