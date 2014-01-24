@@ -37,6 +37,7 @@
 
 #include "RawTile.h"
 
+//enum ImageType { TIFF, JPEG2000 };
 
 
 /// Main class to handle the pyramidal image source
@@ -82,6 +83,7 @@ class IIPImage {
 
   /// Return the image type e.g. tif
   std::string type;
+   //ImageType type;
 
   /// The image pixel dimensions
   std::vector <unsigned int> image_widths, image_heights;
@@ -128,6 +130,8 @@ class IIPImage {
   /// Default Constructor
   IIPImage()
    : isFile( false ),
+    tile_width( 0 ),
+    tile_height( 0 ),
     bpp( 0 ),
     channels( 0 ),
     quality_layers( 0 ),
@@ -142,6 +146,8 @@ class IIPImage {
   IIPImage( const std::string& s )
    : imagePath( s ),
     isFile( false ),
+    tile_width( 0 ),
+    tile_height( 0 ),
     bpp( 0 ),
     channels( 0 ),
     quality_layers( 0 ),
@@ -208,6 +214,7 @@ class IIPImage {
 
   /// Get the image type
   const std::string& getImageType() { return type; };
+     //  ImageType getImageType() { return type; };
 
   /// Get the image timestamp
   /** @param s file path

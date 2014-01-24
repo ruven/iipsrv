@@ -141,15 +141,13 @@ class KakaduImage : public IIPImage {
   /// Copy Constructor
   /** @param image Kakadu object
    */
-  KakaduImage( const KakaduImage& image ): IIPImage( image ), virtual_levels( image.virtual_levels ){
-    tile_width = image.tile_width; tile_height = image.tile_height;
-  };
+  KakaduImage( const KakaduImage& image ): IIPImage( image ), virtual_levels( image.virtual_levels ){};
 
   /// Constructor from IIPImage object
   /** @param image IIPImage object
    */
   KakaduImage( const IIPImage& image ): IIPImage( image ), virtual_levels( 0 ){
-    tile_width = image.tile_width; tile_height = image.tile_height;
+    tile_width = TILESIZE; tile_height = TILESIZE;
   };
 
   /// Assignment Operator

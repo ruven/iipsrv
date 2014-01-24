@@ -1,3 +1,8 @@
+24/01/2014:
+	- Changes to IIPImage and KakaduImage constructors to force correct initialization of
+	  the tile size.
+
+
 17/01/2013:
 	- Fix to rotation code to have array indices run fully down to zero when counting down.
 	  Thanks to Michal Becak for spotting this.
