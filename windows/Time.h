@@ -36,5 +36,8 @@ char *strptime(const char*, const char*, struct tm*);
 int gettimeofday(struct timeval*, struct timezone*);
 double round(double);
 
+// isfinite missing from MSVC compiler
+static inline bool isfinite(double a) { return !_finite(a); }
+
 #endif
 #endif
