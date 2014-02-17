@@ -360,6 +360,7 @@ void filter_cmap( RawTile& in, enum cmap_type cmap ){
   in.dataLength = ndata * out_chan * in.bpc / 8;
 }
 
+
 // Inversion function
 void filter_inv( RawTile& in ){
   float* infptr;
@@ -374,6 +375,7 @@ void filter_inv( RawTile& in ){
     *(infptr++) = 1. - v;
   }
 }
+
 
 // Resize image using nearest neighbour interpolation
 void filter_interpolate_nearestneighbour( RawTile& in, unsigned int resampled_width, unsigned int resampled_height ){
@@ -468,7 +470,7 @@ void filter_interpolate_bilinear( RawTile& in, unsigned int resampled_width, uns
 	  buf[resampled_index+k] = data[p11+k];
 	}
 	else{
-            float tx = data[p11+k]*a + data[p21+k]*b;
+        float tx = data[p11+k]*a + data[p21+k]*b;
 	    float ty = data[p12+k]*a + data[p22+k]*b;
 	    float r = (float)( c*tx + d*ty );
 	    buf[resampled_index+k] = r;
@@ -548,45 +550,45 @@ void filter_rotate( RawTile& in, float angle=0.0 ){
     else if(in.bpc == 32 && in.sampleType == FLOATINGPOINT ) buffer = new float[in.width*in.height*in.channels];
 
     // Rotate 90
-          if ((int) angle % 360 == 90){
-      for (int i = in.width; i > 0; i--){
-        for (int j = in.height; j > 0; j--){
-          unsigned int index = (in.width * j - i )*in.channels;
-          for(int k = 0; k < in.channels; k++){
-            if(in.bpc == 8) ((unsigned char*)buffer)[n++] = ((unsigned char*)in.data)[index+k];
-                  else if(in.bpc == 16) ((unsigned short*)buffer)[n++] = ((unsigned short*)in.data)[index+k];
-                  else if(in.bpc == 32 && in.sampleType == FIXEDPOINT ) ((unsigned int*)buffer)[n++] = ((unsigned int*)in.data)[index+k];
-                  else if(in.bpc == 32 && in.sampleType == FLOATINGPOINT ) ((float*)buffer)[n++] = ((float*)in.data)[index+k];
-                            }
-        }
+    if( (int) angle % 360 == 90 ){
+      for( unsigned int i=0; i < in.width; i++ ){
+	for( int j=in.height-1; j>=0; j-- ){
+	  unsigned int index = (in.width*j + i)*in.channels;
+	  for( int k=0; k < in.channels; k++ ){
+	    if(in.bpc == 8) ((unsigned char*)buffer)[n++] = ((unsigned char*)in.data)[index+k];
+	    else if(in.bpc == 16) ((unsigned short*)buffer)[n++] = ((unsigned short*)in.data)[index+k];
+	    else if(in.bpc == 32 && in.sampleType == FIXEDPOINT) ((unsigned int*)buffer)[n++] = ((unsigned int*)in.data)[index+k];
+	    else if(in.bpc == 32 && in.sampleType == FLOATINGPOINT ) ((float*)buffer)[n++] = ((float*)in.data)[index+k];
+	  }
+	}
       }
     }    
 
     // Rotate 270
     else if( (int) angle % 360 == 270 ){
-      for( int i=in.width - 1; i>=0; i-- ){
-        for( int j=0; j < in.height; j++ ){
-          unsigned int index = (in.width*j + i)*in.channels;
-          for( int k=0; k < in.channels; k++ ){
-            if(in.bpc == 8) ((unsigned char*)buffer)[n++] = ((unsigned char*)in.data)[index+k];
-            else if(in.bpc == 16) ((unsigned short*)buffer)[n++] = ((unsigned short*)in.data)[index+k];
-            else if(in.bpc == 32 && in.sampleType == FIXEDPOINT ) ((unsigned int*)buffer)[n++] = ((unsigned int*)in.data)[index+k];
-            else if(in.bpc == 32 && in.sampleType == FLOATINGPOINT ) ((float*)buffer)[n++] = ((float*)in.data)[index+k];
-          }
-        }
+      for( int i=in.width-1; i>=0; i-- ){
+	for( unsigned int j=0; j < in.height; j++ ){
+	  unsigned int index = (in.width*j + i)*in.channels;
+	  for( int k=0; k < in.channels; k++ ){
+	    if(in.bpc == 8) ((unsigned char*)buffer)[n++] = ((unsigned char*)in.data)[index+k];
+	    else if(in.bpc == 16) ((unsigned short*)buffer)[n++] = ((unsigned short*)in.data)[index+k];
+	    else if(in.bpc == 32 && in.sampleType == FIXEDPOINT ) ((unsigned int*)buffer)[n++] = ((unsigned int*)in.data)[index+k];
+	    else if(in.bpc == 32 && in.sampleType == FLOATINGPOINT ) ((float*)buffer)[n++] = ((float*)in.data)[index+k];
+	  }
+	}
       }
     }
 
     // Rotate 180
     else if( (int) angle % 360 == 180 ){
       for( int i=(in.width*in.height)-1; i >= 0; i-- ){
-        unsigned int index = i * in.channels;
-        for( int k=0; k < in.channels; k++ ){
-          if(in.bpc == 8) ((unsigned char*)buffer)[n++]  = ((unsigned char*)in.data)[index+k];
-          else if(in.bpc == 16) ((unsigned short*)buffer)[n++] = ((unsigned short*)in.data)[index+k];
-          else if(in.bpc == 32 && in.sampleType == FIXEDPOINT) ((unsigned int*)buffer)[n++] = ((unsigned int*)in.data)[index+k];
-          else if(in.bpc == 32 && in.sampleType == FLOATINGPOINT ) ((float*)buffer)[n++] = ((float*)in.data)[index+k];
-        }
+	unsigned index = i * in.channels;
+	for( int k=0; k < in.channels; k++ ){
+	  if(in.bpc == 8) ((unsigned char*)buffer)[n++]  = ((unsigned char*)in.data)[index+k];
+	  else if(in.bpc == 16) ((unsigned short*)buffer)[n++] = ((unsigned short*)in.data)[index+k];
+	  else if(in.bpc == 32 && in.sampleType == FIXEDPOINT) ((unsigned int*)buffer)[n++] = ((unsigned int*)in.data)[index+k];
+	  else if(in.bpc == 32 && in.sampleType == FLOATINGPOINT ) ((float*)buffer)[n++] = ((float*)in.data)[index+k];
+	}
       }
     }
 
