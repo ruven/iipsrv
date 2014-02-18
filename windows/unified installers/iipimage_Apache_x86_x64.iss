@@ -12,7 +12,7 @@ LicenseFile={#file AddBackslash(SourcePath) + "IIPServerLicense.rtf"}
 Compression=lzma2
 SolidCompression=yes
 AllowNoIcons=no
-OutputDir=userdocs:Inno Setup Examples Output\IIPImage JPEG2000\
+OutputDir=.
 OutputBaseFilename=IIPImage_Apache_x86_x64
 ;maximal resolution is 164x314, picture has 163x314, which creates 1 pixel border 
 WizardImageFile=wizardImage.bmp
@@ -29,72 +29,72 @@ Name: "{app}\Logs"
 
 [Files]
 ;Apache server - 32bit
-Source: "Apache_server\32\apache_2.2.23-x86-openssl-1.0.1d.msi"; Check: not Is64BitInstallMode; Flags: dontcopy
-Source: "Apache_server\32\mod_fcgid.so"; DestDir: "{code:GetApacheDir}\modules"; Check: not Is64BitInstallMode;
-Source: "Program_Files\32\msvcp100.dll"; DestDir: "{code:GetApacheDir}\modules"; Check: not Is64BitInstallMode;
-Source: "Program_Files\32\msvcr100.dll"; DestDir: "{code:GetApacheDir}\modules"; Check: not Is64BitInstallMode;
+Source: "..\..\..\download-and-build-pack\x86\apache_2.2.23-x86-openssl-1.0.1d.msi"; Check: not Is64BitInstallMode; Flags: dontcopy
+Source: "..\..\..\download-and-build-pack\x86\mod_fcgid.so"; DestDir: "{code:GetApacheDir}\modules"; Check: not Is64BitInstallMode;
+Source: "..\..\..\download-and-build-pack\x86\msvcp100.dll"; DestDir: "{code:GetApacheDir}\modules"; Check: not Is64BitInstallMode;
+Source: "..\..\..\download-and-build-pack\x86\msvcr100.dll"; DestDir: "{code:GetApacheDir}\modules"; Check: not Is64BitInstallMode;
 ;Apache server - 64bit
-Source: "Apache_server\64\apache_2.2.23-x64-openssl-1.0.1d.msi"; Check: Is64BitInstallMode; Flags: dontcopy
-Source: "Apache_server\64\mod_fcgid.so"; DestDir: "{code:GetApacheDir}\modules"; Check: Is64BitInstallMode;
-Source: "Program_Files\64\msvcp100.dll"; DestDir: "{code:GetApacheDir}\modules"; Check: Is64BitInstallMode;
-Source: "Program_Files\64\msvcr100.dll"; DestDir: "{code:GetApacheDir}\modules"; Check: Is64BitInstallMode;
+Source: "..\..\..\download-and-build-pack\x64\apache_2.2.23-x64-openssl-1.0.1d.msi"; Check: Is64BitInstallMode; Flags: dontcopy
+Source: "..\..\..\download-and-build-pack\x64\mod_fcgid.so"; DestDir: "{code:GetApacheDir}\modules"; Check: Is64BitInstallMode;
+Source: "..\..\..\download-and-build-pack\x64\msvcp100.dll"; DestDir: "{code:GetApacheDir}\modules"; Check: Is64BitInstallMode;
+Source: "..\..\..\download-and-build-pack\x64\msvcr100.dll"; DestDir: "{code:GetApacheDir}\modules"; Check: Is64BitInstallMode;
 ;Program files 32bit (iipimage files) - fcgi,dlls,Readme
-Source: "Program_Files\32\iipsrv.exe"; DestDir: "{app}"; Check: not Is64BitInstallMode;
-Source: "Program_Files\32\kdu_v64R.dll"; DestDir: "{app}"; Check: not Is64BitInstallMode;
-Source: "Program_Files\32\libfcgi.dll"; DestDir: "{app}"; Check: not Is64BitInstallMode;
-Source: "Program_Files\32\msvcp100.dll"; DestDir: "{app}"; Check: not Is64BitInstallMode;
-Source: "Program_Files\32\msvcr100.dll"; DestDir: "{app}"; Check: not Is64BitInstallMode;
+Source: "..\Release\iipsrv.exe"; DestDir: "{app}"; Check: not Is64BitInstallMode;
+Source: "..\dependencies\dlls\x86\kdu_v73R.dll"; DestDir: "{app}"; Check: not Is64BitInstallMode;
+Source: "..\dependencies\dlls\x86\libfcgi.dll"; DestDir: "{app}"; Check: not Is64BitInstallMode;
+Source: "..\..\..\download-and-build-pack\x86\msvcp100.dll"; DestDir: "{app}"; Check: not Is64BitInstallMode;
+Source: "..\..\..\download-and-build-pack\x86\msvcr100.dll"; DestDir: "{app}"; Check: not Is64BitInstallMode;
 ;Program files 64bit (iipimage files) - fcgi,dlls,Readme
-Source: "Program_Files\64\iipsrv.exe"; DestDir: "{app}"; Check: Is64BitInstallMode;
-Source: "Program_Files\64\kdu_v64R.dll"; DestDir: "{app}"; Check: Is64BitInstallMode;
-Source: "Program_Files\64\libfcgi.dll"; DestDir: "{app}"; Check: Is64BitInstallMode;
-Source: "Program_Files\64\msvcp100.dll"; DestDir: "{app}"; Check: Is64BitInstallMode;
-Source: "Program_Files\64\msvcr100.dll"; DestDir: "{app}"; Check: Is64BitInstallMode;
+Source: "..\x64\Release\iipsrv.exe"; DestDir: "{app}"; Check: Is64BitInstallMode;
+Source: "..\dependencies\dlls\x64\kdu_v73R.dll"; DestDir: "{app}"; Check: Is64BitInstallMode;
+Source: "..\dependencies\dlls\x64\libfcgi.dll"; DestDir: "{app}"; Check: Is64BitInstallMode;
+Source: "..\..\..\download-and-build-pack\x64\msvcp100.dll"; DestDir: "{app}"; Check: Is64BitInstallMode;
+Source: "..\..\..\download-and-build-pack\x64\msvcr100.dll"; DestDir: "{app}"; Check: Is64BitInstallMode;
 Source: "README\Apache\Readme.rtf"; DestDir: "{app}"; Flags: isreadme
 ;Virtual directory files - viewer + shortcuts
-Source: "Virtual_Directory\MooViewer2.0\css\ie.css"; DestDir: "{code:GetVirtDir}\MooViewer2.0\css"
-Source: "Virtual_Directory\MooViewer2.0\css\iip.css"; DestDir: "{code:GetVirtDir}\MooViewer2.0\css"
-Source: "Virtual_Directory\MooViewer2.0\images\iip.32x32.png"; DestDir: "{code:GetVirtDir}\MooViewer2.0\images"
-Source: "Virtual_Directory\MooViewer2.0\images\iip.png"; DestDir: "{code:GetVirtDir}\MooViewer2.0\images"
-Source: "Virtual_Directory\MooViewer2.0\images\iip-favicon.png"; DestDir: "{code:GetVirtDir}\MooViewer2.0\images"
-Source: "Virtual_Directory\MooViewer2.0\images\reset.png"; DestDir: "{code:GetVirtDir}\MooViewer2.0\images"
-Source: "Virtual_Directory\MooViewer2.0\images\reset.svg"; DestDir: "{code:GetVirtDir}\MooViewer2.0\images"
-Source: "Virtual_Directory\MooViewer2.0\images\zoomIn.png"; DestDir: "{code:GetVirtDir}\MooViewer2.0\images"
-Source: "Virtual_Directory\MooViewer2.0\images\zoomIn.svg"; DestDir: "{code:GetVirtDir}\MooViewer2.0\images"
-Source: "Virtual_Directory\MooViewer2.0\images\zoomOut.png"; DestDir: "{code:GetVirtDir}\MooViewer2.0\images"
-Source: "Virtual_Directory\MooViewer2.0\images\zoomOut.svg"; DestDir: "{code:GetVirtDir}\MooViewer2.0\images"
-Source: "Virtual_Directory\MooViewer2.0\javascript\iipmooviewer-2.0.js"; DestDir: "{code:GetVirtDir}\MooViewer2.0\javascript"
-Source: "Virtual_Directory\MooViewer2.0\javascript\mootools-core-1.3.2-full-nocompat.js"; DestDir: "{code:GetVirtDir}\MooViewer2.0\javascript"
-Source: "Virtual_Directory\MooViewer2.0\javascript\mootools-more-1.3.2.1.js"; DestDir: "{code:GetVirtDir}\MooViewer2.0\javascript"
-Source: "Virtual_Directory\MooViewer2.0\javascript\protocols.js"; DestDir: "{code:GetVirtDir}\MooViewer2.0\javascript"
-Source: "Virtual_Directory\index.html"; DestDir: "{code:GetVirtDir}"
-Source: "Virtual_Directory\IIPImage MooViewer 2.0.url"; DestDir: "{code:GetVirtDir}"
-Source: "Virtual_Directory\IIPImage Project Website.url"; DestDir: "{code:GetVirtDir}"
-Source: "Virtual_Directory\Online Demo.url"; DestDir: "{code:GetVirtDir}"
-Source: "Images\demo.jp2"; DestDir: "{code:GetImagesDir}"
+Source: "..\..\..\download-and-build-pack\MooViewer2.0\css\ie.css"; DestDir: "{code:GetVirtDir}\MooViewer2.0\css"
+Source: "..\..\..\download-and-build-pack\MooViewer2.0\css\iip.css"; DestDir: "{code:GetVirtDir}\MooViewer2.0\css"
+Source: "..\..\..\download-and-build-pack\MooViewer2.0\images\iip.32x32.png"; DestDir: "{code:GetVirtDir}\MooViewer2.0\images"
+Source: "..\..\..\download-and-build-pack\MooViewer2.0\images\iip.png"; DestDir: "{code:GetVirtDir}\MooViewer2.0\images"
+Source: "..\..\..\download-and-build-pack\MooViewer2.0\images\iip-favicon.png"; DestDir: "{code:GetVirtDir}\MooViewer2.0\images"
+Source: "..\..\..\download-and-build-pack\MooViewer2.0\images\reset.png"; DestDir: "{code:GetVirtDir}\MooViewer2.0\images"
+Source: "..\..\..\download-and-build-pack\MooViewer2.0\images\reset.svg"; DestDir: "{code:GetVirtDir}\MooViewer2.0\images"
+Source: "..\..\..\download-and-build-pack\MooViewer2.0\images\zoomIn.png"; DestDir: "{code:GetVirtDir}\MooViewer2.0\images"
+Source: "..\..\..\download-and-build-pack\MooViewer2.0\images\zoomIn.svg"; DestDir: "{code:GetVirtDir}\MooViewer2.0\images"
+Source: "..\..\..\download-and-build-pack\MooViewer2.0\images\zoomOut.png"; DestDir: "{code:GetVirtDir}\MooViewer2.0\images"
+Source: "..\..\..\download-and-build-pack\MooViewer2.0\images\zoomOut.svg"; DestDir: "{code:GetVirtDir}\MooViewer2.0\images"
+Source: "..\..\..\download-and-build-pack\MooViewer2.0\javascript\iipmooviewer-2.0.js"; DestDir: "{code:GetVirtDir}\MooViewer2.0\javascript"
+Source: "..\..\..\download-and-build-pack\MooViewer2.0\javascript\mootools-core-1.3.2-full-nocompat.js"; DestDir: "{code:GetVirtDir}\MooViewer2.0\javascript"
+Source: "..\..\..\download-and-build-pack\MooViewer2.0\javascript\mootools-more-1.3.2.1.js"; DestDir: "{code:GetVirtDir}\MooViewer2.0\javascript"
+Source: "..\..\..\download-and-build-pack\MooViewer2.0\javascript\protocols.js"; DestDir: "{code:GetVirtDir}\MooViewer2.0\javascript"
+Source: "..\..\..\download-and-build-pack\index.html"; DestDir: "{code:GetVirtDir}"
+Source: "..\..\..\download-and-build-pack\IIPImage MooViewer 2.0.url"; DestDir: "{code:GetVirtDir}"
+Source: "..\..\..\download-and-build-pack\IIPImage Project Website.url"; DestDir: "{code:GetVirtDir}"
+Source: "..\..\..\download-and-build-pack\Online Demo.url"; DestDir: "{code:GetVirtDir}"
+Source: "..\..\..\download-and-build-pack\demo.jp2"; DestDir: "{code:GetImagesDir}"
 ;JPEG2000Transcoder files
 ;32bit wrapper + configuration.ini (wrapper is same for 32bit and 64bit version)
-Source: "Jpeg2000Transcoder\Jpeg2000Transcoder.exe"; DestDir: "{code:GetTranscoderDir}"
-Source: "Jpeg2000Transcoder\configuration.ini"; DestDir: "{code:GetTranscoderDir}"
-Source: "Jpeg2000Transcoder\QtCore4.dll"; DestDir: "{code:GetTranscoderDir}"
-Source: "Jpeg2000Transcoder\QtGui4.dll"; DestDir: "{code:GetTranscoderDir}"
-Source: "Program_Files\32\msvcp100.dll"; DestDir: "{code:GetTranscoderDir}"
-Source: "Program_Files\32\msvcr100.dll"; DestDir: "{code:GetTranscoderDir}"
+Source: "..\..\..\download-and-build-pack\Jpeg2000Transcoder.exe"; DestDir: "{code:GetTranscoderDir}"
+Source: "..\..\..\download-and-build-pack\configuration.ini"; DestDir: "{code:GetTranscoderDir}"
+Source: "..\..\..\download-and-build-pack\QtCore4.dll"; DestDir: "{code:GetTranscoderDir}"
+Source: "..\..\..\download-and-build-pack\QtGui4.dll"; DestDir: "{code:GetTranscoderDir}"
+Source: "..\..\..\download-and-build-pack\x86\msvcp100.dll"; DestDir: "{code:GetTranscoderDir}"
+Source: "..\..\..\download-and-build-pack\x86\msvcr100.dll"; DestDir: "{code:GetTranscoderDir}"
 ;32bit transcoding apps (djpeg and kdu_compress)
-Source: "Jpeg2000Transcoder\32\djpeg.exe"; DestDir: "{code:GetTranscoderDir}\bins";
-Source: "Jpeg2000Transcoder\32\kdu_compress.exe"; DestDir: "{code:GetTranscoderDir}\bins"
-Source: "Program_Files\32\kdu_v64R.dll"; DestDir: "{code:GetTranscoderDir}\bins"
-Source: "Program_Files\32\msvcp100.dll"; DestDir: "{code:GetTranscoderDir}\bins"
-Source: "Program_Files\32\msvcr100.dll"; DestDir: "{code:GetTranscoderDir}\bins"
+Source: "..\..\..\download-and-build-pack\x86\djpeg.exe"; DestDir: "{code:GetTranscoderDir}\bins";
+Source: "..\dependencies\dlls\x86\kdu_compress.exe"; DestDir: "{code:GetTranscoderDir}\bins"
+Source: "..\dependencies\dlls\x86\kdu_v73R.dll"; DestDir: "{code:GetTranscoderDir}\bins"
+Source: "..\..\..\download-and-build-pack\x86\msvcp100.dll"; DestDir: "{code:GetTranscoderDir}\bins"
+Source: "..\..\..\download-and-build-pack\x86\msvcr100.dll"; DestDir: "{code:GetTranscoderDir}\bins"
 ;64bit transcoding apps (djpeg and kdu_compress)
-Source: "Jpeg2000Transcoder\64\djpeg.exe"; DestDir: "{code:GetTranscoderDir}\Jpeg2000Transcoder"; Check: Is64BitInstallMode;
-Source: "Jpeg2000Transcoder\64\kdu_compress.exe"; DestDir: "{code:GetTranscoderDir}\Jpeg2000Transcoder"; Check: Is64BitInstallMode;
-Source: "Program_Files\64\kdu_v64R.dll"; DestDir: "{code:GetTranscoderDir}\Jpeg2000Transcoder"; Check: Is64BitInstallMode;
-Source: "Program_Files\64\msvcp100.dll"; DestDir: "{code:GetTranscoderDir}\bins"
-Source: "Program_Files\64\msvcr100.dll"; DestDir: "{code:GetTranscoderDir}\bins"
+Source: "..\..\..\download-and-build-pack\x64\djpeg.exe"; DestDir: "{code:GetTranscoderDir}\Jpeg2000Transcoder"; Check: Is64BitInstallMode;
+Source: "..\dependencies\dlls\x64\kdu_compress.exe"; DestDir: "{code:GetTranscoderDir}\Jpeg2000Transcoder"; Check: Is64BitInstallMode;
+Source: "..\dependencies\dlls\x64\kdu_v73R.dll"; DestDir: "{code:GetTranscoderDir}\Jpeg2000Transcoder"; Check: Is64BitInstallMode;
+Source: "..\..\..\download-and-build-pack\x64\msvcp100.dll"; DestDir: "{code:GetTranscoderDir}\bins"
+Source: "..\..\..\download-and-build-pack\x64\msvcr100.dll"; DestDir: "{code:GetTranscoderDir}\bins"
 ;Memcached
-Source: "Memcached\32\memcached.exe"; DestDir: "{code:GetMemcachedDir}"; Check: not Is64BitInstallMode;
-Source: "Memcached\64\memcached.exe"; DestDir: "{code:GetMemcachedDir}"; Check: Is64BitInstallMode;
+Source: "..\..\..\download-and-build-pack\x86\memcached.exe"; DestDir: "{code:GetMemcachedDir}"; Check: not Is64BitInstallMode;
+Source: "..\..\..\download-and-build-pack\x64\memcached.exe"; DestDir: "{code:GetMemcachedDir}"; Check: Is64BitInstallMode;
 ;Temporary files - first set memcached, second apache, third creates urls and configures transcoder
 Source: "Batch_files\Apache\memcached.bat"; DestDir: "{tmp}"
 Source: "Batch_files\Apache\apache-conf.bat"; DestDir: "{tmp}"

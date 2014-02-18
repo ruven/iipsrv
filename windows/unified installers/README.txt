@@ -1,20 +1,19 @@
-To make installers, without rebuilding anything on your own, you must only do the steps
-written bellow in REQUIRED STEPS block.
-If you change some binaries, you might have to also recompile some dependencies,
-read Readme.txt in all folders for closer info, which files binaries are interdependent.
-If no Readme is in some folder, than it doesn't need more info as there is nothing to change
-(e.g. batch_files, Images, Readme, Virtual_Directory)
-Files that you must download are not included because of their size or license (kakadu).
+To make installers of iipimage you must do following steps.
 
 *************************************REQUIRED STEPS*************************************
 
-[BOTH VERSIONS]
-For making installers, you must download Qt library and add QtCore.dll and QtGui.dll
-into JPEG2000Transcoder folder.
-(Download links and more info in Readme.txt in JPEG2000Transcoder folder)
+1. Build dependencies of iipimage and iipimage. Step by step tutorial, how to build them
+   is available here: http://help.oldmapsonline.org/jpeg2000/windows/how-to-build-windows-binaries
 
-[ONLY APACHE VERSION]
-For making installer with Apache version, you must download Apache server installer.
-(Download links and more info in Readme.txt in Apache_server folder).
+2. Download download-and-build-pack.zip from following link and unpack it at the same
+   level as iipsrv folder, so you will have iipsrv and download-and-build-pack side by side
+   in a folder.
+   Link: https://github.com/klokantech/iipsrv/releases/download/D%26B-pack-1.0/download-and-build-pack.zip
+   
+   Note: If you want to build JPEG2000Transcoder for yourself, you must replace the one
+   in download-and-build-pack. Also, if you want to use version of kakadu other than 7.3,
+   you must edit this version in scripts.  
+
+3. Open scripts in inno setup and build them
 
 *****************************************************************************************
