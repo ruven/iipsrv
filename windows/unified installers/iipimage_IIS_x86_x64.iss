@@ -83,7 +83,7 @@ Source: "..\..\..\download-and-build-pack\x86\msvcr100.dll"; DestDir: "{code:Get
 ;64bit transcoding apps (djpeg and kdu_compress)
 Source: "..\..\..\download-and-build-pack\x64\djpeg.exe"; DestDir: "{code:GetTranscoderDir}\bins"; Check: Is64BitInstallMode
 Source: "..\dependencies\dlls\x64\kdu_compress.exe"; DestDir: "{code:GetTranscoderDir}\bins"; Check: Is64BitInstallMode
-Source: "..\dependencies\dlls\x64\kdu_v64R.dll"; DestDir: "{code:GetTranscoderDir}\bins"; Check: Is64BitInstallMode
+Source: "..\dependencies\dlls\x64\kdu_v73R.dll"; DestDir: "{code:GetTranscoderDir}\bins"; Check: Is64BitInstallMode
 Source: "..\..\..\download-and-build-pack\x64\msvcp100.dll"; DestDir: "{code:GetTranscoderDir}\bins"; Check: Is64BitInstallMode
 Source: "..\..\..\download-and-build-pack\x64\msvcr100.dll"; DestDir: "{code:GetTranscoderDir}\bins"; Check: Is64BitInstallMode
 ;Memcached

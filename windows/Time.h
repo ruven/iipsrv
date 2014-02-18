@@ -38,8 +38,5 @@ double round(double);
 // Missing isfinite
 static inline bool isfinite(double a) { return _finite(a); }
 
-// isfinite missing from MSVC compiler
-static inline bool isfinite(double a) { return !_finite(a); }
-
 #endif
 #endif
