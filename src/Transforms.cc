@@ -23,6 +23,11 @@
 #include <cmath>
 #include "Transforms.h"
 
+#if _MSC_VER
+#include "../windows/Time.h"
+#endif
+
+using namespace std;
 
 /* D65 temp 6504.
  */
@@ -66,7 +71,7 @@ void filter_normalize( RawTile& in, std::vector<float>& max, std::vector<float>&
       // Loop through our pixels for floating values 
 #pragma ivdep
       for( unsigned int n=c; n<np; n+=nc ){
-        normdata[n] = std::isfinite(fptr[n])? (fptr[n] - minc) * invdiffc : 0.0;
+        normdata[n] = isfinite(fptr[n])? (fptr[n] - minc) * invdiffc : 0.0;
       }
     } else if( in.bpc == 32 && in.sampleType == FIXEDPOINT ) {
       uiptr = (unsigned int*)in.data;
@@ -375,11 +380,12 @@ void filter_inv( RawTile& in ){
 // Resize image using nearest neighbour interpolation
 void filter_interpolate_nearestneighbour( RawTile& in, unsigned int resampled_width, unsigned int resampled_height ){
 
-  float *buf = (float*)in.data;
-
   int channels = in.channels;
   unsigned int width = in.width;
   unsigned int height = in.height;
+
+  float *data = (float*) in.data;
+  float *buf = new float[resampled_width*resampled_height*channels];
 
   // Calculate our scale
   float xscale = (float)width / (float)resampled_width;
@@ -396,12 +402,16 @@ void filter_interpolate_nearestneighbour( RawTile& in, unsigned int resampled_wi
 
       unsigned int resampled_index = (i + j*resampled_width)*channels;
       for( int k=0; k<in.channels; k++ ){
-        buf[resampled_index+k] = buf[pyramid_index+k];
+        buf[resampled_index+k] = data[pyramid_index+k];
       }
     }
   }
 
   // Correctly set our Rawtile info
+  if( in.memoryManaged ) delete[] in.data;
+  in.data = buf;
+  in.memoryManaged = true;
+
   in.width = resampled_width;
   in.height = resampled_height;
   in.dataLength = resampled_width * resampled_height * channels * in.bpc/8;
@@ -413,11 +423,12 @@ void filter_interpolate_nearestneighbour( RawTile& in, unsigned int resampled_wi
 //  - Floating point implementation which benchmarks about 2.5x slower than nearest neighbour
 void filter_interpolate_bilinear( RawTile& in, unsigned int resampled_width, unsigned int resampled_height ){
 
-  float *buf = (float*) in.data;
-
   int channels = in.channels;
   unsigned int width = in.width;
   unsigned int height = in.height;
+
+  float *data = (float*) in.data;
+  float *buf = new float[resampled_width*resampled_height*channels];
 
   // Calculate our scale
   float xscale = (float)width / (float)resampled_width;
@@ -456,19 +467,23 @@ void filter_interpolate_bilinear( RawTile& in, unsigned int resampled_width, uns
 	// This should only ever occur on the top left p11 pixel.
 	// Otherwise perform our full interpolation
 	if( resampled_index == p11 ){
-	  buf[resampled_index+k] = buf[p11+k];
+	  buf[resampled_index+k] = data[p11+k];
 	}
 	else{
-	  float tx = buf[p11+k]*a + buf[p21+k]*b;
-	  float ty = buf[p12+k]*a + buf[p22+k]*b;
-	  float r = (float)( c*tx + d*ty );
-	  buf[resampled_index+k] = r;
+        float tx = data[p11+k]*a + data[p21+k]*b;
+	    float ty = data[p12+k]*a + data[p22+k]*b;
+	    float r = (float)( c*tx + d*ty );
+	    buf[resampled_index+k] = r;
 	}
       }
     }
   }
 
   // Correctly set our Rawtile info
+  if( in.memoryManaged ) delete[] in.data;
+  in.data = buf;
+  in.memoryManaged = true;
+
   in.width = resampled_width;
   in.height = resampled_height;
   in.dataLength = resampled_width * resampled_height * channels * in.bpc/8;
@@ -547,7 +562,7 @@ void filter_rotate( RawTile& in, float angle=0.0 ){
 	  }
 	}
       }
-    }
+    }    
 
     // Rotate 270
     else if( (int) angle % 360 == 270 ){
@@ -623,6 +638,26 @@ void filter_greyscale( RawTile& rawtile ){
   // Update our number of channels and data length
   rawtile.channels = 1;
   rawtile.dataLength = np;
+}
+
+// Crops edge pixels from image
+void filter_crop( RawTile& in, int left, int top, int right, int bottom ){
+
+  unsigned int n = 0;
+  //Cropping
+  for( int i=top; i < in.height - bottom; i++ ){
+    unsigned int index1 = i * in.width;
+    for ( int j=left; j < in.width - right; j++ ){
+      unsigned int index = (index1 + j)*in.channels;
+      for( int k=0; k < in.channels; k++ ){
+        ((float*)in.data)[n++]  = ((float*)in.data)[index+k];
+      }
+    }
+  }
+  //adjust dimensions
+  in.height = in.height - top - bottom;
+  in.width = in.width - left - right;
+  in.dataLength = in.width * in.height * in.channels * in.bpc/8;
 }
 
 

@@ -38,9 +38,9 @@ void View::calculateResolution( unsigned int dimension,
   // Limit j to the maximum resolution
   if( j > max_resolutions+1 ) j = max_resolutions + 1;
 
-  // Only set this if our requested resolution is greater than that
-  // that has already been set.
-  if( (int)max_resolutions - (int)j + 1 < resolution ) resolution = (int)max_resolutions - (int)j + 1;
+  // Only set this if our requested resolution is smaller than that
+  // that has already been set. (better shrink image than upscale)
+  if( (int)max_resolutions - (int)j + 1 >= resolution ) resolution = (int)max_resolutions - (int)j + 1;
 
   // Make sure our value is possible
   if( resolution > (signed int)(max_resolutions - 1) ) resolution = max_resolutions - 1;
@@ -53,17 +53,15 @@ unsigned int View::getResolution(){
 
   unsigned int i;
 
-  resolution = max_resolutions - 1;
-
-  if( requested_width ) View::calculateResolution( width, requested_width );
-  if( requested_height ) View::calculateResolution( height, requested_height );
-
-  // Caluclate our new width and height based on the calculated resolution
+  resolution = 0;
+  
+  if( requested_width ) View::calculateResolution( (unsigned int) (width*view_width), requested_width );
+  if( requested_height ) View::calculateResolution( (unsigned int) (height*view_height), requested_height );
+  // Calculate our new width and height based on the calculated resolution
   for( i=0; i < (max_resolutions - resolution - 1); i++ ){
     width = (int) width / 2;
     height = (int) height / 2;
   }
-
   // Check if we need to use a smaller resolution due to our max size limit
   float scale = getScale();
 
@@ -84,9 +82,7 @@ unsigned int View::getResolution(){
       resolution--;
     }
   }
-
   return resolution;
-
 }
 
 

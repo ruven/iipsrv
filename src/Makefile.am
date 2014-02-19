@@ -58,4 +58,5 @@ iipsrv_fcgi_SOURCES = \
 			PFL.cc \
 			Watermark.h \
 			Watermark.cc \
-			Memcached.h
+			Memcached.h \
+			IIIF.cc

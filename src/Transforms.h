@@ -98,10 +98,17 @@ void filter_interpolate_bilinear( RawTile& in, unsigned int w, unsigned int h );
 void filter_rotate( RawTile& in, float angle );
 
 
+/// Crop image - removes given number of pixels from given sides
+/** @param in tile input data
+    @param left amount of deleted pixels on left side
+    @param top amount of deleted pixels from top
+    @param right amount of deleted pixels on right side
+    @param bottom amount of deleted pixels from the bottom
+*/
+void filter_crop( RawTile& in, int left, int top, int right, int bottom );
+
 /// Convert image to grayscale
 /** @param in input image */
 void filter_greyscale( RawTile& in );
-
-
 
 #endif
