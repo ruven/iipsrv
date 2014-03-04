@@ -45,16 +45,7 @@ static char hexToChar( char first, char second ){
   return static_cast<char>(digit);
 }
 
-
-
-void FIF::run( Session* session, const string& src ){
-
-  if( session->loglevel >= 3 ) *(session->logfile) << "FIF handler reached" << endl;
-
-  // Time this command
-  if( session->loglevel >= 2 ) command_timer.start();
-
-
+std::string FIF::decodeUrl( const string& src){
   // The argument is a URL path, which may contain spaces or other hex encoded characters.
   // So, first decode and filter this path (implementation taken from GNU cgicc: http://www.cgicc.org)
 
@@ -74,9 +65,6 @@ void FIF::run( Session* session, const string& src ){
 
 	// Filter out embedded NULL bytes of the form %00 from the URL
 	if( (*(iter+1)=='0' && *(iter+2)=='0') ){
-	  if( session->loglevel >= 1 ){
-	    *(session->logfile) << "FIF :: Warning! Detected embedded NULL byte in URL: " << src << endl;
-	  }
 	  // Wind forward our iterator
 	  iter+=2;
 	}
@@ -97,6 +85,18 @@ void FIF::run( Session* session, const string& src ){
       break;
     }
   }
+
+  return argument;
+}
+
+void FIF::run( Session* session, const string& src ){
+
+  if( session->loglevel >= 3 ) *(session->logfile) << "FIF handler reached" << endl;
+
+  // Time this command
+  if( session->loglevel >= 2 ) command_timer.start();
+
+  string argument = decodeUrl(src);
 
   // Filter out any ../ to prevent users by-passing any file system prefix
   unsigned int n;

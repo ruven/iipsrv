@@ -32,6 +32,7 @@
 #define MAX_CVT 5000
 #define MAX_LAYERS 0
 #define FILESYSTEM_PREFIX ""
+#define FABRIC_URL ""
 #define WATERMARK ""
 #define WATERMARK_PROBABILITY 1.0
 #define WATERMARK_OPACITY 1.0
@@ -212,6 +213,16 @@ class Environment {
     return interpolation;
   }
 
+  static std::string getFabricUrl(){
+    char* envpara = getenv( "FABRIC_URL" );
+    std::string fabric_url;
+    if( envpara ){
+      fabric_url = std::string( envpara );
+    }
+    else fabric_url = FABRIC_URL;
+
+    return fabric_url;
+  }
 
 };
 

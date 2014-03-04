@@ -44,6 +44,9 @@ void IIIF::run( Session* session, const std::string& argument ){
   // Time this command
   if( session->loglevel >= 2 ) command_timer.start();
 
+  //decode URL
+  string decodedArgument = FIF::decodeUrl(argument);
+
   //variables to store information from url request
   //suffix is last parameter eg. info.xml or native.jpg and filename is identifier
   string suffix;
@@ -58,22 +61,22 @@ void IIIF::run( Session* session, const std::string& argument ){
   //message of the error that occured during parsing
   string errorMsg, errorParam;
 
-  int lastSlashPos = argument.find_last_of("/");
+  int lastSlashPos = decodedArgument.find_last_of("/");
 
   //check if there is slash in argument and if it is not last / first character, extract identifier and suffix
-  if( lastSlashPos < argument.length() && lastSlashPos > 0){
-    suffix = argument.substr( lastSlashPos+1, string::npos );
+  if( lastSlashPos < decodedArgument.length() && lastSlashPos > 0){
+    suffix = decodedArgument.substr( lastSlashPos+1, string::npos );
     if( suffix.substr(0,4) == "info" ){
-      filename = argument.substr(0,lastSlashPos);
+      filename = decodedArgument.substr(0,lastSlashPos);
     }
     else{
       int positionTmp = lastSlashPos;
       for( int i = 0; i < 3; i++) {
-        positionTmp = argument.substr(0,positionTmp).find_last_of("/");
+        positionTmp = decodedArgument.substr(0,positionTmp).find_last_of("/");
       }
       if(positionTmp > 0){
-        filename = argument.substr(0,positionTmp);
-        params = argument.substr(positionTmp + 1, string::npos);
+        filename = decodedArgument.substr(0,positionTmp);
+        params = decodedArgument.substr(positionTmp + 1, string::npos);
       }
       else{
         errorNo = 400; //BAD REQUEST
@@ -81,7 +84,7 @@ void IIIF::run( Session* session, const std::string& argument ){
         errorMsg = "Not enough parameters. Syntax of info request is filename/info.xml, filename/info.json or "
           "filename/info.json?callback=nameOfCallbackFunction. "
           "Syntax of image request is {identifier}/{region}/{size}/{rotation}/{quality}{.format} "
-          "You have entered: " + argument;
+          "You have entered: " + decodedArgument;
       }
     }
   }
@@ -91,7 +94,7 @@ void IIIF::run( Session* session, const std::string& argument ){
     errorMsg = "Not enough parameters. Syntax of info request is filename/info.xml, filename/info.json or "
       "filename/info.json?callback=nameOfCallbackFunction. "
       "Syntax of image request is {identifier}/{region}/{size}/{rotation}/{quality}{.format} "
-      "You have entered: " + argument;;
+      "You have entered: " + decodedArgument;;
   }
 
   if( !errorNo ){
@@ -123,7 +126,7 @@ void IIIF::run( Session* session, const std::string& argument ){
     if(width <= 1 || height <= 1){
       errorNo = 415; // invalid media
       errorParam = "identifier";
-      errorMsg = "Requested file "+ filename +" is probably corrupted. Width or height of loaded image is 1px. You have entered: " + argument;
+      errorMsg = "Requested file "+ filename +" is probably corrupted. Width or height of loaded image is 1px. You have entered: " + decodedArgument;
     }
   }
 
@@ -136,7 +139,7 @@ void IIIF::run( Session* session, const std::string& argument ){
       errorNo = 400; // bad request
       errorParam = "unknown";
       errorMsg = "Wrong info request. Syntax is filename/info.xml, filename/info.json or "
-        "filename/info.json?callback=nameOfCallbackFunction. You have entered: " + argument;
+        "filename/info.json?callback=nameOfCallbackFunction. You have entered: " + decodedArgument;
     }
   }
 
@@ -264,7 +267,7 @@ void IIIF::run( Session* session, const std::string& argument ){
 
       if( errorNo ){
         errorMsg += " Region format is: full, x,y,width,height or pct:x,y,width,height. Your full request is: "
-          + argument;
+          + decodedArgument;
       }
 
       numOfTokens++;
@@ -424,7 +427,7 @@ void IIIF::run( Session* session, const std::string& argument ){
 
       if( errorNo ){
         errorMsg += " Size format is: full or width,height or width, or ,heigh or pct:x or !width,height. "
-          "Your full request is: " + argument;
+          "Your full request is: " + decodedArgument;
       }
 
       numOfTokens++;
@@ -523,7 +526,7 @@ void IIIF::run( Session* session, const std::string& argument ){
       numOfTokens++;
 
       if( errorNo ){
-        errorMsg += " Your full request is: " + argument;
+        errorMsg += " Your full request is: " + decodedArgument;
       }
       if( !errorNo && session->loglevel >= 3 ){
         *(session->logfile) << "IIIF :: requested quality of image is: " << quality
@@ -537,7 +540,7 @@ void IIIF::run( Session* session, const std::string& argument ){
       errorParam = "unknown";
       errorMsg = "Inserted query has more parameters. "
         "Syntax should be {identifier}/{region}/{size}/{rotation}/{quality}{.format} "
-        "You have entered: " + argument;
+        "You have entered: " + decodedArgument;
     }
     //NOT ENOUGH PARAMETERS
     if( !errorNo && numOfTokens < 4 ){
@@ -545,7 +548,7 @@ void IIIF::run( Session* session, const std::string& argument ){
       errorParam = "unknown";
       errorMsg = "Inserted query has not enough parameters. "
         "Syntax should be {identifier}/{region}/{size}/{rotation}/{quality}{.format} "
-        "You have entered: " + argument;
+        "You have entered: " + decodedArgument;
     }
   }
   //END OF PARSING OF INPUT PARAMETERS
@@ -583,7 +586,7 @@ void IIIF::run( Session* session, const std::string& argument ){
     session->out->flush();
 
     *(session->logfile) << "IIIF :: Parsing error occured. " << errorMsg
-      << " Entered argument was " << argument << endl;
+      << " Entered argument was " << decodedArgument << endl;
     throw errorNo;
   }
 
@@ -689,7 +692,11 @@ void IIIF::run( Session* session, const std::string& argument ){
       jsonStringStream << suffix.substr(19,string::npos) << "(";
     }
     jsonStringStream << "{" << endl;
-    jsonStringStream << "\"identifier\" : \"" << escapedFilename << "\"," << endl;
+	jsonStringStream << "\"@context\" : \"http://library.stanford.edu/iiif/image-api/1.1/context.json\"," << endl;
+	string fabricUrl = Environment::getFabricUrl();
+	if(!fabricUrl.empty()){
+	  jsonStringStream << "\"@id\" : \"" << fabricUrl << escapedFilename << "\"," << endl;
+	}
     jsonStringStream << "\"width\" : " << width << "," << endl;
     jsonStringStream << "\"height\" : " << height << "," << endl;
     //sf 1 is always present, it is original image

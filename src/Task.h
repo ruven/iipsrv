@@ -214,6 +214,7 @@ class ROT : public Task {
 class FIF : public Task {
  public:
   void run( Session* session, const std::string& argument );
+  static std::string decodeUrl(const std::string& src);
 };
 
 

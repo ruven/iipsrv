@@ -5,3 +5,11 @@ Makefile
 Makefile.in
 config.*
 doc/html
+windows/dependencies/*
+windows/x64/*
+windows/Release/*
+windows/ipch/*
+*.opensdf
+*.sdf
+*.vcxproj.user
+*.suo
