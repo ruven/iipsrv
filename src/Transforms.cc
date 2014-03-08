@@ -2,7 +2,7 @@
 
 /*  IIP fcgi server module - image processing routines
 
-    Copyright (C) 2004-2013 Ruven Pillay.
+    Copyright (C) 2004-2014 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -35,9 +35,11 @@ static const float _sRGB[3][3] = { {  3.240479, -1.537150, -0.498535 },
 				   { -0.969256, 1.875992, 0.041556 },
 				   { 0.055648, -0.204043, 1.057311 } };
 
+using namespace std;
+
 
 // Normalization function
-void filter_normalize( RawTile& in, std::vector<float>& max, std::vector<float>& min ) {
+void filter_normalize( RawTile& in, vector<float>& max, vector<float>& min ) {
 
   float *normdata;
   unsigned int np = in.dataLength * 8 / in.bpc;
@@ -66,7 +68,7 @@ void filter_normalize( RawTile& in, std::vector<float>& max, std::vector<float>&
       // Loop through our pixels for floating values 
 #pragma ivdep
       for( unsigned int n=c; n<np; n+=nc ){
-        normdata[n] = std::isfinite(fptr[n])? (fptr[n] - minc) * invdiffc : 0.0;
+        normdata[n] = isfinite(fptr[n])? (fptr[n] - minc) * invdiffc : 0.0;
       }
     } else if( in.bpc == 32 && in.sampleType == FIXEDPOINT ) {
       uiptr = (unsigned int*)in.data;
@@ -375,11 +377,23 @@ void filter_inv( RawTile& in ){
 // Resize image using nearest neighbour interpolation
 void filter_interpolate_nearestneighbour( RawTile& in, unsigned int resampled_width, unsigned int resampled_height ){
 
-  float *buf = (float*)in.data;
+  // Pointer to input buffer
+  float *input = (float*) in.data;
 
   int channels = in.channels;
   unsigned int width = in.width;
   unsigned int height = in.height;
+
+  // Pointer to output buffer
+  float *output;
+
+  // Create new buffer if size is larger than input size
+  bool new_buffer = false;
+  if( resampled_width*resampled_height > in.width*in.height ){
+    new_buffer = true;
+    output = new float[resampled_width*resampled_height*in.channels];
+  }
+  else output = (float*) in.data;
 
   // Calculate our scale
   float xscale = (float)width / (float)resampled_width;
@@ -396,15 +410,19 @@ void filter_interpolate_nearestneighbour( RawTile& in, unsigned int resampled_wi
 
       unsigned int resampled_index = (i + j*resampled_width)*channels;
       for( int k=0; k<in.channels; k++ ){
-        buf[resampled_index+k] = buf[pyramid_index+k];
+	output[resampled_index+k] = input[pyramid_index+k];
       }
     }
   }
+
+  // Delete original buffer
+  if( new_buffer ) delete[] (float*) input;
 
   // Correctly set our Rawtile info
   in.width = resampled_width;
   in.height = resampled_height;
   in.dataLength = resampled_width * resampled_height * channels * in.bpc/8;
+  in.data = output;
 
 }
 
@@ -413,20 +431,27 @@ void filter_interpolate_nearestneighbour( RawTile& in, unsigned int resampled_wi
 //  - Floating point implementation which benchmarks about 2.5x slower than nearest neighbour
 void filter_interpolate_bilinear( RawTile& in, unsigned int resampled_width, unsigned int resampled_height ){
 
-  float *buf = (float*) in.data;
+  // Pointer to input buffer
+  float *input = (float*) in.data;
 
   int channels = in.channels;
   unsigned int width = in.width;
   unsigned int height = in.height;
 
+  // Create new buffer and pointer for our output
+  float *output = new float[resampled_width*resampled_height*in.channels];
+
   // Calculate our scale
-  float xscale = (float)width / (float)resampled_width;
-  float yscale = (float)height / (float)resampled_height;
+  float xscale = (float)(width-1) / (float)resampled_width;
+  float yscale = (float)(height-1) / (float)resampled_height;
+
+  // Index for our output buffer
+  unsigned int resampled_index = 0;
 
   for( unsigned int j=0; j<resampled_height; j++ ){
 
-    // Index to the current pyramid resolution's bottom left right pixel
-    unsigned int jj = (unsigned int) floorf(j*yscale);
+    // Index to the current pyramid resolution's top left pixel
+    int jj = (int) floor( j*yscale );
 
     // Calculate some weights - do this in the highest loop possible
     float jscale = j*yscale;
@@ -435,15 +460,15 @@ void filter_interpolate_bilinear( RawTile& in, unsigned int resampled_width, uns
 
     for( unsigned int i=0; i<resampled_width; i++ ){
 
-      // Index to the current pyramid resolution's bottom left right pixel
-      unsigned int ii = (unsigned int) floorf(i*xscale);
+      // Index to the current pyramid resolution's top left pixel
+      int ii = (int) floor( i*xscale );
 
       // Calculate the indices of the 4 surrounding pixels
-      unsigned int p11 = (unsigned int) ( channels * ( ii + jj*width ) );
-      unsigned int p12 = (unsigned int) ( channels * ( ii + (jj+1)*width ) );
-      unsigned int p21 = (unsigned int) ( channels * ( (ii+1) + jj*width ) );
-      unsigned int p22 = (unsigned int) ( channels * ( (ii+1) + (jj+1)*width ) );
-      unsigned int resampled_index = ((i + j*resampled_width) * channels);
+      unsigned int p11, p12, p21, p22;
+      p11 = (unsigned int) ( channels * ( ii + jj*width ) );
+      p12 = (unsigned int) ( channels * ( ii + (jj+1)*width ) );
+      p21 = (unsigned int) ( channels * ( (ii+1) + jj*width ) );
+      p22 = (unsigned int) ( channels * ( (ii+1) + (jj+1)*width ) );
 
       // Calculate the rest of our weights
       float iscale = i*xscale;
@@ -451,27 +476,22 @@ void filter_interpolate_bilinear( RawTile& in, unsigned int resampled_width, uns
       float b = iscale - (float)ii;
 
       for( int k=0; k<in.channels; k++ ){
-
-	// If we are exactly coincident with a bounding box pixel, use that pixel value.
-	// This should only ever occur on the top left p11 pixel.
-	// Otherwise perform our full interpolation
-	if( resampled_index == p11 ){
-	  buf[resampled_index+k] = buf[p11+k];
-	}
-	else{
-	  float tx = buf[p11+k]*a + buf[p21+k]*b;
-	  float ty = buf[p12+k]*a + buf[p22+k]*b;
-	  float r = (float)( c*tx + d*ty );
-	  buf[resampled_index+k] = r;
-	}
+	float tx = input[p11+k]*a + input[p21+k]*b;
+	float ty = input[p12+k]*a + input[p22+k]*b;
+	float r = (float)( c*tx + d*ty );
+	output[resampled_index++] = r;
       }
     }
   }
+
+  // Delete original buffer
+  delete[] (float*) input;
 
   // Correctly set our Rawtile info
   in.width = resampled_width;
   in.height = resampled_height;
   in.dataLength = resampled_width * resampled_height * channels * in.bpc/8;
+  in.data = output;
 
 }
 
@@ -627,7 +647,7 @@ void filter_greyscale( RawTile& rawtile ){
 
 
 // Convert colour or multi-channel image
-void filter_twist( RawTile& rawtile, std::vector<float> matrix ){
+void filter_twist( RawTile& rawtile, vector<float> matrix ){
 
   
 

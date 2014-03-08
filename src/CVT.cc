@@ -1,7 +1,7 @@
 /*
     IIP CVT Command Handler Class Member Function
 
-    Copyright (C) 2006-2013 Ruven Pillay.
+    Copyright (C) 2006-2014 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -107,8 +107,8 @@ void CVT::run( Session* session, const std::string& a ){
       view_top = session->view->getViewTop();
       view_width = session->view->getViewWidth();
       view_height = session->view->getViewHeight();
-      resampled_width = view_width;
-      resampled_height = view_height;
+      resampled_width = session->view->getRequestWidth();
+      resampled_height = session->view->getRequestHeight();
 
       if( session->loglevel >= 3 ){
 	*(session->logfile) << "CVT :: view port is set: image: " << im_width << "x" << im_height
@@ -126,11 +126,11 @@ void CVT::run( Session* session, const std::string& a ){
       resampled_height = session->view->getRequestHeight();
 
       // Make sure our requested width and height don't modify the aspect ratio. Make sure the final image fits *within* the requested size
-      if( ((double)resampled_height/(double)view_height) > ((double)resampled_width/(double)view_width) ){
-	resampled_height = (unsigned int) (((double)resampled_width/(double)view_width) * view_height);
+      if( ((float)resampled_height/(float)view_height) > ((float)resampled_width/(float)view_width) ){
+	resampled_height = (unsigned int) round((((float)resampled_width/(float)view_width) * view_height));
       }
-      else if( ((double)resampled_width/(double)view_width) > ((double)resampled_height/(double)view_height) ){
-	resampled_width = (unsigned int) (((double)resampled_height/(double)view_height) * view_width);
+      else if( ((float)resampled_width/(float)view_width) > ((float)resampled_height/(float)view_height) ){
+	resampled_width = (unsigned int) round((((float)resampled_height/(float)view_height) * view_width));
       }
     }
 
@@ -268,6 +268,7 @@ void CVT::run( Session* session, const std::string& a ){
 
     // Apply any contrast adjustments and/or clipping to 8bit from 16bit or 32bit
     filter_contrast( complete_image, session->view->getContrast() );
+    *(session->logfile) << "CVT :: Applying contrast of " << session->view->getContrast() << endl;
 
 
     // Convert to greyscale if requested
@@ -294,6 +295,8 @@ void CVT::run( Session* session, const std::string& a ){
       if( session->loglevel >= 5 ){
 	rotation_timer.start();
       }
+
+      *(session->logfile) << "CVT :: Rotating image" << endl;
 
       float rotation = session->view->getRotation();
       filter_rotate( complete_image, rotation );

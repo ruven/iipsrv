@@ -1,3 +1,8 @@
+08/03/2014:
+	- Changes to resizing algorithms to enable expansions as well as shrink for all views
+	  and regions.
+
+
 24/01/2014:
 	- Changes to IIPImage and KakaduImage constructors to force correct initialization of
 	  the tile size.

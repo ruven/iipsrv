@@ -43,7 +43,7 @@ class View{
  private:
 
   // Resolution independent x,y,w,h region viewport
-  double view_left, view_top, view_width, view_height; /// viewport
+  float view_left, view_top, view_width, view_height; /// viewport
 
   int resolution;                             /// Requested resolution
   unsigned int max_resolutions;               /// Total available resolutions

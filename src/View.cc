@@ -1,7 +1,7 @@
 /*
     View Member Functions
 
-    Copyright (C) 2004-2013 Ruven Pillay.
+    Copyright (C) 2004-2014 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -21,8 +21,7 @@
 
 #include "View.h"
 #include <cmath>
-
-
+using namespace std;
 
 void View::calculateResolution( unsigned int dimension,
 				unsigned int requested_size ){
@@ -95,12 +94,12 @@ double View::getScale(){
   unsigned int rw;
   unsigned int rh;
   if( requested_width == 0 && requested_height > 0 ){
-    rw = static_cast<unsigned int>( width * requested_height / height );
+    rw = static_cast<unsigned int>( round(width * requested_height / height) );
   }
   else rw = requested_width;
 
   if( requested_height == 0 && requested_width > 0 ){
-    rh = static_cast<unsigned int>( height * requested_width / width );
+    rh = static_cast<unsigned int>( round( height * requested_width / width ) );
   }
   else rh = requested_height;
 
@@ -131,21 +130,23 @@ void View::setViewTop( double y ) {
 
 void View::setViewWidth( double w ) {
   if( w > 1.0 ) view_width = 1.0;
-  else if( w <= 0.0 ) view_width = 0.0001;
+  else if( w < 0.0 ) view_width = 0.0;
   else view_width = w;
 }
 
 
 void View::setViewHeight( double h ) {
   if( h > 1.0 ) view_height = 1.0;
-  else if( h <= 0.0 ) view_height = 0.0001;
+  else if( h < 0.0 ) view_height = 0.0;
   else view_height = h;
 }
 
 
 bool View::viewPortSet() {
   if( (view_width < 1.0) || (view_height < 1.0) ||
-      (view_left > 0.0) || (view_top > 0.0) ) return true;
+      (view_left > 0.0) || (view_top > 0.0) ){
+    return true;
+  }
   else return false;
 }
 
@@ -177,7 +178,7 @@ unsigned int View::getViewWidth(){
 unsigned int View::getViewHeight(){
   // Scale up our viewport, then make sure our size is not too large or too small
   unsigned int h = (unsigned int) round(height * view_height);
-  unsigned int top = (unsigned int) round(height * view_top );
+  unsigned int top = (unsigned int) round(height * view_top);
   if( (h + top) > height ) h = height - top;
   if( h < min_size ) h = min_size;
   return h;
@@ -189,16 +190,21 @@ unsigned int View::getRequestWidth(){
   // If our requested width has not been set, but height has, return a width proportional to
   // this requested height
   if( requested_width == 0 && requested_height > 0 ){
-    requested_width = (unsigned int) round( (double)(width*requested_height) / (double)height );
+    requested_width = (unsigned int) round( (float)(width*requested_height) / (float)height );
   }
 
-  if( requested_width > width ) requested_width = width;
-  if( requested_width > max_size ) requested_width = max_size;
   // If no width has been set, use our full size
   if( requested_width <= 0 ) requested_width = width;
 
+  // Limit our requested width to the xsxsmaximum size
+  if( requested_width > max_size ) requested_width = max_size;
+
   // If we have a region request, scale our request accordingly
-  if( view_width != 1.0 ) requested_width = (unsigned int) round( requested_width * view_width );
+  if( view_width < 1.0 ){
+    float vw = (view_width + view_left > 1.0) ? 1.0 - view_left : view_width;
+    return (unsigned int) round( requested_width * vw );
+  }
+
   return requested_width;
 };
 
@@ -208,16 +214,20 @@ unsigned int View::getRequestHeight(){
   // If our requested height has not been set, but the width has, return a height proportional to
   // this requested width
   if( requested_height == 0 && requested_width > 0 ){
-    requested_height = (unsigned int) round( (double)(height*requested_width) / (double)width );
+    requested_height = (unsigned int) round( (float)(height*requested_width) / (float)width );
   }
 
-  if( requested_height > height ) requested_height = height;
-  if( requested_height > max_size ) requested_height = max_size;
   // If no height has been set, use our full size
   if( requested_height <= 0 ) requested_height = height;
 
+  // Limit our requested height to the max_size
+  if( requested_height > max_size ) requested_height = max_size;
+
   // If we have a region request, scale our request accordingly
-  if( view_height != 1.0 ) requested_height = (unsigned int) round( requested_height * view_height );
+  if( view_height < 1.0 ){
+    float vh = (view_top + view_height > 1.0) ? 1.0 - view_top : view_height;
+    return (unsigned int) round( requested_height * vh );
+  }
   return requested_height;
 };
 

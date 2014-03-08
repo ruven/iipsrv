@@ -390,12 +390,9 @@ RawTile TileManager::getRegion( unsigned int res, int seq, int ang, int layers, 
 		 << rawtile.bpc << " bits per channel" << endl;
       }
 
-      // Set the tile width and height to be that of the source tile
-      // - Use the rawtile data because if we take a tile from cache
-      //   the image pointer will not necessarily be pointing to the
-      //   the current tile
-      //	src_tile_width = (*session->image)->getTileWidth();
-      //	src_tile_height = (*session->image)->getTileHeight();
+      // Set the tile width and height to be that of the source tile - Use the rawtile data
+      // because if we take a tile from cache the image pointer will not necessarily be pointing
+      // to the the current tile
       src_tile_width = rawtile.width;
       src_tile_height = rawtile.height;
       dst_tile_width = src_tile_width;
