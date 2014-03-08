@@ -1,7 +1,7 @@
 /*
     IIP Response Handler Class
 
-    Copyright (C) 2003-2012 Ruven Pillay.
+    Copyright (C) 2003-2014 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -35,6 +35,7 @@ IIPResponse::IIPResponse(){
   modified = "";
   cache = "Cache-Control: max-age=86400";
   mimeType = "Content-Type: application/vnd.netfpx";
+  cors = "";
   eof = "\r\n";
   sent = false;
 }
@@ -93,7 +94,7 @@ void IIPResponse::setError( const string& code, const string& arg ){
 
 string IIPResponse::formatResponse() {
 
-  /* We always need 2 sets of eof after the MIME headers to stop apache from complaining
+  /* We always need 2 sets of eof after the headers before body/response
    */
   string response;
   if( error.length() ){
@@ -103,7 +104,9 @@ string IIPResponse::formatResponse() {
       eof + eof + error;
   }
   else{
-    response = server + eof + cache + eof + modified + eof + mimeType + eof + eof + protocol + eof + responseBody;
+    response = server + eof + cache + eof + modified + eof + mimeType + eof;
+    if( !cors.empty() ) response += cors + eof;
+    response += eof + protocol + eof + responseBody;
   }
 
   return response;

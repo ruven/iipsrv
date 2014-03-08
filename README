@@ -178,6 +178,10 @@ INTERPOLATION: Interpolation method to use for rescaling when using image export
 Integer value. 0 for fastest nearest neighbour interpolation. 1 for bilinear
 interpolation (better quality but about 2.5x slower). Bilinear by default.
 
+CORS: Cross Origin Resource Sharing setting. Disabled by default.
+Set to * to enable for all domains or specify a single domain.
+See http://www.w3.org/TR/cors/ for more details on CORS.
+
 DECODER_MODULES: Comma separated list of external modules for decoding 
 other image formats. This is only necessary if you have activated 
 --enable-modules for ./configure and written your own image format 

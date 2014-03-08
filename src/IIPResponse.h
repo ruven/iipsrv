@@ -1,7 +1,7 @@
 /*
     IIP Response Handler Class
 
-    Copyright (C) 2003-2012 Ruven Pillay.
+    Copyright (C) 2003-2014 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -50,6 +50,7 @@ class IIPResponse{
   std::string protocol;            // IIP protocol version
   std::string responseBody;        // The main response
   std::string error;               // Error message
+  std::string cors;                // CORS (Cross-Origin Resource Sharing) setting
   bool sent;                       // Indicate whether a response has been sent
 
 
@@ -106,6 +107,11 @@ class IIPResponse{
       @param arg the argument supplied by the client
    */
   void setError( const std::string& code, const std::string& arg );
+
+
+  /// Set CORS setting
+  /** @param cors setting */
+  void setCORS( const std::string& c ){ if(!c.empty()) cors = "Access-Control-Allow-Origin: " + c; };
 
 
   /// Get a formatted string to send back

@@ -1,6 +1,8 @@
 08/03/2014:
 	- Changes to resizing algorithms to enable expansions as well as shrink for all views
 	  and regions.
+	- Added CORS (Cross Origin Resource Sharing) support via CORS environment variable for
+	  (AJAX) metadata requests.
 
 
 24/02/2014:
