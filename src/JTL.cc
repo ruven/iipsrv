@@ -125,8 +125,8 @@ void JTL::run( Session* session, const std::string& argument ){
   // Apply normalization and float conversion
   if( session->loglevel >= 3 ){
     *(session->logfile) << "JTL :: Normalizing and converting to float" << endl;
+    function_timer.start();
   }
-
   filter_normalize( rawtile, (*session->image)->max, (*session->image)->min );
   if( session->loglevel >= 3 ){
     *(session->logfile) << "JTL :: Normalization applied in " << function_timer.getTime() << " microseconds" << endl;

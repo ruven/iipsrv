@@ -21,6 +21,7 @@
 #include "Task.h"
 #include <cmath>
 #include <sstream>
+#include <iomanip>
 
 using namespace std;
 
@@ -168,7 +169,7 @@ void PFL::run( Session* session, const std::string& argument ){
 	}
       }
 
-      if( rawtile.sampleType == FLOATINGPOINT ) profile << fixed;
+      if( rawtile.sampleType == FLOATINGPOINT ) profile << fixed << setprecision(9);
       profile << intensity;
       if( j < length-1 ) profile << ",";
 
