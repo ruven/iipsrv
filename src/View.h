@@ -1,7 +1,7 @@
 /*
-    Image View Parameters
+    Image View and Transform Parameters
 
-    Copyright (C) 2003-2013 Ruven Pillay.
+    Copyright (C) 2003-2014 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -24,6 +24,7 @@
 
 
 #include <cstddef>
+#include <vector>
 
 #include "Transforms.h"
 
@@ -77,6 +78,7 @@ class View{
   int max_layers;			       /// Maximum number of quality layers allowed
   int layers;			               /// Number of quality layers
   ColourSpaces colourspace;                    /// Requested colourspace
+  std::vector< std::vector<float> > ctw;       /// Colour twist matrix
 
 
   /// Constructor

@@ -45,6 +45,7 @@ void filter_normalize( RawTile& in, vector<float>& max, vector<float>& min ) {
   unsigned int np = in.dataLength * 8 / in.bpc;
   unsigned int nc = in.channels;
 
+  // Type pointers
   float* fptr;
   unsigned int* uiptr;
   unsigned short* usptr;
@@ -52,39 +53,43 @@ void filter_normalize( RawTile& in, vector<float>& max, vector<float>& min ) {
 
   if( in.bpc == 32 && in.sampleType == FLOATINGPOINT ) {
     normdata = (float*)in.data;
-  } else {
+  }
+  else {
     normdata = new float[np];
   }
 
-  for( unsigned int c = 0 ; c<nc ; c++) {
- 
+  for( unsigned int c = 0 ; c<nc ; c++){
+
     float minc = min[c];
     float diffc = max[c] - minc;
     float invdiffc = fabs(diffc) > 1e-30? 1./diffc : 1e30;
 
-   // Normalize our data
-   if( in.bpc == 32 && in.sampleType == FLOATINGPOINT ) {
+    // Normalize our data
+    if( in.bpc == 32 && in.sampleType == FLOATINGPOINT ) {
       fptr = (float*)in.data;
-      // Loop through our pixels for floating values 
+      // Loop through our pixels for floating point pixels
 #pragma ivdep
       for( unsigned int n=c; n<np; n+=nc ){
         normdata[n] = isfinite(fptr[n])? (fptr[n] - minc) * invdiffc : 0.0;
       }
-    } else if( in.bpc == 32 && in.sampleType == FIXEDPOINT ) {
+    }
+    else if( in.bpc == 32 && in.sampleType == FIXEDPOINT ) {
       uiptr = (unsigned int*)in.data;
-      // Loop through our pixels for uint values 
+      // Loop through our pixels for unsigned int pixels
 #pragma ivdep
       for( unsigned int n=c; n<np; n+=nc ){
         normdata[n] = (uiptr[n] - minc) * invdiffc;
       }
-    } else if( in.bpc == 16 ) {
+    }
+    else if( in.bpc == 16 ) {
       usptr = (unsigned short*)in.data;
       // Loop through our unsigned short pixels
 #pragma ivdep
       for( unsigned int n=c; n<np; n+=nc ){
         normdata[n] = (usptr[n] - minc) * invdiffc;
       }
-    } else {
+    }
+    else {
       ucptr = (unsigned char*)in.data;
       // Loop through our unsigned char pixels
 #pragma ivdep
@@ -94,14 +99,22 @@ void filter_normalize( RawTile& in, vector<float>& max, vector<float>& min ) {
     }
   }
 
-  if(! (in.bpc == 32 && in.sampleType == FLOATINGPOINT) ) {
-    delete[] (float*) in.data;
-    in.data = normdata;
-    in.bpc = 32;
-    in.dataLength = np * in.bpc / 8;
+  // Delete our original buffers, unless we already had floats
+  if( in.bpc == 32 && in.sampleType == FIXEDPOINT ){
+    delete[] (unsigned int*) in.data;
+  }
+  else if( in.bpc == 16 ){
+    delete[] (unsigned short*) in.data;
+  }
+  else if( in.bpc == 8 ){
+    delete[] (unsigned char*) in.data;
   }
 
-  return;
+  // Assign our new buffer and modify some info
+  in.data = normdata;
+  in.bpc = 32;
+  in.dataLength = np * in.bpc / 8;
+
 }
 
 
@@ -646,9 +659,67 @@ void filter_greyscale( RawTile& rawtile ){
 }
 
 
-// Convert colour or multi-channel image
-void filter_twist( RawTile& rawtile, vector<float> matrix ){
+// Apply twist or channel recombination to colour or multi-channel image
+void filter_twist( RawTile& rawtile, const vector< vector<float> >& matrix ){
 
-  
+  unsigned long np = rawtile.width * rawtile.height;
+  unsigned long n = 0;
 
+  // Create temporary buffer for our calculated values
+  float* pixel = new float[rawtile.channels];
+
+  // Calculate the number of columns - limit to our number of channels if necessary
+  unsigned int ncols = (matrix.size()>rawtile.channels) ? rawtile.channels : matrix.size();
+  unsigned int* nrows = new unsigned int[ncols];
+
+  // Pre-calculate the size of each row
+  for( unsigned int i=0; i<ncols; i++ ){
+    nrows[i] = (matrix[i].size()>rawtile.channels) ? rawtile.channels : matrix[i].size();
+  }
+
+  for( unsigned long i=0; i<np; i++ ){
+
+    // Calculate value for each channel
+    for( unsigned int k=0; k<ncols; k++ ){
+
+      // Zero our pixel buffer
+      pixel[k] = 0.0;
+
+      for( unsigned int j=0; j<nrows[k]; j++ ){
+	float m = matrix[k][j];
+	if( m ){
+	  pixel[k] += (m == 1.0) ? ((float*)rawtile.data)[n+j] : ((float*)rawtile.data)[n+j] * m;
+	}
+      }
+    }
+
+    // Only write our values at the end as we reuse channel values several times during the twist loops
+    for( unsigned int k=0; k<rawtile.channels; k++ ) ((float*)rawtile.data)[n++] = pixel[k];
+
+  }
+  delete[] nrows;
+  delete[] pixel;
+}
+
+
+void filter_flatten( RawTile& in, int bands ){
+
+  // We cannot increase the number of channels
+  if( bands >= in.channels ) return;
+
+  unsigned long np = in.width * in.height;
+  unsigned long ni = 0;
+  unsigned long no = 0;
+  unsigned int gap = in.channels - bands;
+
+  // Simply loop through assigning to the same buffer
+  for( unsigned long i=0; i<np; i++ ){
+    for( unsigned int k=0; k<bands; k++ ){
+      ((float*)in.data)[ni++] = ((float*)in.data)[no++];
+    }
+    no += gap;
+  }
+
+  in.channels = bands;
+  in.dataLength = ni * in.bpc/8;
 }

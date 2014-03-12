@@ -4,7 +4,7 @@
 
 /*  IIP Server: Tile Cache Handler
 
-    Copyright (C) 2005-2013 Ruven Pillay.
+    Copyright (C) 2005-2014 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -57,7 +57,7 @@ RawTile TileManager::getNewTile( int resolution, int tile, int xangle, int yangl
   }
 
 
-  // We need to crop our edge tiles if they are not the full tile size
+  // We need to crop our edge tiles if they are padded
   if( ((ttt.width != image->getTileWidth()) || (ttt.height != image->getTileHeight())) && ttt.padded ){
     if( loglevel >= 5 ) * logfile << "TileManager :: Cropping tile" << endl;
     this->crop( &ttt );
@@ -80,7 +80,7 @@ RawTile TileManager::getNewTile( int resolution, int tile, int xangle, int yangl
   case JPEG:
 
     // Do our JPEG compression iff we have an 8 bit per channel image
-    if( ttt.bpc == 8 ){
+    if( ttt.bpc == 8 && (ttt.channels==1 || ttt.channels==3) ){
       if( loglevel >=2 ) compression_timer.start();
       jpeg->Compress( ttt );
       if( loglevel >= 2 ) *logfile << "TileManager :: JPEG Compression Time: "
@@ -244,8 +244,8 @@ RawTile TileManager::getTile( int resolution, int tile, int xangle, int yangle, 
     // Rawtile is a pointer to the cache data, so we need to create a copy of it in case we compress it
     RawTile ttt( *rawtile );
 
-    // Do our JPEG compression iff we have an 8 bit per channel image
-    if( rawtile->bpc == 8 ){
+    // Do our JPEG compression iff we have an 8 bit per channel image and either 1 or 3 bands
+    if( rawtile->bpc==8 && (rawtile->channels==1 || rawtile->channels==3) ){
 
       // Crop if this is an edge tile
       if( ( (ttt.width != image->getTileWidth()) || (ttt.height != image->getTileHeight()) ) && ttt.padded ){

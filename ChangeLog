@@ -1,3 +1,9 @@
+12/03/2014:
+	- Added ability to handle multi-band (>3 channel) images and added new CTW color twist
+	  command that takes a matrix that is applied to each channel in the image.
+	- Cleanup of and more comprehensive timing output within JTL.cc.
+
+
 08/03/2014:
 	- Changes to resizing algorithms to enable expansions as well as shrink for all views
 	  and regions.

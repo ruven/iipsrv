@@ -1,7 +1,7 @@
 /*
     IIP Command Handler Member Functions
 
-    Copyright (C) 2006-2013 Ruven Pillay.
+    Copyright (C) 2006-2014 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -21,8 +21,7 @@
 
 #include "Task.h"
 #include "Tokenizer.h"
-#include <iostream>
-#include <algorithm>
+#include <cstdlib>
 
 
 using namespace std;
@@ -62,6 +61,7 @@ Task* Task::factory( const string& t ){
   else if( type == "pfl" ) return new PFL;
   else if( type == "lyr" ) return new LYR;
   else if( type == "deepzoom" ) return new DeepZoom;
+  else if( type == "ctw" ) return new CTW;
   else return NULL;
 
 }
@@ -304,11 +304,12 @@ void SHD::run( Session* session, const std::string& argument ){
 						   << values[0] << "," << values[1]  << endl;
 }
 
+
 void CMP::run( Session* session, const std::string& argument ){
 
   /* The argument is the colormap type: available colormaps are
      HOT, COLD, JET, BLUE, GREEN, RED
-  */
+   */
 
   string ctype = argument.c_str();
   transform( ctype.begin(), ctype.end(), ctype.begin(), ::tolower );
@@ -326,11 +327,13 @@ void CMP::run( Session* session, const std::string& argument ){
   else session->view->cmapped = false;
 }
 
-void INV::run( Session* session, const std::string& argument ){
 
+void INV::run( Session* session, const std::string& argument ){
+  // Does not take an argument
   if( session->loglevel >= 2 ) *(session->logfile) << "INV handler reached" << endl;
   session->view->inverted = true;
 }
+
 
 void LYR::run( Session* session, const std::string& argument ){
 
@@ -355,3 +358,56 @@ void LYR::run( Session* session, const std::string& argument ){
 
 }
 
+
+void CTW::run( Session* session, const std::string& argument ){
+
+  /* Matrices should be formated as CTW=[a,b,c;d,e,f;g,h,i] where commas separate row values
+     and semi-colons separate columns.
+     Thus, the above argument represents the 3x3 square matrix:
+     [ a b c
+       d e f
+       g h i ]
+  */
+
+  if( argument.length() ){
+    if( session->loglevel >= 2 ) *(session->logfile) << "CTW handler reached" << endl;
+  }
+
+  int pos1 = argument.find("[");
+  int pos2 = argument.find("]");
+
+  // Extract the contents of the array
+  string line = argument.substr( pos1+1, pos2-pos1-1 );
+
+  // Tokenize on rows
+  Tokenizer col_izer( line, ";" );
+
+  while( col_izer.hasMoreTokens() ){
+
+    // Fill each row item
+    Tokenizer row_izer( col_izer.nextToken(), "," );
+    vector<float> row;
+    
+    while( row_izer.hasMoreTokens() ){
+      try{
+	row.push_back( atof( row_izer.nextToken().c_str() ) );
+      }
+      catch( const string& error ){
+	if( session->loglevel >= 1 ) *(session->logfile) << error << endl;
+      }
+    }
+    session->view->ctw.push_back( row );
+  }
+
+  if( session->loglevel >= 3 ){
+    *(session->logfile) << "CTW :: " << session->view->ctw[0].size() << "x" << session->view->ctw.size() << " matrix: " << endl;
+    for( int i=0; i<session->view->ctw.size(); i++ ){
+      *(session->logfile) <<  "CTW ::   ";
+      for( int j=0;j<session->view->ctw[0].size(); j++ ){
+	*(session->logfile) << session->view->ctw[i][j] << " ";
+      }
+      *(session->logfile) << endl;
+    }
+  }
+
+}

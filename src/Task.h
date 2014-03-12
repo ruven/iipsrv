@@ -1,7 +1,7 @@
 /*
     IIP Generic Task Class
 
-    Copyright (C) 2006-2013 Ruven Pillay.
+    Copyright (C) 2006-2014 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -115,7 +115,6 @@ class Task {
   /// Factory function
   /** @param type command type */
   static Task* factory( const std::string& type );
-
 
   /// Check image
   void checkImage();
@@ -310,5 +309,20 @@ class DeepZoom : public Task {
  public:
   void run( Session* session, const std::string& argument );
 };
+
+
+/// IIIF Command
+class IIIF : public Task {
+ public:
+  void run( Session* session, const std::string& argument );
+};
+
+
+/// Color Twist Command
+class CTW : public Task {
+ public:
+  void run( Session* session, const std::string& argument );
+};
+
 
 #endif
