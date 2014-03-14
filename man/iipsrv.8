@@ -6,10 +6,10 @@ IIPSRV \- IIPImage Image Server
 .SH DESCRIPTION
 IIPImage is an advanced high-performance feature-rich imaging server system for web-based streamed viewing and zooming of ultra high-resolution 
 images. It is designed to be fast and bandwidth-efficient with low processor and memory requirements. The system can comfortably handle gigapixel size images as 
-well as advanced image features such as both 8 and 16 bit depths, CIELAB colorimetric images and scientific imagery such as multispectral images.
+well as advanced image features such as 8, 16 and 32 bit depths, CIELAB colorimetric images and scientific imagery such as multispectral images.
 Source images can be either TIFF (tiled multi-resolution) or JPEG2000 (if enabled).
 
-The imaging server can also dynamically export images in JPEG format and perform basic image processing, such as contrast adjustment, region extraction and arbitrary rescaling.
+The imaging server can also dynamically export images in JPEG format and perform basic image processing, such as contrast adjustment, gamma control, conversion from color to greyscale, color twist, region extraction and arbitrary rescaling. The server can also export spectral point or profile data from multispectral data and apply color maps or perform hillshading rendering.
 
 .SH SYNOPSIS
 
@@ -100,6 +100,10 @@ eg: "_pyr_" for
 In this example, just supply FZ1 to the FIF command. The "000"
 indicates the vertical angle and "090" the horizontal. This is only
 relevant to 3D image sequences. The default is "_pyr_".
+.IP CORS
+Cross Origin Resource Sharing setting. Disabled by default.
+Set to "*" to enable for all domains or specify a single domain.
+See http://www.w3.org/TR/cors/ for more details on CORS.
 
 .SH EXAMPLES
 
