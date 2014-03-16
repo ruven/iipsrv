@@ -1,3 +1,7 @@
+16/03/2014:
+	- Added back missing <algorithm> include to Task.cc.
+
+
 12/03/2014:
 	- Added ability to handle multi-band (>3 channel) images and added new CTW color twist
 	  command that takes a matrix that is applied to each channel in the image.

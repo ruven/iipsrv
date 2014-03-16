@@ -22,6 +22,7 @@
 #include "Task.h"
 #include "Tokenizer.h"
 #include <cstdlib>
+#include <algorithm>
 
 
 using namespace std;
@@ -311,7 +312,8 @@ void CMP::run( Session* session, const std::string& argument ){
      HOT, COLD, JET, BLUE, GREEN, RED
    */
 
-  string ctype = argument.c_str();
+  // Convert to lower case in order to do our string comparison
+  string ctype = argument;
   transform( ctype.begin(), ctype.end(), ctype.begin(), ::tolower );
 
   if( session->loglevel >= 2 ) *(session->logfile) << "CMP handler reached" << endl;
