@@ -1,3 +1,7 @@
+20/03/2014:
+	- Fixed signed/unsigned comparison compiler warning in Task.cc.
+
+
 16/03/2014:
 	- Added back missing <algorithm> include to Task.cc.
 

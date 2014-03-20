@@ -403,9 +403,9 @@ void CTW::run( Session* session, const std::string& argument ){
 
   if( session->loglevel >= 3 ){
     *(session->logfile) << "CTW :: " << session->view->ctw[0].size() << "x" << session->view->ctw.size() << " matrix: " << endl;
-    for( int i=0; i<session->view->ctw.size(); i++ ){
+    for( unsigned int i=0; i<session->view->ctw.size(); i++ ){
       *(session->logfile) <<  "CTW ::   ";
-      for( int j=0;j<session->view->ctw[0].size(); j++ ){
+      for( unsigned int j=0;j<session->view->ctw[0].size(); j++ ){
 	*(session->logfile) << session->view->ctw[i][j] << " ";
       }
       *(session->logfile) << endl;
