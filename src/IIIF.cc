@@ -652,7 +652,7 @@ void IIIF::run( Session* session, const std::string& argument ){
     xmlStringStream << "<qualities>" << endl;
     xmlStringStream << "<quality>native</quality>" << endl;
     xmlStringStream << "</qualities>" << endl;
-    xmlStringStream << "<profile>http://library.stanford.edu/iiif/image-api/compliance.html#level1</profile>" << endl;
+    xmlStringStream << "<profile>http://library.stanford.edu/iiif/image-api/1.1/compliance.html#level1</profile>" << endl;
     xmlStringStream << "</info>";
 
     char str[2048];
@@ -709,7 +709,7 @@ void IIIF::run( Session* session, const std::string& argument ){
     jsonStringStream << "\"tile_height\" : " << th << "," << endl;
     jsonStringStream << "\"formats\" : [ \"jpg\" ]," << endl;
     jsonStringStream << "\"qualities\" : [ \"native\" ]," << endl;
-    jsonStringStream << "\"profile\" : \"http://library.stanford.edu/iiif/image-api/compliance.html#level1\"" << endl; 
+    jsonStringStream << "\"profile\" : \"http://library.stanford.edu/iiif/image-api/1.1/compliance.html#level1\"" << endl; 
     jsonStringStream<< "}";
     if( suffix.length() > 19 ){
       jsonStringStream << ");";
