@@ -206,8 +206,8 @@ able to access and read the images!
 EXAMPLE SERVER CONFIGURATIONS
 -----------------------------
 
-# Apache and mod_fastcgi:
-----------------------
+## Apache and mod_fastcgi
+
 httpd.conf example extract:
 
 ```
@@ -239,8 +239,7 @@ FastCgiServer /usr/local/httpd/fcgi-bin/iipsrv.fcgi \
 
 
 
-Apache and mod_fcgid:
---------------------
+## Apache and mod_fcgid
 
 mod_fcgid is a binary compatible replacement for mod_fastcgi. It works in the 
 same way, but is configured differently. Load the module like this:
@@ -288,8 +287,7 @@ Note that on CentOS, FcgidIPCDir is configured by default to
 specify another location for FcgidIPCDir, which is writable, such as /tmp/fcgidsock
 
 
-Lighttpd:
---------
+## Lighttpd
 lighttpd.conf example extract:
 
 ```
@@ -315,8 +313,7 @@ fastcgi.server = ( "/fcgi-bin/iipsrv.fcgi" =>
 ```
 
 
-spawn-fcgi:
-----------
+## spawn-fcgi
 
 iipsrv can also be used with lighttpd's spawn-fcgi without the need for a 
 full web server. Simply spawn the iipsrv process on the command line. The 
@@ -326,8 +323,7 @@ configurations. For example:
     spawn-fcgi -f src/iipsrv.fcgi -a 192.168.0.1 -p 9000
 
 
-MyServer:
---------
+## MyServer:
 Simply run the MyServer configuration and in the MIME section, choose the .fcgi extension
 and select:
 ```
@@ -339,8 +335,7 @@ Manager: NONE
 ```
 
 
-Java Application Servers (Tomcat, Jetty, JBoss etc)
----------------------------------------------------
+## Java Application Servers (Tomcat, Jetty, JBoss etc)
 
 IIPImage can also be used with Java Application Servers such as Apache Tomcat, JBoss and Jetty. Simply add 
 the JFastCGI jar file to your webapp and add the following to your web.xml configuration file in order to 
@@ -368,8 +363,7 @@ You then need to start an instance of the server on the requested port (6667 in 
 spawn-cgi (see spawn-cgi section above).
 
 
-Command Line:
--------------
+## Command Line
 
 It is also possible to start iipsrv on the command line. For example:
 
@@ -391,5 +385,6 @@ fastcgi.server = (
 
 ---------------------------------------------------------------------------
 Please refer to the project site http://iipimage.sf.net for further details
+
 ---------------------------------------------------------------------------
 (c) 2000-2014 Ruven Pillay <ruven@users.sourceforge.net>

@@ -52,7 +52,7 @@ unsigned int get_nprocs_conf(){
 
 
 #include "Timer.h"
-//#define DEBUG 1
+#define DEBUG 0
 
 
 using namespace std;
@@ -224,6 +224,9 @@ void KakaduImage::loadImageInfo( int seq, int ang ) throw(string)
 	  << "Kakadu :: " << quality_layers << " quality layers detected" << endl;
 #endif
   kt.close();
+
+  // For bilevel images, force channels to 1 as we sometimes come across such images which claim 3 channels
+  if( bpp == 1 ) channels = 1;
 
   // Get the max and min values for our data type
   //double sminvalue[4], smaxvalue[4];
@@ -454,7 +457,6 @@ void KakaduImage::process( unsigned int res, int layers, int xoffset, int yoffse
   void *stripe_buffer = NULL;
   int *stripe_heights = NULL;
 
-
   try{
 
     // Note that we set max channels rather than leave the default to strip off alpha channels
@@ -520,7 +522,7 @@ void KakaduImage::process( unsigned int res, int layers, int xoffset, int yoffse
 #endif
 
       // Copy the data into the supplied buffer
-      void *b1, *b2;
+      void *b1 = NULL, *b2 = NULL;
       if( obpp == 16 ){
 	b1 = &( ((kdu_uint16*)stripe_buffer)[0] );
 	b2 = &( ((unsigned short*)buffer)[index] );
@@ -531,10 +533,21 @@ void KakaduImage::process( unsigned int res, int layers, int xoffset, int yoffse
 	if( bpp == 1 ){
 	  // Expand bilevel images to full 8 bit range
 	  // - ideally we would do this in the Kakadu pull_stripe function,
-	  // but the precisions parameter seems not to work as expected
+	  // but the precisions parameter seems not to work as expected.
 	  unsigned int k = tw * stripe_heights[0] * channels;
-	  for( unsigned int n=0; n<k; n++ ){
-	    ((kdu_byte*)stripe_buffer)[n] =  255 - (-((kdu_byte*)stripe_buffer)[n] >> 16);
+	  // Deal with rare 1 bit "sRGB space" first
+	  if( colourspace == sRGB ){
+	    for( unsigned int n=0; n<k; n++ ){
+	      kdu_uint16 p = (kdu_uint16)((kdu_byte*)stripe_buffer)[n];
+	      // Do integer arithetic to multiply by just under 2
+	      ((kdu_byte*)stripe_buffer)[n] = (kdu_byte)( (p<<1) - (p>>2) );
+	    }
+	  }
+	  // The usual 1 channel 1 band case
+	  else{
+	    for( unsigned int n=0; n<k; n++ ){
+	      ((kdu_byte*)stripe_buffer)[n] =  ~(-((kdu_byte*)stripe_buffer)[n] >> 8);
+	    }
 	  }
 	}
       }
