@@ -37,8 +37,6 @@
 
 #include "RawTile.h"
 
-//enum ImageType { TIFF, JPEG2000 };
-
 
 /// Main class to handle the pyramidal image source
 /** Provides functions to open, get various information from an image source
@@ -63,6 +61,9 @@ class IIPImage {
   /// Indicates whether our image is a single file or part or a sequence
   bool isFile;
 
+  /// Image file name suffix
+  std::string suffix;
+
   /// Private function to determine the image type
   void testImageType();
 
@@ -81,9 +82,11 @@ class IIPImage {
 
  public:
 
-  /// Return the image type e.g. tif
-  std::string type;
-   //ImageType type;
+  // Supported image formats
+  enum ImageFormat { TIF, JPEG2000, UNSUPPORTED };
+
+  /// Return the image format e.g. tif
+  ImageFormat format;
 
   /// The image pixel dimensions
   std::vector <unsigned int> image_widths, image_heights;
@@ -164,9 +167,10 @@ class IIPImage {
     fileSystemPrefix( image.fileSystemPrefix ),
     fileNamePattern( image.fileNamePattern ),
     isFile( image.isFile ),
+    suffix( image.suffix ),
     horizontalAnglesList( image.horizontalAnglesList ),
     verticalAnglesList( image.verticalAnglesList ),
-    type( image.type ),
+    format( image.format ),
     image_widths( image.image_widths ),
     image_heights( image.image_heights ),
     tile_width( image.tile_width ),
@@ -212,9 +216,9 @@ class IIPImage {
    */
   const std::string getFileName( int x, int y );
 
-  /// Get the image type
-  const std::string& getImageType() { return type; };
-     //  ImageType getImageType() { return type; };
+  /// Get the image format
+  //  const std::string& getImageFormat() { return format; };
+  ImageFormat getImageFormat() { return format; };
 
   /// Get the image timestamp
   /** @param s file path

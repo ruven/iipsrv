@@ -32,9 +32,9 @@
 #endif
 
 #include <cstdio>
+#include <cstring>
 #include <sys/stat.h>
 #include <sstream>
-#include <iostream>
 #include <algorithm>
 
 
@@ -48,7 +48,8 @@ void IIPImage::swap( IIPImage& first, IIPImage& second ) // nothrow
   // Swap the members of the two objects
   std::swap( first.imagePath, second.imagePath );
   std::swap( first.isFile, second.isFile );
-  std::swap( first.type, second.type );
+  std::swap( first.suffix, second.suffix );
+  std::swap( first.format, second.format );
   std::swap( first.fileSystemPrefix, second.fileSystemPrefix );
   std::swap( first.fileNamePattern, second.fileNamePattern );
   std::swap( first.horizontalAnglesList, second.horizontalAnglesList );
@@ -83,9 +84,43 @@ void IIPImage::testImageType()
 
   if( (stat(path.c_str(),&sb)==0) && S_ISREG(sb.st_mode) ){
     isFile = true;
-    int dot = imagePath.find_last_of( "." );
-    type = imagePath.substr( dot + 1, imagePath.length() );
     timestamp = sb.st_mtime;
+
+    // Determine our file format using magic file signatures
+    unsigned char header[10];
+    FILE *im = fopen( path.c_str(), "rb" );
+    if( im == NULL ){
+      string message = "Unable to open file '" + path + "'";
+      throw message;
+    }
+
+    // Read and close immediately
+    int len = fread( header, 1, 10, im );
+    fclose( im );
+
+    // Make sure we were able to read enough bytes
+    if( len < 10 ){
+      string message = "Unable to read initial byte sequence from file '" + path + "'";
+      throw message;
+    }
+
+    // Magic file signature for JPEG2000
+    unsigned char j2k[10] = {0x00,0x00,0x00,0x0C,0x6A,0x50,0x20,0x20,0x0D,0x0A};
+
+    // Magic file signatures for TIFF (See http://www.garykessler.net/library/file_sigs.html)
+    unsigned char stdtiff[3] = {0x49,0x20,0x49};      // TIFF
+    unsigned char lsbtiff[4] = {0x49,0x49,0x2A,0x00}; // Little Endian TIFF
+    unsigned char msbtiff[4] = {0x49,0x49,0x2A,0x00}; // Big Endian TIFF
+    unsigned char bigtiff[4] = {0x4D,0x4D,0x00,0x2B}; // BigTIFF format
+
+    // Compare our header sequence to our magic byte signatures
+    if( memcmp( header, j2k, 10 ) == 0 ) format = JPEG2000;
+    else if( memcmp( header, stdtiff, 3 ) == 0 || memcmp( header, lsbtiff, 4 ) == 0
+	     || memcmp( header, msbtiff, 4 ) == 0 || memcmp( header, bigtiff, 4 ) == 0 ){
+      format = TIF;
+    }
+    else format = UNSUPPORTED;
+
   }
   else{
 
@@ -114,12 +149,12 @@ void IIPImage::testImageType()
     int dot = tmp.find_last_of( "." );
     int len = tmp.length();
 
-    type = tmp.substr( dot + 1, len );
+    suffix = tmp.substr( dot + 1, len );
 
     updateTimestamp( tmp );
 
 #else
-    string message = path + string( " is not a file and no glob support enabled" );
+    string message = path + string( " is not a regular file and no glob support enabled" );
     throw message;
 #endif
 
@@ -165,7 +200,7 @@ void IIPImage::measureVerticalAngles()
   glob_t gdat;
   unsigned int i;
 
-  string filename = fileSystemPrefix + imagePath + fileNamePattern + "000_*." + type;
+  string filename = fileSystemPrefix + imagePath + fileNamePattern + "000_*." + suffix;
   
   if( glob( filename.c_str(), 0, NULL, &gdat ) != 0 ){
     globfree( &gdat );
@@ -176,7 +211,7 @@ void IIPImage::measureVerticalAngles()
     // Extract angle no from path name.
     int angle;
     string tmp( gdat.gl_pathv[i] );
-    int len = tmp.length() - type.length() - 1;
+    int len = tmp.length() - suffix.length() - 1;
     string sequence_no = tmp.substr( len-3, 3 );
     istringstream(sequence_no) >> angle;
     verticalAnglesList.push_front( angle );
@@ -201,7 +236,7 @@ void IIPImage::measureHorizontalAngles()
   glob_t gdat;
   unsigned int i;
 
-  string filename = fileSystemPrefix + imagePath + fileNamePattern + "*_090." + type;
+  string filename = fileSystemPrefix + imagePath + fileNamePattern + "*_090." + suffix;
 
   if( glob( filename.c_str(), 0, NULL, &gdat ) != 0 ){
     globfree( &gdat );
@@ -261,7 +296,7 @@ const string IIPImage::getFileName( int seq, int ang )
     // The angle or spectral band indices should be a minimum of 3 digits when padded
     snprintf( name, 1024,
 	      "%s%s%03d_%03d.%s", (fileSystemPrefix+imagePath).c_str(), fileNamePattern.c_str(),
-	      seq, ang, type.c_str() );
+	      seq, ang, suffix.c_str() );
     return string( name );
   }
 }
