@@ -1,3 +1,7 @@
+20/07/2014:
+	- Min Max values are now read as vectors in multiple channel images - thanks to Chiara Marmo.
+
+
 19/07/2014:
 	- Added support for magic byte signature file format detection instead of relying on
 	  the file path suffix. Images can now be named arbitrarily (though suffixes still used
