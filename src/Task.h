@@ -47,13 +47,13 @@
 
 #ifdef HAVE_EXT_POOL_ALLOCATOR
 #include <ext/pool_allocator.h>
-typedef HASHMAP < const std::string, IIPImage,
+typedef HASHMAP < std::string, IIPImage,
 			      __gnu_cxx::hash< const std::string >,
 			      std::equal_to< const std::string >,
 			      __gnu_cxx::__pool_alloc< std::pair<const std::string,IIPImage> >
 			      > imageCacheMapType;
 #else
-typedef HASHMAP <const std::string,IIPImage> imageCacheMapType;
+typedef HASHMAP <std::string,IIPImage> imageCacheMapType;
 #endif
 
 

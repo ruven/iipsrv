@@ -2,7 +2,7 @@
 
 /*  IIP Image Server
 
-    Copyright (C) 2005-2013 Ruven Pillay.
+    Copyright (C) 2005-2014 Ruven Pillay.
     Based on an LRU cache by Patrick Audley <http://blackcat.ca/lifeline/query.php/tag=LRU_CACHE>
     Copyright (C) 2004 by Patrick Audley
 
@@ -35,44 +35,19 @@
 
 
 // Test for available map types. Try to use an efficient hashed map type if possible
+// and define this as HASHMAP, which we can then use elsewhere.
 #if defined(HAVE_UNORDERED_MAP)
 #include <unordered_map>
 #define HASHMAP std::unordered_map
-// Need to define the hash function
-namespace std {
-  template<> struct hash< const std::string > {
-    size_t operator()( const std::string& x ) const {
-      return hash< const char* >()( x.c_str() );
-    }
-  };
-}
 
 #elif defined(HAVE_TR1_UNORDERED_MAP)
 #include <tr1/unordered_map>
 #define HASHMAP std::tr1::unordered_map
-// Need to define the hash function
-namespace std {
-  namespace tr1 {
-    template<> struct hash< const std::string > {
-      size_t operator()( const std::string& x ) const {
-	return hash< const char* >()( x.c_str() );
-      }
-    };
-  }
-}
 
 // Use the gcc hash_map extension if we have it
 #elif defined(HAVE_EXT_HASH_MAP)
 #include <ext/hash_map>
 #define HASHMAP __gnu_cxx::hash_map
-// Need to define the hash function
-namespace __gnu_cxx {
-  template<> struct hash< const std::string > {
-    size_t operator()( const std::string& x ) const {
-      return hash< const char* >()( x.c_str() );
-    }
-  };
-}
 
 // If no hash type available, just use map
 #else
@@ -126,13 +101,13 @@ class Cache {
 
   /// Index typedef
 #ifdef HAVE_EXT_POOL_ALLOCATOR
-  typedef HASHMAP < const std::string, List_Iter,
+  typedef HASHMAP < std::string, List_Iter,
     __gnu_cxx::hash< const std::string >,
     std::equal_to< const std::string >,
     __gnu_cxx::__pool_alloc< std::pair<const std::string, List_Iter> >
     > TileMap;
 #else
-  typedef HASHMAP < const std::string,List_Iter > TileMap;
+  typedef HASHMAP < std::string,List_Iter > TileMap;
 #endif
 
 

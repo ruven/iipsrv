@@ -1,3 +1,9 @@
+24/07/2014:
+	- Simplified the use of hash_map types and removed the customized hash function, which
+	  was causing our image metadata cache to work incorrectly. Removed the const prefix from
+	  all hash maps keys.
+
+
 20/07/2014:
 	- Min Max values are now read as vectors in multiple channel images - thanks to Chiara Marmo.
 
