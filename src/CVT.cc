@@ -201,8 +201,10 @@ void CVT::run( Session* session, const std::string& a ){
       }
     }
 
+
     // Apply normalization and float conversion
     filter_normalize( complete_image, (*session->image)->max, (*session->image)->min );
+
 
     // Apply hill shading if requested
     if( session->view->shaded ){
@@ -212,33 +214,6 @@ void CVT::run( Session* session, const std::string& a ){
       filter_shade( complete_image, session->view->shade[0], session->view->shade[1] );
       // Don't forget to reset our channels variable as hill shades are greyscale and this variable is used later
       channels = 1;
-    }
-
-    // Apply any gamma correction
-    if( session->view->getGamma() != 1.0 ){
-      float gamma = session->view->getGamma();
-      if( session->loglevel >= 3 ){
-        *(session->logfile) << "CVT :: Applying gamma of " << gamma << endl; 
-      }
-      filter_gamma( complete_image, gamma );
-    }
-
-    // Apply inversion if requested
-    if( session->view->inverted ){
-      if( session->loglevel >= 3 ){
-	*(session->logfile) << "CVT :: Applying inversion" << endl;
-      }
-      filter_inv( complete_image );
-    }
-
-    // Apply color mapping if requested
-    if( session->view->cmapped ){
-      if( session->loglevel >= 3 ){
-	*(session->logfile) << "CVT :: Applying color map" << endl;
-      }
-      filter_cmap( complete_image, session->view->cmap );
-      // Don't forget to reset our channels variable as this is used later
-      channels = 3;
     }
 
 
@@ -269,6 +244,36 @@ void CVT::run( Session* session, const std::string& a ){
     }
 
 
+    // Apply any gamma correction
+    if( session->view->getGamma() != 1.0 ){
+      float gamma = session->view->getGamma();
+      if( session->loglevel >= 3 ){
+        *(session->logfile) << "CVT :: Applying gamma of " << gamma << endl; 
+      }
+      filter_gamma( complete_image, gamma );
+    }
+
+
+    // Apply inversion if requested
+    if( session->view->inverted ){
+      if( session->loglevel >= 3 ){
+	*(session->logfile) << "CVT :: Applying inversion" << endl;
+      }
+      filter_inv( complete_image );
+    }
+
+
+    // Apply color mapping if requested
+    if( session->view->cmapped ){
+      if( session->loglevel >= 3 ){
+	*(session->logfile) << "CVT :: Applying color map" << endl;
+      }
+      filter_cmap( complete_image, session->view->cmap );
+      // Don't forget to reset our channels variable as this is used later
+      channels = 3;
+    }
+
+
     // Resize our image as requested. Use the interpolation method requested in the server configuration.
     //  - Use bilinear interpolation by default
     if( (view_width!=resampled_width) && (view_height!=resampled_height) ){
@@ -293,6 +298,7 @@ void CVT::run( Session* session, const std::string& a ){
 			    << interpolation_timer.getTime() << " microseconds" << endl;
       }
     }
+
 
     // Apply any contrast adjustments and/or clipping to 8bit from 16bit or 32bit
     filter_contrast( complete_image, session->view->getContrast() );

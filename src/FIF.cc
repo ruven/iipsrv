@@ -1,7 +1,7 @@
 /*
     IIP FIF Command Handler Class Member Function
 
-    Copyright (C) 2006-2013 Ruven Pillay.
+    Copyright (C) 2006-2014 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -221,7 +221,7 @@ void FIF::run( Session* session, const string& src ){
       *(session->logfile) << "FIF :: Image dimensions are " << (*session->image)->getImageWidth()
 			  << " x " << (*session->image)->getImageHeight() << endl
 			  << "FIF :: Image contains " << (*session->image)->channels
-			  << " channels with " << (*session->image)->bpp << " bits per pixel" << endl;
+			  << " channels with " << (*session->image)->bpp << " bits per channel" << endl;
       tm *t = gmtime( &(*session->image)->timestamp );
       char strt[64];
       strftime( strt, 64, "%a, %d %b %Y %H:%M:%S GMT", t );

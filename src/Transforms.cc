@@ -376,13 +376,13 @@ void filter_inv( RawTile& in ){
   float* infptr;
   unsigned int np = in.dataLength * 8 / in.bpc;
 
-  infptr = (float*)in.data;
+  infptr = (float*) in.data;
 
   // Loop through our pixels for floating values 
 #pragma ivdep
-  for(int n=np; n--;) {
+  for( int n=np; n--; ){
     float v = *infptr;
-    *(infptr++) = 1. - v;
+    *(infptr++) = 1.0 - v;
   }
 }
 
@@ -546,7 +546,7 @@ void filter_gamma( RawTile& in, float g ){
 #pragma ivdep
   for(int n=np; n--;){
     float v = *infptr;
-    *(infptr++) = powf(v<0.0? 0.0 : v, g );
+    *(infptr++) = powf( v<0.0 ? 0.0 : v, g );
   }
 }
 
@@ -702,6 +702,8 @@ void filter_twist( RawTile& rawtile, const vector< vector<float> >& matrix ){
 }
 
 
+// Flatten a multi-channel image to a given number of bands by simply stripping
+// away extra bands
 void filter_flatten( RawTile& in, int bands ){
 
   // We cannot increase the number of channels
@@ -714,7 +716,7 @@ void filter_flatten( RawTile& in, int bands ){
 
   // Simply loop through assigning to the same buffer
   for( unsigned long i=0; i<np; i++ ){
-    for( unsigned int k=0; k<bands; k++ ){
+    for( int k=0; k<bands; k++ ){
       ((float*)in.data)[ni++] = ((float*)in.data)[no++];
     }
     no += gap;
