@@ -56,6 +56,7 @@ class View{
   float contrast;                             /// Contrast adjustment requested by CNT command
   float gamma;                                /// Gamma adjustment requested by GAM command
   float rotation;                             /// Rotation requested by ROT command
+  int flip;                                    /// Flip (1=horizontal, 2=vertical)
 
 
   /// Internal function to calculate the resolution associated with a width
@@ -92,7 +93,7 @@ class View{
     shaded = false; shade[0] = 0; shade[1] = 0; shade[2] = 0;
     cmapped = false; inverted = false;
     max_layers = 0; layers = 0;
-    rotation = 0.0;
+    rotation = 0.0; flip = 0;
     colourspace = NONE;
   };
 

@@ -178,13 +178,6 @@ void CVT::run( Session* session, const std::string& a ){
 						    session->view->getLayers(),
 						    view_left, view_top, view_width, view_height );
 
-    if( session->loglevel >= 4 ){
-      if( session->view->getContrast() != 1.0 ){
-	*(session->logfile) << "CVT :: Applying contrast of: " << session->view->getContrast() << endl;
-      }
-      if( complete_image.bpc > 8 ) *(session->logfile) << "CVT :: Rescaling " <<  complete_image.bpc
-						       << " bit data to 8" << endl;
-    }
 
 
     // Convert CIELAB to sRGB
@@ -202,76 +195,73 @@ void CVT::run( Session* session, const std::string& a ){
     }
 
 
-    // Apply normalization and float conversion
-    filter_normalize( complete_image, (*session->image)->max, (*session->image)->min );
+
+    // Only use our float pipeline if necessary
+    if( complete_image.bpc > 8 || session->view->getContrast() != 1.0 || session->view->getGamma() != 1.0 ||
+	session->view->cmapped || session->view->shaded || session->view->inverted || session->view->ctw.size() ){
+
+      // Apply normalization and float conversion
+      filter_normalize( complete_image, (*session->image)->max, (*session->image)->min );
 
 
-    // Apply hill shading if requested
-    if( session->view->shaded ){
-      if( session->loglevel >= 3 ){
-	*(session->logfile) << "CVT :: Applying hill-shading" << endl;
+      // Apply hill shading if requested
+      if( session->view->shaded ){
+	if( session->loglevel >= 3 ){
+	  *(session->logfile) << "CVT :: Applying hill-shading" << endl;
+	}
+	filter_shade( complete_image, session->view->shade[0], session->view->shade[1] );
+	// Don't forget to reset our channels variable as hill shades are greyscale and this variable is used later
+	channels = 1;
       }
-      filter_shade( complete_image, session->view->shade[0], session->view->shade[1] );
-      // Don't forget to reset our channels variable as hill shades are greyscale and this variable is used later
-      channels = 1;
+
+
+      // Apply color twist if requested
+      if( session->view->ctw.size() ){
+	if( session->loglevel >= 3 ){
+	  *(session->logfile) << "CVT :: Applying color twist" << endl;
+	}
+	filter_twist( complete_image, session->view->ctw );
+      }
+
+
+      // Apply any gamma correction
+      if( session->view->getGamma() != 1.0 ){
+	float gamma = session->view->getGamma();
+	if( session->loglevel >= 3 ){
+	  *(session->logfile) << "CVT :: Applying gamma of " << gamma << endl; 
+	}
+	filter_gamma( complete_image, gamma );
+      }
+
+
+      // Apply inversion if requested
+      if( session->view->inverted ){
+	if( session->loglevel >= 3 ){
+	  *(session->logfile) << "CVT :: Applying inversion" << endl;
+	}
+	filter_inv( complete_image );
+      }
+
+
+      // Apply color mapping if requested
+      if( session->view->cmapped ){
+	if( session->loglevel >= 3 ){
+	  *(session->logfile) << "CVT :: Applying color map" << endl;
+	}
+	filter_cmap( complete_image, session->view->cmap );
+	// Don't forget to reset our channels variable as this is used later
+	channels = 3;
+      }
+
+
+      // Apply any contrast adjustments and/or clipping to 8bit from 16bit or 32bit
+      if( session->loglevel >= 3 ){
+	*(session->logfile) << "CVT :: Applying contrast of " << session->view->getContrast() << endl;
+      }
+      filter_contrast( complete_image, session->view->getContrast() );
+
     }
 
-
-    // Apply color twist if requested
-    if( session->view->ctw.size() ){
-      if( session->loglevel >= 3 ){
-        *(session->logfile) << "CVT :: Applying color twist" << endl;
-      }
-      filter_twist( complete_image, session->view->ctw );
-    }
-
-
-    // Reduce to 1 or 3 bands if we have an alpha channel or a multi-band image
-    if( complete_image.channels == 2 ){
-      if( session->loglevel >= 3 ){
-	*(session->logfile) << "CVT :: Flattening to 1 channel" << endl;
-      }
-      filter_flatten( complete_image, 1 );
-      // Don't forget to reset our channels variable as this is used later
-      channels = 1;
-    }
-    else if( complete_image.channels > 3 ){
-      if( session->loglevel >= 3 ){
-	*(session->logfile) << "CVT :: Flattening to 3 channels" << endl;
-      }
-      filter_flatten( complete_image, 3 );
-      channels = 3;
-    }
-
-
-    // Apply any gamma correction
-    if( session->view->getGamma() != 1.0 ){
-      float gamma = session->view->getGamma();
-      if( session->loglevel >= 3 ){
-        *(session->logfile) << "CVT :: Applying gamma of " << gamma << endl; 
-      }
-      filter_gamma( complete_image, gamma );
-    }
-
-
-    // Apply inversion if requested
-    if( session->view->inverted ){
-      if( session->loglevel >= 3 ){
-	*(session->logfile) << "CVT :: Applying inversion" << endl;
-      }
-      filter_inv( complete_image );
-    }
-
-
-    // Apply color mapping if requested
-    if( session->view->cmapped ){
-      if( session->loglevel >= 3 ){
-	*(session->logfile) << "CVT :: Applying color map" << endl;
-      }
-      filter_cmap( complete_image, session->view->cmap );
-      // Don't forget to reset our channels variable as this is used later
-      channels = 3;
-    }
 
 
     // Resize our image as requested. Use the interpolation method requested in the server configuration.
@@ -300,9 +290,23 @@ void CVT::run( Session* session, const std::string& a ){
     }
 
 
-    // Apply any contrast adjustments and/or clipping to 8bit from 16bit or 32bit
-    filter_contrast( complete_image, session->view->getContrast() );
-    *(session->logfile) << "CVT :: Applying contrast of " << session->view->getContrast() << endl;
+    // Reduce to 1 or 3 bands if we have an alpha channel or a multi-band image
+    if( complete_image.channels == 2 ){
+      if( session->loglevel >= 3 ){
+	*(session->logfile) << "CVT :: Flattening to 1 channel" << endl;
+      }
+      filter_flatten( complete_image, 1 );
+      // Don't forget to reset our channels variable as this is used later
+      channels = 1;
+    }
+    else if( complete_image.channels > 3 ){
+      if( session->loglevel >= 3 ){
+	*(session->logfile) << "CVT :: Flattening to 3 channels" << endl;
+      }
+      filter_flatten( complete_image, 3 );
+      channels = 3;
+    }
+
 
 
     // Convert to greyscale if requested
@@ -321,6 +325,26 @@ void CVT::run( Session* session, const std::string& a ){
 			    << greyscale_timer.getTime() << " microseconds" << endl;
       }
     }
+
+
+
+    // Apply flip
+    if( session->view->flip != 0 ){
+      Timer flip_timer;
+      if( session->loglevel >= 5 ){
+	flip_timer.start();
+      }
+
+      filter_flip( complete_image, session->view->flip  );
+
+      if( session->loglevel >= 5 ){
+	*(session->logfile) << "JTL :: Flipping image ";
+	if( session->view->flip == 1 ) *(session->logfile) << "horizontally";
+	else *(session->logfile) << "vertically";
+	*(session->logfile) << " in " << flip_timer.getTime() << " microseconds" << endl; 
+      }
+    }
+
 
 
     // Apply rotation - can apply this safely after gamma and contrast adjustment
@@ -344,6 +368,7 @@ void CVT::run( Session* session, const std::string& a ){
 			    << rotation_timer.getTime() << " microseconds" << endl; 
       }
     }
+
 
 
     // Initialise our JPEG compression object

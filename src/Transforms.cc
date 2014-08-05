@@ -391,22 +391,22 @@ void filter_inv( RawTile& in ){
 void filter_interpolate_nearestneighbour( RawTile& in, unsigned int resampled_width, unsigned int resampled_height ){
 
   // Pointer to input buffer
-  float *input = (float*) in.data;
+  unsigned char *input = (unsigned char*) in.data;
 
   int channels = in.channels;
   unsigned int width = in.width;
   unsigned int height = in.height;
 
   // Pointer to output buffer
-  float *output;
+  unsigned char *output;
 
   // Create new buffer if size is larger than input size
   bool new_buffer = false;
   if( resampled_width*resampled_height > in.width*in.height ){
     new_buffer = true;
-    output = new float[resampled_width*resampled_height*in.channels];
+    output = new unsigned char[resampled_width*resampled_height*in.channels];
   }
-  else output = (float*) in.data;
+  else output = (unsigned char*) in.data;
 
   // Calculate our scale
   float xscale = (float)width / (float)resampled_width;
@@ -429,14 +429,13 @@ void filter_interpolate_nearestneighbour( RawTile& in, unsigned int resampled_wi
   }
 
   // Delete original buffer
-  if( new_buffer ) delete[] (float*) input;
+  if( new_buffer ) delete[] (unsigned char*) input;
 
   // Correctly set our Rawtile info
   in.width = resampled_width;
   in.height = resampled_height;
   in.dataLength = resampled_width * resampled_height * channels * in.bpc/8;
   in.data = output;
-
 }
 
 
@@ -445,14 +444,14 @@ void filter_interpolate_nearestneighbour( RawTile& in, unsigned int resampled_wi
 void filter_interpolate_bilinear( RawTile& in, unsigned int resampled_width, unsigned int resampled_height ){
 
   // Pointer to input buffer
-  float *input = (float*) in.data;
+  unsigned char *input = (unsigned char*) in.data;
 
   int channels = in.channels;
   unsigned int width = in.width;
   unsigned int height = in.height;
 
   // Create new buffer and pointer for our output
-  float *output = new float[resampled_width*resampled_height*in.channels];
+  unsigned char *output = new unsigned char[resampled_width*resampled_height*in.channels];
 
   // Calculate our scale
   float xscale = (float)(width-1) / (float)resampled_width;
@@ -491,21 +490,20 @@ void filter_interpolate_bilinear( RawTile& in, unsigned int resampled_width, uns
       for( int k=0; k<in.channels; k++ ){
 	float tx = input[p11+k]*a + input[p21+k]*b;
 	float ty = input[p12+k]*a + input[p22+k]*b;
-	float r = (float)( c*tx + d*ty );
+	unsigned char r = (unsigned char)( c*tx + d*ty );
 	output[resampled_index++] = r;
       }
     }
   }
 
   // Delete original buffer
-  delete[] (float*) input;
+  delete[] (unsigned char*) input;
 
   // Correctly set our Rawtile info
   in.width = resampled_width;
   in.height = resampled_height;
   in.dataLength = resampled_width * resampled_height * channels * in.bpc/8;
   in.data = output;
-
 }
 
 

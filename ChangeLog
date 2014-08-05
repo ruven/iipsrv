@@ -1,6 +1,8 @@
 05/08/2014:
 	- Added flip function to Transforms.
-	- Modified JTL, DeepZoom and Zoomify to avoid float conversion if not required.
+	- Modified JTL, DeepZoom, Zoomify and CVT to avoid float conversion if not required.
+	- Converted bilinear and nearest neighbour resize code to unsigned char to avoid
+	  unnecessary conversion to float.
 
 
 30/07/2014:
