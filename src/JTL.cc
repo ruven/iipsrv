@@ -123,40 +123,98 @@ void JTL::run( Session* session, const std::string& argument ){
   }
 
 
-  // Apply normalization and float conversion
-  if( session->loglevel >= 4 ){
-    *(session->logfile) << "JTL :: Normalizing and converting to float";
-    function_timer.start();
-  }
-  filter_normalize( rawtile, (*session->image)->max, (*session->image)->min );
-  if( session->loglevel >= 4 ){
-    *(session->logfile) << " in " << function_timer.getTime() << " microseconds" << endl;
-  }
+  // Only use our float pipeline if necessary
+  if( rawtile.bpc > 8 || session->view->getContrast() != 1.0 || session->view->getGamma() != 1.0 ||
+      session->view->cmapped || session->view->shaded || session->view->inverted || session->view->ctw.size() ){
 
-
-  // Apply hill shading if requested
-  if( session->view->shaded ){
+    // Apply normalization and float conversion
     if( session->loglevel >= 4 ){
-      *(session->logfile) << "JTL :: Applying hill-shading";
+      *(session->logfile) << "JTL :: Normalizing and converting to float";
       function_timer.start();
     }
-    filter_shade( rawtile, session->view->shade[0], session->view->shade[1] );
+    filter_normalize( rawtile, (*session->image)->max, (*session->image)->min );
     if( session->loglevel >= 4 ){
       *(session->logfile) << " in " << function_timer.getTime() << " microseconds" << endl;
     }
-  }
 
 
-  // Apply color twist if requested                         
-  if( session->view->ctw.size() ){
+    // Apply hill shading if requested
+    if( session->view->shaded ){
+      if( session->loglevel >= 4 ){
+	*(session->logfile) << "JTL :: Applying hill-shading";
+	function_timer.start();
+      }
+      filter_shade( rawtile, session->view->shade[0], session->view->shade[1] );
+      if( session->loglevel >= 4 ){
+	*(session->logfile) << " in " << function_timer.getTime() << " microseconds" << endl;
+      }
+    }
+
+
+    // Apply color twist if requested                         
+    if( session->view->ctw.size() ){
+      if( session->loglevel >= 4 ){
+	*(session->logfile) << "JTL :: Applying color twist";
+	function_timer.start();
+      }
+      filter_twist( rawtile, session->view->ctw );
+      if( session->loglevel >= 4 ){
+	*(session->logfile) << " in " << function_timer.getTime() << " microseconds" << endl;
+      }
+    }
+
+
+    // Apply any gamma correction
+    if( session->view->getGamma() != 1.0 ){
+      float gamma = session->view->getGamma();
+      if( session->loglevel >= 4 ){
+	*(session->logfile) << "JTL :: Applying gamma of " << gamma;
+	function_timer.start();
+      }
+      filter_gamma( rawtile, gamma);
+      if( session->loglevel >= 4 ){
+	*(session->logfile) << " in " << function_timer.getTime() << " microseconds" << endl;
+      }
+    }
+
+
+    // Apply inversion if requested
+    if( session->view->inverted ){
+      if( session->loglevel >= 4 ){
+	*(session->logfile) << "JTL :: Applying inversion";
+	function_timer.start();
+      }
+      filter_inv( rawtile );
+      if( session->loglevel >= 4 ){
+	*(session->logfile) << " in " << function_timer.getTime() << " microseconds" << endl;
+      }
+    }
+
+
+    // Apply color mapping if requested
+    if( session->view->cmapped ){
+      if( session->loglevel >= 4 ){
+	*(session->logfile) << "JTL :: Applying color map";
+	function_timer.start();
+      }
+      filter_cmap( rawtile, session->view->cmap );
+      if( session->loglevel >= 4 ){
+	*(session->logfile) << " in " << function_timer.getTime() << " microseconds" << endl;
+      }
+    }
+
+
+    // Apply any contrast adjustments and/or clip to 8bit from 16 or 32 bit
+    float contrast = session->view->getContrast();
     if( session->loglevel >= 4 ){
-      *(session->logfile) << "JTL :: Applying color twist";
+      *(session->logfile) << "JTL :: Applying contrast of " << contrast << " and converting to 8 bit";
       function_timer.start();
     }
-    filter_twist( rawtile, session->view->ctw );
+    filter_contrast( rawtile, contrast );
     if( session->loglevel >= 4 ){
       *(session->logfile) << " in " << function_timer.getTime() << " microseconds" << endl;
     }
+
   }
 
 
@@ -174,58 +232,6 @@ void JTL::run( Session* session, const std::string& argument ){
   }
 
 
-  // Apply any gamma correction
-  if( session->view->getGamma() != 1.0 ){
-    float gamma = session->view->getGamma();
-    if( session->loglevel >= 4 ){
-      *(session->logfile) << "JTL :: Applying gamma of " << gamma;
-      function_timer.start();
-    }
-    filter_gamma( rawtile, gamma);
-    if( session->loglevel >= 4 ){
-      *(session->logfile) << " in " << function_timer.getTime() << " microseconds" << endl;
-    }
-  }
-
-
-  // Apply inversion if requested
-  if( session->view->inverted ){
-    if( session->loglevel >= 4 ){
-      *(session->logfile) << "JTL :: Applying inversion";
-      function_timer.start();
-    }
-    filter_inv( rawtile );
-    if( session->loglevel >= 4 ){
-      *(session->logfile) << " in " << function_timer.getTime() << " microseconds" << endl;
-    }
-  }
-
-
-  // Apply color mapping if requested
-  if( session->view->cmapped ){
-    if( session->loglevel >= 4 ){
-      *(session->logfile) << "JTL :: Applying color map";
-      function_timer.start();
-    }
-    filter_cmap( rawtile, session->view->cmap );
-    if( session->loglevel >= 4 ){
-      *(session->logfile) << " in " << function_timer.getTime() << " microseconds" << endl;
-    }
-  }
-
-
-  // Apply any contrast adjustments and/or clipping to 8bit from 16 or 32 bit
-  float contrast = session->view->getContrast();
-  if( session->loglevel >= 4 ){
-    *(session->logfile) << "JTL :: Applying contrast of " << contrast << " and converting to 8 bit";
-    function_timer.start();
-  }
-  filter_contrast( rawtile, contrast );
-  if( session->loglevel >= 4 ){
-    *(session->logfile) << " in " << function_timer.getTime() << " microseconds" << endl;
-  }
-
-
   // Convert to greyscale if requested
   if( (*session->image)->getColourSpace() == sRGB && session->view->colourspace == GREYSCALE ){
     if( session->loglevel >= 4 ){
@@ -239,12 +245,30 @@ void JTL::run( Session* session, const std::string& argument ){
   }
 
 
+  // Apply flip
+  if( session->view->flip != 0 ){
+    Timer flip_timer;
+    if( session->loglevel >= 5 ){
+      flip_timer.start();
+    }
+
+    filter_flip( rawtile, session->view->flip  );
+
+    if( session->loglevel >= 5 ){
+      *(session->logfile) << "JTL :: Flipping image ";
+      if( session->view->flip == 1 ) *(session->logfile) << "horizontally";
+      else *(session->logfile) << "vertically";
+      *(session->logfile) << " in " << flip_timer.getTime() << " microseconds" << endl; 
+    }
+  }
+
+
   // Apply rotation - can apply this safely after gamma and contrast adjustment
   if( session->view->getRotation() != 0.0 ){
     float rotation = session->view->getRotation();
     if( session->loglevel >= 4 ){
       *(session->logfile) << "JTL :: Rotating image by " << rotation << " degrees";
-    function_timer.start();
+      function_timer.start();
     }
     filter_rotate( rawtile, rotation );
     if( session->loglevel >= 4 ){

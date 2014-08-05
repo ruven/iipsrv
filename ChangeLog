@@ -1,3 +1,8 @@
+05/08/2014:
+	- Added flip function to Transforms.
+	- Modified JTL, DeepZoom and Zoomify to avoid float conversion if not required.
+
+
 30/07/2014:
 	- Moved CTW processing function to before gamma function in JTL.cc and CVT.cc.
 	- Added missing function comments and minor layout changes in Transform.cc and FIF.cc.

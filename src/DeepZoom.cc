@@ -7,7 +7,7 @@
     Culture of the Czech Republic. 
 
 
-    Copyright (C) 2009-2013 Ruven Pillay.
+    Copyright (C) 2009-2014 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -201,22 +201,38 @@ void DeepZoom::run( Session* session, const std::string& argument ){
 
     Timer cielab_timer;
     if( session->loglevel >= 4 ){
-      *(session->logfile) << "JTL :: Converting from CIELAB->sRGB" << endl;
+      *(session->logfile) << "DeepZoom :: Converting from CIELAB->sRGB" << endl;
       cielab_timer.start();
     }
 
     filter_LAB2sRGB( rawtile );
 
     if( session->loglevel >= 4 ){
-      *(session->logfile) << "JTL :: CIELAB->sRGB conversion in " << cielab_timer.getTime() << " microseconds" << endl;
+      *(session->logfile) << "DeepZoom :: CIELAB->sRGB conversion in " << cielab_timer.getTime() << " microseconds" << endl;
     }
   }
 
-  // Apply normalization and float conversion
-  filter_normalize( rawtile, (*session->image)->max, (*session->image)->min );
 
-  // Apply any contrast adjustments and/or clipping to 8bit
-  filter_contrast( rawtile, session->view->getContrast() );
+  // Non 8-bit images need rescaling
+  if( rawtile.bpc > 8 ){
+
+    Timer normalization_timer;
+    if( session->loglevel >= 4 ){
+      *(session->logfile) << "DeepZoom :: Scaling to 8 bits per channel" << endl;
+      normalization_timer.start();
+    }
+
+    // Apply normalization and float conversion
+    filter_normalize( rawtile, (*session->image)->max, (*session->image)->min );
+
+    // Apply any contrast adjustments and/or clipping to 8bit
+    filter_contrast( rawtile, session->view->getContrast() );
+
+    if( session->loglevel >= 4 ){
+      *(session->logfile) << "DeepZoom :: Scaling completed in " << normalization_timer.getTime() << " microseconds" << endl;
+    }
+  }
+
 
   // Compress to JPEG
   if( ct == UNCOMPRESSED ){

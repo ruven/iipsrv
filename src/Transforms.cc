@@ -669,12 +669,12 @@ void filter_twist( RawTile& rawtile, const vector< vector<float> >& matrix ){
   float* pixel = new float[rawtile.channels];
 
   // Calculate the number of columns - limit to our number of channels if necessary
-  unsigned int ncols = (matrix.size()>rawtile.channels) ? rawtile.channels : matrix.size();
+  unsigned int ncols = (matrix.size()>(unsigned int)rawtile.channels) ? rawtile.channels : matrix.size();
   unsigned int* nrows = new unsigned int[ncols];
 
   // Pre-calculate the size of each row
   for( unsigned int i=0; i<ncols; i++ ){
-    nrows[i] = (matrix[i].size()>rawtile.channels) ? rawtile.channels : matrix[i].size();
+    nrows[i] = (matrix[i].size()>(unsigned int)rawtile.channels) ? rawtile.channels : matrix[i].size();
   }
 
   for( unsigned long i=0; i<np; i++ ){
@@ -694,7 +694,7 @@ void filter_twist( RawTile& rawtile, const vector< vector<float> >& matrix ){
     }
 
     // Only write our values at the end as we reuse channel values several times during the twist loops
-    for( unsigned int k=0; k<rawtile.channels; k++ ) ((float*)rawtile.data)[n++] = pixel[k];
+    for( int k=0; k<rawtile.channels; k++ ) ((float*)rawtile.data)[n++] = pixel[k];
 
   }
   delete[] nrows;
@@ -717,11 +717,46 @@ void filter_flatten( RawTile& in, int bands ){
   // Simply loop through assigning to the same buffer
   for( unsigned long i=0; i<np; i++ ){
     for( int k=0; k<bands; k++ ){
-      ((float*)in.data)[ni++] = ((float*)in.data)[no++];
+      ((unsigned char*)in.data)[ni++] = ((unsigned char*)in.data)[no++];
     }
     no += gap;
   }
 
   in.channels = bands;
   in.dataLength = ni * in.bpc/8;
+}
+
+
+// Flip image in horizontal or vertical direction (0=horizontal,1=vertical)
+void filter_flip( RawTile& rawtile, int orientation ){
+
+  unsigned char* buffer = new unsigned char[rawtile.width * rawtile.height * rawtile.channels];
+  unsigned long n = 0;
+
+  // Vertical
+  if( orientation == 2 ){
+    for( int j=rawtile.height-1; j>=0; j-- ){
+      for( unsigned int i=0; i<rawtile.width; i++ ){
+        unsigned long index = (rawtile.width*j + i)*rawtile.channels;
+        for( int k=0; k<rawtile.channels; k++ ){
+          buffer[n++] = ((unsigned char*)rawtile.data)[index+k];
+        }
+      }
+    }
+  }
+  // Horizontal
+  else{
+    for( unsigned int j=0; j<rawtile.height; j++ ){
+      for( int i=rawtile.width-1; i>=0; i-- ){
+        unsigned long index = (rawtile.width*j + i)*rawtile.channels;
+        for( int k=0; k<rawtile.channels; k++ ){
+	  buffer[n++] = ((unsigned char*)rawtile.data)[index+k];
+        }
+      }
+    }
+  }
+
+  // Delete our old data buffer and instead point to our grayscale data
+  delete[] (unsigned char*) rawtile.data;
+  rawtile.data = (void*) buffer;
 }

@@ -116,4 +116,12 @@ void filter_twist( RawTile& in, const std::vector< std::vector<float> >& ctw );
 */
 void filter_flatten( RawTile& in, int bands );
 
+
+///Flip image
+/** @param in input image
+    @param o orientation (0=horizontal,1=vertical)
+*/
+void filter_flip( RawTile& in, int o );
+
+
 #endif
