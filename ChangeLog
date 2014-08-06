@@ -2,6 +2,7 @@
 	- Updated exception handling to use std::invalid_argument and a new derived file_error
 	  exception within the IIPImage and derived classes. Allows better distinguishing between
 	  HTTP status errors.
+	- Moved URL decoding code from FIF.cc to separate URL class in URL.h.
 
 
 05/08/2014:

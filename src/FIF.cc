@@ -21,6 +21,7 @@
 
 #include <algorithm>
 #include "Task.h"
+#include "URL.h"
 #include "Environment.h"
 #include "TPTImage.h"
 
@@ -36,17 +37,6 @@ using namespace std;
 
 
 
-// Internal utility function to decode hex values
-static char hexToChar( char first, char second ){
-  int digit;
-  digit = (first >= 'A' ? ((first & 0xDF) - 'A') + 10 : (first - '0'));
-  digit *= 16;
-  digit += (second >= 'A' ? ((second & 0xDF) - 'A') + 10 : (second - '0'));
-  return static_cast<char>(digit);
-}
-
-
-
 void FIF::run( Session* session, const string& src ){
 
   if( session->loglevel >= 3 ) *(session->logfile) << "FIF handler reached" << endl;
@@ -55,56 +45,20 @@ void FIF::run( Session* session, const string& src ){
   if( session->loglevel >= 2 ) command_timer.start();
 
 
-  // The argument is a URL path, which may contain spaces or other hex encoded characters.
-  // So, first decode and filter this path (implementation taken from GNU cgicc: http://www.cgicc.org)
+  // Decode any URL-encoded characters from our path
+  URL url( src );
+  string argument = url.decode();
 
-  string argument;
-  string::const_iterator iter;
-  char c;
-
-  for(iter = src.begin(); iter != src.end(); ++iter) {
-    switch(*iter) {
-    case '+':
-      argument.append(1,' ');
-      break;
-    case '%':
-      // Don't assume well-formed input
-      if( distance(iter, src.end()) >= 2 &&
-          isxdigit(*(iter + 1)) && isxdigit(*(iter + 2)) ){
-
-	// Filter out embedded NULL bytes of the form %00 from the URL
-	if( (*(iter+1)=='0' && *(iter+2)=='0') ){
-	  if( session->loglevel >= 1 ){
-	    *(session->logfile) << "FIF :: Warning! Detected embedded NULL byte in URL: " << src << endl;
-	  }
-	  // Wind forward our iterator
-	  iter+=2;
-	}
-	// Otherwise decode the character
-	else{
-	  c = *++iter;
-	  argument.append(1,hexToChar(c,*++iter));
-	}
-      }
-      // Just pass the % through untouched
-      else {
-	argument.append(1,'%');
-      }
-      break;
-    
-    default:
-      argument.append(1,*iter);
-      break;
-    }
-  }
 
   // Filter out any ../ to prevent users by-passing any file system prefix
   unsigned int n;
   while( (n=argument.find("../")) < argument.length() ) argument.erase(n,3);
 
-
-  if( session->loglevel >= 5 ){
-    *(session->logfile) << "FIF :: URL decoding/filtering: " << src << " => " << argument << endl;
+  if( session->loglevel >=1 ){
+    if( url.warning().length() > 0 ) *(session->logfile) << "FIF :: " << url.warning() << endl;
+    if( session->loglevel >= 5 ){
+      *(session->logfile) << "FIF :: URL decoding/filtering: " << src << " => " << argument << endl;
+    }
   }
 
 
@@ -229,7 +183,7 @@ void FIF::run( Session* session, const string& src ){
     }
 
   }
-  catch( const string& error ){
+  catch( const file_error& error ){
     // Unavailable file error code is 1 3
     session->response->setError( "1 3", "FIF" );
     throw error;
