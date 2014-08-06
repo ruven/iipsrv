@@ -56,7 +56,6 @@ class View{
   float contrast;                             /// Contrast adjustment requested by CNT command
   float gamma;                                /// Gamma adjustment requested by GAM command
   float rotation;                             /// Rotation requested by ROT command
-  int flip;                                    /// Flip (1=horizontal, 2=vertical)
 
 
   /// Internal function to calculate the resolution associated with a width
@@ -80,6 +79,7 @@ class View{
   int layers;			               /// Number of quality layers
   ColourSpaces colourspace;                    /// Requested colourspace
   std::vector< std::vector<float> > ctw;       /// Colour twist matrix
+  int flip;                                    /// Flip (1=horizontal, 2=vertical)
 
 
   /// Constructor

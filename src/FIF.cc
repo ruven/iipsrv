@@ -122,7 +122,7 @@ void FIF::run( Session* session, const string& src ){
 
     // Check whether cache is empty
     if( session->imageCache->empty() ){
-      if( session->loglevel >= 1 ) *(session->logfile) << "FIF :: Image cache initialisation" << endl;
+      if( session->loglevel >= 1 ) *(session->logfile) << "FIF :: Image cache initialization" << endl;
       test = IIPImage( argument );
       test.setFileNamePattern( filename_pattern );
       test.setFileSystemPrefix( filesystem_prefix );

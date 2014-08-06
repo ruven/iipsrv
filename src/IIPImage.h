@@ -2,7 +2,7 @@
 
 /*  IIP fcgi server module
 
-    Copyright (C) 2000-2013 Ruven Pillay.
+    Copyright (C) 2000-2014 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -34,8 +34,17 @@
 #include <list>
 #include <vector>
 #include <map>
+#include <stdexcept>
 
 #include "RawTile.h"
+
+
+/// Define our own derived exception class for file errors
+class file_error : public std::runtime_error {
+ public:
+  file_error(std::string s) : std::runtime_error(s) { }
+};
+
 
 
 /// Main class to handle the pyramidal image source
@@ -65,7 +74,7 @@ class IIPImage {
   std::string suffix;
 
   /// Private function to determine the image type
-  void testImageType();
+  void testImageType() throw( file_error );
 
   /// If we have a sequence of images, determine which horizontal angles exist
   void measureHorizontalAngles();
@@ -223,7 +232,7 @@ class IIPImage {
   /// Get the image timestamp
   /** @param s file path
    */
-  void updateTimestamp( const std::string& s ) throw( std::string );
+  void updateTimestamp( const std::string& s ) throw( file_error );
 
   /// Get a HTTP RFC 1123 formatted timestamp
   const std::string getTimestamp();
@@ -297,7 +306,7 @@ class IIPImage {
   virtual const std::string getDescription() { return std::string( "IIPImage Base Class" ); };
 
   /// Open the image: Overloaded by child class.
-  virtual void openImage() { throw std::string( "IIPImage openImage called" ); };
+  virtual void openImage() { throw file_error( "IIPImage openImage called" ); };
 
   /// Load information about the image eg. number of channels, tile size etc.
   /** @param x horizontal sequence angle

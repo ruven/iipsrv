@@ -661,6 +661,26 @@ int main( int argc, char *argv[] )
 
     }
 
+    // Image file errors
+    catch( const file_error& error ){
+      string status = "Status: 404 Not Found\r\nServer: iipsrv/" + version + "\r\n\r\n" + error.what();
+      writer.printf( status.c_str() );
+      writer.flush();
+      if( loglevel >= 2 ){
+	logfile << "Sending HTTP 404 Not Found" << endl;
+      }
+    }
+
+    // Parameter errors
+    catch( const invalid_argument& error ){
+      string status = "Status: 400 Bad Request\r\nServer: iipsrv/" + version + "\r\n\r\n" + error.what();
+      writer.printf( status.c_str() );
+      writer.flush();
+      if( loglevel >= 2 ){
+	logfile << "Sending HTTP 400 Bad Request" << endl;
+      }
+    }
+
     /* Default catch
      */
     catch( ... ){

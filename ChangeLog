@@ -1,3 +1,9 @@
+06/08/2014:
+	- Updated exception handling to use std::invalid_argument and a new derived file_error
+	  exception within the IIPImage and derived classes. Allows better distinguishing between
+	  HTTP status errors.
+
+
 05/08/2014:
 	- Added flip function to Transforms.
 	- Modified JTL, DeepZoom, Zoomify and CVT to avoid float conversion if not required.

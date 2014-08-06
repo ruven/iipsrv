@@ -171,6 +171,7 @@ void CVT::run( Session* session, const std::string& a ){
     session->out->printf( (const char*) str );
 #endif
 
+
     // Get our requested region from our TileManager
     TileManager tilemanager( session->tileCache, *session->image, session->watermark, session->jpeg, session->logfile, session->loglevel );
     RawTile complete_image = tilemanager.getRegion( requested_res,

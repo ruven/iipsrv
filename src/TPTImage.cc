@@ -2,7 +2,7 @@
 
 /*  IIP Server: Tiled Pyramidal TIFF handler
 
-    Copyright (C) 2000-2013 Ruven Pillay.
+    Copyright (C) 2000-2014 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -28,12 +28,12 @@
 using namespace std;
 
 
-void TPTImage::openImage() throw (string)
+void TPTImage::openImage() throw (file_error)
 {
 
   // Insist that the tiff and tile_buf be non-NULL
   if( tiff || tile_buf ){
-    throw string( "TPT::openImage: tiff or tile_buf is not NULL" );
+    throw file_error( "TPT::openImage: tiff or tile_buf is not NULL" );
   }
 
   string filename = getFileName( currentX, currentY );
@@ -43,7 +43,7 @@ void TPTImage::openImage() throw (string)
 
   // Try to open and allocate a buffer
   if( ( tiff = TIFFOpen( filename.c_str(), "r" ) ) == NULL ){
-    throw string( "tiff open failed for: " + filename );
+    throw file_error( "tiff open failed for: " + filename );
   }
 
   // Load our metadata if not already loaded
@@ -51,7 +51,7 @@ void TPTImage::openImage() throw (string)
 
   // Insist on a tiled image
   if( (tile_width == 0) && (tile_height == 0) ){
-    throw string( "TIFF image is not tiled" );
+    throw file_error( "TIFF image is not tiled" );
   }
 
   isSet = true;
@@ -59,7 +59,7 @@ void TPTImage::openImage() throw (string)
 }
 
 
-void TPTImage::loadImageInfo( int seq, int ang ) throw(string)
+void TPTImage::loadImageInfo( int seq, int ang ) throw(file_error)
 {
   tdir_t current_dir;
   int count;
@@ -185,7 +185,7 @@ void TPTImage::closeImage()
 }
 
 
-RawTile TPTImage::getTile( int seq, int ang, unsigned int res, int layers, unsigned int tile ) throw (string)
+RawTile TPTImage::getTile( int seq, int ang, unsigned int res, int layers, unsigned int tile ) throw (file_error)
 {
   uint32 im_width, im_height, tw, th, ntlx, ntly;
   uint32 rem_x, rem_y;
@@ -197,7 +197,7 @@ RawTile TPTImage::getTile( int seq, int ang, unsigned int res, int layers, unsig
   if( res > numResolutions ){
     ostringstream error;
     error << "TPTImage :: Asked for non-existant resolution: " << res;
-    throw error.str();
+    throw file_error( error.str() );
   }
 
 
@@ -212,7 +212,7 @@ RawTile TPTImage::getTile( int seq, int ang, unsigned int res, int layers, unsig
   if( !tiff ){
     filename = getFileName( seq, ang );
     if( ( tiff = TIFFOpen( filename.c_str(), "r" ) ) == NULL ){
-      throw string( "tiff open failed for:" + filename );
+      throw file_error( "tiff open failed for:" + filename );
     }
   }
 
@@ -231,7 +231,7 @@ RawTile TPTImage::getTile( int seq, int ang, unsigned int res, int layers, unsig
 
   // Change to the right directory for the resolution
   if( !TIFFSetDirectory( tiff, vipsres ) ) {
-    throw string( "TIFFSetDirectory failed" );
+    throw file_error( "TIFFSetDirectory failed" );
   }
 
 
@@ -239,7 +239,7 @@ RawTile TPTImage::getTile( int seq, int ang, unsigned int res, int layers, unsig
   if( tile >= TIFFNumberOfTiles( tiff ) ) {
     ostringstream tile_no;
     tile_no << "Asked for non-existant tile: " << tile;
-    throw tile_no.str();
+    throw file_error( tile_no.str() );
   } 
 
 
@@ -298,7 +298,7 @@ RawTile TPTImage::getTile( int seq, int ang, unsigned int res, int layers, unsig
   // Allocate memory for our tile.
   if( !tile_buf ){
     if( ( tile_buf = _TIFFmalloc( TIFFTileSize(tiff) ) ) == NULL ){
-      throw string( "tiff malloc tile failed" );
+      throw file_error( "tiff malloc tile failed" );
     }
   }
 
@@ -306,7 +306,7 @@ RawTile TPTImage::getTile( int seq, int ang, unsigned int res, int layers, unsig
   int length = TIFFReadEncodedTile( tiff, (ttile_t) tile,
 				    tile_buf, (tsize_t) - 1 );
   if( length == -1 ) {
-    throw string( "TIFFReadEncodedTile failed for " + getFileName( seq, ang ) );
+    throw file_error( "TIFFReadEncodedTile failed for " + getFileName( seq, ang ) );
   }
 
 

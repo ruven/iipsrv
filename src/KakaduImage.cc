@@ -7,8 +7,8 @@
     Culture of the Czech Republic.
 
 
-    Copyright (C) 2009-2013 IIPImage.
-    Authors: Ruven Pillay & Petr Pridal
+    Copyright (C) 2009-2014 IIPImage.
+    Authors: Ruven Pillay
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -52,7 +52,7 @@ unsigned int get_nprocs_conf(){
 
 
 #include "Timer.h"
-#define DEBUG 0
+#define DEBUG 1
 
 
 using namespace std;
@@ -62,7 +62,7 @@ extern std::ofstream logfile;
 #endif
 
 
-void KakaduImage::openImage() throw (string)
+void KakaduImage::openImage() throw (file_error)
 {
   string filename = getFileName( currentX, currentY );
 
@@ -84,12 +84,12 @@ void KakaduImage::openImage() throw (string)
     if( jpx_input.open( &src, false ) != 1 ) throw 1;
   }
   catch (...){
-    throw string( "Kakadu :: Unable to open '"+filename+"'"); // Rethrow the exception
+    throw file_error( "Kakadu :: Unable to open '"+filename+"'"); // Rethrow the exception
   }
 
   // Get our JPX codestream
   jpx_stream = jpx_input.access_codestream(0);
-  if( !jpx_stream.exists() ) throw string( "Kakadu :: No codestream in file '"+filename+"'"); // Throw exception
+  if( !jpx_stream.exists() ) throw file_error( "Kakadu :: No codestream in file '"+filename+"'"); // Throw exception
 
   // Open the underlying JPEG2000 codestream
   input = NULL;
@@ -97,7 +97,7 @@ void KakaduImage::openImage() throw (string)
 
   // Create codestream
   codestream.create(input);
-  if( !codestream.exists() ) throw string( "Kakadu :: Unable to create codestream for '"+filename+"'"); // Throw exception
+  if( !codestream.exists() ) throw file_error( "Kakadu :: Unable to create codestream for '"+filename+"'"); // Throw exception
 
   // Set up the cache size and allow restarting
   //codestream.augment_cache_threshold(1024);
@@ -115,7 +115,7 @@ void KakaduImage::openImage() throw (string)
 }
 
 
-void KakaduImage::loadImageInfo( int seq, int ang ) throw(string)
+void KakaduImage::loadImageInfo( int seq, int ang ) throw(file_error)
 {
   jp2_channels j2k_channels;
   jp2_palette j2k_palette;
@@ -262,7 +262,7 @@ void KakaduImage::closeImage()
 
 
 // Get an invidual tile
-RawTile KakaduImage::getTile( int seq, int ang, unsigned int res, int layers, unsigned int tile ) throw (string)
+RawTile KakaduImage::getTile( int seq, int ang, unsigned int res, int layers, unsigned int tile ) throw (file_error)
 {
 
   // Scale up our output bit depth to the nearest factor of 8
@@ -278,7 +278,7 @@ RawTile KakaduImage::getTile( int seq, int ang, unsigned int res, int layers, un
   if( res > numResolutions ){
     ostringstream tile_no;
     tile_no << "Kakadu :: Asked for non-existant resolution: " << res;
-    throw tile_no.str();
+    throw file_error( tile_no.str() );
   }
 
   int vipsres = ( numResolutions - 1 ) - res;
@@ -299,7 +299,7 @@ RawTile KakaduImage::getTile( int seq, int ang, unsigned int res, int layers, un
   if( tile >= ntlx*ntly ){
     ostringstream tile_no;
     tile_no << "Kakadu :: Asked for non-existant tile: " << tile;
-    throw tile_no.str();
+    throw file_error( tile_no.str() );
   }
 
   // Alter the tile size if it's in the last column
@@ -329,7 +329,7 @@ RawTile KakaduImage::getTile( int seq, int ang, unsigned int res, int layers, un
   // Create our raw tile buffer and initialize some values
   if( obpp == 16 ) rawtile.data = new unsigned short[tw*th*channels];
   else if( obpp == 8 ) rawtile.data = new unsigned char[tw*th*channels];
-  else throw string( "Kakadu :: Unsupported number of bits" );
+  else throw file_error( "Kakadu :: Unsupported number of bits" );
 
   rawtile.dataLength = tw*th*channels*obpp/8;
   rawtile.filename = getImagePath();
@@ -350,7 +350,7 @@ RawTile KakaduImage::getTile( int seq, int ang, unsigned int res, int layers, un
 
 
 // Get an entire region and not just a tile
-RawTile KakaduImage::getRegion( int seq, int ang, unsigned int res, int layers, int x, int y, unsigned int w, unsigned int h ) throw (string)
+RawTile KakaduImage::getRegion( int seq, int ang, unsigned int res, int layers, int x, int y, unsigned int w, unsigned int h ) throw (file_error)
 {
   // Scale up our output bit depth to the nearest factor of 8
   unsigned int obpp = bpp;
@@ -366,7 +366,7 @@ RawTile KakaduImage::getRegion( int seq, int ang, unsigned int res, int layers, 
 
   if( obpp == 16 ) rawtile.data = new unsigned short[w*h*channels];
   else if( obpp == 8 ) rawtile.data = new unsigned char[w*h*channels];
-  else throw string( "Kakadu :: Unsupported number of bits" );
+  else throw file_error( "Kakadu :: Unsupported number of bits" );
 
   rawtile.dataLength = w*h*channels*obpp/8;
   rawtile.filename = getImagePath();
@@ -384,7 +384,7 @@ RawTile KakaduImage::getRegion( int seq, int ang, unsigned int res, int layers, 
 
 
 // Main processing function
-void KakaduImage::process( unsigned int res, int layers, int xoffset, int yoffset, unsigned int tw, unsigned int th, void *d ) throw (string)
+void KakaduImage::process( unsigned int res, int layers, int xoffset, int yoffset, unsigned int tw, unsigned int th, void *d ) throw (file_error)
 {
   // Scale up our output bit depth to the nearest factor of 8
   unsigned int obpp = bpp;
@@ -418,7 +418,7 @@ void KakaduImage::process( unsigned int res, int layers, int xoffset, int yoffse
   canvas_dims.size = kdu_coords( tw, th );
 
   // Check our codestream status - throw exception for malformed codestreams
-  if( !codestream.exists() ) throw string( "Kakadu :: Malformed JPEG2000 - unable to access codestream");
+  if( !codestream.exists() ) throw file_error( "Kakadu :: Malformed JPEG2000 - unable to access codestream");
 
   // Apply our resolution restrictions to calculate the rendering zone on the highest resolution
   // canvas
@@ -565,7 +565,7 @@ void KakaduImage::process( unsigned int res, int layers, int xoffset, int yoffse
 
 
     if( !decompressor.finish() ){
-      throw( "Kakadu :: Error indicated by finish()" );
+      throw file_error( "Kakadu :: Error indicated by finish()" );
     }
 
 
@@ -610,7 +610,7 @@ void KakaduImage::process( unsigned int res, int layers, int xoffset, int yoffse
     delete_buffer( stripe_buffer );
     delete_buffer( buffer );
     if( stripe_heights ) delete[] stripe_heights;
-    throw string( "Kakadu :: Core Exception Caught"); // Rethrow the exception
+    throw file_error( "Kakadu :: Core Exception Caught"); // Rethrow the exception
   }
 
 

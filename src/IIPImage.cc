@@ -3,7 +3,7 @@
 
 /*  IIP fcgi server module
 
-    Copyright (C) 2000-2013 Ruven Pillay.
+    Copyright (C) 2000-2014 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -75,7 +75,7 @@ void IIPImage::swap( IIPImage& first, IIPImage& second ) // nothrow
 
 
 
-void IIPImage::testImageType()
+void IIPImage::testImageType() throw(file_error)
 {
   // Check whether it is a regular file
   struct stat sb;
@@ -91,7 +91,7 @@ void IIPImage::testImageType()
     FILE *im = fopen( path.c_str(), "rb" );
     if( im == NULL ){
       string message = "Unable to open file '" + path + "'";
-      throw message;
+      throw file_error( message );
     }
 
     // Read and close immediately
@@ -101,7 +101,7 @@ void IIPImage::testImageType()
     // Make sure we were able to read enough bytes
     if( len < 10 ){
       string message = "Unable to read initial byte sequence from file '" + path + "'";
-      throw message;
+      throw file_error( message );
     }
 
     // Magic file signature for JPEG2000
@@ -133,12 +133,12 @@ void IIPImage::testImageType()
     if( glob( filename.c_str(), 0, NULL, &gdat ) != 0 ){
       globfree( &gdat );
       string message = path + string( " is neither a file nor part of an image sequence" );
-      throw message;
+      throw file_error( message );
     }
     if( gdat.gl_pathc != 1 ){
       globfree( &gdat );
       string message = string( "There are multiple file extensions matching " )  + filename;
-      throw message;
+      throw file_error( message );
     }
 
     string tmp( gdat.gl_pathv[0] );
@@ -155,7 +155,7 @@ void IIPImage::testImageType()
 
 #else
     string message = path + string( " is not a regular file and no glob support enabled" );
-    throw message;
+    throw file_error( message );
 #endif
 
   }
@@ -164,14 +164,14 @@ void IIPImage::testImageType()
 
 
 
-void IIPImage::updateTimestamp( const string& path ) throw(string)
+void IIPImage::updateTimestamp( const string& path ) throw(file_error)
 {
   // Get a modification time for our image
   struct stat sb;
 
   if( stat( path.c_str(), &sb ) == -1 ){
     string message = string( "Unable to open file " ) + path;
-    throw message;
+    throw file_error( message );
   }
   timestamp = sb.st_mtime;
 }
