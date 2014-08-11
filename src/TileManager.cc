@@ -23,6 +23,7 @@
 
 
 
+#include <cmath>
 #include "TileManager.h"
 
 
@@ -328,13 +329,13 @@ RawTile TileManager::getRegion( unsigned int res, int seq, int ang, int layers, 
     starty = (unsigned int) ( y / src_tile_height );
     xoffset = x % src_tile_width;
     yoffset = y % src_tile_height;
-    endx = (unsigned int) ( (width + x) / src_tile_width ) + 1;
-    endy = (unsigned int) ( (height + y) / src_tile_height ) + 1;
+    endx = (unsigned int) ceil( (float)(width + x) / (float)src_tile_width );
+    endy = (unsigned int) ceil( (float)(height + y) / (float)src_tile_height );
 
     if( loglevel >= 3 ){
-      *logfile << "TileManager getRegion :: Tile Start: " << startx << "," << starty << ","
+      *logfile << "TileManager getRegion :: Tile Start: " << startx << "," << starty << ", with offset: "
 	       << xoffset << "," << yoffset << endl
-	       << "TileManager getRegion :: End Tiles: " << endx << "," << endy << endl;
+	       << "TileManager getRegion :: End Tile: " << endx << "," << endy << endl;
     }
   }
   else{

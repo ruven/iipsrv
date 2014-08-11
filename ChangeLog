@@ -1,6 +1,7 @@
 11/08/2014:
 	- Renamed variable bpp in IIPImage and its derived classes to bpc (bits per channel),
 	  which is more logical and how we have named things elsewhere.
+	- Modification to TileManager, which was requesting more tiles than necessary for regions.
 
 
 06/08/2014:
