@@ -59,7 +59,7 @@ void IIPImage::swap( IIPImage& first, IIPImage& second ) // nothrow
   std::swap( first.tile_width, second.tile_width );
   std::swap( first.tile_height, second.tile_height );
   std::swap( first.numResolutions, second.numResolutions );
-  std::swap( first.bpp, second.bpp );
+  std::swap( first.bpc, second.bpc );
   std::swap( first.channels, second.channels );
   std::swap( first.sampleType, second.sampleType );
   std::swap( first.quality_layers, second.quality_layers );

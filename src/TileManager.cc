@@ -345,19 +345,19 @@ RawTile TileManager::getRegion( unsigned int res, int seq, int ang, int layers, 
 
 
   unsigned int channels = image->getNumChannels();
-  unsigned int bpp = image->getNumBitsPerPixel();
+  unsigned int bpc = image->getNumBitsPerPixel();
   SampleType sampleType = image->getSampleType();
 
   // Create an empty tile with the correct dimensions
-  RawTile region( 0, res, seq, ang, width, height, channels, bpp );
-  region.dataLength = width * height * channels * bpp/8;
+  RawTile region( 0, res, seq, ang, width, height, channels, bpc );
+  region.dataLength = width * height * channels * bpc/8;
   region.sampleType = sampleType;
 
   // Allocate memory for the region
-  if( bpp == 8 ) region.data = new unsigned char[width*height*channels];
-  else if( bpp == 16 ) region.data = new unsigned short[width*height*channels];
-  else if( bpp == 32 && sampleType == FIXEDPOINT ) region.data = new int[width*height*channels];
-  else if( bpp == 32 && sampleType == FLOATINGPOINT ) region.data = new float[width*height*channels];
+  if( bpc == 8 ) region.data = new unsigned char[width*height*channels];
+  else if( bpc == 16 ) region.data = new unsigned short[width*height*channels];
+  else if( bpc == 32 && sampleType == FIXEDPOINT ) region.data = new int[width*height*channels];
+  else if( bpc == 32 && sampleType == FLOATINGPOINT ) region.data = new float[width*height*channels];
 
   unsigned int current_height = 0;
 
@@ -443,22 +443,22 @@ RawTile TileManager::getRegion( unsigned int res, int seq, int ang, int layers, 
 	unsigned int inx = ((k+yf)*rawtile.width*channels) + (xf*channels);
 
 	// Simply copy the line of data across
-	if( bpp == 8 ){
+	if( bpc == 8 ){
 	  unsigned char* ptr = (unsigned char*) rawtile.data;
 	  unsigned char* buf = (unsigned char*) region.data;
 	  memcpy( &buf[buffer_index], &ptr[inx], dst_tile_width*channels );
 	}
-	else if( bpp ==  16 ){
+	else if( bpc ==  16 ){
 	  unsigned short* ptr = (unsigned short*) rawtile.data;
 	  unsigned short* buf = (unsigned short*) region.data;
 	  memcpy( &buf[buffer_index], &ptr[inx], dst_tile_width*channels*2 );
 	}
-	else if( bpp == 32 && sampleType == FIXEDPOINT ){
+	else if( bpc == 32 && sampleType == FIXEDPOINT ){
 	  unsigned int* ptr = (unsigned int*) rawtile.data;
 	  unsigned int* buf = (unsigned int*) region.data;
 	  memcpy( &buf[buffer_index], &ptr[inx], dst_tile_width*channels*4 );
 	}
-	else if( bpp == 32 && sampleType == FLOATINGPOINT ){
+	else if( bpc == 32 && sampleType == FLOATINGPOINT ){
 	  float* ptr = (float*) rawtile.data;
 	  float* buf = (float*) region.data;
 	  memcpy( &buf[buffer_index], &ptr[inx], dst_tile_width*channels*4 );

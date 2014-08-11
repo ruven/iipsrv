@@ -180,11 +180,11 @@ void OBJ::tile_size(){
 void OBJ::bits_per_channel(){
 
   checkImage();
-  int bpp = (*session->image)->getNumBitsPerPixel();
+  int bpc = (*session->image)->getNumBitsPerPixel();
   if( session->loglevel >= 2 ){
-    *(session->logfile) << "OBJ :: Bits-per-channel handler returning " << bpp << endl;
+    *(session->logfile) << "OBJ :: Bits-per-channel handler returning " << bpc << endl;
   }
-  session->response->addResponse( "Bits-per-channel", bpp );
+  session->response->addResponse( "Bits-per-channel", bpc );
 
 }
 

@@ -1,3 +1,8 @@
+11/08/2014:
+	- Renamed variable bpp in IIPImage and its derived classes to bpc (bits per channel),
+	  which is more logical and how we have named things elsewhere.
+
+
 06/08/2014:
 	- Updated exception handling to use std::invalid_argument and a new derived file_error
 	  exception within the IIPImage and derived classes. Allows better distinguishing between

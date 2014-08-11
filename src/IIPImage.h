@@ -109,8 +109,8 @@ class IIPImage {
   /// The number of available resolutions in this image
   unsigned int numResolutions;
 
-  /// The bits per pixel for this image
-  unsigned int bpp;
+  /// The bits per channel for this image
+  unsigned int bpc;
 
   /// The number of channels for this image
   unsigned int channels;
@@ -144,7 +144,7 @@ class IIPImage {
    : isFile( false ),
     tile_width( 0 ),
     tile_height( 0 ),
-    bpp( 0 ),
+    bpc( 0 ),
     channels( 0 ),
     quality_layers( 0 ),
     isSet( false ),
@@ -160,7 +160,7 @@ class IIPImage {
     isFile( false ),
     tile_width( 0 ),
     tile_height( 0 ),
-    bpp( 0 ),
+    bpc( 0 ),
     channels( 0 ),
     quality_layers( 0 ),
     isSet( false ),
@@ -186,7 +186,7 @@ class IIPImage {
     tile_height( image.tile_height ),
     colourspace( image.colourspace ),
     numResolutions( image.numResolutions ),
-    bpp( image.bpp ),
+    bpc( image.bpc ),
     channels( image.channels ),
     sampleType( image.sampleType ),
     min( image.min ),
@@ -250,7 +250,7 @@ class IIPImage {
   unsigned int getNumResolutions() { return numResolutions; };
 
   /// Return the number of bits per pixel for this image
-  unsigned int getNumBitsPerPixel() { return bpp; };
+  unsigned int getNumBitsPerPixel() { return bpc; };
 
   /// Return the number of channels for this image
   unsigned int getNumChannels() { return channels; };

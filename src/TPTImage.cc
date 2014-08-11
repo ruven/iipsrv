@@ -47,7 +47,7 @@ void TPTImage::openImage() throw (file_error)
   }
 
   // Load our metadata if not already loaded
-  if( bpp == 0 ) loadImageInfo( currentX, currentY );
+  if( bpc == 0 ) loadImageInfo( currentX, currentY );
 
   // Insist on a tiled image
   if( (tile_width == 0) && (tile_height == 0) ){
@@ -85,7 +85,7 @@ void TPTImage::loadImageInfo( int seq, int ang ) throw(file_error)
 
   // We have to do this conversion explicitly to avoid problems on Mac OS X
   channels = (unsigned int) samplesperpixel;
-  bpp = (unsigned int) bitspersample;
+  bpc = (unsigned int) bitspersample;
   sampleType = (sampleformat==3) ? FLOATINGPOINT : FIXEDPOINT;
 
   // Check for the no. of resolutions in the pyramidal image
@@ -153,9 +153,9 @@ void TPTImage::loadImageInfo( int seq, int ang ) throw(file_error)
   for( unsigned int i=0; i<channels; i++ ){
     if( (!sminvalue) == smaxvalue[i] ){
       // Set default values if values not included in header
-      if( bpp == 8 ) smaxvalue[i] = 255.0;
-      else if( bpp == 16 ) smaxvalue[i] = 65535.0;
-      else if( bpp == 32 && sampleType == FIXEDPOINT ) smaxvalue[i] = 4294967295.0;
+      if( bpc == 8 ) smaxvalue[i] = 255.0;
+      else if( bpc == 16 ) smaxvalue[i] = 65535.0;
+      else if( bpc == 32 && sampleType == FIXEDPOINT ) smaxvalue[i] = 4294967295.0;
     }
     min.push_back( (float)sminvalue[i] );
     max.push_back( (float)smaxvalue[i] );
@@ -253,7 +253,7 @@ RawTile TPTImage::getTile( int seq, int ang, unsigned int res, int layers, unsig
   TIFFGetField( tiff, TIFFTAG_IMAGELENGTH, &im_height );
   TIFFGetField( tiff, TIFFTAG_PHOTOMETRIC, &colour );
 //   TIFFGetField( tiff, TIFFTAG_SAMPLESPERPIXEL, &channels );
-//   TIFFGetField( tiff, TIFFTAG_BITSPERSAMPLE, &bpp );
+//   TIFFGetField( tiff, TIFFTAG_BITSPERSAMPLE, &bpc );
 
 
   // Get the width and height for last row and column tiles
@@ -310,7 +310,7 @@ RawTile TPTImage::getTile( int seq, int ang, unsigned int res, int layers, unsig
   }
 
 
-  RawTile rawtile( tile, res, seq, ang, tw, th, channels, bpp );
+  RawTile rawtile( tile, res, seq, ang, tw, th, channels, bpc );
   rawtile.data = tile_buf;
   rawtile.dataLength = length;
   rawtile.filename = getImagePath();

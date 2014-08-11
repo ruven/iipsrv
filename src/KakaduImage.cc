@@ -106,7 +106,7 @@ void KakaduImage::openImage() throw (file_error)
   //  codestream.enable_restart();
 
   // Load our metadata if not already loaded
-  if( bpp == 0 ) loadImageInfo( currentX, currentY );
+  if( bpc == 0 ) loadImageInfo( currentX, currentY );
 
 #ifdef DEBUG
   logfile << "Kakadu :: openImage() :: " << timer.getTime() << " microseconds" << endl;
@@ -138,7 +138,7 @@ void KakaduImage::loadImageInfo( int seq, int ang ) throw(file_error)
   image_heights.push_back(layer_size.y);
   channels = j2k_channels.get_num_colours();
   numResolutions = codestream.get_min_dwt_levels();
-  bpp = codestream.get_bit_depth(0,true);
+  bpc = codestream.get_bit_depth(0,true);
 
   unsigned int w = layer_size.x;
   unsigned int h = layer_size.y;
@@ -218,7 +218,7 @@ void KakaduImage::loadImageInfo( int seq, int ang ) throw(file_error)
       cs = j2k_colour.get_space();
       break;
   }
-  logfile << "Kakadu :: " << bpp << " bit data" << endl
+  logfile << "Kakadu :: " << bpc << " bit data" << endl
 	  << "Kakadu :: " << channels << " channels" << endl
 	  << "Kakadu :: colour space: " << cs << endl
 	  << "Kakadu :: " << quality_layers << " quality layers detected" << endl;
@@ -226,13 +226,13 @@ void KakaduImage::loadImageInfo( int seq, int ang ) throw(file_error)
   kt.close();
 
   // For bilevel images, force channels to 1 as we sometimes come across such images which claim 3 channels
-  if( bpp == 1 ) channels = 1;
+  if( bpc == 1 ) channels = 1;
 
   // Get the max and min values for our data type
   //double sminvalue[4], smaxvalue[4];
   for( unsigned int i=0; i<channels; i++ ){
     min.push_back( 0.0 );
-    if( bpp == 16 ) max.push_back( 65535.0 );
+    if( bpc == 16 ) max.push_back( 65535.0 );
     else max.push_back( 255.0 );
   }
 
@@ -266,9 +266,9 @@ RawTile KakaduImage::getTile( int seq, int ang, unsigned int res, int layers, un
 {
 
   // Scale up our output bit depth to the nearest factor of 8
-  unsigned obpp = bpp;
-  if( bpp <= 16 && bpp > 8 ) obpp = 16;
-  else if( bpp <= 8 ) obpp = 8;
+  unsigned obpc = bpc;
+  if( bpc <= 16 && bpc > 8 ) obpc = 16;
+  else if( bpc <= 8 ) obpc = 8;
 
 #ifdef DEBUG
   Timer timer;
@@ -323,15 +323,15 @@ RawTile KakaduImage::getTile( int seq, int ang, unsigned int res, int layers, un
 
 
   // Create our Rawtile object and initialize with data
-  RawTile rawtile( tile, res, seq, ang, tw, th, channels, obpp );
+  RawTile rawtile( tile, res, seq, ang, tw, th, channels, obpc );
 
 
   // Create our raw tile buffer and initialize some values
-  if( obpp == 16 ) rawtile.data = new unsigned short[tw*th*channels];
-  else if( obpp == 8 ) rawtile.data = new unsigned char[tw*th*channels];
+  if( obpc == 16 ) rawtile.data = new unsigned short[tw*th*channels];
+  else if( obpc == 8 ) rawtile.data = new unsigned char[tw*th*channels];
   else throw file_error( "Kakadu :: Unsupported number of bits" );
 
-  rawtile.dataLength = tw*th*channels*obpp/8;
+  rawtile.dataLength = tw*th*channels*obpc/8;
   rawtile.filename = getImagePath();
   rawtile.timestamp = timestamp;
 
@@ -353,22 +353,22 @@ RawTile KakaduImage::getTile( int seq, int ang, unsigned int res, int layers, un
 RawTile KakaduImage::getRegion( int seq, int ang, unsigned int res, int layers, int x, int y, unsigned int w, unsigned int h ) throw (file_error)
 {
   // Scale up our output bit depth to the nearest factor of 8
-  unsigned int obpp = bpp;
-  if( bpp <= 16 && bpp > 8 ) obpp = 16;
-  else if( bpp <= 8 ) obpp = 8;
+  unsigned int obpc = bpc;
+  if( bpc <= 16 && bpc > 8 ) obpc = 16;
+  else if( bpc <= 8 ) obpc = 8;
 
 #ifdef DEBUG
   Timer timer;
   timer.start();
 #endif
 
-  RawTile rawtile( 0, res, seq, ang, w, h, channels, obpp );
+  RawTile rawtile( 0, res, seq, ang, w, h, channels, obpc );
 
-  if( obpp == 16 ) rawtile.data = new unsigned short[w*h*channels];
-  else if( obpp == 8 ) rawtile.data = new unsigned char[w*h*channels];
+  if( obpc == 16 ) rawtile.data = new unsigned short[w*h*channels];
+  else if( obpc == 8 ) rawtile.data = new unsigned char[w*h*channels];
   else throw file_error( "Kakadu :: Unsupported number of bits" );
 
-  rawtile.dataLength = w*h*channels*obpp/8;
+  rawtile.dataLength = w*h*channels*obpc/8;
   rawtile.filename = getImagePath();
   rawtile.timestamp = timestamp;
 
@@ -387,9 +387,9 @@ RawTile KakaduImage::getRegion( int seq, int ang, unsigned int res, int layers, 
 void KakaduImage::process( unsigned int res, int layers, int xoffset, int yoffset, unsigned int tw, unsigned int th, void *d ) throw (file_error)
 {
   // Scale up our output bit depth to the nearest factor of 8
-  unsigned int obpp = bpp;
-  if( bpp <= 16 && bpp > 8 ) obpp = 16;
-  else if( bpp <= 8 ) obpp = 8;
+  unsigned int obpc = bpc;
+  if( bpc <= 16 && bpc > 8 ) obpc = 16;
+  else if( bpc <= 8 ) obpc = 8;
 
   int vipsres = ( numResolutions - 1 ) - res;
 
@@ -492,11 +492,11 @@ void KakaduImage::process( unsigned int res, int layers, int xoffset, int yoffse
 #endif
 
     // Create our buffers
-    if( obpp == 16 ){
+    if( obpc == 16 ){
       stripe_buffer = new kdu_uint16[tw*stripe_heights[0]*channels];
       buffer = new unsigned short[tw*th*channels];
     }
-    else if( obpp == 8 ){
+    else if( obpc == 8 ){
       stripe_buffer = new kdu_byte[tw*stripe_heights[0]*channels];
       buffer = new unsigned char[tw*th*channels];
     }
@@ -507,12 +507,12 @@ void KakaduImage::process( unsigned int res, int layers, int xoffset, int yoffse
       decompressor.get_recommended_stripe_heights( comp_dims.size.y,
 						   1024, stripe_heights, NULL );
 
-      if( obpp == 16 ){
+      if( obpc == 16 ){
 	// Set these to false to get unsigned 16 bit values
 	bool s[3] = {false,false,false};
 	continues = decompressor.pull_stripe( (kdu_int16*) stripe_buffer, stripe_heights, NULL, NULL, NULL, NULL, s );
       }
-      else if( obpp == 8 ){
+      else if( obpc == 8 ){
 	continues = decompressor.pull_stripe( (kdu_byte*) stripe_buffer, stripe_heights, NULL, NULL, NULL );
       }
 
@@ -523,14 +523,14 @@ void KakaduImage::process( unsigned int res, int layers, int xoffset, int yoffse
 
       // Copy the data into the supplied buffer
       void *b1 = NULL, *b2 = NULL;
-      if( obpp == 16 ){
+      if( obpc == 16 ){
 	b1 = &( ((kdu_uint16*)stripe_buffer)[0] );
 	b2 = &( ((unsigned short*)buffer)[index] );
       }
-      else if( obpp == 8 ){
+      else if( obpc == 8 ){
 	b1 = &( ((kdu_byte*)stripe_buffer)[0] );
 	b2 = &( ((unsigned char*)buffer)[index] );
-	if( bpp == 1 ){
+	if( bpc == 1 ){
 	  // Expand bilevel images to full 8 bit range
 	  // - ideally we would do this in the Kakadu pull_stripe function,
 	  // but the precisions parameter seems not to work as expected.
@@ -552,7 +552,7 @@ void KakaduImage::process( unsigned int res, int layers, int xoffset, int yoffse
 	}
       }
 
-      memcpy( b2, b1, tw * stripe_heights[0] * channels * obpp/8 );
+      memcpy( b2, b1, tw * stripe_heights[0] * channels * obpc/8 );
 
       // Advance our output buffer pointer
       index += tw * stripe_heights[0] * channels;
@@ -582,17 +582,17 @@ void KakaduImage::process( unsigned int res, int layers, int xoffset, int yoffse
 	for( unsigned int i=0; i<tw; i+=factor ){
 	  for( unsigned int k=0; k<channels; k++ ){
 	    // Handle 16 and 8 bit data
-	    if( obpp==16 ){
+	    if( obpc==16 ){
 	      ((unsigned short*)d)[n++] = ((unsigned short*)buffer)[j*tw*channels + i*channels + k];
 	    }
-	    else if( obpp==8 ){
+	    else if( obpc==8 ){
 	      ((unsigned char*)d)[n++] = ((unsigned char*)buffer)[j*tw*channels + i*channels + k];
 	    }
 	  }
 	}
       }
     }
-    else memcpy( d, buffer, tw*th*channels * obpp/8 );
+    else memcpy( d, buffer, tw*th*channels * obpc/8 );
 
     // Delete our local buffer
     delete_buffer( buffer );
@@ -627,8 +627,8 @@ void KakaduImage::process( unsigned int res, int layers, int xoffset, int yoffse
 // Delete our buffers
 void KakaduImage::delete_buffer( void* buffer ){
   if( buffer ){
-    if( bpp <= 16 && bpp > 8 ) delete[] (kdu_uint16*) buffer;
-    else if( bpp<=8 ) delete[] (kdu_byte*) buffer;
+    if( bpc <= 16 && bpc > 8 ) delete[] (kdu_uint16*) buffer;
+    else if( bpc<=8 ) delete[] (kdu_byte*) buffer;
   }
 
 
