@@ -2,6 +2,10 @@
 	- Renamed variable bpp in IIPImage and its derived classes to bpc (bits per channel),
 	  which is more logical and how we have named things elsewhere.
 	- Modification to TileManager, which was requesting more tiles than necessary for regions.
+	- Changes to View.cc to make WID and HEI requests with region exports produce images with a
+	  *final* size of that requested by WID or HEI. For example RGN=0.1,0.1,0.5,0.5&WID=500 will
+	  now produce an image of 500px in width rather than extract the region from an image of size
+	  500px wide. CVT also cleaned up.
 
 
 06/08/2014:

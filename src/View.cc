@@ -23,6 +23,7 @@
 #include <cmath>
 using namespace std;
 
+
 void View::calculateResolution( unsigned int dimension,
 				unsigned int requested_size ){
   unsigned int i = 1;
@@ -54,8 +55,8 @@ unsigned int View::getResolution(){
 
   resolution = max_resolutions - 1;
 
-  if( requested_width ) View::calculateResolution( width, requested_width );
-  if( requested_height ) View::calculateResolution( height, requested_height );
+  if( requested_width ) View::calculateResolution( width, round((float)requested_width/(float)view_width) );
+  if( requested_height ) View::calculateResolution( height, round((float)requested_height/(float)view_height) );
 
   // Caluclate our new width and height based on the calculated resolution
   for( i=0; i < (max_resolutions - resolution - 1); i++ ){
@@ -89,7 +90,7 @@ unsigned int View::getResolution(){
 }
 
 
-double View::getScale(){
+float View::getScale(){
 
   unsigned int rw;
   unsigned int rh;
@@ -103,9 +104,9 @@ double View::getScale(){
   }
   else rh = requested_height;
 
-  double scale = static_cast<double>(rw) / static_cast<double>(width);
+  float scale = static_cast<float>(rw) / static_cast<float>(width);
 
-  if( static_cast<double>(rh) / static_cast<double>(height) < scale ) scale = static_cast<double>(rh) / static_cast<double>(height);
+  if( static_cast<float>(rh) / static_cast<float>(height) < scale ) scale = static_cast<float>(rh) / static_cast<float>(height);
 
   // Sanity check
   if( scale <= 0 || scale > 1.0 ) scale = 1.0;
@@ -114,28 +115,28 @@ double View::getScale(){
 }
 
 
-void View::setViewLeft( double x ) {
+void View::setViewLeft( float x ) {
   if( x > 1.0 ) view_left = 1.0;
   else if( x < 0.0 ) view_left = 0.0;
   else view_left = x;
 }
 
 
-void View::setViewTop( double y ) {
+void View::setViewTop( float y ) {
   if( y > 1.0 ) view_top = 1.0;
   else if( y < 0.0 ) view_top = 0.0;
   else view_top = y;
 }
 
 
-void View::setViewWidth( double w ) {
+void View::setViewWidth( float w ) {
   if( w > 1.0 ) view_width = 1.0;
   else if( w < 0.0 ) view_width = 0.0;
   else view_width = w;
 }
 
 
-void View::setViewHeight( double h ) {
+void View::setViewHeight( float h ) {
   if( h > 1.0 ) view_height = 1.0;
   else if( h < 0.0 ) view_height = 0.0;
   else view_height = h;
@@ -189,47 +190,54 @@ unsigned int View::getRequestWidth(){
 
   // If our requested width has not been set, but height has, return a width proportional to
   // this requested height
-  if( requested_width == 0 && requested_height > 0 ){
-    requested_width = (unsigned int) round( (float)(width*requested_height) / (float)height );
+  unsigned int w = requested_width;
+  if( requested_width == 0 ){
+    if( requested_height != 0 ){
+      w = (unsigned int) round( (float)(getViewWidth()*requested_height) / (float)getViewHeight() );
+    }
+
+    // If no width or height has been set, use our full size
+    else if( requested_height==0 ) w = width;
   }
 
-  // If no width has been set, use our full size
-  if( requested_width <= 0 ) requested_width = width;
-
-  // Limit our requested width to the xsxsmaximum size
-  if( requested_width > max_size ) requested_width = max_size;
+  // Limit our requested width to the maximum export size
+  if( w > max_size ) w = max_size;
 
   // If we have a region request, scale our request accordingly
-  if( view_width < 1.0 ){
-    float vw = (view_width + view_left > 1.0) ? 1.0 - view_left : view_width;
-    return (unsigned int) round( requested_width * vw );
-  }
+//   if( view_width < 1.0 ){
+//     float vw = (view_width + view_left > 1.0) ? 1.0 - view_left : view_width;
+//     return (unsigned int) round( requested_width * vw );
+//   }
 
-  return requested_width;
-};
+  return w;
+}
 
 
 unsigned int View::getRequestHeight(){
 
   // If our requested height has not been set, but the width has, return a height proportional to
   // this requested width
-  if( requested_height == 0 && requested_width > 0 ){
-    requested_height = (unsigned int) round( (float)(height*requested_width) / (float)width );
+  unsigned int h = requested_height;
+  if( requested_height == 0 ){
+    if( requested_width != 0 ){
+      h = (unsigned int) round( (float)(getViewHeight()*requested_width) / (float)getViewWidth() );
+    }
+
+    // If no height has been set, use our full size
+    else if( requested_width==0 ) h = height;
   }
 
-  // If no height has been set, use our full size
-  if( requested_height <= 0 ) requested_height = height;
-
-  // Limit our requested height to the max_size
-  if( requested_height > max_size ) requested_height = max_size;
+  // Limit our requested height to the maximum export size
+  if( h > max_size ) requested_height = max_size;
 
   // If we have a region request, scale our request accordingly
-  if( view_height < 1.0 ){
-    float vh = (view_top + view_height > 1.0) ? 1.0 - view_top : view_height;
-    return (unsigned int) round( requested_height * vh );
-  }
-  return requested_height;
-};
+//   if( view_height < 1.0 ){
+//     float vh = (view_top + view_height > 1.0) ? 1.0 - view_top : view_height;
+//     return (unsigned int) round( requested_height * vh );
+//   }
+
+  return h;
+}
 
 
 /// Return the number of layers to decode

@@ -146,27 +146,27 @@ class View{
 
   /// Return the scaling required in case our requested width or height is in between available resolutions
   /* @return scaling factor */
-  double getScale();
+  float getScale();
 
 
   /// Set the left co-ordinate of the viewport
   /** @param x left resolution independent co-ordinate */
-  void setViewLeft( double x );
+  void setViewLeft( float x );
 
 
   /// Set the top co-ordinate of the viewport
   /** @param y top resolution independent co-ordinate */
-  void setViewTop( double y );
+  void setViewTop( float y );
 
 
   /// Set the width co-ordinate of the viewport
   /** @param w width resolution independent co-ordinate */
-  void setViewWidth( double w );
+  void setViewWidth( float w );
 
 
   /// Set the height co-ordinate of the viewport
   /** @param h height resolution independent co-ordinate */
-  void setViewHeight( double h );
+  void setViewHeight( float h );
 
 
   /// Set the source image pixel size
