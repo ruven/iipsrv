@@ -1,3 +1,9 @@
+13/08/2014:
+	- The rotate filter only ever operates on 8bit data, so remove if else type statements from
+	  function - increases average function speed by about around 15%.
+	- Added missing URL.h to src/Makefile.am.
+
+
 11/08/2014:
 	- Renamed variable bpp in IIPImage and its derived classes to bpc (bits per channel),
 	  which is more logical and how we have named things elsewhere.

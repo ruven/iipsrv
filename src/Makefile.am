@@ -43,6 +43,7 @@ iipsrv_fcgi_SOURCES = \
 			Transforms.h \
 			Transforms.cc \
 			Environment.h \
+			URL.h \
 			Writer.h \
 			Task.h \
 			Task.cc \

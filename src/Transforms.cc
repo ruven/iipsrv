@@ -118,6 +118,7 @@ void filter_normalize( RawTile& in, vector<float>& max, vector<float>& min ) {
 }
 
 
+
 // Hillshading function
 void filter_shade( RawTile& in, int h_angle, int v_angle ){
 
@@ -179,6 +180,7 @@ void filter_shade( RawTile& in, int h_angle, int v_angle ){
   in.channels = 1;
   in.dataLength = in.width * in.height * in.bpc / 8;
 }
+
 
 
 // Convert a single pixel from CIELAB to sRGB
@@ -272,6 +274,7 @@ static void LAB2sRGB( unsigned char *in, unsigned char *out ){
 }
 
 
+
 // Convert whole tile from CIELAB to sRGB
 void filter_LAB2sRGB( RawTile& in ){
 
@@ -289,6 +292,8 @@ void filter_LAB2sRGB( RawTile& in ){
     ((unsigned char*)in.data)[n+2] = q[2];
   }
 }
+
+
 
 // Colormap function
 void filter_cmap( RawTile& in, enum cmap_type cmap ){
@@ -371,6 +376,7 @@ void filter_cmap( RawTile& in, enum cmap_type cmap ){
 }
 
 
+
 // Inversion function
 void filter_inv( RawTile& in ){
   float* infptr;
@@ -385,6 +391,7 @@ void filter_inv( RawTile& in ){
     *(infptr++) = 1.0 - v;
   }
 }
+
 
 
 // Resize image using nearest neighbour interpolation
@@ -437,6 +444,7 @@ void filter_interpolate_nearestneighbour( RawTile& in, unsigned int resampled_wi
   in.dataLength = resampled_width * resampled_height * channels * in.bpc/8;
   in.data = output;
 }
+
 
 
 // Resize image using bilinear interpolation
@@ -507,6 +515,7 @@ void filter_interpolate_bilinear( RawTile& in, unsigned int resampled_width, uns
 }
 
 
+
 // Function to apply a contrast adjustment and clip to 8 bit
 void filter_contrast( RawTile& in, float c ){
 
@@ -530,6 +539,7 @@ void filter_contrast( RawTile& in, float c ){
 }
 
 
+
 // Gamma correction
 void filter_gamma( RawTile& in, float g ){
 
@@ -549,21 +559,18 @@ void filter_gamma( RawTile& in, float g ){
 }
 
 
+
 // Rotation function
 void filter_rotate( RawTile& in, float angle=0.0 ){
 
   // Currently implemented only for rectangular rotations
   if( (int)angle % 90 == 0 && (int)angle % 360 != 0 ){
 
-    // Intialize our counter and data buffer
+    // Intialize our counter
     unsigned int n = 0;
-    void* buffer = NULL;
 
-    // Allocate memory for our temporary buffer
-    if(in.bpc == 8) buffer = new unsigned char[in.width*in.height*in.channels];
-    else if(in.bpc == 16) buffer = new unsigned short[in.width*in.height*in.channels];
-    else if(in.bpc == 32 && in.sampleType == FIXEDPOINT ) buffer = new unsigned int[in.width*in.height*in.channels];
-    else if(in.bpc == 32 && in.sampleType == FLOATINGPOINT ) buffer = new float[in.width*in.height*in.channels];
+    // Allocate memory for our temporary buffer - rotate function only ever operates on 8bit data
+    void *buffer = new unsigned char[in.width*in.height*in.channels];
 
     // Rotate 90
     if( (int) angle % 360 == 90 ){
@@ -571,10 +578,7 @@ void filter_rotate( RawTile& in, float angle=0.0 ){
 	for( int j=in.height-1; j>=0; j-- ){
 	  unsigned int index = (in.width*j + i)*in.channels;
 	  for( int k=0; k < in.channels; k++ ){
-	    if(in.bpc == 8) ((unsigned char*)buffer)[n++] = ((unsigned char*)in.data)[index+k];
-	    else if(in.bpc == 16) ((unsigned short*)buffer)[n++] = ((unsigned short*)in.data)[index+k];
-	    else if(in.bpc == 32 && in.sampleType == FIXEDPOINT) ((unsigned int*)buffer)[n++] = ((unsigned int*)in.data)[index+k];
-	    else if(in.bpc == 32 && in.sampleType == FLOATINGPOINT ) ((float*)buffer)[n++] = ((float*)in.data)[index+k];
+	    ((unsigned char*)buffer)[n++] = ((unsigned char*)in.data)[index+k]; 
 	  }
 	}
       }
@@ -586,10 +590,7 @@ void filter_rotate( RawTile& in, float angle=0.0 ){
 	for( unsigned int j=0; j < in.height; j++ ){
 	  unsigned int index = (in.width*j + i)*in.channels;
 	  for( int k=0; k < in.channels; k++ ){
-	    if(in.bpc == 8) ((unsigned char*)buffer)[n++] = ((unsigned char*)in.data)[index+k];
-	    else if(in.bpc == 16) ((unsigned short*)buffer)[n++] = ((unsigned short*)in.data)[index+k];
-	    else if(in.bpc == 32 && in.sampleType == FIXEDPOINT ) ((unsigned int*)buffer)[n++] = ((unsigned int*)in.data)[index+k];
-	    else if(in.bpc == 32 && in.sampleType == FLOATINGPOINT ) ((float*)buffer)[n++] = ((float*)in.data)[index+k];
+	    ((unsigned char*)buffer)[n++] = ((unsigned char*)in.data)[index+k];
 	  }
 	}
       }
@@ -600,19 +601,13 @@ void filter_rotate( RawTile& in, float angle=0.0 ){
       for( int i=(in.width*in.height)-1; i >= 0; i-- ){
 	unsigned index = i * in.channels;
 	for( int k=0; k < in.channels; k++ ){
-	  if(in.bpc == 8) ((unsigned char*)buffer)[n++]  = ((unsigned char*)in.data)[index+k];
-	  else if(in.bpc == 16) ((unsigned short*)buffer)[n++] = ((unsigned short*)in.data)[index+k];
-	  else if(in.bpc == 32 && in.sampleType == FIXEDPOINT) ((unsigned int*)buffer)[n++] = ((unsigned int*)in.data)[index+k];
-	  else if(in.bpc == 32 && in.sampleType == FLOATINGPOINT ) ((float*)buffer)[n++] = ((float*)in.data)[index+k];
+	  ((unsigned char*)buffer)[n++]  = ((unsigned char*)in.data)[index+k];
 	}
       }
     }
 
     // Delete old data buffer
-    if( in.bpc == 8 ) delete[] (unsigned char*) in.data;
-    else if( in.bpc == 16 ) delete[] (unsigned short*) in.data;
-    else if( in.bpc == 32 && in.sampleType == FIXEDPOINT ) delete[] (unsigned int*) in.data;
-    else if( in.bpc == 32 && in.sampleType == FLOATINGPOINT ) delete[] (float*) in.data;
+    delete[] (unsigned char*) in.data;
 
     // Assign new data to Rawtile
     in.data = buffer;
@@ -625,6 +620,7 @@ void filter_rotate( RawTile& in, float angle=0.0 ){
     }
   }
 }
+
 
 
 // Convert colour to grayscale using the conversion formula:
@@ -655,6 +651,7 @@ void filter_greyscale( RawTile& rawtile ){
   rawtile.channels = 1;
   rawtile.dataLength = np;
 }
+
 
 
 // Apply twist or channel recombination to colour or multi-channel image
@@ -700,6 +697,7 @@ void filter_twist( RawTile& rawtile, const vector< vector<float> >& matrix ){
 }
 
 
+
 // Flatten a multi-channel image to a given number of bands by simply stripping
 // away extra bands
 void filter_flatten( RawTile& in, int bands ){
@@ -723,6 +721,7 @@ void filter_flatten( RawTile& in, int bands ){
   in.channels = bands;
   in.dataLength = ni * in.bpc/8;
 }
+
 
 
 // Flip image in horizontal or vertical direction (0=horizontal,1=vertical)
