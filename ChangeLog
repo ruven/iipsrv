@@ -2,6 +2,9 @@
 	- The rotate filter only ever operates on 8bit data, so remove if else type statements from
 	  function - increases average function speed by about around 15%.
 	- Added missing URL.h to src/Makefile.am.
+	- Refactored JTL into 2 separate functions: run (parses arguments) & send (performs tile
+	  request, processing and sending). Allows this to be re-used in other functions, such as
+	  Zoomify.cc etc.
 
 
 11/08/2014:

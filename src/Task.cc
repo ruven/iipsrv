@@ -205,8 +205,8 @@ void RGN::run( Session* session, const std::string& argument ){
   }
 
   // Only load this information if our argument was correctly parsed to
-  // give 4 values
-  if( i == 4 ){
+  // give 4 values and that we have a width and height greater than zero
+  if( i == 4 && region[2]>0 && region[3]>0){
     session->view->setViewLeft( region[0] );
     session->view->setViewTop( region[1] );
     session->view->setViewWidth( region[2] );
@@ -261,14 +261,29 @@ void JTLS::run( Session* session, const std::string& argument ){
   if( i == 4 ){
     session->view->xangle = values[0];
     session->view->yangle = values[3];
-    char tmp[128];
-    snprintf( tmp, 56, "%d,%d", values[1], values[2] );
-    string str = tmp;
+
+    // Simply pass this on to our JTL send command
     JTL jtl;
-    jtl.run( session, str );
+    jtl.send( session, values[1], values[2] );
   }
 
+}
 
+
+void JTL::run( Session* session, const std::string& argument ){
+
+  /* The argument should consist of 2 comma separated values:
+     1) resolution
+     2) tile number
+  */
+
+  // Parse the argument list
+  int delimitter = argument.find( "," );
+  int resolution = atoi( argument.substr( 0, delimitter ).c_str() );
+  int tile = atoi( argument.substr( delimitter + 1, argument.length() ).c_str() );
+
+  // Send out the requested tile
+  this->send( session, resolution, tile );
 }
 
 
@@ -345,7 +360,6 @@ void LYR::run( Session* session, const std::string& argument ){
 
     if( session->loglevel >= 2 ) *(session->logfile) << "LYR handler reached" << endl;
     if( session->loglevel >= 3 ) *(session->logfile) << "LYR :: requested layer is " << layer << endl;
-
 
     // Check the value is realistic
     if( layer < 1 || layer > 256 ){

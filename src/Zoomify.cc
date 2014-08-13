@@ -58,9 +58,6 @@ void Zoomify::run( Session* session, const std::string& argument ){
   FIF fif;
   fif.run( session, prefix );
 
-  // Load image info
-  (*session->image)->loadImageInfo( session->view->xangle, session->view->yangle );
-
 
   // Get the full image size and the total number of resolutions available
   unsigned int width = (*session->image)->getImageWidth();
@@ -155,104 +152,9 @@ void Zoomify::run( Session* session, const std::string& argument ){
   unsigned int tile = y*ntlx + x;
 
 
-  // Get our tile
-  TileManager tilemanager( session->tileCache, *session->image, session->watermark, session->jpeg, session->logfile, session->loglevel );
-
-  CompressionType ct;
-  if( (*session->image)->getColourSpace() == CIELAB ) ct = UNCOMPRESSED;
-  else if( (*session->image)->getNumBitsPerPixel() > 8 ) ct = UNCOMPRESSED;
-  else ct = JPEG;
-
-
-  RawTile rawtile = tilemanager.getTile( resolution, tile, session->view->xangle,
-					 session->view->yangle, session->view->getLayers(), ct );
-
-  int len = rawtile.dataLength;
-
-  if( session->loglevel >= 3 ){
-    *(session->logfile) << "Zoomify :: Tile size: " << rawtile.width << " x " << rawtile.height << endl
-			<< "Zoomify :: Channels per sample: " << rawtile.channels << endl
-			<< "Zoomify :: Bits per channel: " << rawtile.bpc << endl
-			<< "Zoomify :: Compressed tile size is " << len << endl;
-  }
-
-
-  // Convert CIELAB to sRGB
-  if( (*session->image)->getColourSpace() == CIELAB ){
-
-    Timer cielab_timer;
-    if( session->loglevel >= 4 ){
-      *(session->logfile) << "Zoomify :: Converting from CIELAB->sRGB" << endl;
-      cielab_timer.start();
-    }
-
-    filter_LAB2sRGB( rawtile );
-
-    if( session->loglevel >= 4 ){
-      *(session->logfile) << "Zoomify :: CIELAB->sRGB conversion in " << cielab_timer.getTime() << " microseconds" << endl;
-    }
-  }
-
-
-  // Non 8-bit images need rescaling
-  if( rawtile.bpc > 8 ){
-
-    Timer normalization_timer;
-    if( session->loglevel >= 4 ){
-      *(session->logfile) << "Zoomify :: Scaling to 8 bits per channel" << endl;
-      normalization_timer.start();
-    }
-
-    // Apply normalization and float conversion
-    filter_normalize( rawtile, (*session->image)->max, (*session->image)->min );
-
-    // Apply any contrast adjustments and/or clipping to 8bit
-    filter_contrast( rawtile, session->view->getContrast() );
-
-    if( session->loglevel >= 4 ){
-      *(session->logfile) << "Zommify :: Scaling completed in " << normalization_timer.getTime() << " microseconds" << endl;
-    }
-  }
-
-
-  // Compress to JPEG if necessary
-  if( ct == UNCOMPRESSED ){
-    if( session->loglevel >= 4 ) *(session->logfile) << "Zoomify :: Compressing UNCOMPRESSED to JPEG" << endl;
-    len = session->jpeg->Compress( rawtile );
-  }
-
-
-#ifndef DEBUG
-  char str[1024];
-  snprintf( str, 1024,
-	    "Server: iipsrv/%s\r\n"
-	    "Content-Type: image/jpeg\r\n"
-            "Content-Length: %d\r\n"
-	    "Cache-Control: max-age=%d\r\n"
-	    "Last-Modified: %s\r\n"
-	    "\r\n",
-	    VERSION, len, MAX_AGE, (*session->image)->getTimestamp().c_str() );
-
-  session->out->printf( (const char*) str );
-#endif
-
-
-  if( session->out->putStr( (const char*) rawtile.data, len ) != len ){
-    if( session->loglevel >= 1 ){
-      *(session->logfile) << "Zoomify :: Error writing jpeg tile" << endl;
-    }
-  }
-
-
-  if( session->out->flush() == -1 ) {
-    if( session->loglevel >= 1 ){
-      *(session->logfile) << "Zoomify :: Error flushing jpeg tile" << endl;
-    }
-  }
-
-
-  // Inform our response object that we have sent something to the client
-  session->response->setImageSent();
+  // Simply pass this on to our JTL send command
+  JTL jtl;
+  jtl.send( session, resolution, tile );
 
 
   // Total Zoomify response time

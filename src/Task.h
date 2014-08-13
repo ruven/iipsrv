@@ -227,6 +227,13 @@ class FIF : public Task {
 class JTL : public Task {
  public:
   void run( Session* session, const std::string& argument );
+
+  /// Send out a single tile
+  /** @param session our current session
+      @param resolution requested image resolution
+      @param tile requested tile index
+   */
+  void send( Session* session, int resolution, int tile );
 };
 
 
@@ -311,18 +318,12 @@ class DeepZoom : public Task {
 };
 
 
-/// IIIF Command
-class IIIF : public Task {
- public:
-  void run( Session* session, const std::string& argument );
-};
-
-
 /// Color Twist Command
 class CTW : public Task {
  public:
   void run( Session* session, const std::string& argument );
 };
+
 
 
 #endif

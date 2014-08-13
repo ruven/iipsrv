@@ -1,5 +1,5 @@
 /*
-    IIP JTLS Command Handler Class Member Function
+    IIP JTL Command Handler Class Member Function
 
     Copyright (C) 2006-2014 Ruven Pillay.
 
@@ -27,29 +27,15 @@
 using namespace std;
 
 
-void JTL::run( Session* session, const std::string& argument ){
-
-  /* The argument should consist of 2 comma separated values:
-     1) resolution
-     2) tile number
-  */
+void JTL::send( Session* session, int resolution, int tile ){
 
   if( session->loglevel >= 3 ) (*session->logfile) << "JTL handler reached" << endl;
 
-  int resolution, tile;
   Timer function_timer;
 
 
   // Time this command
   if( session->loglevel >= 2 ) command_timer.start();
-
-
-  // Parse the argument list
-  int delimitter = argument.find( "," );
-  resolution = atoi( argument.substr( 0, delimitter ).c_str() );
-
-  delimitter = argument.find( "," );
-  tile = atoi( argument.substr( delimitter + 1, argument.length() ).c_str() );
 
 
   // If we have requested a rotation, remap the tile index to rotated coordinates
@@ -80,23 +66,17 @@ void JTL::run( Session* session, const std::string& argument ){
   TileManager tilemanager( session->tileCache, *session->image, session->watermark, session->jpeg, session->logfile, session->loglevel );
 
   CompressionType ct;
-  if( (*session->image)->getNumBitsPerPixel() > 8 ) ct = UNCOMPRESSED;
-  else if( (*session->image)->getColourSpace() == CIELAB ) ct = UNCOMPRESSED;
-  else if( (*session->image)->getNumChannels() == 2 || (*session->image)->getNumChannels() > 3 ) ct = UNCOMPRESSED;
-  else if( session->view->getContrast() != 1.0 ) ct = UNCOMPRESSED;
-  else if( session->view->getGamma() != 1.0 ) ct = UNCOMPRESSED;
-  else if( session->view->getRotation() != 0.0 ) ct = UNCOMPRESSED;
-  else if( session->view->shaded ) ct = UNCOMPRESSED;
-  else if( session->view->cmapped ) ct = UNCOMPRESSED;
-  else if( session->view->inverted ) ct = UNCOMPRESSED;
-  else if( session->view->ctw.size() ) ct = UNCOMPRESSED;
+  if( (*session->image)->getNumBitsPerPixel() > 8 || (*session->image)->getColourSpace() == CIELAB
+      || (*session->image)->getNumChannels() == 2 || (*session->image)->getNumChannels() > 3
+      || session->view->getContrast() != 1.0 || session->view->getGamma() != 1.0 
+      || session->view->getRotation() != 0.0 || session->view->shaded
+      || session->view->cmapped || session->view->inverted
+      || session->view->ctw.size() ) ct = UNCOMPRESSED;
   else ct = JPEG;
+
 
   RawTile rawtile = tilemanager.getTile( resolution, tile, session->view->xangle,
 					 session->view->yangle, session->view->getLayers(), ct );
-
-  // For image sequences where images are not all the same bitdepth, the TileManager will return an uncompressed tile
-  if( rawtile.bpc > 8 ) ct = UNCOMPRESSED;
 
 
   int len = rawtile.dataLength;
@@ -278,7 +258,7 @@ void JTL::run( Session* session, const std::string& argument ){
 
 
   // Compress to JPEG
-  if( ct == UNCOMPRESSED ){
+  if( rawtile.compressionType == UNCOMPRESSED ){
     if( session->loglevel >= 4 ){
       *(session->logfile) << "JTL :: Compressing UNCOMPRESSED to JPEG";
       function_timer.start();
