@@ -163,6 +163,25 @@ void GAM::run( Session* session, const std::string& argument ){
 }
 
 
+void CVT::run( Session* session, const std::string& src ){
+
+  // Put the argument into lower case
+  string argument = src;
+  transform( argument.begin(), argument.end(), argument.begin(), ::tolower );
+
+  // For the moment, only deal with JPEG. If we have specified something else, give a warning
+  // and send JPEG anyway
+  if( argument != "jpeg" ){
+    if( session->loglevel >= 1 ) *(session->logfile) << "CVT :: Unsupported request: '" << argument << "'. Sending JPEG." << endl;
+  }
+  else{
+    if( session->loglevel >= 3 ) *(session->logfile) << "CVT :: JPEG output" << endl;
+  }
+
+  this->send( session );
+}
+
+
 void WID::run( Session* session, const std::string& argument ){
 
   int requested_width = atoi( argument.c_str() );

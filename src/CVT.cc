@@ -30,13 +30,11 @@ using namespace std;
 
 
 
-void CVT::run( Session* session, const std::string& a ){
-
-  Timer tile_timer;
-  this->session = session;
+void CVT::send( Session* session ){
 
   if( session->loglevel >= 2 ) *(session->logfile) << "CVT handler reached" << endl;
 
+  this->session = session;
   checkImage();
 
 
@@ -44,25 +42,9 @@ void CVT::run( Session* session, const std::string& a ){
   if( session->loglevel >= 2 ) command_timer.start();
 
 
-  // Put the argument into lower case
-  string argument = a;
-  transform( argument.begin(), argument.end(), argument.begin(), ::tolower );
-
-
-  // For the moment, only deal with JPEG. If we have specified something else, give a warning
-  // and send JPEG anyway
-  if( argument != "jpeg" ){
-    if( session->loglevel >= 1 ) *(session->logfile) << "CVT :: Unsupported request: '" << argument << "'. Sending JPEG." << endl;
-    argument = "jpeg";
-  }
-  else{
-    if( session->loglevel >= 3 ) *(session->logfile) << "CVT :: JPEG output" << endl;
-  }
-
-
-
   // Reload info in case we are dealing with a sequence
   //(*session->image)->loadImageInfo( session->view->xangle, session->view->yangle );
+
 
   // Calculate the number of tiles at the requested resolution
   unsigned int im_width = (*session->image)->getImageWidth();
@@ -243,6 +225,7 @@ void CVT::run( Session* session, const std::string& a ){
       }
       filter_cmap( complete_image, session->view->cmap );
     }
+
 
     // Apply any contrast adjustments and/or clipping to 8bit from 16bit or 32bit
     if( session->loglevel >= 3 ){

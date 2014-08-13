@@ -5,6 +5,7 @@
 	- Refactored JTL into 2 separate functions: run (parses arguments) & send (performs tile
 	  request, processing and sending). Allows this to be re-used in other functions, such as
 	  Zoomify.cc etc.
+	- Refactored CVT similarly to JTL with now a separate send() function.
 
 
 11/08/2014:

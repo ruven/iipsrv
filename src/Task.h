@@ -223,7 +223,7 @@ class FIF : public Task {
 };*/
 
 
-/// JPEG Tile Command
+/// JPEG Tile Export Command
 class JTL : public Task {
  public:
   void run( Session* session, const std::string& argument );
@@ -251,10 +251,14 @@ class TIL : public Task {
 };
 
 
-/// CVT Command
+/// CVT Region Export Command
 class CVT : public Task {
  public:
   void run( Session* session, const std::string& argument );
+
+  /// Send out our requested region
+  /** @param session our current session */
+  void send( Session* session );
 };
 
 
