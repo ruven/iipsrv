@@ -322,6 +322,13 @@ class DeepZoom : public Task {
 };
 
 
+/// IIIF Command
+class IIIF : public Task {
+ public:
+  void run( Session* session, const std::string& argument );
+};
+
+
 /// Color Twist Command
 class CTW : public Task {
  public:

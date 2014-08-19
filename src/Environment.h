@@ -39,6 +39,7 @@
 #define LIBMEMCACHED_TIMEOUT 86400  // 24 hours
 #define INTERPOLATION 1
 #define CORS "";
+#define BASE_URL "";
 
 
 #include <string>
@@ -219,6 +220,15 @@ class Environment {
     if( envpara ) cors = std::string( envpara );
     else cors = CORS;
     return cors;
+  }
+
+
+  static std::string getBaseURL(){
+    char* envpara = getenv( "BASE_URL" );
+    std::string base_url;
+    if( envpara ) base_url = std::string( envpara );
+    else base_url = BASE_URL;
+    return base_url;
   }
 
 };

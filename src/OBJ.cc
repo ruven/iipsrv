@@ -1,7 +1,7 @@
 /*
     IIP OJB Command Handler Class Member Functions
 
-    Copyright (C) 2006-2013 Ruven Pillay.
+    Copyright (C) 2006-2014 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -53,7 +53,7 @@ void OBJ::run( Session* s, const std::string& a )
   }
   else if( argument == "iip-server" ) iip_server();
   // IIP optional commands
-  else if( argument == "iip-opt-comm" ) session->response->addResponse( "IIP-opt-comm:CVT CNT QLT JTL JTLS WID HEI RGN MINMAX SHD CMP INV" );
+  else if( argument == "iip-opt-comm" ) session->response->addResponse( "IIP-opt-comm:CVT CNT QLT JTL JTLS WID HEI RGN MINMAX SHD CMP INV CTW" );
   // IIP optional objects
   else if( argument == "iip-opt-obj" ) session->response->addResponse( "IIP-opt-obj:Horizontal-views Vertical-views Tile-size Bits-per-channel Min-Max-sample-values" );
   // Resolution-number
