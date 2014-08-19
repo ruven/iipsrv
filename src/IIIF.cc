@@ -161,7 +161,9 @@ void IIIF::run( Session* session, const string& src ){
     string id;
     string host = Environment::getBaseURL();
     if( host.length() > 0 ){
-      id = host + (session->headers["QUERY_STRING"]).substr(5,string::npos);
+      string query = (session->headers["QUERY_STRING"]);
+      query = query.substr( 5, query.length()-suffix.length()-6 );
+      id = host + query;
     }
     else{
       string request_uri = session->headers["REQUEST_URI"];
