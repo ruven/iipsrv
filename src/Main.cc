@@ -430,13 +430,8 @@ int main( int argc, char *argv[] )
 
     // View object for use with the CVT command etc
     View view;
-    if( max_CVT != -1 ){
-      view.setMaxSize( max_CVT );
-      if( loglevel >= 2 ) logfile << "CVT maximum viewport size set to " << max_CVT << endl;
-    }
+    if( max_CVT != -1 ) view.setMaxSize( max_CVT );
     if( max_layers != 0 ) view.setMaxLayers( max_layers );
-
-
 
 
 
@@ -488,6 +483,10 @@ int main( int argc, char *argv[] )
 	}
       }
       session.headers["QUERY_STRING"] = request_string;
+      session.headers["SERVER_PROTOCOL"] =  FCGX_GetParam("SERVER_PROTOCOL", request.envp);
+      session.headers["HTTP_HOST"] = FCGX_GetParam("HTTP_HOST", request.envp);
+      session.headers["REQUEST_URI"] = FCGX_GetParam("REQUEST_URI", request.envp);
+
 
 
 #ifdef HAVE_MEMCACHED

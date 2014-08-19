@@ -68,18 +68,19 @@ class View{
 
  public:
 
-  int xangle;                                  /// Horizontal View
-  int yangle;                                  /// Vertical View
-  bool shaded;                                 /// Whether to use shading view
-  int shade[3];                                /// Shading incident light angles (x,y,z)
-  bool cmapped;                                /// Whether to modify colormap
-  enum cmap_type cmap;                         /// colormap
-  bool inverted;                               /// Whether to invert colormap
-  int max_layers;			       /// Maximum number of quality layers allowed
-  int layers;			               /// Number of quality layers
-  ColourSpaces colourspace;                    /// Requested colourspace
-  std::vector< std::vector<float> > ctw;       /// Colour twist matrix
-  int flip;                                    /// Flip (1=horizontal, 2=vertical)
+  int xangle;                                 /// Horizontal View
+  int yangle;                                 /// Vertical View
+  bool shaded;                                /// Whether to use shading view
+  int shade[3];                               /// Shading incident light angles (x,y,z)
+  bool cmapped;                               /// Whether to modify colormap
+  enum cmap_type cmap;                        /// colormap
+  bool inverted;                              /// Whether to invert colormap
+  int max_layers;			      /// Maximum number of quality layers allowed
+  int layers;			              /// Number of quality layers
+  ColourSpaces colourspace;                   /// Requested colourspace
+  std::vector< std::vector<float> > ctw;      /// Colour twist matrix
+  int flip;                                   /// Flip (1=horizontal, 2=vertical)
+  bool maintain_aspect;                       /// Indicate whether aspect ratio should be maintained
 
 
   /// Constructor
@@ -94,6 +95,7 @@ class View{
     cmapped = false; inverted = false;
     max_layers = 0; layers = 0;
     rotation = 0.0; flip = 0;
+    maintain_aspect = true;
     colourspace = NONE;
   };
 

@@ -1,3 +1,8 @@
+19/08/2014:
+	- Added aspect ratio flag in View.h for use in CVT.cc. Also cleaned up Main.cc to remove
+	  unnecesary logging and record extra http headers.
+
+
 13/08/2014:
 	- The rotate filter only ever operates on 8bit data, so remove if else type statements from
 	  function - increases average function speed by about around 15%.

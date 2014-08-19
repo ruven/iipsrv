@@ -101,12 +101,15 @@ void CVT::send( Session* session ){
     resampled_width = session->view->getRequestWidth();
     resampled_height = session->view->getRequestHeight();
 
-    // Make sure our requested width and height don't modify the aspect ratio. Make sure the final image fits *within* the requested size
-    if( ((float)resampled_height/(float)view_height) > ((float)resampled_width/(float)view_width) ){
-      resampled_height = (unsigned int) round((((float)resampled_width/(float)view_width) * view_height));
-    }
-    else if( ((float)resampled_width/(float)view_width) > ((float)resampled_height/(float)view_height) ){
-      resampled_width = (unsigned int) round((((float)resampled_height/(float)view_height) * view_width));
+    // Make sure our requested width and height don't modify the aspect ratio.
+    // Make sure the final image fits *within* the requested size
+    if( session->view->maintain_aspect ){
+      if( ((float)resampled_height/(float)view_height) > ((float)resampled_width/(float)view_width) ){
+	resampled_height = (unsigned int) round((((float)resampled_width/(float)view_width) * view_height));
+      }
+      else if( ((float)resampled_width/(float)view_width) > ((float)resampled_height/(float)view_height) ){
+	resampled_width = (unsigned int) round((((float)resampled_height/(float)view_height) * view_width));
+      }
     }
   }
 
@@ -239,7 +242,7 @@ void CVT::send( Session* session ){
 
   // Resize our image as requested. Use the interpolation method requested in the server configuration.
   //  - Use bilinear interpolation by default
-  if( (view_width!=resampled_width) && (view_height!=resampled_height) ){
+  if( (view_width!=resampled_width) || (view_height!=resampled_height) ){
     Timer interpolation_timer;
     string interpolation_type;
     if( session->loglevel >= 5 ){
