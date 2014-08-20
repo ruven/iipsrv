@@ -36,9 +36,7 @@
 
 // Define several IIIF strings
 #define IIIF_SYNTAX "IIIF syntax is {identifier}/{region}/{size}/{rotation}/{quality}{.format}"
-//#define IIIF_PROFILE "http://iiif.io/api/image/1.1/compliance.html#level1"
 #define IIIF_PROFILE "http://iiif.io/api/image/2/level1.json"
-//#define IIIF_CONTEXT "http://iiif.io/image-api/1.1/context.json"
 #define IIIF_CONTEXT "http://iiif.io/api/image/2/context.json"
 #define IIIF_PROTOCOL "http://iiif.io/api/image"
 
@@ -110,7 +108,7 @@ void IIIF::run( Session* session, const string& src ){
     }
     else{
       string request_uri = session->headers["REQUEST_URI"];
-      request_uri.erase( request_uri.length() - suffix.length() - 1, string::npos );
+      request_uri.erase( request_uri.length() - suffix.length(), string::npos );
       id = "http://" + session->headers["HTTP_HOST"] + request_uri;
     }
     string header = string( "Status: 303 See Other\r\n" )
@@ -155,7 +153,6 @@ void IIIF::run( Session* session, const string& src ){
     // Encoded file name
     string escapedFilename;
 
-    // Determine the URL used to access us
     // Generate our @id - use our BASE_URL environment variable if we are
     //  behind a web server rewrite function
     string id;
@@ -167,7 +164,7 @@ void IIIF::run( Session* session, const string& src ){
     }
     else{
       string request_uri = session->headers["REQUEST_URI"];
-      request_uri.erase( request_uri.length() - suffix.length() - 1, string::npos );
+      request_uri.erase( request_uri.length()-suffix.length()-1, string::npos );
       id = "http://" + session->headers["HTTP_HOST"] + request_uri;
     }
 
@@ -193,42 +190,24 @@ void IIIF::run( Session* session, const string& src ){
 		     << "  \"protocol\" : \"" << IIIF_PROTOCOL << "\"," << endl
 		     << "  \"width\" : " << width << "," << endl
 		     << "  \"height\" : " << height << "," << endl
-		     << "  \"tiles\" : [{ \"width\" : " << tw << ", \"height\" : " << th
+		     << "  \"tiles\" : [" << endl
+		     << "     { \"width\" : " << tw << ", \"height\" : " << th
 		     << ", \"scale_factors\" : [ 1"; // Scale 1 is original image
 
     for( unsigned int i=1; i < numResolutions; i++ ){
       infoStringStream << ", " << pow(2.0,i);
     }
 
-    infoStringStream << " ] }]," << endl
+    infoStringStream << " ] }" << endl
+		     << "  ]," << endl
 		     << "  \"profile\" : [" << endl
 		     << "     \"" << IIIF_PROFILE << "\"," << endl
 		     << "     { \"formats\" : [ \"jpg\" ]," << endl
-		     << "      \"qualities\" : [ \"native\",\"color\",\"gray\" ]," << endl
-		     << "      \"supports\" : [\"region_by_pct\",\"size_by_forced_wh\",\"size_by_wh\",\"size_above_full\",\"rotation_by_90s\",\"mirroring\",\"gray\"] }" << endl
-		     << "   ]" << endl
+		     << "       \"qualities\" : [ \"native\",\"color\",\"gray\" ]," << endl
+		     << "       \"supports\" : [\"region_by_pct\",\"size_by_forced_wh\",\"size_by_wh\",\"size_above_full\",\"rotation_by_90s\",\"mirroring\",\"gray\"] }" << endl
+		     << "  ]" << endl
 		     << "}";
 
-
-// 1.1 info format
-//     infoStringStream << "{" << endl
-// 		     << "  \"@context\" : \"" << IIIF_CONTEXT << "\"," << endl
-//  		     << "  \"@id\" : \"" << escapedFilename << "\"," << endl
-// 		     << "  \"profile\" : \"" << IIIF_PROFILE << "\"," << endl
-// 		     << "  \"width\" : " << width << "," << endl
-// 		     << "  \"height\" : " << height << "," << endl
-// 		     << "  \"scale_factors\" : [ 1"; // Scale 1 is original image
-
-//     for( unsigned int i=1; i < numResolutions; i++ ){
-//       infoStringStream << ", " << pow(2.0,i);
-//     }
-
-//     infoStringStream << " ]," << endl
-// 		     << "  \"tile_width\" : " << tw << "," << endl
-// 		     << "  \"tile_height\" : " << th << "," << endl
-// 		     << "  \"formats\" : [ \"jpg\" ]," << endl
-// 		     << "  \"qualities\" : [ \"native\",\"color\",\"grey\" ]" << endl
-// 		     << "}";
 
     // Get our Access-Control-Allow-Origin value, if any
     string cors = Environment::getCORS();
@@ -577,10 +556,6 @@ void IIIF::run( Session* session, const string& src ){
     view_height = im_height;
   }
 
-  unsigned int resampled_width = session->view->getRequestWidth();
-  unsigned int resampled_height = session->view->getRequestHeight();
-
-  *(session->logfile) << "IIIF :: view: " << view_width << "x" << view_height << endl;
 
 
   // Determine whether this is a tile request which coincides with our tile boundaries

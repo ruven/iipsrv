@@ -1,3 +1,7 @@
+20/08/2014:
+	- Cleanup to IIIF code and some cosmetic improvements to generated JSON.
+
+
 19/08/2014:
 	- Added aspect ratio flag in View.h for use in CVT.cc. Also cleaned up Main.cc to remove
 	  unnecesary logging and record extra http headers.
