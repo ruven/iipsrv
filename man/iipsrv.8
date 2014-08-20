@@ -1,10 +1,10 @@
-.TH IIPSRV 8 "APRIL 2012" Linux "User Manuals"
+.TH IIPSRV 8 "AUGUST 2014" Linux "User Manuals"
 .SH NAME
 
 IIPSRV \- IIPImage Image Server
 
 .SH DESCRIPTION
-IIPImage is an advanced high-performance feature-rich imaging server system for web-based streamed viewing and zooming of ultra high-resolution 
+IIPImage is an advanced high-performance feature-rich multi-protocol image server for web-based streamed viewing and zooming of ultra high-resolution 
 images. It is designed to be fast and bandwidth-efficient with low processor and memory requirements. The system can comfortably handle gigapixel size images as 
 well as advanced image features such as 8, 16 and 32 bit depths, CIELAB colorimetric images and scientific imagery such as multispectral images.
 Source images can be either TIFF (tiled multi-resolution) or JPEG2000 (if enabled).
@@ -104,6 +104,10 @@ relevant to 3D image sequences. The default is "_pyr_".
 Cross Origin Resource Sharing setting. Disabled by default.
 Set to "*" to enable for all domains or specify a single domain.
 See http://www.w3.org/TR/cors/ for more details on CORS.
+.IP BASE_URL
+Set a base URL for use in certain protocol requests if web server rewriting has taken place and the public URL is not the same as that supplied to
+.B iipsrv
+
 
 .SH EXAMPLES
 
@@ -115,18 +119,12 @@ Note that Apache has two FCGI modules: mod_fastcgi and mod_fcgid which are confi
 You may also wish to 
 run
 .B iipsrv
-as a standalone program. To do this, use the following syntax to bind
-to a particular port. In this example,
+as a standalone program. To do this, use the following syntax to bind to a particular port and listen for FCGI (not HTTP) requests. 
+In the following example,
 .B iipsrv
 will bind to port 9000 on the machine's IP address 192.168.0.1:
 
 % iipsrv.fcgi --bind 192.168.0.1:9000
-
-For use in stand alone mode, you will then need to configure your webserver on the same machine or another to point to this IP address and port.
-
-For web servers such as Nginx or Java Application Servers such as Tomcat, JBoss or Jetty, which cannot automatically start FCGI processes, you will need to run
-.B iipsrv
-as a standalone program.
 
 It is also possible to run
 .Iiipsrv
@@ -136,6 +134,12 @@ program. Set up any parameters via environment variables and run the command as 
 
 % spawn-fcgi -f src/iipsrv.fcgi -a 192.168.0.1 -p 9000
 
+For use in stand alone or spawn-fcgi mode, you will then need to configure your webserver on the same machine or another to direct FCGI protocol requests to this IP address and port.
+
+For web servers such as Nginx or Java Application Servers such as Tomcat, JBoss or Jetty, which cannot automatically start FCGI processes, 
+.B iipsrv
+will need to be started in stand alone mode or via spawn-fcgi.
+
 
 .SH PROTOCOLS
 
@@ -143,24 +147,29 @@ The IIPImage server supports the
 .B Internet Imaging Protocol (IIP)
 , the
 .B Zoomify
-protocol and the
+protocol, the
 .B DeepZoom
-protocol. Client applications supporting these protocols should be able to use
+and the 
+.B International Image Interoperability Framework (IIIF)
+protocols. Client applications supporting these protocols should be able to use
 .B iipsrv
 as their back-end server.
 .B IIP
-is the most feature rich of the 3 and allows access to the more advanced imaging server features.
+is the most feature rich of the 4 protocols and allows access to the more advanced imaging server features.
 
 
 
 .SH IMAGE PATHS
 
-The image paths given to the server via the FIF variable must be
-absolute paths on the server machine (eg. FIF=/images/test.tif) 
-and not paths relative to the web server document root location.
-Images do not, therefore, need to be directly accessible by the
-client via the web server. Make sure the server process owner is
-able to access and read the images.
+The image paths given to the server must be absolute paths on the server machine (eg. via the FIF variable for the IIP protocol: FIF=/images/test.tif) and 
+.I not 
+paths 
+relative to the web server document root location. If the FILESYSTEM_PREFIX server directive has been set (see OPTIONS above), then this prefix is automatically pre-pended to all requests 
+to generate the absolute image path. Make sure that the server process owner is able to access and read the images.
+
+Note that images do 
+.I not
+need to be directly accessible externally by the client via the web server.
 
 
 .SH SEE ALSO
