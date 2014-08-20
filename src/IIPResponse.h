@@ -114,6 +114,10 @@ class IIPResponse{
   void setCORS( const std::string& c ){ if(!c.empty()) cors = "Access-Control-Allow-Origin: " + c; };
 
 
+  /// Get CORS setting
+  std::string getCORS(){ return cors; };
+
+
   /// Get a formatted string to send back
   std::string formatResponse();
 

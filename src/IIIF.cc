@@ -23,7 +23,6 @@
 #include <cmath>
 #include <cstdlib>
 #include <sstream>
-#include "Environment.h"
 #include "Task.h"
 #include "Tokenizer.h"
 #include "Transforms.h"
@@ -102,7 +101,7 @@ void IIIF::run( Session* session, const string& src ){
   else{
     // No parameters, so redirect to info request
     string id;
-    string host = Environment::getBaseURL();
+    string host = session->headers["BASE_URL"];
     if( host.length() > 0 ){
       id = host + (session->headers["QUERY_STRING"]).substr(5,string::npos);
     }
@@ -150,13 +149,10 @@ void IIIF::run( Session* session, const string& src ){
     // Our string buffer
     stringstream infoStringStream;
 
-    // Encoded file name
-    string escapedFilename;
-
     // Generate our @id - use our BASE_URL environment variable if we are
     //  behind a web server rewrite function
     string id;
-    string host = Environment::getBaseURL();
+    string host = session->headers["BASE_URL"];
     if( host.length() > 0 ){
       string query = (session->headers["QUERY_STRING"]);
       query = query.substr( 5, query.length()-suffix.length()-6 );
@@ -168,20 +164,9 @@ void IIIF::run( Session* session, const string& src ){
       id = "http://" + session->headers["HTTP_HOST"] + request_uri;
     }
 
-    // JSON encoding of filename
-    for( unsigned int i=0; i<id.length(); i++ ){
-      char c = id[i];
-      switch(c){
-      case '\\':
-	escapedFilename += "\\\\";
-	break;
-      case '"':
-	escapedFilename += "\\\"";
-	break;
-      default:
-	escapedFilename += c;
-      }
-    }
+    // Escape file name for JSON
+    URL json(id);
+    string escapedFilename = json.Escape();
 
 
     infoStringStream << "{" << endl
@@ -210,7 +195,7 @@ void IIIF::run( Session* session, const string& src ){
 
 
     // Get our Access-Control-Allow-Origin value, if any
-    string cors = Environment::getCORS();
+    string cors = session->response->getCORS();
     string eof = "\r\n";
 
     // Now output the info text
@@ -220,7 +205,7 @@ void IIIF::run( Session* session, const string& src ){
 	   << "Cache-Control: max-age=" << MAX_AGE << eof
 	   << "Last-Modified: " << (*session->image)->getTimestamp() << eof
 	   << "Link: <" << IIIF_PROFILE << ">;rel=\"profile\"" << eof;
-    if( !cors.empty() ) header << "Access-Control-Allow-Origin: " << cors << eof;
+    if( !cors.empty() ) header << cors << eof;
     header << eof << infoStringStream.str();
 
     session->out->printf( (const char*) header.str().c_str() );

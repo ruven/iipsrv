@@ -50,6 +50,9 @@ class URL{
   /// Decode and filter URL
   std::string decode();
 
+  /// String escaping for JSON etc
+  std::string Escape();
+
   /// Return any warning message
   std::string warning(){ return warning_message; };
 
@@ -108,6 +111,28 @@ inline std::string URL::decode()
   }
 
   return argument;
+}
+
+
+// Escape strings for JSON etc.
+inline std::string URL::Escape()
+{
+  std::string json;
+
+  for( unsigned int i=0; i<url.length(); i++ ){
+    char c = url[i];
+    switch(c){
+      case '\\':
+	json += "\\\\";
+	break;
+      case '"':
+	json += "\\\"";
+	break;
+      default:
+	json += c;
+    }
+  }
+  return json;
 }
 
 

@@ -259,6 +259,10 @@ int main( int argc, char *argv[] )
   string cors = Environment::getCORS();
 
 
+  // Get any Base URL setting
+  string base_url = Environment::getBaseURL();
+
+
   // Print out some information
   if( loglevel >= 1 ){
     logfile << "Setting maximum image cache size to " << max_image_cache_size << "MB" << endl;
@@ -267,6 +271,7 @@ int main( int argc, char *argv[] )
     logfile << "Setting maximum CVT size to " << max_CVT << endl;
     logfile << "Setting 3D file sequence name pattern to '" << filename_pattern << "'" << endl;
     if( !cors.empty() ) logfile << "Setting Cross Origin Resource Sharing to '" << cors << "'" << endl;
+    if( !base_url.empty() ) logfile << "Setting Base URL to '" << base_url << "'" << endl;
     if( max_layers != 0 ){
       logfile << "Setting max quality layers (for supported file formats) to ";
       if( max_layers < 0 ) logfile << "all layers" << endl;
@@ -486,6 +491,7 @@ int main( int argc, char *argv[] )
       session.headers["SERVER_PROTOCOL"] =  FCGX_GetParam("SERVER_PROTOCOL", request.envp);
       session.headers["HTTP_HOST"] = FCGX_GetParam("HTTP_HOST", request.envp);
       session.headers["REQUEST_URI"] = FCGX_GetParam("REQUEST_URI", request.envp);
+      session.headers["BASE_URL"] = base_url;
 
 
 
