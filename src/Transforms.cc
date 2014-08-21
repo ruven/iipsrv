@@ -25,7 +25,9 @@
 
 
 // Define something similar to C99 std::isfinite if this does not exist
+// Need to also check for a direct define as it can be implemented as a macro
 #ifndef HAVE_ISFINITE
+#ifndef isfinite
 #include <limits>
 static bool isfinite( float arg )
 {
@@ -33,6 +35,7 @@ static bool isfinite( float arg )
     arg != std::numeric_limits<float>::infinity() &&
     arg != -std::numeric_limits<float>::infinity();
 }
+#endif
 #endif
 
 
