@@ -46,6 +46,10 @@ class file_error : public std::runtime_error {
 };
 
 
+// Supported image formats
+enum ImageFormat { TIF, JPEG2000, UNSUPPORTED };
+
+
 
 /// Main class to handle the pyramidal image source
 /** Provides functions to open, get various information from an image source
@@ -90,9 +94,6 @@ class IIPImage {
 
 
  public:
-
-  // Supported image formats
-  enum ImageFormat { TIF, JPEG2000, UNSUPPORTED };
 
   /// Return the image format e.g. tif
   ImageFormat format;

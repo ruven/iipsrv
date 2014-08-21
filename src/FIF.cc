@@ -109,14 +109,14 @@ void FIF::run( Session* session, const string& src ){
       Test for different image types - only TIFF is native for now
     ***************************************************************/
 
-    IIPImage::ImageFormat format = test.getImageFormat();
+    ImageFormat format = test.getImageFormat();
 
-    if( format == IIPImage::ImageFormat::TIF ){
+    if( format == TIF ){
       if( session->loglevel >= 2 ) *(session->logfile) << "FIF :: TIFF image detected" << endl;
       *session->image = new TPTImage( test );
     }
 #ifdef HAVE_KAKADU
-    else if( format == IIPImage::ImageFormat::JPEG2000 ){
+    else if( format == JPEG2000 ){
       if( session->loglevel >= 2 ) *(session->logfile) << "FIF :: JPEG2000 image detected" << endl;
       *session->image = new KakaduImage( test );
     }

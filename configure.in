@@ -49,6 +49,9 @@ AC_CHECK_HEADERS(windows.h)
 # we want largefile support, if possible
 AC_SYS_LARGEFILE
 
+# Check for C99 isfinite function
+AX_CXX_HAVE_ISFINITE
+
 
 #************************************************************ 
 

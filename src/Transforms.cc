@@ -24,6 +24,19 @@
 #include "Transforms.h"
 
 
+// Define something similar to C99 std::isfinite if this does not exist
+#ifndef HAVE_ISFINITE
+#include <limits>
+static bool isfinite( float arg )
+{
+  return arg == arg && 
+    arg != std::numeric_limits<float>::infinity() &&
+    arg != -std::numeric_limits<float>::infinity();
+}
+#endif
+
+
+
 /* D65 temp 6504.
  */
 #define D65_X0 95.0470
@@ -528,7 +541,7 @@ void filter_contrast( RawTile& in, float c ){
 #pragma ivdep
   for( unsigned int n=0; n<np; n++ ){
     float v = infptr[n] * 255.0 * c;
-    buffer[n] = (unsigned char) (v<255.0) ? (v<0.0? 0.0 : v) : 255.0;
+    buffer[n] = (unsigned char)( (v<255.0) ? (v<0.0? 0.0 : v) : 255.0 );
   }
 
   // Replace original buffer with new

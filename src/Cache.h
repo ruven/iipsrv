@@ -49,6 +49,20 @@
 #include <ext/hash_map>
 #define HASHMAP __gnu_cxx::hash_map
 
+/* Explicit template specialization of hash of a string class,
+   which just uses the internal char* representation as a wrapper.
+   Required for older versions of gcc as hashing on a string is
+   not supported.
+ */
+namespace __gnu_cxx {
+  template <>
+    struct hash<std::string> {
+      size_t operator() (const std::string& x) const {
+	return hash<const char*>()(x.c_str());
+      }
+    };
+}
+
 // If no hash type available, just use map
 #else
 #include <map>

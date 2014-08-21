@@ -180,7 +180,7 @@ void IIIF::run( Session* session, const string& src ){
 		     << ", \"scale_factors\" : [ 1"; // Scale 1 is original image
 
     for( unsigned int i=1; i < numResolutions; i++ ){
-      infoStringStream << ", " << pow(2.0,i);
+      infoStringStream << ", " << pow(2.0,(double)i);
     }
 
     infoStringStream << " ] }" << endl
