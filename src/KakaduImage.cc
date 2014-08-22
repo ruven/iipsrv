@@ -136,7 +136,7 @@ void KakaduImage::loadImageInfo( int seq, int ang ) throw(file_error)
 
   image_widths.push_back(layer_size.x);
   image_heights.push_back(layer_size.y);
-  channels = j2k_channels.get_num_colours();
+  channels = codestream.get_num_components();
   numResolutions = codestream.get_min_dwt_levels();
   bpc = codestream.get_bit_depth(0,true);
 
