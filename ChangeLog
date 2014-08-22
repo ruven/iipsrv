@@ -1,3 +1,8 @@
+22/08/2014:
+	- Fix to properly read 12 bit JP2 files.
+	- KakaduImage's virtual_levels counter moved into IIPImage class.
+
+
 21/08/2014:
 	- Fixes to allow compilation on older versions of gcc.
 

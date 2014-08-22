@@ -95,6 +95,9 @@ class IIPImage {
 
  public:
 
+  /// Number of resolution levels that don't physically exist in file
+  unsigned int virtual_levels;
+
   /// Return the image format e.g. tif
   ImageFormat format;
 
@@ -159,6 +162,7 @@ class IIPImage {
   IIPImage( const std::string& s )
    : imagePath( s ),
     isFile( false ),
+    virtual_levels( 0 ),
     tile_width( 0 ),
     tile_height( 0 ),
     bpc( 0 ),
@@ -180,6 +184,7 @@ class IIPImage {
     suffix( image.suffix ),
     horizontalAnglesList( image.horizontalAnglesList ),
     verticalAnglesList( image.verticalAnglesList ),
+    virtual_levels( image.virtual_levels ),
     format( image.format ),
     image_widths( image.image_widths ),
     image_heights( image.image_heights ),

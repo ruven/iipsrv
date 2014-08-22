@@ -8,7 +8,7 @@
 
 
     Copyright (C) 2009-2014 IIPImage.
-    Authors: Ruven Pillay
+    Author: Ruven Pillay
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -52,7 +52,7 @@ unsigned int get_nprocs_conf(){
 
 
 #include "Timer.h"
-#define DEBUG 1
+//#define DEBUG 1
 
 
 using namespace std;
@@ -143,6 +143,11 @@ void KakaduImage::loadImageInfo( int seq, int ang ) throw(file_error)
   unsigned int w = layer_size.x;
   unsigned int h = layer_size.y;
 
+#ifdef DEBUG
+  logfile << "Kakadu :: DWT Levels: " << numResolutions << endl;
+  logfile << "Kakadu :: Resolution : " << w << "x" << h << endl;
+#endif
+
   // Loop through each resolution and calculate the image dimensions - 
   // We calculate ourselves rather than relying on get_dims() to force a similar
   // behaviour to TIFF with resolutions at floor(x/2) rather than Kakadu's default ceil(x/2) 
@@ -178,7 +183,6 @@ void KakaduImage::loadImageInfo( int seq, int ang ) throw(file_error)
     }
   }
 
-
   if( n > numResolutions ){
 #ifdef DEBUG
     logfile << "Kakadu :: Warning! Insufficient resolution levels in JPEG2000 stream. Will generate " << n-numResolutions << " extra levels dynamically -" << endl
@@ -186,7 +190,7 @@ void KakaduImage::loadImageInfo( int seq, int ang ) throw(file_error)
 #endif
   }
 
-  if( n > numResolutions+1 ) virtual_levels = n-numResolutions-1;
+  if( n > numResolutions ) virtual_levels = n-numResolutions-1;
   numResolutions = n;
 
 
@@ -232,7 +236,7 @@ void KakaduImage::loadImageInfo( int seq, int ang ) throw(file_error)
   //double sminvalue[4], smaxvalue[4];
   for( unsigned int i=0; i<channels; i++ ){
     min.push_back( 0.0 );
-    if( bpc == 16 ) max.push_back( 65535.0 );
+    if( bpc > 8 && bpc <= 16 ) max.push_back( 65535.0 );
     else max.push_back( 255.0 );
   }
 
@@ -395,12 +399,15 @@ void KakaduImage::process( unsigned int res, int layers, int xoffset, int yoffse
 
   // Handle virtual resolutions
   if( res < virtual_levels ){
-    unsigned int factor = 2*(virtual_levels-res);
+    unsigned int factor = pow( 2, virtual_levels-res );
     xoffset *= factor;
     yoffset *= factor;
     tw *= factor;
     th *= factor;
-    vipsres = numResolutions - 1 - (virtual_levels-res);
+    vipsres = numResolutions - 1 - virtual_levels;
+#ifdef DEBUG
+  logfile << "Kakadu :: using smallest existing resolution " << virtual_levels << endl;
+#endif
   }
 
   // Set the number of layers to half of the number of detected layers if we have not set the
@@ -577,7 +584,7 @@ void KakaduImage::process( unsigned int res, int layers, int xoffset, int yoffse
 #endif
 
       unsigned int n = 0;
-      unsigned int factor = 2*(virtual_levels-res);
+      unsigned int factor = pow( 2.0, virtual_levels-res );
       for( unsigned int j=0; j<th; j+=factor ){
 	for( unsigned int i=0; i<tw; i+=factor ){
 	  for( unsigned int k=0; k<channels; k++ ){

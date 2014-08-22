@@ -49,6 +49,7 @@ void IIPImage::swap( IIPImage& first, IIPImage& second ) // nothrow
   std::swap( first.imagePath, second.imagePath );
   std::swap( first.isFile, second.isFile );
   std::swap( first.suffix, second.suffix );
+  std::swap( first.virtual_levels, second.virtual_levels );
   std::swap( first.format, second.format );
   std::swap( first.fileSystemPrefix, second.fileSystemPrefix );
   std::swap( first.fileNamePattern, second.fileNamePattern );

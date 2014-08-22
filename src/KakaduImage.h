@@ -10,7 +10,7 @@
 
 
     Copyright (C) 2009-2014 IIPImage.
-    Authors: Ruven Pillay
+    Author: Ruven Pillay
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -33,12 +33,10 @@
 
 
 #include "IIPImage.h"
-#include <cstdio>
 
 #include <jpx.h>
 #include <jp2.h>
 #include <kdu_stripe_decompressor.h>
-#include <iostream>
 #include <fstream>
 
 #define TILESIZE 256
@@ -104,9 +102,6 @@ class KakaduImage : public IIPImage {
   /// Tile or Strip region
   kdu_dims comp_dims;
 
-  /// Number of levels that don't physically exist
-  unsigned int virtual_levels;
-
   /// Main processing function
   /** @param r resolution
       @param l number of quality levels to decode
@@ -127,26 +122,26 @@ class KakaduImage : public IIPImage {
  public:
 
   /// Constructor
-  KakaduImage(): IIPImage(), virtual_levels( 0 ){
+  KakaduImage(): IIPImage(){
     tile_width = TILESIZE; tile_height = TILESIZE;
   };
 
   /// Constructor
   /** @param path image path
    */
-  KakaduImage( const std::string& path ): IIPImage( path ), virtual_levels( 0 ){
+  KakaduImage( const std::string& path ): IIPImage( path ){
     tile_width = TILESIZE; tile_height = TILESIZE;
   };
 
   /// Copy Constructor
   /** @param image Kakadu object
    */
-  KakaduImage( const KakaduImage& image ): IIPImage( image ), virtual_levels( image.virtual_levels ){};
+  KakaduImage( const KakaduImage& image ): IIPImage( image ) {};
 
   /// Constructor from IIPImage object
   /** @param image IIPImage object
    */
-  KakaduImage( const IIPImage& image ): IIPImage( image ), virtual_levels( 0 ){
+  KakaduImage( const IIPImage& image ): IIPImage( image ){
     tile_width = TILESIZE; tile_height = TILESIZE;
   };
 
