@@ -1,3 +1,7 @@
+03/09/2014:
+	- Fix to IIPImage.cc for file type detection for multispectral sequences.
+
+
 22/08/2014:
 	- Fix to properly read 12 bit JP2 files.
 	- KakaduImage's virtual_levels counter moved into IIPImage class.

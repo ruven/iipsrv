@@ -84,6 +84,7 @@ void IIPImage::testImageType() throw(file_error)
   string path = fileSystemPrefix + imagePath;
 
   if( (stat(path.c_str(),&sb)==0) && S_ISREG(sb.st_mode) ){
+
     isFile = true;
     timestamp = sb.st_mtime;
 
@@ -151,6 +152,9 @@ void IIPImage::testImageType() throw(file_error)
     int len = tmp.length();
 
     suffix = tmp.substr( dot + 1, len );
+    if( suffix == "jp2" || suffix == "jpx" || suffix == "j2k" ) format = JPEG2000;
+    else if( suffix == "tif" || suffix == "tiff" ) format = TIF;
+    else format = UNSUPPORTED;
 
     updateTimestamp( tmp );
 
