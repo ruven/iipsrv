@@ -1,3 +1,7 @@
+05/09/2014:
+	- Updated IIIF info.json output to be compliant with changed IIIF 2.0 specification.
+
+
 03/09/2014:
 	- Fix to IIPImage.cc for file type detection for multispectral sequences.
 

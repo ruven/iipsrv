@@ -177,7 +177,7 @@ void IIIF::run( Session* session, const string& src ){
 		     << "  \"height\" : " << height << "," << endl
 		     << "  \"tiles\" : [" << endl
 		     << "     { \"width\" : " << tw << ", \"height\" : " << th
-		     << ", \"scale_factors\" : [ 1"; // Scale 1 is original image
+		     << ", \"scaleFactors\" : [ 1"; // Scale 1 is original image
 
     for( unsigned int i=1; i < numResolutions; i++ ){
       infoStringStream << ", " << pow(2.0,(double)i);
@@ -189,7 +189,7 @@ void IIIF::run( Session* session, const string& src ){
 		     << "     \"" << IIIF_PROFILE << "\"," << endl
 		     << "     { \"formats\" : [ \"jpg\" ]," << endl
 		     << "       \"qualities\" : [ \"native\",\"color\",\"gray\" ]," << endl
-		     << "       \"supports\" : [\"region_by_pct\",\"size_by_forced_wh\",\"size_by_wh\",\"size_above_full\",\"rotation_by_90s\",\"mirroring\",\"gray\"] }" << endl
+		     << "       \"supports\" : [\"regionByPct\",\"sizeByForcedWh\",\"sizeByWh\",\"sizeAboveFull\",\"rotationBy90s\",\"mirroring\",\"gray\"] }" << endl
 		     << "  ]" << endl
 		     << "}";
 
