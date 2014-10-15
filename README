@@ -222,8 +222,15 @@ ScriptAlias /fcgi-bin/ "/usr/local/httpd/fcgi-bin/"
 <Directory "/usr/local/httpd/fcgi-bin">
    AllowOverride None
    Options None
-   Order allow,deny
-   Allow from all
+
+# Syntax for access is different in Apache 2.4 - uncomment appropriate version
+# Apache 2.2
+#   Order allow,deny
+#   Allow from all
+
+# Apache 2.4
+   Require all granted
+
 </Directory>
 
 # Set the module handler
@@ -263,8 +270,14 @@ ScriptAlias /fcgi-bin/ "/var/www/localhost/fcgi-bin/"
 <Directory "/var/www/localhost/fcgi-bin/">
    AllowOverride None
    Options None
-   Order allow,deny
-   Allow from all
+
+# Syntax for access is different in Apache 2.4 - uncomment appropriate version
+# Apache 2.2
+#   Order allow,deny
+#   Allow from all
+
+# Apache 2.4
+   Require all granted
 
    # Set the module handler
    AddHandler fcgid-script .fcgi
@@ -326,7 +339,7 @@ configurations. For example:
     spawn-fcgi -f src/iipsrv.fcgi -a 192.168.0.1 -p 9000
 
 
-## MyServer:
+### MyServer:
 Simply run the MyServer configuration and in the MIME section, choose the .fcgi extension
 and select:
 ```
