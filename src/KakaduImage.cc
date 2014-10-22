@@ -57,6 +57,12 @@ unsigned int get_nprocs_conf(){
 
 using namespace std;
 
+// Kakadu 7.5 uses namespaces                                                                                                                                                        
+#if KDU_MAJOR_VERSION > 7 || (KDU_MAJOR_VERSION == 7 && KDU_MINOR_VERSION >= 5)
+using namespace kdu_core;
+using namespace kdu_supp;
+#endif
+
 #ifdef DEBUG
 extern std::ofstream logfile;
 #endif
