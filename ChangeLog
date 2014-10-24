@@ -1,3 +1,11 @@
+24/10/2014:
+	- Updated MINMAX command syntax in Task.cc to channel:min,max
+
+
+22/10/2014:
+	- Updated KakaduImage.cc to use Kakadu namespaces in version 7.5 and greater.
+
+
 05/09/2014:
 	- Updated IIIF info.json output to be compliant with changed IIIF 2.0 specification.
 

@@ -123,7 +123,7 @@ void MINMAX::run( Session* session, const std::string& argument ){
   if( session->loglevel >= 3 ) *(session->logfile) << "MINMAX handler reached" << endl;
 
   // Parse the argument list
-  int delimitter = argument.find( "," );
+  int delimitter = argument.find( ":" );
   string tmp = argument.substr( 0, delimitter );
   int nchan = atoi( tmp.c_str() ) - 1;
   string arg2 = argument.substr( delimitter + 1, argument.length() );
