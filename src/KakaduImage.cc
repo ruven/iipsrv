@@ -492,11 +492,11 @@ void KakaduImage::process( unsigned int res, int layers, int xoffset, int yoffse
 #endif
     // Create our buffers
     if( obpp == 16 ){
-      stripe_buffer = new kdu_uint16[tw*stripe_heights[0]*channels];
+      stripe_buffer = new kdu_uint16[tw*th*channels];
       buffer = new unsigned short[tw*th*channels];
     }
     else if( obpp == 8 ){
-      stripe_buffer = new kdu_byte[tw*stripe_heights[0]*channels];
+      stripe_buffer = new kdu_byte[tw*th*channels];
       buffer = new unsigned char[tw*th*channels];
     }
 
