@@ -131,6 +131,8 @@ void IIIF::run( Session* session, const string& src ){
   filename = (*session->image)->getImagePath();
 
   // Get the information about image, that can be shown in info.json
+  unsigned int requested_width;
+  unsigned int requested_height;
   unsigned int width = (*session->image)->getImageWidth();
   unsigned int height = (*session->image)->getImageHeight();
   unsigned tw = (*session->image)->getTileWidth();
@@ -203,8 +205,7 @@ void IIIF::run( Session* session, const string& src ){
     header << "Server: iipsrv/" << VERSION << eof
 	   << "Content-Type: application/ld+json" << eof
 	   << "Cache-Control: max-age=" << MAX_AGE << eof
-	   << "Last-Modified: " << (*session->image)->getTimestamp() << eof
-	   << "Link: <" << IIIF_PROFILE << ">;rel=\"profile\"" << eof;
+	   << "Last-Modified: " << (*session->image)->getTimestamp() << eof;
     if( !cors.empty() ) header << cors << eof;
     header << eof << infoStringStream.str();
 
@@ -303,9 +304,8 @@ void IIIF::run( Session* session, const string& src ){
       transform( sizeString.begin(), sizeString.end(), sizeString.begin(), ::tolower );
 
       // Calculate the width and height of our region
-      unsigned int requested_width = session->view->getViewWidth();
-      unsigned int requested_height = session->view->getViewHeight();
-
+      requested_width = session->view->getViewWidth();
+      requested_height = session->view->getViewHeight();
 
       // "full" request
       if( sizeString == "full" ){
@@ -326,14 +326,8 @@ void IIIF::run( Session* session, const string& src ){
       // "w,h", "w,", ",h", "!w,h" requests
       else{
 
-        // Indicates that before width is exclamation mark
-        bool isExclamationMark = false;
-
         // !w,h request - remove !, remember it and continue as if w,h request
-        if( sizeString.substr(0,1) == "!" ) {
-          isExclamationMark = true;
-          sizeString.erase(0,1);
-        }
+        if( sizeString.substr(0,1) == "!" ) sizeString.erase(0,1);
 	// Otherwise tell our view to break aspect ratio
 	else session->view->maintain_aspect = false;
 
@@ -348,7 +342,7 @@ void IIIF::run( Session* session, const string& src ){
 	else if( pos == 0 ){
 	  istringstream i( sizeString.substr( 1, string::npos ) );
 	  if( !(i >> requested_height) ) throw invalid_argument( "invalid height" );
-	  requested_width = round( (float)requested_height*width / (float)height );
+	  requested_width = round( (float)requested_height*session->view->getViewWidth()/session->view->getViewHeight() );
 	}
 
 	// If comma is not at the beginning, we must have a "width,height" or "width," request
@@ -356,7 +350,7 @@ void IIIF::run( Session* session, const string& src ){
 	else if( pos == sizeString.length()-1 ){
 	  istringstream i( sizeString.substr( 0, string::npos - 1 ) );
 	  if( !(i >> requested_width ) ) throw invalid_argument( "invalid width" );
-	  requested_height = round( (float)requested_width*height / (float)width );
+	  requested_height = round( (float)requested_width*session->view->getViewHeight()/session->view->getViewWidth() );
 	}
 
 	// Remaining case is "width,height"
@@ -366,19 +360,6 @@ void IIIF::run( Session* session, const string& src ){
 	  i.clear();
 	  i.str( sizeString.substr( pos+1, string::npos ) );
 	  if( !(i >> requested_height) ) throw invalid_argument( "invalid height" );
-
-	  // Fit within requested size
-	  if( isExclamationMark ){
-	    // Make sure the requested image fits *within* the requested dimensions
-	    if( ((float)requested_height/(float)session->view->getViewHeight()) >
-		((float)requested_width/(float)session->view->getViewWidth()) ){
-	      requested_height = (unsigned int) round((((float)requested_width/(float)session->view->getViewWidth()) * session->view->getViewHeight()));
-	    }
-	    else if( ((float)requested_width/(float)session->view->getViewWidth()) >
-		     ((float)requested_height/(float)session->view->getViewHeight()) ){
-	      requested_width = (unsigned int) round((((float)requested_height/(float)session->view->getViewHeight()) * session->view->getViewWidth()));
-	    }
-	  }
 	}
       }
 
@@ -477,13 +458,13 @@ void IIIF::run( Session* session, const string& src ){
 
 
 
-    // TOO MANY PARAMETERS, tell it to user and show him his request
+    // Too many parameters
     if( izer.hasMoreTokens() ){
       throw invalid_argument( "IIIF: Query has too many parameters. " IIIF_SYNTAX );
     }
 
 
-    // NOT ENOUGH PARAMETERS
+    // Not enough parameters
     if( numOfTokens < 4 ){
       throw invalid_argument( "IIIF: Query has too few parameters. " IIIF_SYNTAX );
     }
@@ -502,7 +483,7 @@ void IIIF::run( Session* session, const string& src ){
       *(session->logfile) << "IIIF :: image request for " << (*session->image)->getImagePath()
 			  << " with arguments: region: " << session->view->getViewLeft() << "," << session->view->getViewTop() << ","
 			  << session->view->getViewWidth() << "," << session->view->getViewHeight()
-			  << "; size: " << session->view->getRequestWidth() << "x" << session->view->getRequestHeight()
+			  << "; size: " << requested_width << "x" << requested_height
 			  << "; rotation: " << session->view->getRotation()
 			  << endl;
     }
@@ -510,41 +491,29 @@ void IIIF::run( Session* session, const string& src ){
 
 
 
-  // Define our separator depending on the OS
-#ifdef WIN32
-  const string separator = "\\";
-#else
-  const string separator = "/";
-#endif
-
-
-
   // Get most suitable resolution and recalculate width and height of region in this resolution
   int requested_res = session->view->getResolution();
 
   unsigned int im_width = (*session->image)->image_widths[numResolutions-requested_res-1];
-  unsigned int im_height = (*session->image)->image_heights[numResolutions-requested_res-1];
+  //  unsigned int im_height = (*session->image)->image_heights[numResolutions-requested_res-1];
 
-  unsigned int view_left, view_top, view_width, view_height;
+  unsigned int view_left, view_top;
 
   if( session->view->viewPortSet() ){
     // Set the absolute viewport size and extract the co-ordinates
     view_left = session->view->getViewLeft();
     view_top = session->view->getViewTop();
-    view_width = session->view->getViewWidth();
-    view_height = session->view->getViewHeight();
   }
   else{
     view_left = 0;
     view_top = 0;
-    view_width = im_width;
-    view_height = im_height;
   }
 
 
-
   // Determine whether this is a tile request which coincides with our tile boundaries
-  if( view_width == tw && view_height == th && (view_left%tw == 0) && (view_top%th == 0) ){
+  if( (requested_width == tw) && (requested_height == th) &&
+      (view_left%tw == 0) && (view_top%th == 0) &&
+      session->view->maintain_aspect ){
 
     // Get the width and height for last row and column tiles
     unsigned int rem_x = im_width % tw;

@@ -62,8 +62,7 @@ void CVT::send( Session* session ){
 
 
   if( session->loglevel >= 3 ){
-    *(session->logfile) << "CVT :: image set to " << im_width << "x" << im_height
-			<< " using resolution " << requested_res << endl;
+    *(session->logfile) << "CVT :: Using resolution " << requested_res << " with size " << im_width << "x" << im_height << endl;
   }
 
 
@@ -84,11 +83,9 @@ void CVT::send( Session* session ){
     view_height = session->view->getViewHeight();
     resampled_width = session->view->getRequestWidth();
     resampled_height = session->view->getRequestHeight();
-    *(session->logfile) << "CVT :: requested height: " << resampled_height << endl;
 
     if( session->loglevel >= 3 ){
-      *(session->logfile) << "CVT :: view port is set: image: " << im_width << "x" << im_height
-			  << ". View Port: " << view_left << "," << view_top
+      *(session->logfile) << "CVT :: Region: " << view_left << "," << view_top
 			  << "," << view_width << "," << view_height << endl;
     }
   }
@@ -100,23 +97,24 @@ void CVT::send( Session* session ){
     view_height = im_height;
     resampled_width = session->view->getRequestWidth();
     resampled_height = session->view->getRequestHeight();
+  }
 
-    // Make sure our requested width and height don't modify the aspect ratio.
-    // Make sure the final image fits *within* the requested size
-    if( session->view->maintain_aspect ){
-      if( ((float)resampled_height/(float)view_height) > ((float)resampled_width/(float)view_width) ){
-	resampled_height = (unsigned int) round((((float)resampled_width/(float)view_width) * view_height));
-      }
-      else if( ((float)resampled_width/(float)view_width) > ((float)resampled_height/(float)view_height) ){
-	resampled_width = (unsigned int) round((((float)resampled_height/(float)view_height) * view_width));
-      }
+
+  // If we have requested that the aspect ratio be maintained, make sure the final image fits *within* the requested size
+  if( session->view->maintain_aspect ){
+    if( ((float)resampled_height/(float)view_height) > ((float)resampled_width/(float)view_width) ){
+      resampled_height = (unsigned int) round((((float)resampled_width/(float)view_width) * view_height));
+    }
+    else if( ((float)resampled_width/(float)view_width) > ((float)resampled_height/(float)view_height) ){
+      resampled_width = (unsigned int) round((((float)resampled_height/(float)view_height) * view_width));
     }
   }
 
 
   if( session->loglevel >= 3 ){
     *(session->logfile) << "CVT :: Requested scaled region size is " << resampled_width << "x" << resampled_height
-			<< ". Nearest pyramid region size is " << view_width << "x" << view_height << endl;
+			<< " at resolution " << requested_res
+			<< ". Nearest existing resolution is " << view_width << "x" << view_height << endl;
   }
 
 

@@ -306,7 +306,7 @@ RawTile TileManager::getRegion( unsigned int res, int seq, int ang, int layers, 
 
   // The basic tile size ie. not the current tile
   unsigned int basic_tile_width = src_tile_width;
-  // unsigned int basic_tile_height = src_tile_height;
+  unsigned int basic_tile_height = src_tile_height;
 
   int num_res = image->getNumResolutions();
   unsigned int im_width = image->image_widths[num_res-res-1];
@@ -329,13 +329,15 @@ RawTile TileManager::getRegion( unsigned int res, int seq, int ang, int layers, 
     starty = (unsigned int) ( y / src_tile_height );
     xoffset = x % src_tile_width;
     yoffset = y % src_tile_height;
+
     endx = (unsigned int) ceil( (float)(width + x) / (float)src_tile_width );
     endy = (unsigned int) ceil( (float)(height + y) / (float)src_tile_height );
 
     if( loglevel >= 3 ){
-      *logfile << "TileManager getRegion :: Tile Start: " << startx << "," << starty << ", with offset: "
+      *logfile << "TileManager getRegion :: Total tiles in image: " << ntlx << "x" << ntly << " tiles" << endl
+	       << "TileManager getRegion :: Tile start: " << startx << "," << starty << " with offset: "
 	       << xoffset << "," << yoffset << endl
-	       << "TileManager getRegion :: End Tile: " << endx << "," << endy << endl;
+	       << "TileManager getRegion :: Tile end: " << endx-1 << "," << endy-1 << endl;
     }
   }
   else{
@@ -407,6 +409,8 @@ RawTile TileManager::getRegion( unsigned int res, int seq, int ang, int layers, 
       // and end points on the source image
       if( !( x==0 && y==0 && width==im_width && height==im_height ) ){
 
+	unsigned int remainder;  // Remaining pixels in the final row or column
+
 	if( j == startx ){
 	  // Calculate the width used in the current tile
 	  // If there is only 1 tile, the width is just the view width
@@ -415,7 +419,9 @@ RawTile TileManager::getRegion( unsigned int res, int seq, int ang, int layers, 
 	  xf = xoffset;
 	}
 	else if( j == endx-1 ){
-	  dst_tile_width = (width+x) % basic_tile_width;
+	  // If this is the final row, calculate the remaining number of pixels
+	  remainder = (width+x) % basic_tile_width;
+	  if( remainder != 0 ) dst_tile_width = remainder;
 	}
 
 	if( i == starty ){
@@ -426,12 +432,14 @@ RawTile TileManager::getRegion( unsigned int res, int seq, int ang, int layers, 
 	  yf = yoffset;
 	}
 	else if( i == endy-1 ){
-	  dst_tile_height = (height+y) % basic_tile_width;
+	  // If this is the final row, calculate the remaining number of pixels
+	  remainder = (height+y) % basic_tile_height;
+	  if( remainder != 0 ) dst_tile_height = remainder;
 	}
 
 	if( loglevel >= 4 ){
-	  *logfile << "TileManager getRegion :: destination tile height: " << dst_tile_height
-		   << ", tile width: " << dst_tile_width << endl;
+	  *logfile << "TileManager getRegion :: destination tile width: " << dst_tile_width
+		   << ", tile height: " << dst_tile_height << endl;
 	}
       }
 

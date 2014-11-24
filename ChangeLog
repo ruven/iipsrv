@@ -1,3 +1,9 @@
+24/11/2014:
+	- Fix to TileManager.cc to properly calculate tile height for final row.
+	- Updates to IIIF code to ensure tiles are properly detected.
+	- Changes to View class to calculate regions from full resolution image.
+
+
 24/10/2014:
 	- Updated MINMAX command syntax in Task.cc to channel:min,max
 

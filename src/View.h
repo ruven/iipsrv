@@ -48,7 +48,8 @@ class View{
 
   int resolution;                             /// Requested resolution
   unsigned int max_resolutions;               /// Total available resolutions
-  unsigned int width, height;                 /// Width and height at requested resolution
+  unsigned int width, height;                 /// Image width and height at full resolution
+  unsigned int res_width, res_height;         /// Width and height at requested resolution
   unsigned int min_size;                      /// Minimum viewport dimension
   unsigned int max_size;                      /// Maximum viewport dimension
   unsigned int requested_width;               /// Width requested by WID command
@@ -85,9 +86,11 @@ class View{
 
   /// Constructor
   View() {
-    resolution = 0; max_resolutions = 0; min_size = 8; max_size = 0;
-    width = 0; height = 0;
     view_left = 0.0; view_top = 0.0; view_width = 1.0; view_height = 1.0;
+    resolution = 0; max_resolutions = 0;
+    width = 0; height = 0;
+    res_width = 0; res_height = 0;
+    min_size = 8; max_size = 0;
     requested_width = 0; requested_height = 0;
     contrast = 1.0; gamma = 1.0;
     xangle = 0; yangle = 90;
@@ -112,7 +115,7 @@ class View{
 
   /// Set the maximum view port dimension
   /** @param r number of availale resolutions */
-  void setMaxResolutions( unsigned int r ){ max_resolutions = r; };
+  void setMaxResolutions( unsigned int r ){ max_resolutions = r; resolution=r-1; };
 
 
   /// Get the size of the requested width
