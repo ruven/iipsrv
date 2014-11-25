@@ -485,6 +485,7 @@ void IIIF::run( Session* session, const string& src ){
 			  << session->view->getViewWidth() << "," << session->view->getViewHeight()
 			  << "; size: " << requested_width << "x" << requested_height
 			  << "; rotation: " << session->view->getRotation()
+			  << "; mirroring: " << session->view->flip
 			  << endl;
     }
   }
@@ -495,7 +496,7 @@ void IIIF::run( Session* session, const string& src ){
   int requested_res = session->view->getResolution();
 
   unsigned int im_width = (*session->image)->image_widths[numResolutions-requested_res-1];
-  //  unsigned int im_height = (*session->image)->image_heights[numResolutions-requested_res-1];
+  unsigned int im_height = (*session->image)->image_heights[numResolutions-requested_res-1];
 
   unsigned int view_left, view_top;
 
@@ -511,9 +512,14 @@ void IIIF::run( Session* session, const string& src ){
 
 
   // Determine whether this is a tile request which coincides with our tile boundaries
-  if( (requested_width == tw) && (requested_height == th) &&
-      (view_left%tw == 0) && (view_top%th == 0) &&
-      session->view->maintain_aspect ){
+  if( ( session->view->maintain_aspect && (requested_res>0) &&
+	(requested_width == tw) && (requested_height == th) &&
+	(view_left%tw == 0) && (view_top%th == 0) &&
+ 	(session->view->getViewWidth()<im_width) && (session->view->getViewHeight()<im_height) )
+      ||
+      ( session->view->maintain_aspect && (requested_res==0) &&
+	(requested_width==im_width) && (requested_height==im_height) )
+      ){
 
     // Get the width and height for last row and column tiles
     unsigned int rem_x = im_width % tw;

@@ -26,12 +26,13 @@ using namespace std;
 
 void View::calculateResolution( unsigned int dimension,
 				unsigned int requested_size ){
-  unsigned int i = 1;
-  unsigned int j = 1;
 
-  // Calculate the resolution number for this request.
-  while( (unsigned int)(dimension/i) >= requested_size ){
-    i *= 2;
+  unsigned int j = 1;
+  unsigned int d = dimension;
+
+  // Calculate the resolution number for this request
+  while( d >= requested_size ){
+    d = d/2;
     j++;
   }
 
@@ -55,8 +56,9 @@ unsigned int View::getResolution(){
 
   resolution = max_resolutions - 1;
 
-  if( requested_width ) View::calculateResolution( width, round((float)requested_width/(float)view_width) );
-  if( requested_height ) View::calculateResolution( height, round((float)requested_height/(float)view_height) );
+  // Note that we use floor() as that is how our resolutions are calculated 
+  if( requested_width ) View::calculateResolution( width, floor((float)requested_width/(float)view_width) );
+  if( requested_height ) View::calculateResolution( height, floor((float)requested_height/(float)view_height) );
 
   res_width = width;
   res_height = height;

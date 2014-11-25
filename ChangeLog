@@ -1,3 +1,8 @@
+25/11/2014:
+	- Fix of rounding error problem in View.cc for calculating resolution level.
+	- Fix to IIIF.cc to properly handle resolution 0 requests.
+
+
 24/11/2014:
 	- Fix to TileManager.cc to properly calculate tile height for final row.
 	- Updates to IIIF code to ensure tiles are properly detected.
