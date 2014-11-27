@@ -1,3 +1,7 @@
+27/11/2014:
+	- Added new magic identifier for BigTIFF images to IIPImage.cc
+
+
 25/11/2014:
 	- Fix of rounding error problem in View.cc for calculating resolution level.
 	- Fix to IIIF.cc to properly handle resolution 0 requests.
