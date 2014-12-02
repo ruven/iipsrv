@@ -41,6 +41,10 @@
 
 #define TILESIZE 256
 
+// Kakadu 7.5 uses namespaces
+#if KDU_MAJOR_VERSION > 7 || (KDU_MAJOR_VERSION == 7 && KDU_MINOR_VERSION >= 5)
+using namespace kdu_supp; // Also includes the `kdu_core' namespace
+#endif
 
 extern std::ofstream logfile;
 
