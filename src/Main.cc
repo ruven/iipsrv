@@ -1,7 +1,7 @@
 /*
     IIP FCGI server module - Main loop.
 
-    Copyright (C) 2000-2014 Ruven Pillay
+    Copyright (C) 2000-2015 Ruven Pillay
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -672,6 +672,7 @@ int main( int argc, char *argv[] )
       writer.printf( status.c_str() );
       writer.flush();
       if( loglevel >= 2 ){
+	logfile << error.what() << endl;
 	logfile << "Sending HTTP 404 Not Found" << endl;
       }
     }
@@ -682,6 +683,7 @@ int main( int argc, char *argv[] )
       writer.printf( status.c_str() );
       writer.flush();
       if( loglevel >= 2 ){
+	logfile << error.what() << endl;
 	logfile << "Sending HTTP 400 Bad Request" << endl;
       }
     }
