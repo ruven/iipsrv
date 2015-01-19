@@ -1,3 +1,8 @@
+19/02/2015:
+	- Added missing <cctype> include in URL.h and replaced pow(2.0,x) with bit shifting in
+	  KakaduImage.cc and View.cc. Now compiles cleanly with VisualStudio Express.
+
+
 09/01/2015:
 	- Better logging for exceptions in Main.cc
 

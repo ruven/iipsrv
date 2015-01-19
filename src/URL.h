@@ -1,7 +1,7 @@
 /*
     Simple URL decoder Class
 
-    Copyright (C) 2014 Ruven Pillay.
+    Copyright (C) 2014-2015 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -24,6 +24,7 @@
 
 #include <string>
 #include <iterator>
+#include <cctype>
 
 
 /// Simple utility class to decode and filter URLs
