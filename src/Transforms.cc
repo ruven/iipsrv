@@ -85,6 +85,7 @@ void filter_normalize( RawTile& in, vector<float>& max, vector<float>& min ) {
       fptr = (float*)in.data;
       // Loop through our pixels for floating point pixels
 #pragma ivdep
+#pragma omp parallel for
       for( unsigned int n=c; n<np; n+=nc ){
         normdata[n] = isfinite(fptr[n])? (fptr[n] - minc) * invdiffc : 0.0;
       }
@@ -93,6 +94,7 @@ void filter_normalize( RawTile& in, vector<float>& max, vector<float>& min ) {
       uiptr = (unsigned int*)in.data;
       // Loop through our pixels for unsigned int pixels
 #pragma ivdep
+#pragma omp parallel for
       for( unsigned int n=c; n<np; n+=nc ){
         normdata[n] = (uiptr[n] - minc) * invdiffc;
       }
@@ -101,6 +103,7 @@ void filter_normalize( RawTile& in, vector<float>& max, vector<float>& min ) {
       usptr = (unsigned short*)in.data;
       // Loop through our unsigned short pixels
 #pragma ivdep
+#pragma omp parallel for
       for( unsigned int n=c; n<np; n+=nc ){
         normdata[n] = (usptr[n] - minc) * invdiffc;
       }
@@ -109,6 +112,7 @@ void filter_normalize( RawTile& in, vector<float>& max, vector<float>& min ) {
       ucptr = (unsigned char*)in.data;
       // Loop through our unsigned char pixels
 #pragma ivdep
+#pragma omp parallel for
       for( unsigned int n=c; n<np; n+=nc ){
         normdata[n] = (ucptr[n] - minc) * invdiffc;
       }
@@ -214,7 +218,6 @@ static void LAB2sRGB( unsigned char *in, unsigned char *out ){
      and signed char for a/b. We also need to rescale
      correctly to 0-100 for L and -127 -> +127 for a/b.
   */
-  l = in[0];
   L = (float) ( in[0] / 2.55 );
   l = ( (signed char*)in )[1];
   a = (float) l;
@@ -542,6 +545,7 @@ void filter_contrast( RawTile& in, float c ){
   float* infptr = (float*)in.data;
 
 #pragma ivdep
+#pragma omp parallel for
   for( unsigned int n=0; n<np; n++ ){
     float v = infptr[n] * 255.0 * c;
     buffer[n] = (unsigned char)( (v<255.0) ? (v<0.0? 0.0 : v) : 255.0 );

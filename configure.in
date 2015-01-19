@@ -52,6 +52,13 @@ AC_SYS_LARGEFILE
 # Check for C99 isfinite function
 AX_CXX_HAVE_ISFINITE
 
+# Check for OpenMP
+AC_OPENMP
+AS_IF([test "x$enable_openmp" != "xyes"], [
+ INCLUDES="$INCLUDES $OPENMP_CFLAGS"
+ LIBS="$LIBS $OPENMP_CFLAGS"
+])
+
 
 #************************************************************ 
 
