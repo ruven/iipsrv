@@ -27,7 +27,9 @@
 #include <string>
 #include <libmemcached/memcached.h>
 
-
+#ifdef LIBMEMCACHED_VERSION_STRING
+typedef memcached_return memcached_return_t;
+#endif
 
 /// Cache to store raw tile data
 
