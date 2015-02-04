@@ -400,7 +400,7 @@ void KakaduImage::process( unsigned int res, int layers, int xoffset, int yoffse
 
   // Handle virtual resolutions
   if( res < virtual_levels ){
-    unsigned int factor = 2 << (virtual_levels-res);
+    unsigned int factor = 1 << (virtual_levels-res);
     xoffset *= factor;
     yoffset *= factor;
     tw *= factor;
@@ -585,7 +585,7 @@ void KakaduImage::process( unsigned int res, int layers, int xoffset, int yoffse
 #endif
 
       unsigned int n = 0;
-      unsigned int factor = 2 << (virtual_levels-res);
+      unsigned int factor = 1 << (virtual_levels-res);
       for( unsigned int j=0; j<th; j+=factor ){
 	for( unsigned int i=0; i<tw; i+=factor ){
 	  for( unsigned int k=0; k<channels; k++ ){
