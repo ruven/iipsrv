@@ -160,7 +160,7 @@ bool View::viewPortSet() {
 unsigned int View::getViewLeft(){
   // Scale up our view to a real pixel value.
   // Note that we calculate from our full resolution image to avoid errors from the rounding at each resolution size
-  unsigned int l = round( width*view_left/(2 << (max_resolutions-resolution-1)) );
+  unsigned int l = round( width*view_left/(1 << (max_resolutions-resolution-1)) );
   return l;
 }
 
@@ -168,7 +168,7 @@ unsigned int View::getViewLeft(){
 unsigned int View::getViewTop(){
   // Scale up our view to a real pixel value
   // Note that we calculate from our full resolution image to avoid errors from the rounding at each resolution size
-  unsigned int t = round( height*view_top/(2 << (max_resolutions-resolution-1)) );
+  unsigned int t = round( height*view_top/(1 << (max_resolutions-resolution-1)) );
   return t;
 }
 
@@ -176,7 +176,7 @@ unsigned int View::getViewTop(){
 unsigned int View::getViewWidth(){
 
   // Scale up our viewport, then make sure our size is not too large or too small
-  unsigned int rw = width / (2 << (max_resolutions-resolution-1));
+  unsigned int rw = width / (1 << (max_resolutions-resolution-1));
   unsigned int w = round( view_width*rw );
   unsigned int left = (unsigned int) round( view_left*rw );
 
@@ -189,7 +189,7 @@ unsigned int View::getViewWidth(){
 unsigned int View::getViewHeight(){
 
   // Scale up our viewport, then make sure our size is not too large or too small
-  unsigned int rh = height / (2 <<  (max_resolutions-resolution-1));
+  unsigned int rh = height / (1 <<  (max_resolutions-resolution-1));
   unsigned int h = (unsigned int) round( view_height*rh );
   unsigned int top = (unsigned int) round( view_top*rh );
 
