@@ -108,6 +108,11 @@ void CVT::send( Session* session ){
     else if( ((float)resampled_width/(float)view_width) > ((float)resampled_height/(float)view_height) ){
       resampled_width = (unsigned int) round((((float)resampled_height/(float)view_height) * view_width));
     }
+
+    if((resampled_height > view_height) || (resampled_width > view_width)) {
+      resampled_height = view_height;
+      resampled_width = view_width;
+    }
   }
 
 
