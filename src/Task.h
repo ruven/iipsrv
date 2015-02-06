@@ -194,6 +194,12 @@ class HEI : public Task {
   void run( Session* session, const std::string& argument );
 };
 
+/// CVT Prevent upscaling Command
+class Upscale : public Task {
+ public:
+  void run( Session* session, const std::string& argument );
+};
+
 
 /// CVT Region Command
 class RGN : public Task {
