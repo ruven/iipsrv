@@ -2,7 +2,7 @@
 
     IIIF Request Command Handler Class Member Function
 
-    Copyright (C) 2014 Ruven Pillay
+    Copyright (C) 2014-2015 Ruven Pillay
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -166,9 +166,9 @@ void IIIF::run( Session* session, const string& src ){
       id = "http://" + session->headers["HTTP_HOST"] + request_uri;
     }
 
-    // Escape file name for JSON
+    // Decode and escape any URL-encoded characters from our file name for JSON
     URL json(id);
-    string escapedFilename = json.Escape();
+    string escapedFilename = json.escape();
 
 
     infoStringStream << "{" << endl
