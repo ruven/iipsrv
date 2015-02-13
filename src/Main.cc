@@ -497,9 +497,10 @@ int main( int argc, char *argv[] )
         session.headers["HTTP_HOST"] = header;
       }
 
+      std::string http_if_modified_since;
       if( (header = FCGX_GetParam("HTTP_IF_MODIFIED_SINCE", request.envp)) ){
-        std::string& http_if_modified_since = session.headers["HTTP_IF_MODIFIED_SINCE"];
         http_if_modified_since = header;
+        session.headers["HTTP_IF_MODIFIED_SINCE"] = http_if_modified_since;
         if( loglevel >= 2 ){
           logfile << "HTTP Header: If-Modified-Since: " << http_if_modified_since << endl;
         }
@@ -507,20 +508,18 @@ int main( int argc, char *argv[] )
 #ifdef HAVE_MEMCACHED
       // Check whether this exists in memcached, but only if we haven't had an if_modified_since
       // request, which should always be faster to send
-      if( !header ){
-	char* memcached_response = NULL;
-	if( (memcached_response = memcached.retrieve( request_string )) ){
-	  writer.putStr( memcached_response, memcached.length() );
-	  writer.flush();
-	  free( memcached_response );
-	  throw( 100 );
-	}
+      if( http_if_modified_since.empty() ){
+        char* memcached_response = NULL;
+        if( (memcached_response = memcached.retrieve( request_string )) ){
+          writer.putStr( memcached_response, memcached.length() );
+          writer.flush();
+          free( memcached_response );
+          throw( 100 );
+        }
       }
 #endif
 
-
       // Parse up the command list
-
       list < pair<string,string> > requests;
       list < pair<string,string> > :: const_iterator commands;
 
