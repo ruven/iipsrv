@@ -445,26 +445,8 @@ int main( int argc, char *argv[] )
     IIPResponse response;
     response.setCORS( cors );
 
+
     try{
-      
-      // Get the query into a string
-#ifdef DEBUG
-      const string request_string = argv[1];
-#else
-      const string request_string = FCGX_GetParam( "QUERY_STRING", request.envp );
-#endif
-
-      // Check that we actually have a request string
-      if( request_string.length() == 0 ) {
-	throw string( "QUERY_STRING not set" );
-      }
-
-      if( loglevel >=2 ){
-	logfile << "Full Request is " << request_string << endl;
-      }
-
-      
-
       // Set up our session data object
       Session session;
       session.image = &image;
@@ -479,39 +461,65 @@ int main( int argc, char *argv[] )
       session.watermark = &watermark;
       session.headers.empty();
 
+
       // Get certain HTTP headers, such as if_modified_since and the query_string
       char* header = NULL;
-      if( (header = FCGX_GetParam("HTTP_IF_MODIFIED_SINCE", request.envp)) ){
-	session.headers["HTTP_IF_MODIFIED_SINCE"] = string(header);
-	if( loglevel >= 2 ){
-	  logfile << "HTTP Header: If-Modified-Since: " << session.headers["HTTP_IF_MODIFIED_SINCE"] << endl;
-	}
-      }
-      session.headers["QUERY_STRING"] = request_string;
-      session.headers["SERVER_PROTOCOL"] =  FCGX_GetParam("SERVER_PROTOCOL", request.envp);
-      session.headers["HTTP_HOST"] = FCGX_GetParam("HTTP_HOST", request.envp);
-      session.headers["REQUEST_URI"] = FCGX_GetParam("REQUEST_URI", request.envp);
+
       session.headers["BASE_URL"] = base_url;
 
+#ifdef DEBUG
+      header = argv[1];
+#else
+      header = FCGX_GetParam( "QUERY_STRING", request.envp );
+#endif
+      std::string request_string;
+      if( header ){
+        request_string = header;
+        session.headers["QUERY_STRING"] = request_string;
+      }
+      // Check that we actually have a request string
+      if( request_string.empty() ){
+        throw string( "QUERY_STRING not set" );
+      }
+      if( loglevel >=2 ){
+        logfile << "Full Request is " << request_string << endl;
+      }
 
+      if( (header = FCGX_GetParam("REQUEST_URI", request.envp)) ){
+        session.headers["REQUEST_URI"] = header;
+      }
 
+      if( (header = FCGX_GetParam("SERVER_PROTOCOL", request.envp)) ){
+        session.headers["SERVER_PROTOCOL"] = header;
+      }
+
+      if( (header = FCGX_GetParam("HTTP_HOST", request.envp)) ){
+        session.headers["HTTP_HOST"] = header;
+      }
+
+      std::string http_if_modified_since;
+      if( (header = FCGX_GetParam("HTTP_IF_MODIFIED_SINCE", request.envp)) ){
+        http_if_modified_since = header;
+        session.headers["HTTP_IF_MODIFIED_SINCE"] = http_if_modified_since;
+        if( loglevel >= 2 ){
+          logfile << "HTTP Header: If-Modified-Since: " << http_if_modified_since << endl;
+        }
+      }
 #ifdef HAVE_MEMCACHED
       // Check whether this exists in memcached, but only if we haven't had an if_modified_since
       // request, which should always be faster to send
-      if( !header ){
-	char* memcached_response = NULL;
-	if( (memcached_response = memcached.retrieve( request_string )) ){
-	  writer.putStr( memcached_response, memcached.length() );
-	  writer.flush();
-	  free( memcached_response );
-	  throw( 100 );
-	}
+      if( http_if_modified_since.empty() ){
+        char* memcached_response = NULL;
+        if( (memcached_response = memcached.retrieve( request_string )) ){
+          writer.putStr( memcached_response, memcached.length() );
+          writer.flush();
+          free( memcached_response );
+          throw( 100 );
+        }
       }
 #endif
 
-
       // Parse up the command list
-
       list < pair<string,string> > requests;
       list < pair<string,string> > :: const_iterator commands;
 
