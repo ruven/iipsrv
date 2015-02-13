@@ -1,3 +1,8 @@
+13/02/2015:
+	- Added checks for NULL FCGX_GetParam results and to empty HTTP_IF_MODIFIED_SINCE.
+	  See: https://github.com/ruven/iipsrv/issues/33 - thanks to Brian Helba.
+
+
 12/02/2015:
 	- Fixed @id decoding in IIIF.cc for paths containing slashes
 
