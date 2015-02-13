@@ -328,6 +328,43 @@ fastcgi.server = ( "/fcgi-bin/iipsrv.fcgi" =>
 --------------------------------------------------------------------
 ```
 
+### NginX
+
+iipsrv can also be NginX. The one drawback with regards to iipsrv is that it cannot automatically spawn FCGI processes, so you will need to use 
+nginx together with spawn-fcgi or start iipsrv from the command line.
+
+To set up nginx with iipsrv add a directive such as this to your nginx configuration, which will forward requests to /fcgi-bin/iipsrv.fcgi to a 
+running iipsrv process on port 9000.
+
+```
+location /fcgi-bin/iipsrv.fcgi {
+	fastcgi_pass 	localhost:9000;
+	fastcgi_param   PATH_INFO $fastcgi_script_name;
+        fastcgi_param   REQUEST_METHOD $request_method;
+        fastcgi_param   QUERY_STRING $query_string;
+        fastcgi_param   CONTENT_TYPE $content_type;
+        fastcgi_param   CONTENT_LENGTH $content_length;
+        fastcgi_param   SERVER_PROTOCOL $server_protocol;
+        fastcgi_param   REQUEST_URI $request_uri;
+}
+```
+
+Nginx can also handle load balancing to multiple iipsrv instances, which can be hosted on the same machine on multiple ports or on different hosts. 
+For a multiple host configuration, declare the load balancing like this:
+
+```
+upstream iip {
+	server 192.168.0.1:9000;
+	server 192.168.0.2:9000;
+	server 192.168.0.3:9000;
+	server 192.168.0.4:9000;
+}
+```
+
+and change the fastcgi_pass parameter in the above location configuration to point to this instead of a fixed address:
+
+    fastcgi_pass 	iip;
+
 
 ### spawn-fcgi
 
@@ -403,4 +440,4 @@ For example with lighttpd:
 Please refer to the project site http://iipimage.sf.net for further details
 
 ---------------------------------------------------------------------------
-(c) 2000-2014 Ruven Pillay <ruven@users.sourceforge.net>
+(c) 2000-2015 Ruven Pillay <ruven@users.sourceforge.net>
