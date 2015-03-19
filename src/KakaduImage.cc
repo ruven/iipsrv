@@ -509,11 +509,34 @@ void KakaduImage::process( unsigned int res, int layers, int xoffset, int yoffse
       buffer = new unsigned char[tw*th*channels];
     }
 
+    // Keep track of changes in stripe heights
+    int previous_stripe_heights = stripe_heights[0];
+
 
     while( continues ){
 
+      
       decompressor.get_recommended_stripe_heights( comp_dims.size.y,
 						   1024, stripe_heights, NULL );
+
+
+      // If we have a larger stripe height, allocate new memory for this
+      if( stripe_heights[0] > previous_stripe_heights ){
+
+	// First delete then re-allocate our buffers
+	delete_buffer( stripe_buffer );
+	if( obpc == 16 ){
+	  stripe_buffer = new kdu_uint16[tw*stripe_heights[0]*channels];
+	}
+	else if( obpc == 8 ){
+	  stripe_buffer = new kdu_byte[tw*stripe_heights[0]*channels];
+	}
+
+#ifdef DEBUG
+	logfile << "Kakadu :: Stripe height increase: re-allocating memory for height " << stripe_heights[0] << endl;
+#endif
+      }
+
 
       if( obpc == 16 ){
 	// Set these to false to get unsigned 16 bit values
@@ -581,7 +604,7 @@ void KakaduImage::process( unsigned int res, int layers, int xoffset, int yoffse
     if( res < virtual_levels ){
 
 #ifdef DEBUG
-      logfile << "Kakadu :: resizing tile to virtual resolution" << endl;
+      logfile << "Kakadu :: resizing tile to virtual resolution with factor " << (1 << (virtual_levels-res)) << endl;
 #endif
 
       unsigned int n = 0;

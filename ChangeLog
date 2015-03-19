@@ -1,3 +1,8 @@
+19/03/2015:
+	- Fix to KakaduImage.cc to check for increases in stripe heights and make sure
+	  sufficient memory is allocated.
+
+
 13/02/2015:
 	- Added checks for NULL FCGX_GetParam results and to empty HTTP_IF_MODIFIED_SINCE.
 	  See: https://github.com/ruven/iipsrv/issues/33 - thanks to Brian Helba.
