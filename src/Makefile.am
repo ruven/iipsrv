@@ -13,15 +13,15 @@ if ENABLE_KAKADU
 iipsrv_fcgi_LDADD += KakaduImage.o
 endif
 
-if ENABLE_PNG
+#if ENABLE_PNG
 #iipsrv_fcgi_LDADD += PNGCompressor.o PTL.o
-endif
+#endif
 
 if ENABLE_MODULES
 iipsrv_fcgi_LDADD += DSOImage.o
 endif
 
-EXTRA_iipsrv_fcgi_SOURCES = DSOImage.h DSOImage.cc KakaduImage.h KakaduImage.cc PNGCompressor.h PNGCompressor.cc PTL.cc Main.cc
+EXTRA_iipsrv_fcgi_SOURCES = DSOImage.h DSOImage.cc KakaduImage.h KakaduImage.cc Main.cc
 
 iipsrv_fcgi_SOURCES = \
 			IIPImage.h \
