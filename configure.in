@@ -227,7 +227,7 @@ if test "x${KAKADU}" = xtrue; then
 	LIBS="$LIBS $kakadu_path/apps/make/jpx.o $kakadu_path/apps/make/jp2.o $kakadu_path/apps/make/kdu_stripe_decompressor.o $kakadu_path/apps/make/ssse3_stripe_transfer.o $kakadu_path/apps/make/*.so -lpthread"
 
     AC_CHECK_FILE( $kakadu_path/apps/make/avx2_stripe_transfer.o,
-        AC_MSG_RESULT([configure: Kakadu is > v7.5.]);
+        AC_MSG_RESULT([configure: Kakadu is >= v7.5.]);
         KDU_75=true,
         AC_MSG_RESULT([configure: Kakadu is < v7.5])
     )
