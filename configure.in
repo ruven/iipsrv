@@ -226,11 +226,11 @@ if test "x${KAKADU}" = xtrue; then
 	EXTRAS="KakaduImage.o"
 	LIBS="$LIBS $kakadu_path/apps/make/jpx.o $kakadu_path/apps/make/jp2.o $kakadu_path/apps/make/kdu_stripe_decompressor.o $kakadu_path/apps/make/*.so -lpthread"
 
-	# Check for SSE3 support in Kakadu
+	# Check for SSSE3 support in Kakadu
 	AC_CHECK_FILE( $kakadu_path/apps/make/ssse3_stripe_transfer.o,
-		KDU_SSE3=true
+		KDU_SSSE3=true
 	)
-	if test "x{KDU_SSE3}" = xtrue; then
+	if test "x${KDU_SSSE3}" = xtrue; then
 		LIBS="$LIBS $kakadu_path/apps/make/ssse3_stripe_transfer.o"
 	fi
 
