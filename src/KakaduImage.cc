@@ -199,8 +199,14 @@ void KakaduImage::loadImageInfo( int seq, int ang ) throw(file_error)
   if( channels == 1 ) colourspace = GREYSCALE;
   else{
     jp2_colour_space cs = j2k_colour.get_space();
-    if( cs == JP2_sRGB_SPACE || cs == JP2_CIELab_SPACE ) colourspace = sRGB;
+    if( cs == JP2_sRGB_SPACE || cs == JP2_iccRGB_SPACE || cs == JP2_esRGB_SPACE || cs == JP2_CIELab_SPACE ) colourspace = sRGB;
     //else if ( cs == JP2_CIELab_SPACE ) colourspace = CIELAB;
+    else {
+#ifdef DEBUG
+    	logfile << "WARNING : colour space not found, setting sRGB colour space value" << endl;
+#endif
+    	colourspace = sRGB;
+    }
   }
 
 
