@@ -148,7 +148,7 @@ void DeepZoom::run( Session* session, const std::string& argument ){
   // Take into account the extra zoom levels required by the DeepZoom spec
   resolution = resolution - (dzi_res-numResolutions) - 1;
   if( resolution < 0 ) resolution = 0;
-  if( (unsigned int)resolution > numResolutions ) resolution = numResolutions-1;
+  if( (unsigned int)resolution > numResolutions-1 ) resolution = numResolutions-1;
 
   if( session->loglevel >= 2 ){
     *(session->logfile) << "DeepZoom :: Tile request for resolution: "
