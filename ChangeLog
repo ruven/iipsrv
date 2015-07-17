@@ -1,3 +1,8 @@
+17/07/2015:
+	- Increased buffer memory for JPEG encoding to handle certain images or tiles that
+	  encode at Q=100 to sizes significantly larger than the raw data.
+
+
 19/03/2015:
 	- Fix to KakaduImage.cc to check for increases in stripe heights and make sure
 	  sufficient memory is allocated.

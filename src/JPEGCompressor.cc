@@ -1,6 +1,6 @@
 /*  JPEG class wrapper to ijg jpeg library
 
-    Copyright (C) 2000-2012 Ruven Pillay.
+    Copyright (C) 2000-2015 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -25,7 +25,7 @@
 using namespace std;
 
 
-#define MX 16536
+#define MX 32768
 
 
 /* My version of the JPEG error_exit function. We want to pass control back
