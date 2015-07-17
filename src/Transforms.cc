@@ -2,7 +2,7 @@
 
 /*  IIP fcgi server module - image processing routines
 
-    Copyright (C) 2004-2014 Ruven Pillay.
+    Copyright (C) 2004-2015 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -46,6 +46,10 @@ static bool isfinite( float arg )
 #define D65_Y0 100.0
 #define D65_Z0 108.8827
 
+/* Size threshold for using parallel loops (256x256 pixels)
+ */
+#define PARALLEL_THRESHOLD 65536
+
 
 static const float _sRGB[3][3] = { {  3.240479, -1.537150, -0.498535 },
 				   { -0.969256, 1.875992, 0.041556 },
@@ -65,7 +69,7 @@ void filter_normalize( RawTile& in, vector<float>& max, vector<float>& min ) {
   float* fptr;
   unsigned int* uiptr;
   unsigned short* usptr;
-  unsigned char* ucptr; 
+  unsigned char* ucptr;
 
   if( in.bpc == 32 && in.sampleType == FLOATINGPOINT ) {
     normdata = (float*)in.data;
@@ -398,16 +402,16 @@ void filter_cmap( RawTile& in, enum cmap_type cmap ){
 
 // Inversion function
 void filter_inv( RawTile& in ){
-  float* infptr;
+
   unsigned int np = in.dataLength * 8 / in.bpc;
+  float *infptr = (float*) in.data;
 
-  infptr = (float*) in.data;
-
-  // Loop through our pixels for floating values 
+  // Loop through our pixels for floating values
 #pragma ivdep
-  for( int n=np; n--; ){
-    float v = *infptr;
-    *(infptr++) = 1.0 - v;
+#pragma omp parallel for
+  for( unsigned int n=0; n<np; n++ ){
+    float v = infptr[n];
+    infptr[n] = 1.0 - v;
   }
 }
 
@@ -484,9 +488,9 @@ void filter_interpolate_bilinear( RawTile& in, unsigned int resampled_width, uns
   float xscale = (float)(width-1) / (float)resampled_width;
   float yscale = (float)(height-1) / (float)resampled_height;
 
-  // Index for our output buffer
-  unsigned int resampled_index = 0;
 
+  // Do not parallelize for small images (256x256 pixels) as this can be slower that single threaded
+#pragma omp parallel for if( resampled_width*resampled_height > PARALLEL_THRESHOLD )
   for( unsigned int j=0; j<resampled_height; j++ ){
 
     // Index to the current pyramid resolution's top left pixel
@@ -514,11 +518,14 @@ void filter_interpolate_bilinear( RawTile& in, unsigned int resampled_width, uns
       float a = (float)(ii+1) - iscale;
       float b = iscale - (float)ii;
 
+      // Output buffer index
+      unsigned int resampled_index = j*resampled_width*in.channels + i*in.channels;
+
       for( int k=0; k<in.channels; k++ ){
 	float tx = input[p11+k]*a + input[p21+k]*b;
 	float ty = input[p12+k]*a + input[p22+k]*b;
 	unsigned char r = (unsigned char)( c*tx + d*ty );
-	output[resampled_index++] = r;
+	output[resampled_index+k] = r;
       }
     }
   }
@@ -570,11 +577,12 @@ void filter_gamma( RawTile& in, float g ){
 
   infptr = (float*)in.data;
 
-  // Loop through our pixels for floating values 
+  // Loop through our pixels for floating values
 #pragma ivdep
-  for(int n=np; n--;){
-    float v = *infptr;
-    *(infptr++) = powf( v<0.0 ? 0.0 : v, g );
+#pragma omp parallel for
+  for( unsigned int n=0; n<np; n++ ){
+    float v = infptr[n];
+    infptr[n] = powf( v<0.0 ? 0.0 : v, g );
   }
 }
 
@@ -598,7 +606,7 @@ void filter_rotate( RawTile& in, float angle=0.0 ){
 	for( int j=in.height-1; j>=0; j-- ){
 	  unsigned int index = (in.width*j + i)*in.channels;
 	  for( int k=0; k < in.channels; k++ ){
-	    ((unsigned char*)buffer)[n++] = ((unsigned char*)in.data)[index+k]; 
+	    ((unsigned char*)buffer)[n++] = ((unsigned char*)in.data)[index+k];
 	  }
 	}
       }

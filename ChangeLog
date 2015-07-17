@@ -3,6 +3,8 @@
 	  encode at Q=100 to sizes significantly larger than the raw data.
 	- Added new CACHE_CONTROL server parameter to allow user control over this. If not
 	  set, it defaults to the previous default value of "max-age=86400".
+	- More image processing routines now parallelized with OpenMP: bilinear interpolation, 
+	  for example, now parallelized and considerably faster.
 
 
 19/03/2015:
