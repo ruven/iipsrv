@@ -279,10 +279,10 @@ void JTL::send( Session* session, int resolution, int tile ){
 	    "Server: iipsrv/%s\r\n"
 	    "Content-Type: image/jpeg\r\n"
             "Content-Length: %d\r\n"
-	    "Cache-Control: max-age=%d\r\n"
+	    "%s\r\n"
 	    "Last-Modified: %s\r\n"
 	    "\r\n",
-	    VERSION, len, MAX_AGE, (*session->image)->getTimestamp().c_str() );
+	    VERSION, len, session->response->getCacheControl().c_str(), (*session->image)->getTimestamp().c_str() );
 
   session->out->printf( str );
 #endif
