@@ -1,4 +1,4 @@
-.TH IIPSRV 8 "AUGUST 2014" Linux "User Manuals"
+.TH IIPSRV 8 "JULY 2015" Linux "User Manuals"
 .SH NAME
 
 IIPSRV \- IIPImage Image Server
@@ -73,10 +73,10 @@ component such as ../ is also filtered out. No default value.
 The maximum permitted image pixel size returned by the CVT command
 in conjunction with WID or HEI or RGN. The default is 5000. This
 prevents huge requests from overloading the server
-.IP LAYERS
-The number of quality layers to decode for image that support 
+.IP MAX_LAYERS
+The maximum number of quality layers to decode for image that support 
 progressive quality encoding, such as JPEG2000. Ignored for other file 
-formats. The default is 1.
+formats. By default half of the available layers are decoded. If set to -1, all the available layers will be decoded.
 .IP WATERMARK
 TIFF image to use as watermark file. This image should be not be 
 bigger the tile size used for TIFF tiling. If bigger, it will simply be 
@@ -107,7 +107,9 @@ See http://www.w3.org/TR/cors/ for more details on CORS.
 .IP BASE_URL
 Set a base URL for use in certain protocol requests if web server rewriting has taken place and the public URL is not the same as that supplied to
 .B iipsrv
-
+.IP CACHE_CONTROL
+Set the HTTP Cache-Control header. See http://www.w3.org/Protocols/rfc2616/rfc2616-sec14.html#sec14.9 for a full list of options. If not set, header defaults to "max-age=86400" (24 hours).
+ 
 
 .SH EXAMPLES
 

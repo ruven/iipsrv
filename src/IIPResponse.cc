@@ -1,7 +1,7 @@
 /*
     IIP Response Handler Class
 
-    Copyright (C) 2003-2014 Ruven Pillay.
+    Copyright (C) 2003-2015 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -33,7 +33,6 @@ IIPResponse::IIPResponse(){
   protocol = "";
   server = "Server: iipsrv/" + string(VERSION);
   modified = "";
-  cache = "Cache-Control: max-age=86400";
   mimeType = "Content-Type: application/vnd.netfpx";
   cors = "";
   eof = "\r\n";
@@ -104,7 +103,7 @@ string IIPResponse::formatResponse() {
       eof + eof + error;
   }
   else{
-    response = server + eof + cache + eof + modified + eof + mimeType + eof;
+    response = server + eof + cacheControl + eof + modified + eof + mimeType + eof;
     if( !cors.empty() ) response += cors + eof;
     response += eof + protocol + eof + responseBody;
   }

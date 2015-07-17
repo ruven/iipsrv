@@ -187,6 +187,9 @@ See http://www.w3.org/TR/cors/ for more details on CORS.
 BASE_URL: Set a base URL for use in certain protocol requests if web server rewriting 
 has taken place and the public URL is not the same as that supplied to iipsrv.
 
+CACHE_CONTROL: Set the HTTP Cache-Control header. See http://www.w3.org/Protocols/rfc2616/rfc2616-sec14.html#sec14.9 for 
+a full list of options. If not set, header defaults to "max-age=86400" (24 hours).
+
 DECODER_MODULES: Comma separated list of external modules for decoding 
 other image formats. This is only necessary if you have activated 
 --enable-modules for ./configure and written your own image format 

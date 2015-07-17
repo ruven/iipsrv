@@ -135,7 +135,7 @@ void CVT::send( Session* session ){
 
   char str[1024];
   snprintf( str, 1024, "Server: iipsrv/%s\r\n"
-	    "Cache-Control: max-age=%d\r\n"
+	    "%s\r\n"
 	    "Last-Modified: %s\r\n"
 	    "Content-Type: image/jpeg\r\n"
 	    "Content-Disposition: inline;filename=\"%s.jpg\"\r\n"
@@ -143,7 +143,7 @@ void CVT::send( Session* session ){
 	    "Transfer-Encoding: chunked\r\n"
 #endif
 	    "\r\n",
-	    VERSION, MAX_AGE, (*session->image)->getTimestamp().c_str(), basename.c_str() );
+	    VERSION, session->response->getCacheControl().c_str(), (*session->image)->getTimestamp().c_str(), basename.c_str() );
 
   session->out->printf( (const char*) str );
 #endif

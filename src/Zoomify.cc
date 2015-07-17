@@ -5,7 +5,7 @@
     * (www.oldmapsonline.org) from Ministry of Culture of the Czech Republic      *
 
 
-    Copyright (C) 2008-2014 Ruven Pillay.
+    Copyright (C) 2008-2015 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -107,11 +107,11 @@ void Zoomify::run( Session* session, const std::string& argument ){
     snprintf( str, 1024,
 	      "Server: iipsrv/%s\r\n"
 	      "Content-Type: application/xml\r\n"
-	      "Cache-Control: max-age=%d\r\n"
 	      "Last-Modified: %s\r\n"
+	      "%s\r\n"
 	      "\r\n"
 	      "<IMAGE_PROPERTIES WIDTH=\"%d\" HEIGHT=\"%d\" NUMTILES=\"%d\" NUMIMAGES=\"1\" VERSION=\"1.8\" TILESIZE=\"%d\" />",
-	      VERSION, MAX_AGE,(*session->image)->getTimestamp().c_str(), width, height, ntiles, tw );
+	      VERSION, (*session->image)->getTimestamp().c_str(), session->response->getCacheControl().c_str(), width, height, ntiles, tw );
 
     session->out->printf( (const char*) str );
     session->response->setImageSent();

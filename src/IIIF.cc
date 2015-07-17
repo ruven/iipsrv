@@ -204,8 +204,9 @@ void IIIF::run( Session* session, const string& src ){
     stringstream header;
     header << "Server: iipsrv/" << VERSION << eof
 	   << "Content-Type: application/ld+json" << eof
-	   << "Cache-Control: max-age=" << MAX_AGE << eof
-	   << "Last-Modified: " << (*session->image)->getTimestamp() << eof;
+	   << "Last-Modified: " << (*session->image)->getTimestamp() << eof
+	   << session->response->getCacheControl() << eof;
+
     if( !cors.empty() ) header << cors << eof;
     header << eof << infoStringStream.str();
 
