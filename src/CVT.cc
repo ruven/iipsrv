@@ -1,7 +1,7 @@
 /*
     IIP CVT Command Handler Class Member Function
 
-    Copyright (C) 2006-2014 Ruven Pillay.
+    Copyright (C) 2006-2015 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -204,7 +204,7 @@ void CVT::send( Session* session ){
     if( session->view->getGamma() != 1.0 ){
       float gamma = session->view->getGamma();
       if( session->loglevel >= 3 ){
-	*(session->logfile) << "CVT :: Applying gamma of " << gamma << endl; 
+	*(session->logfile) << "CVT :: Applying gamma of " << gamma << endl;
       }
       filter_gamma( complete_image, gamma );
     }
@@ -310,7 +310,7 @@ void CVT::send( Session* session ){
     if( session->loglevel >= 5 ){
       string direction = session->view->flip==1 ? "horizontally" : "vertically";
       *(session->logfile) << "JTL :: Flipping image " << direction << " in "
-			  << flip_timer.getTime() << " microseconds" << endl; 
+			  << flip_timer.getTime() << " microseconds" << endl;
     }
   }
 
@@ -332,7 +332,7 @@ void CVT::send( Session* session ){
 
     if( session->loglevel >= 5 ){
       *(session->logfile) << "CVT :: Rotating image by " << rotation << " degrees in "
-			  << rotation_timer.getTime() << " microseconds" << endl; 
+			  << rotation_timer.getTime() << " microseconds" << endl;
     }
   }
 
@@ -374,11 +374,11 @@ void CVT::send( Session* session ){
 
 
   // Send out the data per strip of fixed height.
-  // Allocate enough memory for this plus an extra 16k for instances where compressed
+  // Allocate enough memory for this plus an extra 64k for instances where compressed
   // data is greater than uncompressed
   unsigned int strip_height = 128;
   unsigned int channels = complete_image.channels;
-  unsigned char* output = new unsigned char[resampled_width*channels*strip_height+16536];
+  unsigned char* output = new unsigned char[resampled_width*channels*strip_height+65636];
   int strips = (resampled_height/strip_height) + (resampled_height%strip_height == 0 ? 0 : 1);
 
   for( int n=0; n<strips; n++ ){
@@ -470,4 +470,5 @@ void CVT::send( Session* session ){
   }
 
 
-}  
+}
+
