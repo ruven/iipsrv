@@ -1,3 +1,7 @@
+20/07/2015:
+	- More OpenMP parallelization and cleanups to Transform.cc
+
+
 17/07/2015:
 	- Increased buffer memory for JPEG encoding to handle certain images or tiles that
 	  encode at Q=100 to sizes significantly larger than the raw data.
