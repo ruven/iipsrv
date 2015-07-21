@@ -135,6 +135,10 @@ void View::setViewTop( float y ) {
 
 
 void View::setViewWidth( float w ) {
+  // Crop region widths > 100% of image size
+  if( view_left+w > 1.0 ) w = 1.0-view_left;
+
+  // Sanity check
   if( w > 1.0 ) view_width = 1.0;
   else if( w < 0.0 ) view_width = 0.0;
   else view_width = w;
@@ -142,6 +146,10 @@ void View::setViewWidth( float w ) {
 
 
 void View::setViewHeight( float h ) {
+  // Crop region heights > 100% of image size
+  //if( view_height+h > 1.0 ) h = 1.0-view_height;
+
+  // Sanity check
   if( h > 1.0 ) view_height = 1.0;
   else if( h < 0.0 ) view_height = 0.0;
   else view_height = h;

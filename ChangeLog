@@ -1,3 +1,8 @@
+21/07/2015:
+	- Fixed error in View.cc when setting regions sizes that extend beyond image boundaries:
+	  regions now cropped to boundaries.
+
+
 20/07/2015:
 	- More OpenMP parallelization and cleanups to Transform.cc
 
