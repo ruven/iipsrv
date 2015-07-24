@@ -150,7 +150,7 @@ AC_CHECK_HEADERS(lcms2.h,
 		LCMS=true; AC_DEFINE(LCMS),
 		LCMS=false )
 )
-
+LCMS=false
 
 
 #************************************************************ 
@@ -345,6 +345,8 @@ Options Enabled:
 ---------------
  Memcached: 			${MEMCACHED}
  JPEG2000 (Kakadu):		${KAKADU}
- PNG Output:			${PNG}
- LitleCMS:			${LCMS}
 ])
+
+# PNG Output:			${PNG}
+# LitleCMS:			${LCMS}
+#])
