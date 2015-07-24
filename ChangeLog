@@ -1,3 +1,7 @@
+24/07/2015:
+	- Added timers to all image processing functions in CVT.cc + code cleanup.
+
+
 21/07/2015:
 	- Fixed error in View.cc when setting regions sizes that extend beyond image boundaries:
 	  regions now cropped to boundaries.
