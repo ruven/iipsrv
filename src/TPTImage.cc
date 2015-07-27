@@ -42,7 +42,7 @@ void TPTImage::openImage() throw (file_error)
   updateTimestamp( filename );
 
   // Try to open and allocate a buffer
-  if( ( tiff = TIFFOpen( filename.c_str(), "r" ) ) == NULL ){
+  if( ( tiff = TIFFOpen( filename.c_str(), "rm" ) ) == NULL ){
     throw file_error( "tiff open failed for: " + filename );
   }
 
@@ -211,7 +211,7 @@ RawTile TPTImage::getTile( int seq, int ang, unsigned int res, int layers, unsig
   // Open the TIFF if it's not already open
   if( !tiff ){
     filename = getFileName( seq, ang );
-    if( ( tiff = TIFFOpen( filename.c_str(), "r" ) ) == NULL ){
+    if( ( tiff = TIFFOpen( filename.c_str(), "rm" ) ) == NULL ){
       throw file_error( "tiff open failed for:" + filename );
     }
   }
