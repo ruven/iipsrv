@@ -1,3 +1,10 @@
+27/07/2015:
+	- Modified ROT command to accept horizontal flipping through "!" prefix as with IIIF.
+	- Cosmetic improvement to FIF logging.
+	- Modified TPTImage to disable use of memory mapping when opening images as this seems
+	  to be slower when opening very large TIFFs.
+
+
 24/07/2015:
 	- Added timers to all image processing functions in CVT.cc + code cleanup.
 

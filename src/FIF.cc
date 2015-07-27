@@ -175,7 +175,8 @@ void FIF::run( Session* session, const string& src ){
       *(session->logfile) << "FIF :: Image dimensions are " << (*session->image)->getImageWidth()
 			  << " x " << (*session->image)->getImageHeight() << endl
 			  << "FIF :: Image contains " << (*session->image)->channels
-			  << " channels with " << (*session->image)->bpc << " bits per channel" << endl;
+			  << " channel" << (((*session->image)->channels>1)?"s":"") << " with "
+			  << (*session->image)->bpc << " bits per channel" << endl;
       tm *t = gmtime( &(*session->image)->timestamp );
       char strt[64];
       strftime( strt, 64, "%a, %d %b %Y %H:%M:%S GMT", t );
