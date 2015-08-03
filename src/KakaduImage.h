@@ -9,7 +9,7 @@
     Culture of the Czech Republic.
 
 
-    Copyright (C) 2009-2014 IIPImage.
+    Copyright (C) 2009-2015 IIPImage.
     Author: Ruven Pillay
 
     This program is free software; you can redistribute it and/or modify

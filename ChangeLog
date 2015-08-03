@@ -1,3 +1,7 @@
+03/08/2015:
+	- Added palette support for bilevel images to handle cases where LUTs are inverted
+
+
 27/07/2015:
 	- Modified ROT command to accept horizontal flipping through "!" prefix as with IIIF.
 	- Cosmetic improvement to FIF logging.

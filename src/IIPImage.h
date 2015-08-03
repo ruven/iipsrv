@@ -2,7 +2,7 @@
 
 /*  IIP fcgi server module
 
-    Copyright (C) 2000-2014 Ruven Pillay.
+    Copyright (C) 2000-2015 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -93,13 +93,19 @@ class IIPImage {
   std::list <int> verticalAnglesList;
 
 
- public:
+ protected:
+
+  /// LUT
+  std::vector <int> lut;
 
   /// Number of resolution levels that don't physically exist in file
   unsigned int virtual_levels;
 
   /// Return the image format e.g. tif
   ImageFormat format;
+
+
+ public:
 
   /// The image pixel dimensions
   std::vector <unsigned int> image_widths, image_heights;
@@ -184,6 +190,7 @@ class IIPImage {
     suffix( image.suffix ),
     horizontalAnglesList( image.horizontalAnglesList ),
     verticalAnglesList( image.verticalAnglesList ),
+    lut( image.lut ),
     virtual_levels( image.virtual_levels ),
     format( image.format ),
     image_widths( image.image_widths ),
