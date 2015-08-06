@@ -17,7 +17,7 @@ FEATURES
 * Support for gigapixel images
 * Dynamic JPEG export of whole or regions of images at any resolution
 * Supports IIP, Zoomify, DeepZoom and IIIF protocols
-* 8, 16 and 32 bit image support
+* 1, 8, 16 and 32 bit image support including 32 bit floating point support
 * CIELAB support with automatic CIELAB->sRGB colour space conversion
 * JPEG2000 support
 * Multispectral image support
@@ -333,7 +333,7 @@ fastcgi.server = ( "/fcgi-bin/iipsrv.fcgi" =>
 
 ### NginX
 
-iipsrv can also be NginX. The one drawback with regards to iipsrv is that it cannot automatically spawn FCGI processes, so you will need to use 
+iipsrv can also be used with NginX. The one drawback with regards to iipsrv is that it cannot automatically spawn FCGI processes, so you will need to use 
 nginx together with spawn-fcgi or start iipsrv from the command line.
 
 To set up nginx with iipsrv add a directive such as this to your nginx configuration, which will forward requests to /fcgi-bin/iipsrv.fcgi to a 
@@ -439,8 +439,8 @@ For example with lighttpd:
 
 
 
----------------------------------------------------------------------------
-Please refer to the project site http://iipimage.sf.net for further details
+------------------------------------------------------------------------------------
+Please refer to the project site http://iipimage.sourceforge.net for further details
 
----------------------------------------------------------------------------
+------------------------------------------------------------------------------------
 (c) 2000-2015 Ruven Pillay <ruven@users.sourceforge.net>

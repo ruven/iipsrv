@@ -43,6 +43,7 @@ class IIPResponse{
  private:
 
   std::string server;              // Server header
+  std::string powered;             // Powered By header
   std::string modified;            // Last modified header
   std::string cacheControl;        // Cache control header
   std::string mimeType;            // Mime type header

@@ -507,7 +507,7 @@ int main( int argc, char *argv[] )
       if( (header = FCGX_GetParam("HTTP_IF_MODIFIED_SINCE", request.envp)) ){
 	session.headers["HTTP_IF_MODIFIED_SINCE"] = string(header);
 	if( loglevel >= 2 ){
-	  logfile << "HTTP Header: If-Modified-Since: " << session.headers["HTTP_IF_MODIFIED_SINCE"] << endl;
+	  logfile << "HTTP Header: If-Modified-Since: " << header << endl;
 	}
       }
 

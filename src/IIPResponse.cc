@@ -32,6 +32,7 @@ IIPResponse::IIPResponse(){
   error = "";
   protocol = "";
   server = "Server: iipsrv/" + string(VERSION);
+  powered = "X-Powered-By: IIPImage";
   modified = "";
   mimeType = "Content-Type: application/vnd.netfpx";
   cors = "";
@@ -103,7 +104,7 @@ string IIPResponse::formatResponse() {
       eof + eof + error;
   }
   else{
-    response = server + eof + cacheControl + eof + modified + eof + mimeType + eof;
+    response = server + eof + powered + eof + cacheControl + eof + modified + eof + mimeType + eof;
     if( !cors.empty() ) response += cors + eof;
     response += eof + protocol + eof + responseBody;
   }

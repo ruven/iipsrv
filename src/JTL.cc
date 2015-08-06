@@ -277,6 +277,7 @@ void JTL::send( Session* session, int resolution, int tile ){
 
   snprintf( str, 1024,
 	    "Server: iipsrv/%s\r\n"
+	    "X-Powered-By: IIPImage\r\n"
 	    "Content-Type: image/jpeg\r\n"
             "Content-Length: %d\r\n"
 	    "Last-Modified: %s\r\n"

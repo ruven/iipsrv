@@ -137,7 +137,9 @@ void CVT::send( Session* session ){
   string basename = filename.substr( pos, filename.rfind(".")-pos );
 
   char str[1024];
-  snprintf( str, 1024, "Server: iipsrv/%s\r\n"
+  snprintf( str, 1024,
+	    "Server: iipsrv/%s\r\n"
+	    "X-Powered-By: IIPImage\r\n"
 	    "%s\r\n"
 	    "Last-Modified: %s\r\n"
 	    "Content-Type: image/jpeg\r\n"
