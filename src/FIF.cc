@@ -1,7 +1,7 @@
 /*
     IIP FIF Command Handler Class Member Function
 
-    Copyright (C) 2006-2014 Ruven Pillay.
+    Copyright (C) 2006-2015 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -29,7 +29,7 @@
 #include "KakaduImage.h"
 #endif
 
-#define MAXIMAGECACHE 500  // Max number of items in image cache
+#define MAXIMAGECACHE 1000  // Max number of items in image cache
 
 
 
@@ -71,6 +71,10 @@ void FIF::run( Session* session, const string& src ){
   // Get our image pattern variable
   string filename_pattern = Environment::getFileNamePattern();
 
+  // Timestamp of cached image
+  time_t timestamp = 0;
+
+
   // Put the image setup into a try block as object creation can throw an exception
   try{
 
@@ -87,6 +91,7 @@ void FIF::run( Session* session, const string& src ){
       // Cache Hit
       if( session->imageCache->find(argument) != session->imageCache->end() ){
 	test = (*session->imageCache)[ argument ];
+	timestamp = test.timestamp;       // Record timestamp if we have a cached image
 	if( session->loglevel >= 2 ){
 	  *(session->logfile) << "FIF :: Image cache hit. Number of elements: " << session->imageCache->size() << endl;
 	}
@@ -158,10 +163,19 @@ void FIF::run( Session* session, const string& src ){
     */
 
 
-    // Open image, update timestamp and add it to our cache
+    // Open image and update timestamp
     (*session->image)->openImage();
-    (*session->imageCache)[argument] = *(*session->image);
 
+    // Check timestamp consistency. If cached timestamp is older, update metadata
+    if( timestamp>0 && (timestamp < (*session->image)->timestamp) ){
+      if( session->loglevel >= 2 ){
+	*(session->logfile) << "FIF :: Image timestamp changed: reloading metadata" << endl;
+      }
+      (*session->image)->loadImageInfo( (*session->image)->currentX, (*session->image)->currentY );
+    }
+
+    // Add this image to our cache, overwriting previous version if it exists
+    (*session->imageCache)[argument] = *(*session->image);
 
     if( session->loglevel >= 3 ){
       *(session->logfile) << "FIF :: Created image" << endl;
@@ -176,7 +190,7 @@ void FIF::run( Session* session, const string& src ){
 			  << " x " << (*session->image)->getImageHeight() << endl
 			  << "FIF :: Image contains " << (*session->image)->channels
 			  << " channel" << (((*session->image)->channels>1)?"s":"") << " with "
-			  << (*session->image)->bpc << " bits per channel" << endl;
+			  << (*session->image)->bpc << " bit" << (((*session->image)->bpc>1)?"s":"") << " per channel" << endl;
       tm *t = gmtime( &(*session->image)->timestamp );
       char strt[64];
       strftime( strt, 64, "%a, %d %b %Y %H:%M:%S GMT", t );
@@ -213,7 +227,7 @@ void FIF::run( Session* session, const string& src ){
     }
     else{
       if( session->loglevel >= 2 ){
-	*(session->logfile) << "FIF :: Content modified" << endl;
+	*(session->logfile) << "FIF :: Content modified since requested time" << endl;
       }
     }
   }
