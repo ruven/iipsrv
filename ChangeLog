@@ -1,3 +1,7 @@
+07/09/2015:
+	- Fixed isfinite autoconf macro in acinclude.m4 to force float type
+
+
 06/08/2015:
 	- Added timestamp check and metadata reload for images that have been modified
 	- Added X-Powered-By header as a number of web servers strip out the Server header
