@@ -114,7 +114,7 @@
 
 19/08/2014:
 	- Added aspect ratio flag in View.h for use in CVT.cc. Also cleaned up Main.cc to remove
-	  unnecesary logging and record extra http headers.
+	  unnecessary logging and record extra http headers.
 	- Added IIIF protocol version 2.0 support via the IIIF argument.
 
 
@@ -338,7 +338,7 @@
 
 
 30/10/2012:
-	- Autoconf cleanup. Removed unneccesary autoconf files: should now use
+	- Autoconf cleanup. Removed unnecessary autoconf files: should now use
 	  autogen.sh script first before ./configure
 
 
@@ -621,7 +621,7 @@
 	- Major changes to the HTTP headers sent by iipsrv. Added
 	  HTTP Server id and Last-Modified timestamps to all server output.
 	  Checks are now made for a If-Modified-Since response and a
-	  304 Not Modified reponse returned if the timestamps match.
+	  304 Not Modified response returned if the timestamps match.
 	  This should significantly improve server performance.
 
 

@@ -134,7 +134,7 @@ class IIPImage {
   /// Quality layers
   unsigned int quality_layers;
 
-  /// Indicate whether we have opened and initialised some paramters for this image
+  /// Indicate whether we have opened and initialised some parameters for this image
   bool isSet;
 
   /// If we have an image sequence, the current X and Y position

@@ -63,7 +63,7 @@ unsigned int View::getResolution(){
   res_width = width;
   res_height = height;
 
-  // Caluclate our new width and height based on the calculated resolution
+  // Calculate our new width and height based on the calculated resolution
   for( i=1; i < (max_resolutions - resolution); i++ ){
     res_width = (int) floor(res_width / 2.0);
     res_height = (int) floor(res_height / 2.0);

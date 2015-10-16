@@ -402,7 +402,7 @@ void LYR::run( Session* session, const string& argument ){
 
 void CTW::run( Session* session, const string& argument ){
 
-  /* Matrices should be formated as CTW=[a,b,c;d,e,f;g,h,i] where commas separate row values
+  /* Matrices should be formatted as CTW=[a,b,c;d,e,f;g,h,i] where commas separate row values
      and semi-colons separate columns.
      Thus, the above argument represents the 3x3 square matrix:
      [ a b c
