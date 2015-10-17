@@ -196,7 +196,7 @@ RawTile TPTImage::getTile( int seq, int ang, unsigned int res, int layers, unsig
   // Check the resolution exists
   if( res > numResolutions ){
     ostringstream error;
-    error << "TPTImage :: Asked for non-existant resolution: " << res;
+    error << "TPTImage :: Asked for non-existent resolution: " << res;
     throw file_error( error.str() );
   }
 
@@ -238,7 +238,7 @@ RawTile TPTImage::getTile( int seq, int ang, unsigned int res, int layers, unsig
   // Check that a valid tile number was given  
   if( tile >= TIFFNumberOfTiles( tiff ) ) {
     ostringstream tile_no;
-    tile_no << "Asked for non-existant tile: " << tile;
+    tile_no << "Asked for non-existent tile: " << tile;
     throw file_error( tile_no.str() );
   } 
 

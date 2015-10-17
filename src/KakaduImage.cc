@@ -305,7 +305,7 @@ RawTile KakaduImage::getTile( int seq, int ang, unsigned int res, int layers, un
 
   if( res > numResolutions ){
     ostringstream tile_no;
-    tile_no << "Kakadu :: Asked for non-existant resolution: " << res;
+    tile_no << "Kakadu :: Asked for non-existent resolution: " << res;
     throw file_error( tile_no.str() );
   }
 
@@ -326,7 +326,7 @@ RawTile KakaduImage::getTile( int seq, int ang, unsigned int res, int layers, un
 
   if( tile >= ntlx*ntly ){
     ostringstream tile_no;
-    tile_no << "Kakadu :: Asked for non-existant tile: " << tile;
+    tile_no << "Kakadu :: Asked for non-existent tile: " << tile;
     throw file_error( tile_no.str() );
   }
 
