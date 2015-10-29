@@ -108,14 +108,14 @@ void IIPImage::testImageType() throw(file_error)
     }
 
     // Magic file signature for JPEG2000
-    unsigned char j2k[10] = {0x00,0x00,0x00,0x0C,0x6A,0x50,0x20,0x20,0x0D,0x0A};
+    static const unsigned char j2k[10] = {0x00,0x00,0x00,0x0C,0x6A,0x50,0x20,0x20,0x0D,0x0A};
 
     // Magic file signatures for TIFF (See http://www.garykessler.net/library/file_sigs.html)
-    unsigned char stdtiff[3] = {0x49,0x20,0x49};       // TIFF
-    unsigned char lsbtiff[4] = {0x49,0x49,0x2A,0x00};  // Little Endian TIFF
-    unsigned char msbtiff[4] = {0x49,0x49,0x2A,0x00};  // Big Endian TIFF
-    unsigned char lbigtiff[4] = {0x4D,0x4D,0x00,0x2B}; // Little Endian BigTIFF
-    unsigned char bbigtiff[4] = {0x49,0x49,0x2B,0x00}; // Big Endian BigTIFF
+    static const unsigned char stdtiff[3] = {0x49,0x20,0x49};       // TIFF
+    static const unsigned char lsbtiff[4] = {0x49,0x49,0x2A,0x00};  // Little Endian TIFF
+    static const unsigned char msbtiff[4] = {0x49,0x49,0x2A,0x00};  // Big Endian TIFF
+    static const unsigned char lbigtiff[4] = {0x4D,0x4D,0x00,0x2B}; // Little Endian BigTIFF
+    static const unsigned char bbigtiff[4] = {0x49,0x49,0x2B,0x00}; // Big Endian BigTIFF
 
     // Compare our header sequence to our magic byte signatures
     if( memcmp( header, j2k, 10 ) == 0 ) format = JPEG2000;
