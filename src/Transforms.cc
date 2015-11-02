@@ -326,8 +326,9 @@ void filter_LAB2sRGB( RawTile& in ){
 void filter_cmap( RawTile& in, enum cmap_type cmap ){
 
   float value;
+  unsigned in_chan = in.channels;
   unsigned out_chan = 3;
-  unsigned int ndata = in.dataLength * 8 / in.bpc / in.channels;
+  unsigned int ndata = in.dataLength * 8 / in.bpc;
 
   const float max3 = 1.0/3.0;
   const float max8 = 1.0/8.0;
@@ -339,7 +340,7 @@ void filter_cmap( RawTile& in, enum cmap_type cmap ){
   switch(cmap){
     case HOT:
 #pragma ivdep
-      for( int unsigned n=0; n<ndata; n++, outv+=3 ){
+      for( int unsigned n=0; n<ndata; n+=in_chan, outv+=3 ){
         value = fptr[n];
         if(value>1.)
           { outv[0]=outv[1]=outv[2]=1.; }
@@ -356,7 +357,7 @@ void filter_cmap( RawTile& in, enum cmap_type cmap ){
       break;
     case COLD:
 #pragma ivdep
-      for( unsigned int n=0; n<ndata; n++, outv+=3 ){
+      for( unsigned int n=0; n<ndata; n+=in_chan, outv+=3 ){
         value = fptr[n];
         if(value>1.)
           { outv[0]=outv[1]=outv[2]=1.; }
@@ -373,7 +374,7 @@ void filter_cmap( RawTile& in, enum cmap_type cmap ){
       break;
     case JET:
 #pragma ivdep
-      for( unsigned int n=0; n<ndata; n++, outv+=3 ){
+      for( unsigned int n=0; n<ndata; n+=in_chan, outv+=3 ){
         value = fptr[n];
         if(value<0.)
           { outv[0]=outv[1]=outv[2]=0.; }
