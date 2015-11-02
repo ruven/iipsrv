@@ -120,7 +120,6 @@ void PFL::run( Session* session, const std::string& argument ){
   list <int> :: const_iterator i;
   unsigned int n = views.size();
 
-
   // Put the results into a string stream
   ostringstream profile;
   profile.precision(6);
@@ -144,6 +143,7 @@ void PFL::run( Session* session, const std::string& argument ){
     RawTile rawtile = tilemanager.getRegion( resolution, wavelength, session->view->yangle, session->view->getLayers(), x1, y1, width, height );
 
     // Loop through our pixels
+    length *= rawtile.channels;
     for( unsigned int j=0; j<length; j++ ){
 
       float intensity = 0.0;
