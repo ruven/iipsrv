@@ -117,7 +117,7 @@ void CVT::send( Session* session ){
   if( session->loglevel >= 3 ){
     *(session->logfile) << "CVT :: Requested scaled region size is " << resampled_width << "x" << resampled_height
 			<< " at resolution " << requested_res
-			<< ". Nearest existing resolution is " << view_width << "x" << view_height << endl;
+			<< ". Nearest existing resolution has region with size " << view_width << "x" << view_height << endl;
   }
 
 

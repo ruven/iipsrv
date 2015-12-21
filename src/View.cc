@@ -24,14 +24,18 @@
 using namespace std;
 
 
+/// Calculate optimal resolution for a given requested pixel dimension
 void View::calculateResolution( unsigned int dimension,
 				unsigned int requested_size ){
 
   unsigned int j = 1;
   unsigned int d = dimension;
 
+  if( requested_size < min_size ) requested_size = min_size;
+  unsigned int rs = (requested_size<min_size) ? min_size : requested_size;
+
   // Calculate the resolution number for this request
-  while( d >= requested_size ){
+  while( d >= rs ){
     d = d/2;
     j++;
   }
@@ -56,7 +60,7 @@ unsigned int View::getResolution(){
 
   resolution = max_resolutions - 1;
 
-  // Note that we use floor() as that is how our resolutions are calculated 
+  // Note that we use floor() as that is how our resolutions are calculated
   if( requested_width ) View::calculateResolution( width, floor((float)requested_width/(float)view_width) );
   if( requested_height ) View::calculateResolution( height, floor((float)requested_height/(float)view_height) );
 
@@ -109,9 +113,11 @@ float View::getScale(){
   }
   else rh = requested_height;
 
+
   float scale = static_cast<float>(rw) / static_cast<float>(width);
 
   if( static_cast<float>(rh) / static_cast<float>(res_height) < scale ) scale = static_cast<float>(rh) / static_cast<float>(res_height);
+
 
   // Sanity check
   if( scale <= 0 || scale > 1.0 ) scale = 1.0;

@@ -1,7 +1,7 @@
 /*
     Image View and Transform Parameters
 
-    Copyright (C) 2003-2014 Ruven Pillay.
+    Copyright (C) 2003-2015 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -60,7 +60,7 @@ class View{
 
 
   /// Internal function to calculate the resolution associated with a width
-  ///  or height request. This also takes into account maximum size limits.
+  ///  or height request. This also takes into account maximum & minimum size limits.
   /** @param m maximum size
       @param r requested size
    */
@@ -90,7 +90,7 @@ class View{
     resolution = 0; max_resolutions = 0;
     width = 0; height = 0;
     res_width = 0; res_height = 0;
-    min_size = 8; max_size = 0;
+    min_size = 1; max_size = 0;
     requested_width = 0; requested_height = 0;
     contrast = 1.0; gamma = 1.0;
     xangle = 0; yangle = 90;

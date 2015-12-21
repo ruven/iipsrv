@@ -1,3 +1,8 @@
+21/12/2015:
+	- Fixed infinite loop in View::calculateResolution if requested size = 0. Set
+	  minimum output size to 1px.
+
+
 07/09/2015:
 	- Fixed isfinite autoconf macro in acinclude.m4 to force float type
 
