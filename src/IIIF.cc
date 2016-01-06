@@ -2,7 +2,7 @@
 
     IIIF Request Command Handler Class Member Function
 
-    Copyright (C) 2014-2015 Ruven Pillay
+    Copyright (C) 2014-2016 Ruven Pillay
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -281,7 +281,7 @@ void IIIF::run( Session* session, const string& src ){
 	session->view->setViewHeight( region[3] / hd );
 
         // Incorrect region request
-        if( regionIzer.hasMoreTokens() || n < 4 ){
+        if( region[2] <= 0.0 || region[3] <= 0.0 || regionIzer.hasMoreTokens() || n < 4 ){
 	  throw invalid_argument( "IIIF: incorrect region format: " + regionString );
         }
 
