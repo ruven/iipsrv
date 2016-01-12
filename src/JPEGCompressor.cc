@@ -174,6 +174,9 @@ void JPEGCompressor::InitCompression( const RawTile& rawtile, unsigned int strip
     throw string( "JPEGCompressor: JPEG can only handle images of either 1 or 3 channels" );
   }
 
+  // JPEG can only handle 8 bit data
+  if( rawtile.bpc != 8 ) throw string( "JPEGCompressor: JPEG can only handle 8 bit images" );
+
 
   // We set up the normal JPEG error routines, then override error_exit.
   cinfo.err = jpeg_std_error( &jerr );
@@ -324,6 +327,8 @@ int JPEGCompressor::Compress( RawTile& rawtile ) throw (string)
     throw string( "JPEGCompressor: JPEG can only handle images of either 1 or 3 channels" );
   }
 
+  // JPEG can only handle 8 bit data
+  if( rawtile.bpc != 8 ) throw string( "JPEGCompressor: JPEG can only handle 8 bit images" );
 
   // We set up the normal JPEG error routines, then override error_exit.
   cinfo.err = jpeg_std_error( &jerr );

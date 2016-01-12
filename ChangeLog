@@ -1,5 +1,9 @@
+12/01/2016:
+	- Added check to JPEGCompressor to reject images that are not 8 bits per channel
+
+
 06/01/2016:
-	- Added extra paraemter check for incoherent region sizes for IIIF protocol
+	- Added extra parameter check for incoherent region sizes for IIIF protocol
 
 
 21/12/2015:
