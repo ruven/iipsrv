@@ -1,7 +1,7 @@
 /*
     Image View and Transform Parameters
 
-    Copyright (C) 2003-2015 Ruven Pillay.
+    Copyright (C) 2003-2016 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -239,6 +239,14 @@ class View{
   /// Get rotation
   /* @return requested rotation angle in degrees */
   float getRotation(){ return rotation; };
+
+  /// Whether view requires floating point processing
+  bool floatProcessing(){
+    if( contrast != 1.0 || gamma != 1.0 || cmapped || shaded || inverted || ctw.size() ){
+      return true;
+    }
+    else return false;
+  }
 
 };
 

@@ -1,7 +1,7 @@
 /*
     IIP CVT Command Handler Class Member Function
 
-    Copyright (C) 2006-2015 Ruven Pillay.
+    Copyright (C) 2006-2016 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -176,8 +176,7 @@ void CVT::send( Session* session ){
 
 
   // Only use our floating point pipeline if necessary
-  if( complete_image.bpc > 8 || session->view->getContrast() != 1.0 || session->view->getGamma() != 1.0 ||
-      session->view->cmapped || session->view->shaded || session->view->inverted || session->view->ctw.size() ){
+  if( complete_image.bpc > 8 || session->view->floatProcessing() ){
 
     // Apply normalization and perform float conversion
     {

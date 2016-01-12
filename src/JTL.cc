@@ -1,7 +1,7 @@
 /*
     IIP JTL Command Handler Class Member Function
 
-    Copyright (C) 2006-2015 Ruven Pillay.
+    Copyright (C) 2006-2016 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -104,8 +104,7 @@ void JTL::send( Session* session, int resolution, int tile ){
 
 
   // Only use our float pipeline if necessary
-  if( rawtile.bpc > 8 || session->view->getContrast() != 1.0 || session->view->getGamma() != 1.0 ||
-      session->view->cmapped || session->view->shaded || session->view->inverted || session->view->ctw.size() ){
+  if( rawtile.bpc > 8 || session->view->floatProcessing() ){
 
     // Apply normalization and float conversion
     if( session->loglevel >= 4 ){
