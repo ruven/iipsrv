@@ -95,7 +95,7 @@ class View{
     contrast = 1.0; gamma = 1.0;
     xangle = 0; yangle = 90;
     shaded = false; shade[0] = 0; shade[1] = 0; shade[2] = 0;
-    cmapped = false; inverted = false;
+    cmapped = false; cmap = HOT; inverted = false;
     max_layers = 0; layers = 0;
     rotation = 0.0; flip = 0;
     maintain_aspect = true;

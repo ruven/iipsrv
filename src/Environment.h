@@ -1,7 +1,7 @@
 /*
     IIP Environment Variable Class
 
-    Copyright (C) 2006-2015 Ruven Pillay.
+    Copyright (C) 2006-2016 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -113,7 +113,6 @@ class Environment {
     if( envpara ){
       max_CVT = atoi( envpara );
       if( max_CVT < 64 ) max_CVT = 64;
-      if( max_CVT == -1 ) max_CVT = -1;
     }
     else max_CVT = MAX_CVT;
 

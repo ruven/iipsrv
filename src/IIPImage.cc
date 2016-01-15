@@ -3,7 +3,7 @@
 
 /*  IIP fcgi server module
 
-    Copyright (C) 2000-2015 Ruven Pillay.
+    Copyright (C) 2000-2016 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -83,15 +83,16 @@ void IIPImage::testImageType() throw(file_error)
   struct stat sb;
 
   string path = fileSystemPrefix + imagePath;
+  const char *pstr = path.c_str();
 
-  if( (stat(path.c_str(),&sb)==0) && S_ISREG(sb.st_mode) ){
+  if( (stat(pstr,&sb)==0) && S_ISREG(sb.st_mode) ){
 
     isFile = true;
     timestamp = sb.st_mtime;
 
     // Determine our file format using magic file signatures
     unsigned char header[10];
-    FILE *im = fopen( path.c_str(), "rb" );
+    FILE *im = fopen( pstr, "rb" );
     if( im == NULL ){
       string message = "Unable to open file '" + path + "'";
       throw file_error( message );

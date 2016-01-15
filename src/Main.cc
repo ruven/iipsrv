@@ -1,7 +1,7 @@
 /*
     IIP FCGI server module - Main loop.
 
-    Copyright (C) 2000-2015 Ruven Pillay
+    Copyright (C) 2000-2016 Ruven Pillay
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -465,10 +465,10 @@ int main( int argc, char *argv[] )
       session.tileCache = &tileCache;
       session.out = &writer;
       session.watermark = &watermark;
-      session.headers.empty();
+      session.headers.clear();
 
       char* header = NULL;
- 
+
       // Get the query into a string
 #ifdef DEBUG
       header = argv[1];
@@ -662,7 +662,7 @@ int main( int argc, char *argv[] )
     catch( const string& error ){
 
       if( loglevel >= 1 ){
-	logfile << error << endl << endl;
+	logfile << endl << error << endl << endl;
       }
 
       if( response.errorIsSet() ){
@@ -746,7 +746,6 @@ int main( int argc, char *argv[] )
     if( loglevel >= 2 ){
       logfile << "image closed and deleted" << endl
 	      << "Server count is " << IIPcount << endl << endl;
-      
     }
 
 

@@ -2,7 +2,7 @@
 
 /*  IIP fcgi server module
 
-    Copyright (C) 2000-2015 Ruven Pillay.
+    Copyright (C) 2000-2016 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -152,10 +152,15 @@ class IIPImage {
   /// Default Constructor
   IIPImage()
    : isFile( false ),
+    virtual_levels( 0 ),
+    format( UNSUPPORTED ),
     tile_width( 0 ),
     tile_height( 0 ),
+    colourspace( NONE ),
+    numResolutions( 0 ),
     bpc( 0 ),
     channels( 0 ),
+    sampleType( FIXEDPOINT ),
     quality_layers( 0 ),
     isSet( false ),
     currentX( 0 ),
@@ -169,10 +174,14 @@ class IIPImage {
    : imagePath( s ),
     isFile( false ),
     virtual_levels( 0 ),
+    format( UNSUPPORTED ),
     tile_width( 0 ),
     tile_height( 0 ),
+    colourspace( NONE ),
+    numResolutions( 0 ),
     bpc( 0 ),
     channels( 0 ),
+    sampleType( FIXEDPOINT ),
     quality_layers( 0 ),
     isSet( false ),
     currentX( 0 ),

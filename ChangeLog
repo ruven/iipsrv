@@ -1,3 +1,7 @@
+15/01/2016:
+	- Fixed a series of minor issues identified by Coverity scan
+
+
 12/01/2016:
 	- Added check to JPEGCompressor to reject images that are not 8 bits per channel
 	- Added new floatProcessing() function to View.h to simplify code in JTL and CVT
