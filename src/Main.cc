@@ -199,7 +199,7 @@ int main( int argc, char *argv[] )
       logfile << "No socket specified" << endl << endl;
       exit(1);
     }
-    listen_socket = FCGX_OpenSocket( socket.c_str(), 10 );
+    listen_socket = FCGX_OpenSocket( socket.c_str(), 2048 );
     if( listen_socket < 0 ){
       logfile << "Unable to open socket '" << socket << "'" << endl << endl;
       exit(1);
