@@ -1,3 +1,7 @@
+28/01/2016:
+	- Added ifdefs to Transform.cc to enforce either ivdep for icc or openmp for gcc
+
+
 15/01/2016:
 	- Fixed a series of minor issues identified by Coverity scan
 
