@@ -1,3 +1,7 @@
+29/01/2016:
+	- Minor update to IIPImage.cc to reduce risk of race condition in stat -> fopen calls
+
+
 28/01/2016:
 	- Added ifdefs to Transform.cc to enforce either ivdep for icc or openmp for gcc
 
@@ -58,7 +62,7 @@
 	  encode at Q=100 to sizes significantly larger than the raw data.
 	- Added new CACHE_CONTROL server parameter to allow user control over this. If not
 	  set, it defaults to the previous default value of "max-age=86400".
-	- More image processing routines now parallelized with OpenMP: bilinear interpolation, 
+	- More image processing routines now parallelized with OpenMP: bilinear interpolation,
 	  for example, now parallelized and considerably faster.
 
 
@@ -687,7 +691,7 @@
 
 
 05/11/2009:
-	- Updated the autoconf, aclocal, automake and libtool scripts to the 
+	- Updated the autoconf, aclocal, automake and libtool scripts to the
 	  latest versions.
 
 
@@ -709,7 +713,7 @@
 	- Security fixes to Task.cc to make sure while loop is limited to the
 	  expected number of arguments. (Thanks to Willem Hengeveld for pointing
 	  this out).
-	
+
 
 19/08/2009:
 	- Minor updates to IIPImage.h and IIPImage.cc. FIF.cc also now tests
@@ -1040,8 +1044,8 @@
 01/04/2004:
         - Fixed length given by the error response. We now count both
           the code and the argument.
- 
- 
+
+
 30/03/2004:
         - Fixed TIL to only send the MIME type once before the tile
           sequence.
@@ -1049,8 +1053,8 @@
           whenever we have a problem in Main.cc. Plus the catch
           clause now checks for an error in IIPResponse and sends
           this if available rather than the advertising banner.
- 
- 
+
+
 29/03/2004:
         - Changed the vertical and horizontal views syntax back to
           old style.
@@ -1058,7 +1062,7 @@
           Apache complains if there are not 2 sets of CRLF.
         - Changed the IIPImage metadata map to use the string class
           rather than char* - seems to fix a freeze problem.
- 
+
 
 06/03/2004:
 	- More fixes to RGN code. Moved the verification logic into
@@ -1216,7 +1220,7 @@
 22/08/2003:
 	- Added extra variable to track the current vertical position as
 	  well as the horizontal. Fixes bug when switching between vertical
-	  angles on sequence zero.	
+	  angles on sequence zero.
 	- XHTMLified the advertising banner :-)
 
 
@@ -1261,7 +1265,7 @@
 	  so will mothball it till after the forthcoming release.
 
 
-10/11/2002: 
+10/11/2002:
 	- Changes to some header files etc to make it compatible with gcc 3.2:
 	  Mainly STL string specifiers, plus replacement of slist type
 	  with std::list.
@@ -1279,7 +1283,7 @@
 	  tiles. Sometimes the JPEG data is larger than the original
 	  so we need to allocate some extra memory just in case.
 	- Also fixed the iip_empty_output_buffer( j_compress_ptr cinfo )
-	  function. Now properly empties the buffer and returns TRUE.	
+	  function. Now properly empties the buffer and returns TRUE.
 	- The Compress() routine now passes the entire image buffer array
 	  into jpeg_write_scanlines rather than doing it row by
 	  row. The row array is dynamically allocated and deleted
