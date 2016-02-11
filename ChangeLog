@@ -1,3 +1,7 @@
+11/02/2016:
+	- Added backlog parameter support for command line use through --backlog parameter.
+
+
 29/01/2016:
 	- Minor update to IIPImage.cc to reduce risk of race condition in stat -> fopen calls
 

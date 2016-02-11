@@ -1,4 +1,4 @@
-.TH IIPSRV 8 "JULY 2015" Linux "User Manuals"
+.TH IIPSRV 8 "February 2016" "Ruven Pillay"
 .SH NAME
 
 IIPSRV \- IIPImage Image Server
@@ -9,7 +9,7 @@ images. It is designed to be fast and bandwidth-efficient with low processor and
 well as advanced image features such as 8, 16 and 32 bit depths, CIELAB colorimetric images and scientific imagery such as multispectral images.
 Source images can be either TIFF (tiled multi-resolution) or JPEG2000 (if enabled).
 
-The imaging server can also dynamically export images in JPEG format and perform basic image processing, such as contrast adjustment, gamma control, conversion from color to greyscale, color twist, region extraction and arbitrary rescaling. The server can also export spectral point or profile data from multispectral data and apply color maps or perform hillshading rendering.
+The image server can also dynamically export images in JPEG format and perform basic image processing, such as contrast adjustment, gamma control, conversion from color to greyscale, color twist, region extraction and arbitrary rescaling. The server can also export spectral point or profile data from multispectral data and apply color maps or perform hillshading rendering.
 
 .SH SYNOPSIS
 
@@ -127,6 +127,19 @@ In the following example,
 will bind to port 9000 on the machine's IP address 192.168.0.1:
 
 % iipsrv.fcgi --bind 192.168.0.1:9000
+
+There is additionally a
+.B --backlog
+parameter that is optional and sets the socket backlog value. The backlog value specifies the number of requests can be queued and, therefore, increases the number of concurrent connections that 
+.B iipsrv
+can handle and is set to 2048 by default. For example:
+
+% iipsrv.fcgi --bind 192.168.0.1:9000 --backlog 1024
+
+Note that the backlog parameter must be specified
+.B after the bind parameter and argument.
+Note also that this value may be limited by the operating system. On Linux kernels < 2.4.25 and Mac OS X, the backlog limit is hard-coded to 128, so any value above this will be limited to 128 by the OS. If you do provide a backlog value, verify whether the setting /proc/sys/net/core/somaxconn should be updated.
+
 
 It is also possible to run
 .Iiipsrv
