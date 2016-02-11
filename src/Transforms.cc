@@ -715,7 +715,7 @@ void filter_greyscale( RawTile& rawtile ){
   //  - benchmarks to around 25% faster than floating point
 #if defined(__ICC) || defined(__INTEL_COMPILER)
 #pragma ivdep
-#else
+#elif defined(_OPENMP)
 #pragma omp parallel for if( rawtile.width*rawtile.height > PARALLEL_THRESHOLD )
 #endif
   for( unsigned int i=0; i<np; i++ ){

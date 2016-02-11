@@ -582,7 +582,7 @@ void KakaduImage::process( unsigned int res, int layers, int xoffset, int yoffse
 	b1 = &( ((kdu_uint16*)stripe_buffer)[0] );
 	b2 = &( ((unsigned short*)buffer)[index] );
       }
-      else if( obpc == 8 ){
+      else{ // if( obpc == 8 ){
 	b1 = &( ((kdu_byte*)stripe_buffer)[0] );
 	b2 = &( ((unsigned char*)buffer)[index] );
 

@@ -9,7 +9,7 @@
     Culture of the Czech Republic.
 
 
-    Copyright (C) 2009-2015 IIPImage.
+    Copyright (C) 2009-2016 IIPImage.
     Author: Ruven Pillay
 
     This program is free software; you can redistribute it and/or modify
@@ -127,14 +127,14 @@ class KakaduImage : public IIPImage {
 
   /// Constructor
   KakaduImage(): IIPImage(){
-    tile_width = TILESIZE; tile_height = TILESIZE;
+    tile_width = TILESIZE; tile_height = TILESIZE; input = NULL;
   };
 
   /// Constructor
   /** @param path image path
    */
   KakaduImage( const std::string& path ): IIPImage( path ){
-    tile_width = TILESIZE; tile_height = TILESIZE;
+    tile_width = TILESIZE; tile_height = TILESIZE; input = NULL;
   };
 
   /// Copy Constructor
@@ -146,7 +146,7 @@ class KakaduImage : public IIPImage {
   /** @param image IIPImage object
    */
   KakaduImage( const IIPImage& image ): IIPImage( image ){
-    tile_width = TILESIZE; tile_height = TILESIZE;
+    tile_width = TILESIZE; tile_height = TILESIZE; input = NULL;
   };
 
   /// Assignment Operator

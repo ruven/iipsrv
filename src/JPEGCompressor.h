@@ -87,7 +87,7 @@ class JPEGCompressor{
 
   /// Constructor
   /** @param quality JPEG Quality factor (0-100) */
-  JPEGCompressor( int quality ) { Q = quality; };
+   JPEGCompressor( int quality ) { Q = quality; dest = NULL; };
 
 
   /// Set the compression quality
