@@ -162,8 +162,14 @@ void IIIF::run( Session* session, const string& src ){
     }
     else{
       string request_uri = session->headers["REQUEST_URI"];
+      string scheme = session->headers["HTTPS"].empty() ? "http://" : "https://";
+
+      if (request_uri.empty()) {
+        throw invalid_argument( "IIIF: REQUEST_URI was not set in FastCGI request, so the ID parameter cannot be set." );
+      }
+
       request_uri.erase( request_uri.length()-suffix.length()-1, string::npos );
-      id = "http://" + session->headers["HTTP_HOST"] + request_uri;
+      id = scheme + session->headers["HTTP_HOST"] + request_uri;
     }
 
     // Decode and escape any URL-encoded characters from our file name for JSON
@@ -194,7 +200,6 @@ void IIIF::run( Session* session, const string& src ){
 		     << "       \"supports\" : [\"regionByPct\",\"sizeByForcedWh\",\"sizeByWh\",\"sizeAboveFull\",\"rotationBy90s\",\"mirroring\",\"gray\"] }" << endl
 		     << "  ]" << endl
 		     << "}";
-
 
     // Get our Access-Control-Allow-Origin value, if any
     string cors = session->response->getCORS();

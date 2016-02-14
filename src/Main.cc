@@ -501,13 +501,16 @@ int main( int argc, char *argv[] )
 
       // Get several other HTTP headers
       if( (header = FCGX_GetParam("SERVER_PROTOCOL", request.envp)) ){
-	session.headers["SERVER_PROTOCOL"] = string(header);
+        session.headers["SERVER_PROTOCOL"] = string(header);
       }
       if( (header = FCGX_GetParam("HTTP_HOST", request.envp)) ){
-	session.headers["HTTP_HOST"] = string(header);
+        session.headers["HTTP_HOST"] = string(header);
       }
       if( (header = FCGX_GetParam("REQUEST_URI", request.envp)) ){
-	session.headers["REQUEST_URI"] = string(header);
+        session.headers["REQUEST_URI"] = string(header);
+      }
+      if ( (header = FCGX_GetParam("HTTPS", request.envp)) ) {
+        session.headers["HTTPS"] = string(header);
       }
 
       // Check for IF_MODIFIED_SINCE
