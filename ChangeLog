@@ -1,3 +1,7 @@
+29/02/2016:
+	- Added support for 1 bit bilevel TIFF
+
+
 11/02/2016:
 	- Added backlog parameter support for command line use through --backlog parameter.
 	- Fixed several more Coverity scan warnings.
