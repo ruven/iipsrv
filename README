@@ -345,7 +345,7 @@ running iipsrv process on port 9000.
 
 ```
 location /fcgi-bin/iipsrv.fcgi {
-	fastcgi_pass 	localhost:9000;
+	fastcgi_pass    localhost:9000;
 	fastcgi_param   PATH_INFO $fastcgi_script_name;
         fastcgi_param   REQUEST_METHOD $request_method;
         fastcgi_param   QUERY_STRING $query_string;
@@ -353,6 +353,7 @@ location /fcgi-bin/iipsrv.fcgi {
         fastcgi_param   CONTENT_LENGTH $content_length;
         fastcgi_param   SERVER_PROTOCOL $server_protocol;
         fastcgi_param   REQUEST_URI $request_uri;
+        fastcgi_param   HTTPS $https if_not_empty;
 }
 ```
 
@@ -432,6 +433,16 @@ For example:
 
 where the argument given to bind is the socket on which to listen to FCGI
 requests. Note that these are *not* HTTP requests and iipsrv will still require a web server front-end.
+
+There is additionally a --backlog parameter that is optional and sets the socket backlog value. The backlog value specifies the number of requests can be queued and, 
+therefore, increases the number of concurrent connections that iipsrv can handle and is set to 2048 by default. For example:
+
+    iipsrv.fcgi --bind 192.168.0.1:9000 --backlog 1024
+
+Note that the backlog parameter must be specified after the bind parameter and argument.  Note also that this value may be limited by the operating system. On Linux kernels 
+< 2.4.25 and Mac OS X, the backlog limit is hard-coded to 128, so any value above this will be limited to 128 by the OS. If you do provide a backlog value, verify whether 
+the setting /proc/sys/net/core/somaxconn should be updated.
+
 Your web server should, therefore, be configured to use this address for FastCGI.
 For example with lighttpd:
 
