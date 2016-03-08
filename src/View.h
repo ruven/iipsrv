@@ -113,6 +113,11 @@ class View{
   void setMaxSize( unsigned int m ){ max_size = m; };
 
 
+  /// Get the maximum allowed output size
+  /* @return maximum output dimension */
+  unsigned int getMaxSize(){ return max_size; };
+
+
   /// Set the maximum view port dimension
   /** @param r number of availale resolutions */
   void setMaxResolutions( unsigned int r ){ max_resolutions = r; resolution=r-1; };

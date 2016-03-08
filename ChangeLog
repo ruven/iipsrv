@@ -1,3 +1,8 @@
+08/03/2016:
+	- Added sizes field to IIIF JSON responses giving list of exportable pyramid sizes
+	  smaller than MAX_CVT.
+
+
 29/02/2016:
 	- Added support for 1 bit bilevel TIFF
 
