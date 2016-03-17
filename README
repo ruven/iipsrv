@@ -7,8 +7,8 @@ IIPImage - High Resolution Streaming Image Server
 
 ABOUT
 -----
-IIPImage is an advanced high-performance feature-rich image server system for web-based streamed viewing and zooming of ultra high-resolution 
-images. It is designed to be fast and bandwidth-efficient with low processor and memory requirements. The system can comfortably handle gigapixel size images as 
+IIPImage is an advanced high-performance feature-rich image server system for web-based streamed viewing and zooming of ultra high-resolution
+images. It is designed to be fast and bandwidth-efficient with low processor and memory requirements. The system can comfortably handle gigapixel size images as
 well as advanced image features such as 8, 16 and 32 bits per channel, CIELAB colorimetric images and scientific imagery such as multispectral images, image sequences and 3D surface topologies.
 
 
@@ -45,8 +45,8 @@ iipsrv is released under the GNU General Public License (GPL). See the copyright
 notice COPYING in this directory for licensing details or go to
 http://www.gnu.org/licenses/gpl.html for more details.
 
-If you use IIPImage on a public site and remove the IIP link logo from the 
-client, you must provide a link on your site back to the IIPImage site - 
+If you use IIPImage on a public site and remove the IIP link logo from the
+client, you must provide a link on your site back to the IIPImage site -
 http://iipimage.sf.net
 
 This distribution includes version 2.4.0 of the FCGI development libraries.
@@ -99,7 +99,7 @@ distributed memory object caching system. If enabled, IIPImage will cache
 results using Memcached, giving IIPImage added speed and scalability. To use
 this, you will need to install the library (and development files) of
 libmemcached (http://libmemcached.org). This will be automatically detected
-during the build process. 
+during the build process.
 
 
 
@@ -118,7 +118,7 @@ following parameters to the ./configure command
 OPTIONAL LIBRARIES: OPENJPEG
 ----------------------------
 
-IIPImage is able to decode JPEG2000 images via the open source OpenJPEG 
+IIPImage is able to decode JPEG2000 images via the open source OpenJPEG
 library (http://www.openjpeg.org/). Activated if OpenJPEG development
 files found in system path or path provided via
 
@@ -153,38 +153,38 @@ MAX_IMAGE_CACHE_SIZE: Max image cache size to be held in RAM in MB. This is
 a cache of the compressed JPEG image tiles requested by the client.
 The default is 10MB.
 
-FILESYSTEM_PREFIX: This is a prefix automatically added by the server to the 
-beginning of each file system path. This can be useful for security reasons to 
-limit access to certain sub-directories. For example, with a prefix of 
-"/home/images/" set on the server, a request by a client for "image.tif" will 
-point to the path "/home/images/image.tif".  Any reverse directory path 
+FILESYSTEM_PREFIX: This is a prefix automatically added by the server to the
+beginning of each file system path. This can be useful for security reasons to
+limit access to certain sub-directories. For example, with a prefix of
+"/home/images/" set on the server, a request by a client for "image.tif" will
+point to the path "/home/images/image.tif".  Any reverse directory path
 component such as ../ is also filtered out. No default value.
 
 JPEG_QUALITY: The default JPEG quality factor for compression when the
 client does not specify one . The value should be between 1 (highest level of
 compression) and 100 (highest image quality). The default is 75.
 
-MAX_CVT: Limits the maximum image dimensions in pixels (the WID or HEI 
-commands) allowable for dynamic JPEG export via the CVT command. This 
+MAX_CVT: Limits the maximum image dimensions in pixels (the WID or HEI
+commands) allowable for dynamic JPEG export via the CVT command. This
 prevents huge requests from overloading the server. The default is 5000.
 
 ALLOW_UPSCALING: Determines whether an image may be rendered at a size greater
 than that of the source image. A value of 0 will prevent upscaling.
 The default is 1 (upscaling is allowed).
 
-MAX_LAYERS: The maximum number of quality layers to decode for images that support 
-progressive quality encoding, such as JPEG2000. Ignored for other file 
+MAX_LAYERS: The maximum number of quality layers to decode for images that support
+progressive quality encoding, such as JPEG2000. Ignored for other file
 formats. If not set, half of the available quality layers will be decoded by default.
 If set to -1, all the available layers will be decoded by default.
 
-FILENAME_PATTERN: Pattern that follows the name stem for a 3D or multispectral 
-sequence. eg: "_pyr_" for FZ1_pyr_000_090.tif. The default is "_pyr_". This is 
+FILENAME_PATTERN: Pattern that follows the name stem for a 3D or multispectral
+sequence. eg: "_pyr_" for FZ1_pyr_000_090.tif. The default is "_pyr_". This is
 only relevant to 3D image sequences.
 
-WATERMARK: TIFF image to use as watermark file. This image should be not be 
-bigger the tile size used for TIFF tiling. If bigger, it will simply be 
-cropped to the tile size. If smaller, the watermark will be positioned 
-randomly within the available space. The image can be either colour or 
+WATERMARK: TIFF image to use as watermark file. This image should be not be
+bigger the tile size used for TIFF tiling. If bigger, it will simply be
+cropped to the tile size. If smaller, the watermark will be positioned
+randomly within the available space. The image can be either colour or
 grayscale.
 
 WATERMARK_PROBABILITY: The probability that a particular tile will have a watermark
@@ -206,7 +206,7 @@ CORS: Cross Origin Resource Sharing setting. Disabled by default.
 Set to * to enable for all domains or specify a single domain.
 See http://www.w3.org/TR/cors/ for more details on CORS.
 
-BASE_URL: Set a base URL for use in certain protocol requests if web server rewriting 
+BASE_URL: Set a base URL for use in certain protocol requests if web server rewriting
 has taken place and the public URL is not the same as that supplied to iipsrv.
 
 URI_MAP: Set a mapping from a URL prefix to a supported protocol. This enables iipsrv to
@@ -215,7 +215,7 @@ be able to work without requring full CGI query strings. Map must be of the form
 be one of IIP,IIIF,DeepZoom, Zoomify. Used, for example, to map requests of the form
 http://server/iiif/ to the IIIF protocol handler without requiring web server rewriting.
 
-CACHE_CONTROL: Set the HTTP Cache-Control header. See http://www.w3.org/Protocols/rfc2616/rfc2616-sec14.html#sec14.9 for 
+CACHE_CONTROL: Set the HTTP Cache-Control header. See http://www.w3.org/Protocols/rfc2616/rfc2616-sec14.html#sec14.9 for
 a full list of options. If not set, header defaults to "max-age=86400" (24 hours).
 
 EMBED_ICC: Set whether the ICC profile is embedded within the output image.
@@ -225,12 +225,12 @@ OMP_NUM_THREADS: Set the number of OpenMP threads to be used by the iipsrv image
 processing routines (See OpenMP specification for details). All available processor
 threads are used by default.
 
-KAKADU_READMODE: Set the Kakadu JPEG2000 read-mode. 0 for 'fast' mode with minimal error checking (default), 1 for 'fussy' mode with no error 
+KAKADU_READMODE: Set the Kakadu JPEG2000 read-mode. 0 for 'fast' mode with minimal error checking (default), 1 for 'fussy' mode with no error
 recovery, 2 for 'resilient' mode with maximum recovery from codestream errors. See the Kakadu documentation for further details.
 
-DECODER_MODULES: Comma separated list of external modules for decoding 
-other image formats. This is only necessary if you have activated 
---enable-modules for ./configure and written your own image format 
+DECODER_MODULES: Comma separated list of external modules for decoding
+other image formats. This is only necessary if you have activated
+--enable-modules for ./configure and written your own image format
 handler(s).
 
 
@@ -239,7 +239,7 @@ handler(s).
 IMAGE PATHS
 -----------
 The images paths given to the server via the FIF variable must be
-absolute paths on the server machine (eg. FIF=/images/test.tif) 
+absolute paths on the server machine (eg. FIF=/images/test.tif)
 and not paths relative to the web server document root location.
 Images do not, therefore, need to be directly accessible by the
 client via the web server. Make sure the server process owner is
@@ -294,14 +294,14 @@ FastCgiServer /usr/local/httpd/fcgi-bin/iipsrv.fcgi \
 
 ### Apache and mod_fcgid
 
-mod_fcgid is a binary compatible replacement for mod_fastcgi. It works in the 
+mod_fcgid is a binary compatible replacement for mod_fastcgi. It works in the
 same way, but is configured differently. Load the module like this:
 
 
     LoadModule fcgid_module /path/to/apachemodules/mod_fcgid.so
 
 
-Here is an example configuration. Note that mod_fcgid does not have a 
+Here is an example configuration. Note that mod_fcgid does not have a
 FastCgiServer directive and there is no need to explicitly start the server:
 
 ```
@@ -341,8 +341,8 @@ FcgidMaxProcessesPerClass 1
 -------------------------------------------------------------------
 ```
 
-Note that on CentOS, FcgidIPCDir is configured by default to 
-/var/log/httpd/fcgidsock, which may not be writable by Apache. If this is the case, 
+Note that on CentOS, FcgidIPCDir is configured by default to
+/var/log/httpd/fcgidsock, which may not be writable by Apache. If this is the case,
 specify another location for FcgidIPCDir, which is writable, such as /tmp/fcgidsock
 
 
@@ -373,16 +373,16 @@ fastcgi.server = ( "/fcgi-bin/iipsrv.fcgi" =>
 
 ### NginX
 
-iipsrv can also be used with NginX. The one drawback with regards to iipsrv is that it cannot automatically spawn FCGI processes, so you will need to use 
+iipsrv can also be used with NginX. The one drawback with regards to iipsrv is that it cannot automatically spawn FCGI processes, so you will need to use
 nginx together with spawn-fcgi or start iipsrv from the command line.
 
-To set up nginx with iipsrv add a directive such as this to your nginx configuration, which will forward requests to /fcgi-bin/iipsrv.fcgi to a 
+To set up nginx with iipsrv add a directive such as this to your nginx configuration, which will forward requests to /fcgi-bin/iipsrv.fcgi to a
 running iipsrv process on port 9000.
 
 ```
 location /fcgi-bin/iipsrv.fcgi {
-	fastcgi_pass    localhost:9000;
-	fastcgi_param   PATH_INFO $fastcgi_script_name;
+        fastcgi_pass    localhost:9000;
+        fastcgi_param   PATH_INFO $fastcgi_script_name;
         fastcgi_param   REQUEST_METHOD $request_method;
         fastcgi_param   QUERY_STRING $query_string;
         fastcgi_param   CONTENT_TYPE $content_type;
@@ -393,28 +393,28 @@ location /fcgi-bin/iipsrv.fcgi {
 }
 ```
 
-Nginx can also handle load balancing to multiple iipsrv instances, which can be hosted on the same machine on multiple ports or on different hosts. 
+Nginx can also handle load balancing to multiple iipsrv instances, which can be hosted on the same machine on multiple ports or on different hosts.
 For a multiple host configuration, declare the load balancing like this:
 
 ```
 upstream iip {
-	server 192.168.0.1:9000;
-	server 192.168.0.2:9000;
-	server 192.168.0.3:9000;
-	server 192.168.0.4:9000;
+        server 192.168.0.1:9000;
+        server 192.168.0.2:9000;
+        server 192.168.0.3:9000;
+        server 192.168.0.4:9000;
 }
 ```
 
 and change the fastcgi_pass parameter in the above location configuration to point to this instead of a fixed address:
 
-    fastcgi_pass 	iip;
+    fastcgi_pass        iip;
 
 
 ### spawn-fcgi
 
-iipsrv can also be used with lighttpd's spawn-fcgi without the need for a 
-full web server. Simply spawn the iipsrv process on the command line. The 
-process can be bound to an IP address and port for backend load-balancing 
+iipsrv can also be used with lighttpd's spawn-fcgi without the need for a
+full web server. Simply spawn the iipsrv process on the command line. The
+process can be bound to an IP address and port for backend load-balancing
 configurations. For example:
 
     spawn-fcgi -f src/iipsrv.fcgi -a 192.168.0.1 -p 9000
@@ -427,15 +427,15 @@ and select:
 --------------------------------------------------------------------
 MIME Type: application octet-stream
 Action: Execute self contained FastCGI
-Manager: NONE 
+Manager: NONE
 --------------------------------------------------------------------
 ```
 
 
 ### Java Application Servers (Tomcat, Jetty, JBoss etc)
 
-IIPImage can also be used with Java Application Servers such as Apache Tomcat, JBoss and Jetty. Simply add 
-the JFastCGI jar file to your webapp and add the following to your web.xml configuration file in order to 
+IIPImage can also be used with Java Application Servers such as Apache Tomcat, JBoss and Jetty. Simply add
+the JFastCGI jar file to your webapp and add the following to your web.xml configuration file in order to
 re-route FCGI requests to the IIPImage server on the specified port.
 
 ```
@@ -456,7 +456,7 @@ re-route FCGI requests to the IIPImage server on the specified port.
 </servlet-mapping>
 ```
 
-You then need to start an instance of the server on the requested port (6667 in this example) using 
+You then need to start an instance of the server on the requested port (6667 in this example) using
 spawn-cgi (see spawn-cgi section above) or on the command line (see below).
 
 
@@ -470,13 +470,13 @@ For example:
 where the argument given to bind is the socket on which to listen to FCGI
 requests. Note that these are *not* HTTP requests and iipsrv will still require a web server front-end.
 
-There is additionally a --backlog parameter that is optional and sets the socket backlog value. The backlog value specifies the number of requests can be queued and, 
+There is additionally a --backlog parameter that is optional and sets the socket backlog value. The backlog value specifies the number of requests can be queued and,
 therefore, increases the number of concurrent connections that iipsrv can handle and is set to 2048 by default. For example:
 
     iipsrv.fcgi --bind 192.168.0.1:9000 --backlog 1024
 
-Note that the backlog parameter must be specified after the bind parameter and argument.  Note also that this value may be limited by the operating system. On Linux kernels 
-< 2.4.25 and Mac OS X, the backlog limit is hard-coded to 128, so any value above this will be limited to 128 by the OS. If you do provide a backlog value, verify whether 
+Note that the backlog parameter must be specified after the bind parameter and argument.  Note also that this value may be limited by the operating system. On Linux kernels
+< 2.4.25 and Mac OS X, the backlog limit is hard-coded to 128, so any value above this will be limited to 128 by the OS. If you do provide a backlog value, verify whether
 the setting /proc/sys/net/core/somaxconn should be updated.
 
 Your web server should, therefore, be configured to use this address for FastCGI.
