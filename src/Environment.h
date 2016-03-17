@@ -129,6 +129,15 @@ class Environment {
     return layers;
   }
 
+  static bool getUseOpenJPEG(){
+    char* envpara = getenv( "USE_OPENJPEG" );
+    int value;
+    if( envpara ) value = atoi( envpara );
+    else value = 0;
+
+    return (value > 0);
+  }
+
 
   static std::string getFileSystemPrefix(){
     char* envpara = getenv( "FILESYSTEM_PREFIX" );

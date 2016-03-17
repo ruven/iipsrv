@@ -256,6 +256,15 @@ int main( int argc, char *argv[] )
   string filesystem_prefix = Environment::getFileSystemPrefix();
 
 
+#if !defined(HAVE_OPENJPEG)
+  bool useOpenJPEG = false;
+#elif defined(HAVE_KAKADU)
+  bool useOpenJPEG = Environment::getUseOpenJPEG();
+#else
+  bool useOpenJPEG = true;
+#endif
+
+
   // Set up our watermark object
   Watermark watermark( Environment::getWatermark(),
 		       Environment::getWatermarkOpacity(),
@@ -290,7 +299,10 @@ int main( int argc, char *argv[] )
       else logfile << max_layers << endl;
     }
 #ifdef HAVE_KAKADU
-    logfile << "Setting up JPEG2000 support via Kakadu SDK" << endl;
+    if(!useOpenJPEG) logfile << "Setting up JPEG2000 support via Kakadu SDK" << endl;
+#endif
+#ifdef HAVE_OPENJPEG
+    if(useOpenJPEG) logfile << "Setting up JPEG2000 support via OpenJPEG" << endl;
 #endif
   }
 
@@ -473,6 +485,7 @@ int main( int argc, char *argv[] )
       session.out = &writer;
       session.watermark = &watermark;
       session.headers.clear();
+      session.useOpenJPEG = useOpenJPEG;
 
       char* header = NULL;
 
