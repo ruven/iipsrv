@@ -36,7 +36,7 @@ class OpenJPEGImage : public IIPImage {
 
 private:
 
- 	FILE* fsrc; // Compressed source file
+	std::string filename; // Compressed source file
 
 	unsigned int raster_width; // Image size
 	unsigned int raster_height;
@@ -52,14 +52,14 @@ private:
 
 	/**
 		 Main processing function
-      		\param tw		width of region
-      		\param th		height of region
-      		\param xoffset		x coordinate
-      		\param yoffset		y coordinate
+		\param tw		width of region
+		\param th		height of region
+		\param xoffset		x coordinate
+		\param yoffset		y coordinate
 		\param res		resolution
-      		\param layers		number of quality levels to decode
-      		\param tile		specific tile to decode (-1 if deconding a region)
-      		\param d		buffer to fill
+		\param layers		number of quality levels to decode
+		\param tile		specific tile to decode (-1 if deconding a region)
+		\param d		buffer to fill
 	*/
 	void process(unsigned int tw, unsigned int th, unsigned int xoffset, unsigned int yoffset, unsigned int res, int layers, int tile, void* d) throw (std::string);
 
@@ -71,8 +71,8 @@ public:
 	OpenJPEGImage() : IIPImage(){
 		image_tile_width = 0; image_tile_height = 0;
 		tile_width = TILESIZE; tile_height = TILESIZE;
-    		raster_width = 0; raster_height = 0;
-    		sgnd = 0; numResolutions = 0; virtual_levels = 0;
+		raster_width = 0; raster_height = 0;
+		sgnd = 0; numResolutions = 0; virtual_levels = 0;
 	};
 
 	/**
@@ -82,8 +82,8 @@ public:
 	OpenJPEGImage(const std::string& path) : IIPImage(path){
 		image_tile_width = 0; image_tile_height = 0;
 		tile_width = TILESIZE; tile_height = TILESIZE;
-    		raster_width = 0; raster_height = 0;
-    		sgnd = 0; numResolutions = 0; virtual_levels = 0;
+		raster_width = 0; raster_height = 0;
+		sgnd = 0; numResolutions = 0; virtual_levels = 0;
 	};
 
 	/**
@@ -130,7 +130,7 @@ public:
 
 	/**
 		Overloaded function for returning a region from image
- 		\param ha	horizontal angle
+		\param ha	horizontal angle
 		\param va	vertical angle
 		\param r	resolution
 		\param l	number of quality layers to decode
