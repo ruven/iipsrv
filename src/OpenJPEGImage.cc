@@ -67,10 +67,8 @@ void OpenJPEGImage::openImage() throw (string){
 		logfile << "INFO :: OpenJPEG :: openImage() :: started" << endl << flush;
 	#endif
 
-	string filename = getFileName( currentX, currentY ); // Get file name
- 	updateTimestamp(filename); // Check if our image has been modified
-
-	if(!(fsrc = fopen(filename.c_str(), "rb"))) throw string("ERROR :: OpenJPEG :: openImage() :: failed to open file for reading");
+	filename = getFileName( currentX, currentY ); // Get file name
+	updateTimestamp(filename); // Check if our image has been modified
 
 	loadImageInfo(currentX, currentY);
 	isSet = true; // Image is opened and info is set
@@ -91,11 +89,6 @@ void OpenJPEGImage::closeImage(){
 	#ifdef DEBUG
 		logfile << "INFO :: OpenJPEG :: closeImage() :: started" << endl << flush;
 	#endif
-
-	if(fsrc){
-		fclose(fsrc);
-		fsrc = NULL;
-	}
 
 	#ifdef DEBUG
 		logfile << "INFO :: OpenJPEG :: closeImage() :: ended" << endl << flush;
@@ -144,7 +137,7 @@ void OpenJPEGImage::loadImageInfo( int seq, int ang ) throw(string){
 	if(!opj_setup_decoder(l_codec, &parameters))
 		throw string("ERROR :: OpenJPEG :: openImage() :: opj_setup_decoder() failed"); // Setup decoder
 
-	if(!(l_stream = opj_stream_create_default_file_stream(fsrc,1)))
+	if(!(l_stream = opj_stream_create_default_file_stream(filename.c_str(), 1)))
 		throw string("ERROR :: OpenJPEG :: openImage() :: opj_stream_create_default_file_stream() failed"); // Create stream
 
 	if(!opj_read_header(l_stream, l_codec, &l_image)) throw string("ERROR :: OpenJPEG :: openImage() :: opj_read_header() failed"); // Read main header
@@ -173,7 +166,7 @@ void OpenJPEGImage::loadImageInfo( int seq, int ang ) throw(string){
 	// Check whether component parameters make sense
 	for(int i = 2; i <= (int)l_image->numcomps; ++i)
 	    if(l_image->comps[i-1].w != l_image->comps[0].w || l_image->comps[i-1].h != l_image->comps[0].h)
-	    	throw string("ERROR :: OpenJPEG :: loadImageInfo() :: Could not handle that image");
+		throw string("ERROR :: OpenJPEG :: loadImageInfo() :: Could not handle that image");
 
 	// Save color space
 	switch((channels = l_image->numcomps)){
@@ -182,7 +175,7 @@ void OpenJPEGImage::loadImageInfo( int seq, int ang ) throw(string){
 		default: throw string("ERROR :: OpenJPEG :: Unsupported color space");
 	}
 
-	bpp = l_image->comps[0].bpp; // Save bit depth
+	bpc = l_image->comps[0].prec; // Save bit depth
 	sgnd = l_image->comps[0].sgnd; // Save whether the data are signed
 
 	// Save first resolution level
@@ -208,7 +201,7 @@ void OpenJPEGImage::loadImageInfo( int seq, int ang ) throw(string){
 	if(i > numResolutions){
 		virtual_levels = i-numResolutions;
 		#ifdef DEBUG
-			logfile << 	"WARNING :: OpenJPEG :: Insufficient resolution levels in JPEG2000 stream. Will generate " <<
+			logfile <<	"WARNING :: OpenJPEG :: Insufficient resolution levels in JPEG2000 stream. Will generate " <<
 						virtual_levels << " extra levels dynamically." << endl;
 		#endif
 
@@ -265,33 +258,33 @@ RawTile OpenJPEGImage::getTile(int seq, int ang, unsigned int res, int layers, u
 
 	bool edge_x = false; // Alter the tile size if it's in the last column
 	if((tile % ntlx == ntlx - 1) && rem_x != 0){
-    	tw = rem_x;
-    	edge_x = true;
+	tw = rem_x;
+	edge_x = true;
 	}
 
 	bool edge_y = false; // Alter the tile size if it's in the bottom row
 	if((tile / ntlx == ntly - 1) && rem_y != 0){
-    	th = rem_y;
-    	edge_y = true;
+	th = rem_y;
+	edge_y = true;
 	}
 
 	// Calculate the pixel offsets for this tile
 	int xoffset = (tile % ntlx) * tile_width;
-  	int yoffset = (tile / ntlx) * tile_height;
+	int yoffset = (tile / ntlx) * tile_height;
 
 	#ifdef DEBUG
 		logfile << "\tFinal tile size requested: " << tw << "x" << th << " @" << channels << endl << flush;
 	#endif
 
 	// Create Rawtile object and initialize it
-  	RawTile rawtile(tile, res, seq, ang, tw, th, channels, 8);
+	RawTile rawtile(tile, res, seq, ang, tw, th, channels, 8);
 	rawtile.data = new unsigned char[tw*th*channels];
 	rawtile.dataLength = tw*th*channels;
 	rawtile.filename = getImagePath();
 	rawtile.timestamp = timestamp;
 
 	// Set the number of layers to half of the number of detected layers if we have not set the layers parameter manually
-  	if(layers <= 0) layers = ceil(max_layers/2.0);
+	if(layers <= 0) layers = ceil(max_layers/2.0);
 
 	// Process the tile - save data to rawfile.data
 	// We can decode a single tile only if requested size equals tile size defined in opened image
@@ -341,14 +334,14 @@ void OpenJPEGImage::getRegion(int seq, int ang, unsigned int res, int layers, in
 }
 
 /************************************************************************/
-/*        		 process() - Main processing function  		*/
+/*      		 process() - Main processing function		*/
 /************************************************************************/
 // Core method for recovering tiles and regions from opened picture via OPJ library
 
 void OpenJPEGImage::process(unsigned int tw, unsigned int th, unsigned int xoffset, unsigned int yoffset, unsigned int res, int layers, int tile, void *d) throw (string){
 
-    	static opj_image_t* out_image; // Decoded image
-    	static opj_stream_t* l_stream;	// File stream
+	static opj_image_t* out_image; // Decoded image
+	static opj_stream_t* l_stream;	// File stream
 	static opj_codec_t* l_codec; // Handle to a decompressor
 
 	unsigned int factor = 1; // Downsampling factor - set it to default value
@@ -384,7 +377,7 @@ void OpenJPEGImage::process(unsigned int tw, unsigned int th, unsigned int xoffs
 	opj_set_warning_handler(l_codec, warning_callback, 00);
 	opj_set_error_handler(l_codec, error_callback, 00);
 
-	if(!(l_stream = opj_stream_create_default_file_stream(fsrc, 1)))
+	if(!(l_stream = opj_stream_create_default_file_stream(filename.c_str(), 1)))
 		throw string("ERROR :: OpenJPEG :: process() :: opj_stream_create_default_file_stream() failed"); // Create stream
 
 	opj_dparameters_t params;
@@ -417,7 +410,7 @@ void OpenJPEGImage::process(unsigned int tw, unsigned int th, unsigned int xoffs
 		logfile <<		"INFO :: OpenJPEG :: process() :: Decoding took " << timer.getTime() << " microseconds" << endl <<
 					"INFO :: OpenJPEG :: process() :: Decoded image info: " << endl <<
 					"\tPrecision: " << out_image->comps[0].prec << endl <<
-					"\tBPP: " << out_image->comps[0].bpp << endl <<
+					"\tBPP: " << out_image->comps[0].bpc << endl <<
 					"\tSigned: " << out_image->comps[0].sgnd << endl <<
 					"\tXOFF: " << out_image->comps[0].x0 << endl <<
 					"\tYOFF: " << out_image->comps[0].y0 << endl <<
@@ -429,7 +422,7 @@ void OpenJPEGImage::process(unsigned int tw, unsigned int th, unsigned int xoffs
 	#endif
 
 	// Now we need to pass decoded data to the buffer we received as a parameter (actually we received just a reference to it)
-	unsigned char* p_buffer = (unsigned char*) d; 	// Create new pointer to the buffer as unsigned char pointer
+	unsigned char* p_buffer = (unsigned char*) d;	// Create new pointer to the buffer as unsigned char pointer
 							// We are unable to perform pointer arithmetics on void pointers
 	unsigned int buffer_write_pos = 0; // Write position indicator
 	unsigned int h_pos = 0; unsigned int w_pos; unsigned int xy_position = 0; // Another position indicators
