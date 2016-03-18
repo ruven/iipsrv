@@ -105,7 +105,7 @@ AC_SEARCH_LIBS(gzopen, z)
 
 
 #************************************************************
-# Check for libmemecached
+# Check for libmemcached
 
 AC_CHECK_HEADERS( libmemcached/memcached.h,
 	AC_SEARCH_LIBS( memcached_create,
