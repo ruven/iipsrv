@@ -2,7 +2,7 @@
 
 /*  IIPImage Tiled Pyramidal TIFF Class
 
-    Copyright (C) 2000-2014 Ruven Pillay.
+    Copyright (C) 2000-2016 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -59,7 +59,7 @@ class TPTImage : public IIPImage {
   TPTImage( const TPTImage& image ): IIPImage( image ), tiff( NULL ),tile_buf( NULL ) {};
 
   /// Assignment Operator
-  /** @param TPTImage object
+  /** @param image TPTImage object
    */
   TPTImage& operator = ( TPTImage image ) {
     if( this != &image ){
