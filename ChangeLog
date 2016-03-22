@@ -1,3 +1,6 @@
+22/03/2016: Version 1.0 Released
+
+
 08/03/2016:
 	- Added sizes field to IIIF JSON responses giving list of exportable pyramid sizes
 	  smaller than MAX_CVT.
