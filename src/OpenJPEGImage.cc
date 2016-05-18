@@ -37,19 +37,22 @@ using namespace std;
 // These are called by OpenJPEG library. This driver then decides to ignore the messages or to process them.
 // While not in debug mode errors are processed but warnings and info messages are omitted
 
-static void error_callback(const char *msg, void *client_data){
+static void error_callback(const char *msg, void */*client_data*/)
+{
 	stringstream ss;
 	ss << "ERROR :: OpenJPEG core :: " << msg;
 	throw string(ss.str());
 }
 
-static void warning_callback(const char *msg, void *client_data){
+static void warning_callback(const char *msg, void */*client_data*/)
+{
 	#ifdef DEBUG
 		logfile << "WARNING :: OpenJPEG core :: " << msg << flush;
 	#endif
 }
 
-static void info_callback(const char *msg, void *client_data){
+static void info_callback(const char *msg, void */*client_data*/)
+{
 	#ifdef DEBUG
 		logfile << "INFO :: OpenJPEG core :: " << msg << flush;
 	#endif
@@ -100,7 +103,8 @@ void OpenJPEGImage::closeImage(){
 /************************************************************************/
 // Saves important image information to IIPImage and OpenJPEGImage variables
 
-void OpenJPEGImage::loadImageInfo( int seq, int ang ) throw(string){
+void OpenJPEGImage::loadImageInfo(int /*seq*/, int /*ang*/) throw(string)
+{
 
 	#ifdef DEBUG
 		Timer timer; timer.start();
@@ -303,8 +307,11 @@ RawTile OpenJPEGImage::getTile(int seq, int ang, unsigned int res, int layers, u
 /************************************************************************/
 // Gets selected region from opened picture
 
-void OpenJPEGImage::getRegion(int seq, int ang, unsigned int res, int layers, int x, int y, unsigned int w, unsigned int h, unsigned char* buf) throw (string){
-
+void OpenJPEGImage::getRegion(int /*seq*/, int /*ang*/, unsigned int res,
+                              int layers, int x, int y,
+                              unsigned int w, unsigned int h,
+                              unsigned char* buf) throw (string)
+{
 	#ifdef DEBUG
 		Timer timer; timer.start();
 		logfile << "INFO :: OpenJPEG :: getRegion() :: started" << endl << flush;
