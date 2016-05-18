@@ -182,8 +182,8 @@ void OpenJPEGImage::loadImageInfo( int seq, int ang ) throw(string){
 	image_widths.push_back((raster_width = l_image->x1 - l_image->x0));
 	image_heights.push_back((raster_height = l_image->y1 - l_image->y0));
 
-	int tmp_w = raster_width;
-	int tmp_h = raster_height;
+	unsigned int tmp_w = raster_width;
+	unsigned int tmp_h = raster_height;
 	#ifdef DEBUG
 		logfile << "INFO :: OpenJPEG :: Resolution : " << tmp_w << "x" << tmp_h << endl << flush;
 	#endif
