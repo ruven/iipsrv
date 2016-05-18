@@ -256,16 +256,14 @@ RawTile OpenJPEGImage::getTile(int seq, int ang, unsigned int res, int layers, u
 
 	unsigned int tw = tile_width, th = tile_height;
 
-	bool edge_x = false; // Alter the tile size if it's in the last column
+	// Alter the tile size if it's in the last column
 	if((tile % ntlx == ntlx - 1) && rem_x != 0){
 	tw = rem_x;
-	edge_x = true;
 	}
 
-	bool edge_y = false; // Alter the tile size if it's in the bottom row
+	// Alter the tile size if it's in the bottom row
 	if((tile / ntlx == ntly - 1) && rem_y != 0){
 	th = rem_y;
-	edge_y = true;
 	}
 
 	// Calculate the pixel offsets for this tile
