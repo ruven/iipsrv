@@ -209,19 +209,26 @@ AC_SUBST(DL_LIBS)
 
 # Check for OpenJPEG JPEG2000 library
 
+AC_ARG_ENABLE(openjpeg,
+    [  --enable-openjpeg       enable OpenJPEG] )
+
+OPENJPEG=false
+
+if test "$enable_openjpeg" = "yes"; then
+
 AC_ARG_WITH( openjpeg,
    [  --with-openjpeg=DIR          location of the openjpeg source files],
    openjpeg_path=$withval)
 
-
-AC_CHECK_FILE($openjpeg_path/src/lib/openjp2/openjpeg.h,
-    AC_MSG_RESULT([configure: Found OpenJPEG sources. Will compile JPEG2000 support]); OPENJPEG=true,
-    AC_MSG_RESULT([configure: No OpenJPEG JPEG2000 Sources Found]); OPENJPEG=false
-)
-
-if test "x$OPENJPEG" = xtrue; then
-    INCLUDES="$INCLUDES -I$openjpeg_path/src/lib/openjp2/"
-    LIBS="$LIBS $openjpeg_path/bin/libopenjp2.so -lpthread"
+if test -n "$openjpeg_path"; then
+    AC_CHECK_FILE($openjpeg_path/src/lib/openjp2/openjpeg.h,
+        AC_MSG_RESULT([configure: Found OpenJPEG sources. Will compile JPEG2000 support]); OPENJPEG=true,
+        AC_MSG_RESULT([configure: No OpenJPEG JPEG2000 Sources Found])
+    )
+    if test "x$OPENJPEG" = xtrue; then
+        INCLUDES="$INCLUDES -I$openjpeg_path/src/lib/openjp2/"
+        LIBS="$LIBS $openjpeg_path/bin/libopenjp2.so -lpthread"
+    fi
 else
     PKG_CHECK_MODULES([OPENJPEG], [libopenjp2], [OPENJPEG=true], [OPENJPEG=false])
     if test "x$OPENJPEG" = xtrue; then
@@ -237,10 +244,15 @@ fi
 
 AM_CONDITIONAL([ENABLE_OPENJPEG], [test x$OPENJPEG = xtrue])
 
-AC_SUBST(INCLUDES)
 AC_SUBST(EXTRAS)
-
+AC_SUBST(INCLUDES)
 AC_SUBST(LIBS)
+
+else
+
+AM_CONDITIONAL([ENABLE_OPENJPEG], [false])
+
+fi
 
 
 #************************************************************
