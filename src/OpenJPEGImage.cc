@@ -71,8 +71,9 @@ void OpenJPEGImage::openImage() throw(file_error)
           << flush;
 #endif
 
-  filename = getFileName(currentX, currentY); // Get file name
-  updateTimestamp(filename); // Check if our image has been modified
+  std::string filename = getFileName(currentX, currentY);
+  // Check if our image has been modified.
+  updateTimestamp(filename);
 
   loadImageInfo(currentX, currentY);
   isSet = true; // Image is opened and info is set
@@ -148,6 +149,7 @@ void OpenJPEGImage::loadImageInfo(int /*seq*/, int /*ang*/) throw(file_error)
     throw file_error("ERROR :: OpenJPEG :: openImage() :: opj_setup_decoder() failed"); // Setup decoder
   }
 
+  std::string filename = getFileName(currentX, currentY);
   if (!(l_stream = opj_stream_create_default_file_stream(filename.c_str(), 1))) {
     throw file_error("ERROR :: OpenJPEG :: openImage() :: opj_stream_create_default_file_stream() failed"); // Create stream
   }
@@ -204,7 +206,8 @@ void OpenJPEGImage::loadImageInfo(int /*seq*/, int /*ang*/) throw(file_error)
   }
 
   bpc = l_image->comps[0].prec; // Save bit depth
-  sgnd = l_image->comps[0].sgnd; // Save whether the data are signed
+  // Save whether the data are signed.
+  sgnd = (l_image->comps[0].sgnd != 0);
 
   // Save first resolution level
   image_widths.push_back((raster_width = l_image->x1 - l_image->x0));
@@ -328,7 +331,7 @@ RawTile OpenJPEGImage::getTile(int seq, int ang, unsigned int res, int layers,
   // If tile sizes defined in IIPImage and opened image do not match, indexes of tiles we ask OPJ library for do not match either
   // In case of this tile size inconsistency, seventh parameter becomes -1. This means that OpenJPEG library will process the request as
   // a request for region, not a tile. OPJ library will then select tiles that need to be decoded in order to decode requested region.
-  process(tw, th, xoffset, yoffset, res, layers,
+  process(res, layers,xoffset, yoffset, tw, th,
           (image_tile_width == tw && image_tile_height == th) ? tile : -1, rawtile.data);
 
 #ifdef DEBUG
@@ -344,10 +347,9 @@ RawTile OpenJPEGImage::getTile(int seq, int ang, unsigned int res, int layers,
 /************************************************************************/
 // Gets selected region from opened picture
 
-void OpenJPEGImage::getRegion(int /*seq*/, int /*ang*/, unsigned int res,
-    int layers, int x, int y,
-    unsigned int w, unsigned int h,
-    unsigned char* buf) throw(file_error)
+RawTile OpenJPEGImage::getRegion(int ha, int va, unsigned int res, int layers,
+                                 int x, int y,
+                                 unsigned int w, unsigned int h) throw(file_error)
 {
 #ifdef DEBUG
   Timer timer;
@@ -359,6 +361,14 @@ void OpenJPEGImage::getRegion(int /*seq*/, int /*ang*/, unsigned int res,
   // Check if desired resolution exists
   if (res > numResolutions) {
     throw file_error("ERROR :: OpenJPEG :: getRegion() :: Asked for non-existent resolution");
+  }
+
+  // Scale up our output bit depth to the nearest factor of 8
+  unsigned int obpc = bpc;
+  if (bpc <= 16 && bpc > 8) {
+    obpc = 16;
+  } else if (bpc <= 8) {
+    obpc = 8;
   }
 
   // Check layer request
@@ -374,13 +384,30 @@ void OpenJPEGImage::getRegion(int /*seq*/, int /*ang*/, unsigned int res,
     throw file_error("ERROR :: OpenJPEG :: getRegion() :: Asked for region out of raster size");
   }
 
+  RawTile rawtile(0, res, ha, va, w, h, channels, obpc);
+
+  if (obpc == 16) {
+    rawtile.data = new unsigned short[w * h * channels];
+  } else if (obpc == 8) {
+    rawtile.data = new unsigned char[w * h * channels];
+  } else {
+    throw file_error("ERROR :: OpenJPEG :: Unsupported number of bits");
+  }
+
+  rawtile.dataLength = w * h * channels * obpc / 8;
+  rawtile.filename = getImagePath();
+  rawtile.timestamp = timestamp;
+
   // Get the region
-  process(w, h, x, y, res, layers, -1, buf);
+  process(res, layers, x, y, w, h, -1, rawtile.data);
 
 #ifdef DEBUG
-  logfile << "INFO :: OpenJPEG :: getRegion() :: " << timer.getTime() << " microseconds" << endl
+  logfile << "INFO :: OpenJPEG :: getRegion() :: "
+          << timer.getTime() << " microseconds" << endl
           << flush;
 #endif
+
+  return rawtile;
 }
 
 /************************************************************************/
@@ -388,9 +415,9 @@ void OpenJPEGImage::getRegion(int /*seq*/, int /*ang*/, unsigned int res,
 /************************************************************************/
 // Core method for recovering tiles and regions from opened picture via OPJ library
 
-void OpenJPEGImage::process(unsigned int tw, unsigned int th,
+void OpenJPEGImage::process(unsigned int res, int layers,
                             unsigned int xoffset, unsigned int yoffset,
-                            unsigned int res, int layers, int tile,
+                            unsigned int tw, unsigned int th, int tile,
                             void* d) throw(file_error)
 {
   static opj_image_t* out_image; // Decoded image
@@ -438,6 +465,7 @@ void OpenJPEGImage::process(unsigned int tw, unsigned int th,
   opj_set_warning_handler(l_codec, warning_callback, 00);
   opj_set_error_handler(l_codec, error_callback, 00);
 
+  std::string filename = getFileName(currentX, currentY);
   if (!(l_stream = opj_stream_create_default_file_stream(filename.c_str(), 1))) {
     // Create stream
     throw file_error("ERROR :: OpenJPEG :: process() :: opj_stream_create_default_file_stream() failed");
@@ -489,7 +517,7 @@ void OpenJPEGImage::process(unsigned int tw, unsigned int th,
   logfile << "INFO :: OpenJPEG :: process() :: Decoding took " << timer.getTime() << " microseconds" << endl
           << "INFO :: OpenJPEG :: process() :: Decoded image info: " << endl
           << "\tPrecision: " << out_image->comps[0].prec << endl
-          << "\tBPP: " << out_image->comps[0].bpc << endl
+          << "\tBPP: " << out_image->comps[0].bpp << endl
           << "\tSigned: " << out_image->comps[0].sgnd << endl
           << "\tXOFF: " << out_image->comps[0].x0 << endl
           << "\tYOFF: " << out_image->comps[0].y0 << endl
