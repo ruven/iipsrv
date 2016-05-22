@@ -231,7 +231,7 @@ RawTile OpenJPEGImage::getTile(int seq, int ang, unsigned int res, int layers, u
 	#endif
 
 	if(res > numResolutions)
-		throw file_error("ERROR :: OpenJPEG :: getTile() :: Asked for non-existant resolution"); // Check whether requested resolution exists in the picture
+		throw file_error("ERROR :: OpenJPEG :: getTile() :: Asked for non-existent resolution"); // Check whether requested resolution exists in the picture
 
 	// Reverse the resolution number - resolutions in IIPImage are stored in reversed order
 	int vipsres = ( numResolutions - 1 ) - res;
@@ -254,7 +254,7 @@ RawTile OpenJPEGImage::getTile(int seq, int ang, unsigned int res, int layers, u
 					"\tRemaining tile height in bottom row: " << rem_y << endl << flush;
 	#endif
 
-	if(tile >= ntlx*ntly) throw file_error("ERROR :: OpenJPEG :: getTile() :: Asked for non-existant tile"); // Check whether requested tile exists
+	if(tile >= ntlx*ntly) throw file_error("ERROR :: OpenJPEG :: getTile() :: Asked for non-existent tile"); // Check whether requested tile exists
 
 	unsigned int tw = tile_width, th = tile_height;
 
@@ -316,7 +316,7 @@ void OpenJPEGImage::getRegion(int /*seq*/, int /*ang*/, unsigned int res,
 	#endif
 
 	// Check if desired resolution exists
-	if(res > numResolutions) throw file_error("ERROR :: OpenJPEG :: getRegion() :: Asked for non-existant resolution");
+	if(res > numResolutions) throw file_error("ERROR :: OpenJPEG :: getRegion() :: Asked for non-existent resolution");
 
 	// Check layer request
 	if(layers <= 0) layers = ceil(max_layers/2.0);
