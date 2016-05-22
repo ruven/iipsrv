@@ -64,7 +64,7 @@ AS_IF([test "x$enable_openmp" != "xyes"], [
 
 
 AC_ARG_ENABLE([debug],
-     [  --enable-debug    Turn on debugging],
+     [  --enable-debug          turn on debugging],
      [case "${enableval}" in
        yes) debug=true ;;
        no)  debug=false ;;
@@ -186,7 +186,7 @@ AC_SUBST(LIBFCGI_LIBS)
 # Check for libdl for dynamic library loading
 
 AC_ARG_ENABLE(modules,
-    [  --enable-modules       enable dynamic module loading] )
+    [  --enable-modules        enable dynamic module loading] )
 
 if test "$enable_modules" = "yes"; then
 
@@ -210,7 +210,7 @@ AC_SUBST(DL_LIBS)
 # Check for Kakadu JPEG2000 library
 
 AC_ARG_WITH( kakadu,
-   [  --with-kakadu=DIR          location of the kakadu source files],
+   [  --with-kakadu=DIR             location of the Kakadu source files],
    kakadu_path=$withval)
 
 
