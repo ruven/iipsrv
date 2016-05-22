@@ -61,7 +61,7 @@ private:
 		\param tile		specific tile to decode (-1 if deconding a region)
 		\param d		buffer to fill
 	*/
-	void process(unsigned int tw, unsigned int th, unsigned int xoffset, unsigned int yoffset, unsigned int res, int layers, int tile, void* d) throw (std::string);
+	void process(unsigned int tw, unsigned int th, unsigned int xoffset, unsigned int yoffset, unsigned int res, int layers, int tile, void* d) throw (file_error);
 
 public:
 
@@ -104,14 +104,14 @@ public:
 	/**
 		Overloaded function for opening a JP2 image
 	*/
-	void openImage() throw (std::string);
+	void openImage() throw (file_error);
 
 	/**
 		Overloaded function for loading JP2 image information
 		\param x horizontal sequence angle
 		\param y vertical sequence angle
 	*/
-	void loadImageInfo(int x, int y) throw (std::string);
+	void loadImageInfo(int x, int y) throw (file_error);
 
 	/**
 		Overloaded function for closing a JP2 image
@@ -126,7 +126,7 @@ public:
 		\param l	number of quality layers to decode
 		\param t	tile number
 	*/
-    RawTile getTile(int x, int y, unsigned int r, int l, unsigned int t) throw (std::string);
+    RawTile getTile(int x, int y, unsigned int r, int l, unsigned int t) throw (file_error);
 
 	/**
 		Overloaded function for returning a region from image
@@ -141,7 +141,7 @@ public:
 		\param b	buffer to fill
 		\return		a RawTile object
 	*/
-	void getRegion(int ha, int va, unsigned int r, int l, int x, int y, unsigned int w, unsigned int h, unsigned char* b) throw (std::string);
+	void getRegion(int ha, int va, unsigned int r, int l, int x, int y, unsigned int w, unsigned int h, unsigned char* b) throw (file_error);
 };
 
 #endif
