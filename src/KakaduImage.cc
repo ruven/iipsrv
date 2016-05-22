@@ -58,11 +58,6 @@ unsigned int get_nprocs_conf(){
 using namespace std;
 
 
-#ifdef DEBUG
-extern std::ofstream logfile;
-#endif
-
-
 void KakaduImage::openImage() throw (file_error)
 {
   string filename = getFileName( currentX, currentY );
