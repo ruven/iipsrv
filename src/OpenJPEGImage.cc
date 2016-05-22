@@ -19,10 +19,13 @@
 //#define DEBUG 1
 
 #include "OpenJPEGImage.h"
+
 #include <sstream>
 #include <math.h>
 #include <fstream>
 #include <Timer.h>
+
+#include <openjpeg.h>
 
 using namespace std;
 

@@ -20,12 +20,6 @@
 #define _OPENJPEGIMAGE_H
 
 #include "IIPImage.h"
-#include <cstdio>
-
-#include <stdio.h> // openjpeg.h needs FILE*
-#include <openjpeg.h>
-#include <iostream>
-#include <fstream>
 
 #define TILESIZE 256
 
