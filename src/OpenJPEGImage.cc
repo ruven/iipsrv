@@ -41,7 +41,7 @@ static void error_callback(const char *msg, void */*client_data*/)
 {
 	stringstream ss;
 	ss << "ERROR :: OpenJPEG core :: " << msg;
-	throw string(ss.str());
+	throw file_error(ss.str());
 }
 
 static void warning_callback(const char *msg, void */*client_data*/)
@@ -63,7 +63,7 @@ static void info_callback(const char *msg, void */*client_data*/)
 /************************************************************************/
 // Opens file with image and calls loadImageInfo()
 
-void OpenJPEGImage::openImage() throw (string){
+void OpenJPEGImage::openImage() throw (file_error){
 
 	#ifdef DEBUG
 		Timer timer; timer.start();
@@ -103,7 +103,7 @@ void OpenJPEGImage::closeImage(){
 /************************************************************************/
 // Saves important image information to IIPImage and OpenJPEGImage variables
 
-void OpenJPEGImage::loadImageInfo(int /*seq*/, int /*ang*/) throw(string)
+void OpenJPEGImage::loadImageInfo(int /*seq*/, int /*ang*/) throw(file_error)
 {
 
 	#ifdef DEBUG
@@ -139,12 +139,12 @@ void OpenJPEGImage::loadImageInfo(int /*seq*/, int /*ang*/) throw(string)
 	opj_dparameters_t parameters; // Set default decoder parameters
 	opj_set_default_decoder_parameters(&parameters);
 	if(!opj_setup_decoder(l_codec, &parameters))
-		throw string("ERROR :: OpenJPEG :: openImage() :: opj_setup_decoder() failed"); // Setup decoder
+		throw file_error("ERROR :: OpenJPEG :: openImage() :: opj_setup_decoder() failed"); // Setup decoder
 
 	if(!(l_stream = opj_stream_create_default_file_stream(filename.c_str(), 1)))
-		throw string("ERROR :: OpenJPEG :: openImage() :: opj_stream_create_default_file_stream() failed"); // Create stream
+		throw file_error("ERROR :: OpenJPEG :: openImage() :: opj_stream_create_default_file_stream() failed"); // Create stream
 
-	if(!opj_read_header(l_stream, l_codec, &l_image)) throw string("ERROR :: OpenJPEG :: openImage() :: opj_read_header() failed"); // Read main header
+	if(!opj_read_header(l_stream, l_codec, &l_image)) throw file_error("ERROR :: OpenJPEG :: openImage() :: opj_read_header() failed"); // Read main header
 
 	opj_codestream_info_v2_t* cst_info = opj_get_cstr_info(l_codec); // Get info structure
 	image_tile_width = cst_info->tdx; // Save image tile width - tile width that this image operates with
@@ -159,24 +159,24 @@ void OpenJPEGImage::loadImageInfo(int /*seq*/, int /*ang*/) throw(string)
 	// Check whether image parameters make sense
 	if(	l_image->x1 <= l_image->x0 || l_image->y1 <= l_image->y0 || l_image->numcomps == 0 ||
 		l_image->comps[0].w != l_image->x1 - l_image->x0 || l_image->comps[0].h != l_image->y1 - l_image->y0)
-			throw string("ERROR :: OpenJPEG :: loadImageInfo() :: Could not handle that image");
+			throw file_error("ERROR :: OpenJPEG :: loadImageInfo() :: Could not handle that image");
 
 	// Check for 420 format
 	if(	l_image->color_space != OPJ_CLRSPC_SRGB && l_image->numcomps == 3 &&
 		l_image->comps[1].w == l_image->comps[0].w / 2 && l_image->comps[1].h == l_image->comps[0].h / 2 &&
 		l_image->comps[2].w == l_image->comps[0].w / 2 && l_image->comps[2].h == l_image->comps[0].h / 2)
-			throw string("ERROR :: OpenJPEG :: loadImageInfo() :: 420 format detected.");
+			throw file_error("ERROR :: OpenJPEG :: loadImageInfo() :: 420 format detected.");
 
 	// Check whether component parameters make sense
 	for(int i = 2; i <= (int)l_image->numcomps; ++i)
 	    if(l_image->comps[i-1].w != l_image->comps[0].w || l_image->comps[i-1].h != l_image->comps[0].h)
-		throw string("ERROR :: OpenJPEG :: loadImageInfo() :: Could not handle that image");
+		throw file_error("ERROR :: OpenJPEG :: loadImageInfo() :: Could not handle that image");
 
 	// Save color space
 	switch((channels = l_image->numcomps)){
 		case 3: colourspace = sRGB; break;
 		case 1: colourspace = GREYSCALE; break;
-		default: throw string("ERROR :: OpenJPEG :: Unsupported color space");
+		default: throw file_error("ERROR :: OpenJPEG :: Unsupported color space");
 	}
 
 	bpc = l_image->comps[0].prec; // Save bit depth
@@ -225,7 +225,7 @@ void OpenJPEGImage::loadImageInfo(int /*seq*/, int /*ang*/) throw(string)
 /************************************************************************/
 // Get one individual tile from the opened picture
 
-RawTile OpenJPEGImage::getTile(int seq, int ang, unsigned int res, int layers, unsigned int tile) throw (string){
+RawTile OpenJPEGImage::getTile(int seq, int ang, unsigned int res, int layers, unsigned int tile) throw (file_error){
 
 	#ifdef DEBUG
 		Timer timer; timer.start();
@@ -233,7 +233,7 @@ RawTile OpenJPEGImage::getTile(int seq, int ang, unsigned int res, int layers, u
 	#endif
 
 	if(res > numResolutions)
-		throw string("ERROR :: OpenJPEG :: getTile() :: Asked for non-existant resolution"); // Check whether requested resolution exists in the picture
+		throw file_error("ERROR :: OpenJPEG :: getTile() :: Asked for non-existant resolution"); // Check whether requested resolution exists in the picture
 
 	// Reverse the resolution number - resolutions in IIPImage are stored in reversed order
 	int vipsres = ( numResolutions - 1 ) - res;
@@ -256,7 +256,7 @@ RawTile OpenJPEGImage::getTile(int seq, int ang, unsigned int res, int layers, u
 					"\tRemaining tile height in bottom row: " << rem_y << endl << flush;
 	#endif
 
-	if(tile >= ntlx*ntly) throw string("ERROR :: OpenJPEG :: getTile() :: Asked for non-existant tile"); // Check whether requested tile exists
+	if(tile >= ntlx*ntly) throw file_error("ERROR :: OpenJPEG :: getTile() :: Asked for non-existant tile"); // Check whether requested tile exists
 
 	unsigned int tw = tile_width, th = tile_height;
 
@@ -310,7 +310,7 @@ RawTile OpenJPEGImage::getTile(int seq, int ang, unsigned int res, int layers, u
 void OpenJPEGImage::getRegion(int /*seq*/, int /*ang*/, unsigned int res,
                               int layers, int x, int y,
                               unsigned int w, unsigned int h,
-                              unsigned char* buf) throw (string)
+                              unsigned char* buf) throw (file_error)
 {
 	#ifdef DEBUG
 		Timer timer; timer.start();
@@ -318,7 +318,7 @@ void OpenJPEGImage::getRegion(int /*seq*/, int /*ang*/, unsigned int res,
 	#endif
 
 	// Check if desired resolution exists
-	if(res > numResolutions) throw string("ERROR :: OpenJPEG :: getRegion() :: Asked for non-existant resolution");
+	if(res > numResolutions) throw file_error("ERROR :: OpenJPEG :: getRegion() :: Asked for non-existant resolution");
 
 	// Check layer request
 	if(layers <= 0) layers = ceil(max_layers/2.0);
@@ -327,7 +327,7 @@ void OpenJPEGImage::getRegion(int /*seq*/, int /*ang*/, unsigned int res,
 	int vipsres = (numResolutions - 1) - res;
 
 	// Check if specified region is valid for this picture
-	if((x + w) > image_widths[vipsres] || (y + h) > image_heights[vipsres]) throw string("ERROR :: OpenJPEG :: getRegion() :: Asked for region out of raster size");
+	if((x + w) > image_widths[vipsres] || (y + h) > image_heights[vipsres]) throw file_error("ERROR :: OpenJPEG :: getRegion() :: Asked for region out of raster size");
 
 	// Get the region
 	process(w, h, x, y, res, layers, -1, buf);
@@ -343,7 +343,7 @@ void OpenJPEGImage::getRegion(int /*seq*/, int /*ang*/, unsigned int res,
 /************************************************************************/
 // Core method for recovering tiles and regions from opened picture via OPJ library
 
-void OpenJPEGImage::process(unsigned int tw, unsigned int th, unsigned int xoffset, unsigned int yoffset, unsigned int res, int layers, int tile, void *d) throw (string){
+void OpenJPEGImage::process(unsigned int tw, unsigned int th, unsigned int xoffset, unsigned int yoffset, unsigned int res, int layers, int tile, void *d) throw (file_error){
 
 	static opj_image_t* out_image; // Decoded image
 	static opj_stream_t* l_stream;	// File stream
@@ -383,16 +383,16 @@ void OpenJPEGImage::process(unsigned int tw, unsigned int th, unsigned int xoffs
 	opj_set_error_handler(l_codec, error_callback, 00);
 
 	if(!(l_stream = opj_stream_create_default_file_stream(filename.c_str(), 1)))
-		throw string("ERROR :: OpenJPEG :: process() :: opj_stream_create_default_file_stream() failed"); // Create stream
+		throw file_error("ERROR :: OpenJPEG :: process() :: opj_stream_create_default_file_stream() failed"); // Create stream
 
 	opj_dparameters_t params;
 	params.cp_layer = layers; // Set quality layers
 	params.cp_reduce = 0;
-	if(!opj_setup_decoder(l_codec, &params)) throw string("ERROR :: OpenJPEG :: process() :: opj_setup_decoder() failed"); // Setup layers
+	if(!opj_setup_decoder(l_codec, &params)) throw file_error("ERROR :: OpenJPEG :: process() :: opj_setup_decoder() failed"); // Setup layers
 
-	if(!opj_read_header(l_stream, l_codec, &out_image)) throw string("ERROR :: OpenJPEG :: process() :: opj_read_header() failed"); // Read main header
+	if(!opj_read_header(l_stream, l_codec, &out_image)) throw file_error("ERROR :: OpenJPEG :: process() :: opj_read_header() failed"); // Read main header
 	if(!opj_set_decoded_resolution_factor(l_codec, vipsres))
-		throw string("ERROR :: OpenJPEG :: process() :: opj_set_decoded_resolution_factor() failed"); // Setup resolution
+		throw file_error("ERROR :: OpenJPEG :: process() :: opj_set_decoded_resolution_factor() failed"); // Setup resolution
 	#ifdef DEBUG
 		Timer timer; timer.start();
 		logfile << "INFO :: OpenJPEG :: process() :: Decoding started" << endl << flush;
@@ -404,12 +404,12 @@ void OpenJPEGImage::process(unsigned int tw, unsigned int th, unsigned int xoffs
 		#endif
 		// Tell OpenJPEG what region we want to decode
 		if(!opj_set_decode_area(l_codec, out_image, xoffset, yoffset, xoffset+tw, yoffset+th))
-			throw string("ERROR :: OpenJPEG :: process() :: opj_set_decode_area() failed");
+			throw file_error("ERROR :: OpenJPEG :: process() :: opj_set_decode_area() failed");
 		// Decode region from image
-		if(!opj_decode(l_codec, l_stream, out_image)) throw string("ERROR :: OpenJPEG :: process() :: opj_decode() failed");
+		if(!opj_decode(l_codec, l_stream, out_image)) throw file_error("ERROR :: OpenJPEG :: process() :: opj_decode() failed");
 	}
 	// Get a single tile if possible
-	else if(!opj_get_decoded_tile(l_codec, l_stream, out_image, tile)) throw string("ERROR :: OpenJPEG :: process() :: opj_get_decoded_tile() failed");
+	else if(!opj_get_decoded_tile(l_codec, l_stream, out_image, tile)) throw file_error("ERROR :: OpenJPEG :: process() :: opj_get_decoded_tile() failed");
 
 	#ifdef DEBUG
 		logfile <<		"INFO :: OpenJPEG :: process() :: Decoding took " << timer.getTime() << " microseconds" << endl <<
