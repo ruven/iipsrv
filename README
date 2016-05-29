@@ -57,7 +57,8 @@ See COPYING.FCGI for licensing information for these libraries.
 REQUIREMENTS
 ------------
 Requirements: libtiff, zlib and the IJG JPEG development libraries.
-Optional: libmemcached (for Memcached) and Kakadu or OpenJPEG (for JPEG2000)
+Optional: libmemcached (for Memcached) and Kakadu or OpenJPEG (for JPEG2000).
+The support for OpenJPEG is highly experimental and not ready for production.
 
 Plus, of course, an fcgi-enabled web server. The server has been successfully
 tested on the following servers:
