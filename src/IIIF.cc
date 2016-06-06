@@ -168,10 +168,15 @@ void IIIF::run( Session* session, const string& src )
     // Decode and escape any URL-encoded characters from our file name for JSON
     URL json(id);
     string escapedFilename = json.escape();
+    string iiif_id = session->headers["HTTP_X_IIIF_ID"].empty() ? escapedFilename : session->headers["HTTP_X_IIIF_ID"];
+
+    if ( session->loglevel >= 5 ){
+      *(session->logfile) << "IIIF :: ID is set to " << iiif_id << endl;
+    }
 
     infoStringStream << "{" << endl
                      << "  \"@context\" : \"" << IIIF_CONTEXT << "\"," << endl
-                     << "  \"@id\" : \"" << escapedFilename << "\"," << endl
+                     << "  \"@id\" : \"" << iiif_id << "\"," << endl
                      << "  \"protocol\" : \"" << IIIF_PROTOCOL << "\"," << endl
                      << "  \"width\" : " << width << "," << endl
                      << "  \"height\" : " << height << "," << endl
