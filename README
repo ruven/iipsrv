@@ -249,7 +249,9 @@ FastCgiServer /usr/local/httpd/fcgi-bin/iipsrv.fcgi \
 -initial-env MAX_IMAGE_CACHE_SIZE=10 \
 -initial-env FILENAME_PATTERN=_pyr_ \
 -initial-env JPEG_QUALITY=50 \
--initial-env MAX_CVT=3000
+-initial-env MAX_CVT=3000 \
+-listen-queue-depth 2048 \
+-processes 1
 --------------------------------------------------------------------
 ```
 

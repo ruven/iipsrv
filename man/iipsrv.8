@@ -109,7 +109,7 @@ Set a base URL for use in certain protocol requests if web server rewriting has 
 .B iipsrv
 .IP CACHE_CONTROL
 Set the HTTP Cache-Control header. See http://www.w3.org/Protocols/rfc2616/rfc2616-sec14.html#sec14.9 for a full list of options. If not set, header defaults to "max-age=86400" (24 hours).
- 
+
 
 .SH EXAMPLES
 
@@ -118,8 +118,7 @@ will be automatically started by both Apache and Lighttpd. But not by Nginx or J
 See the example configuration in the README or included with your distribution for the appropriate syntax.
 Note that Apache has two FCGI modules: mod_fastcgi and mod_fcgid which are configured differently.
 
-You may also wish to 
-run
+You may also wish to run
 .B iipsrv
 as a standalone program. To do this, use the following syntax to bind to a particular port and listen for FCGI (not HTTP) requests. 
 In the following example,
@@ -142,7 +141,7 @@ Note also that this value may be limited by the operating system. On Linux kerne
 
 
 It is also possible to run
-.Iiipsrv
+.I iipsrv
 via the
 .I spawn-fcgi
 program. Set up any parameters via environment variables and run the command as follows to bind, as in the previous example to port 9000 on IP address 192.168.0.1:
@@ -192,4 +191,3 @@ IIPImage website: http://iipimage.sourceforge.net
 
 .SH AUTHORS
 Ruven Pillay <ruven@users.sourceforge.net>
-
