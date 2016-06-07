@@ -581,7 +581,7 @@ void filter_interpolate_bilinear( RawTile& in, unsigned int resampled_width, uns
 // Function to apply a contrast adjustment and clip to 8 bit
 void filter_contrast( RawTile& in, float c ){
 
-  unsigned int np = in.dataLength * 8 / in.bpc;
+  unsigned long np = in.width * in.height;
   unsigned char* buffer = new unsigned char[np];
   float* infptr = (float*)in.data;
 
@@ -590,7 +590,7 @@ void filter_contrast( RawTile& in, float c ){
 #elif defined(_OPENMP)
 #pragma omp parallel for
 #endif
-  for( unsigned int n=0; n<np; n++ ){
+  for( unsigned long n=0; n<np; n++ ){
     float v = infptr[n] * 255.0 * c;
     buffer[n] = (unsigned char)( (v<255.0) ? (v<0.0? 0.0 : v) : 255.0 );
   }
