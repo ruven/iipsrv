@@ -512,6 +512,9 @@ int main( int argc, char *argv[] )
       if ( (header = FCGX_GetParam("HTTPS", request.envp)) ) {
         session.headers["HTTPS"] = string(header);
       }
+      if ( (header = FCGX_GetParam("HTTP_X_IIIF_ID", request.envp)) ) {
+        session.headers["HTTP_X_IIIF_ID"] = string(header);
+      }
 
       // Check for IF_MODIFIED_SINCE
       if( (header = FCGX_GetParam("HTTP_IF_MODIFIED_SINCE", request.envp)) ){
