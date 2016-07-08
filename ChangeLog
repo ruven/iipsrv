@@ -1,3 +1,8 @@
+08/07/2016:
+	- Removed "gray" from IIIF list of supported features - already specified in the
+	  qualities list.
+
+
 07/06/2016:
 	- Added fix for API change in get_colour_mapping() function in Kakadu version 7.8
 
