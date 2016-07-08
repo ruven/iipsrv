@@ -57,7 +57,7 @@ See COPYING.FCGI for licensing information for these libraries.
 REQUIREMENTS
 ------------
 Requirements: libtiff, zlib and the IJG JPEG development libraries.
-Optional: libmemcached (for Memcached) and Kakadu (for JPEG2000)
+Optional: libmemcached (for Memcached) and Kakadu or OpenJPEG (for JPEG2000)
 
 Plus, of course, an fcgi-enabled web server. The server has been successfully
 tested on the following servers:
@@ -112,6 +112,19 @@ the Kakadu SDK as per the instructions supplied with the SDK. Then, the
 following parameters to the ./configure command
 
     --with-kakadu=/path/to/kakadu/distribution
+
+
+
+OPTIONAL LIBRARIES: OPENJPEG
+----------------------------
+IIPImage is able to decode JPEG2000 images via the free software OpenJPEG
+(https://github.com/uclouvain/openjpeg). This is still much slower than
+decoding via the Kakadu SDK, and it is also highly experimental.
+
+It is also possible to use both the Kakadu SDK and OpenJPEG.
+Then the Kakadu SDK will be used by default.
+OpenJPEG can be enabled by setting the environment variable USE_OPENJPEG
+to any value larger than 0, for example with USE_OPENJPEG=1.
 
 
 
