@@ -128,15 +128,10 @@ void FIF::run( Session* session, const string& src ){
     else if( format == JPEG2000 ){
       if( session->loglevel >= 2 )
         *(session->logfile) << "FIF :: JPEG2000 image detected" << endl;
-#if defined(HAVE_OPENJPEG)
-      if( session->useOpenJPEG )
-        *session->image = new OpenJPEGImage( test );
-#endif
 #if defined(HAVE_KAKADU)
-#if defined(HAVE_OPENJPEG)
-      else
-#endif
         *session->image = new KakaduImage( test );
+#elif defined(HAVE_OPENJPEG)
+        *session->image = new OpenJPEGImage( test );
 #endif
     }
 #endif

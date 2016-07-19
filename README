@@ -122,11 +122,6 @@ IIPImage is able to decode JPEG2000 images via the free software OpenJPEG
 (https://github.com/uclouvain/openjpeg). This is still much slower than
 decoding via the Kakadu SDK, and it is also highly experimental.
 
-It is also possible to use both the Kakadu SDK and OpenJPEG.
-Then the Kakadu SDK will be used by default.
-OpenJPEG can be enabled by setting the environment variable USE_OPENJPEG
-to any value larger than 0, for example with USE_OPENJPEG=1.
-
 
 
 INSTALLATION

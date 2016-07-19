@@ -72,7 +72,6 @@ struct Session {
   IIPResponse* response;
   Watermark* watermark;
   int loglevel;
-  bool useOpenJPEG;
   std::ofstream* logfile;
   std::map <const std::string, std::string> headers;
 
