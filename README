@@ -1,7 +1,9 @@
 IIPImage - High Resolution Streaming Image Server
 =================================================
 
+[![GPLv3 Licensed](https://img.shields.io/badge/license-GPLv3-blue.svg)](https://www.gnu.org/copyleft/gpl.html)
 [![Build Status](https://travis-ci.org/ruven/iipsrv.svg)](https://travis-ci.org/ruven/iipsrv)
+[![Coverity Scan](https://img.shields.io/coverity/scan/3997.svg)](https://scan.coverity.com/projects/ruven-iipsrv)
 
 ABOUT
 -----
@@ -17,7 +19,7 @@ FEATURES
 * Support for gigapixel images
 * Dynamic JPEG export of whole or regions of images at any resolution
 * Supports IIP, Zoomify, DeepZoom and IIIF protocols
-* 8, 16 and 32 bit image support
+* 1, 8, 16 and 32 bit image support including 32 bit floating point support
 * CIELAB support with automatic CIELAB->sRGB colour space conversion
 * JPEG2000 support
 * Multispectral image support
@@ -38,6 +40,7 @@ doc subdirectory
 
 LICENCE
 -------
+
 iipsrv is released under the GNU General Public License (GPL). See the copyright
 notice COPYING in this directory for licensing details or go to
 http://www.gnu.org/licenses/gpl.html for more details.
@@ -157,7 +160,7 @@ If set to -1, all the available layers will be decoded by default.
 
 FILENAME_PATTERN: Pattern that follows the name stem for a 3D or multispectral 
 sequence. eg: "_pyr_" for FZ1_pyr_000_090.tif. The default is "_pyr_". This is 
-only relevent to 3D image sequences.
+only relevant to 3D image sequences.
 
 WATERMARK: TIFF image to use as watermark file. This image should be not be 
 bigger the tile size used for TIFF tiling. If bigger, it will simply be 
@@ -186,6 +189,9 @@ See http://www.w3.org/TR/cors/ for more details on CORS.
 
 BASE_URL: Set a base URL for use in certain protocol requests if web server rewriting 
 has taken place and the public URL is not the same as that supplied to iipsrv.
+
+CACHE_CONTROL: Set the HTTP Cache-Control header. See http://www.w3.org/Protocols/rfc2616/rfc2616-sec14.html#sec14.9 for 
+a full list of options. If not set, header defaults to "max-age=86400" (24 hours).
 
 DECODER_MODULES: Comma separated list of external modules for decoding 
 other image formats. This is only necessary if you have activated 
@@ -243,7 +249,9 @@ FastCgiServer /usr/local/httpd/fcgi-bin/iipsrv.fcgi \
 -initial-env MAX_IMAGE_CACHE_SIZE=10 \
 -initial-env FILENAME_PATTERN=_pyr_ \
 -initial-env JPEG_QUALITY=50 \
--initial-env MAX_CVT=3000
+-initial-env MAX_CVT=3000 \
+-listen-queue-depth 2048 \
+-processes 1
 --------------------------------------------------------------------
 ```
 
@@ -328,6 +336,44 @@ fastcgi.server = ( "/fcgi-bin/iipsrv.fcgi" =>
 --------------------------------------------------------------------
 ```
 
+### NginX
+
+iipsrv can also be used with NginX. The one drawback with regards to iipsrv is that it cannot automatically spawn FCGI processes, so you will need to use 
+nginx together with spawn-fcgi or start iipsrv from the command line.
+
+To set up nginx with iipsrv add a directive such as this to your nginx configuration, which will forward requests to /fcgi-bin/iipsrv.fcgi to a 
+running iipsrv process on port 9000.
+
+```
+location /fcgi-bin/iipsrv.fcgi {
+	fastcgi_pass    localhost:9000;
+	fastcgi_param   PATH_INFO $fastcgi_script_name;
+        fastcgi_param   REQUEST_METHOD $request_method;
+        fastcgi_param   QUERY_STRING $query_string;
+        fastcgi_param   CONTENT_TYPE $content_type;
+        fastcgi_param   CONTENT_LENGTH $content_length;
+        fastcgi_param   SERVER_PROTOCOL $server_protocol;
+        fastcgi_param   REQUEST_URI $request_uri;
+        fastcgi_param   HTTPS $https if_not_empty;
+}
+```
+
+Nginx can also handle load balancing to multiple iipsrv instances, which can be hosted on the same machine on multiple ports or on different hosts. 
+For a multiple host configuration, declare the load balancing like this:
+
+```
+upstream iip {
+	server 192.168.0.1:9000;
+	server 192.168.0.2:9000;
+	server 192.168.0.3:9000;
+	server 192.168.0.4:9000;
+}
+```
+
+and change the fastcgi_pass parameter in the above location configuration to point to this instead of a fixed address:
+
+    fastcgi_pass 	iip;
+
 
 ### spawn-fcgi
 
@@ -388,6 +434,16 @@ For example:
 
 where the argument given to bind is the socket on which to listen to FCGI
 requests. Note that these are *not* HTTP requests and iipsrv will still require a web server front-end.
+
+There is additionally a --backlog parameter that is optional and sets the socket backlog value. The backlog value specifies the number of requests can be queued and, 
+therefore, increases the number of concurrent connections that iipsrv can handle and is set to 2048 by default. For example:
+
+    iipsrv.fcgi --bind 192.168.0.1:9000 --backlog 1024
+
+Note that the backlog parameter must be specified after the bind parameter and argument.  Note also that this value may be limited by the operating system. On Linux kernels 
+< 2.4.25 and Mac OS X, the backlog limit is hard-coded to 128, so any value above this will be limited to 128 by the OS. If you do provide a backlog value, verify whether 
+the setting /proc/sys/net/core/somaxconn should be updated.
+
 Your web server should, therefore, be configured to use this address for FastCGI.
 For example with lighttpd:
 
@@ -399,8 +455,8 @@ For example with lighttpd:
 
 
 
----------------------------------------------------------------------------
-Please refer to the project site http://iipimage.sf.net for further details
+------------------------------------------------------------------------------------
+Please refer to the project site http://iipimage.sourceforge.net for further details
 
----------------------------------------------------------------------------
-(c) 2000-2014 Ruven Pillay <ruven@users.sourceforge.net>
+------------------------------------------------------------------------------------
+(c) 2000-2016 Ruven Pillay <ruven@users.sourceforge.net>

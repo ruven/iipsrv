@@ -1,7 +1,7 @@
 /*
     IIP FCGI server module - Main loop.
 
-    Copyright (C) 2000-2015 Ruven Pillay
+    Copyright (C) 2000-2016 Ruven Pillay
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -75,8 +75,10 @@ static void unsetenv(char *env_name) {
 #endif
 
 
-//#define DEBUG 1
+// Define our default socket backlog
+#define DEFAULT_BACKLOG 2048
 
+//#define DEBUG 1
 
 using namespace std;
 
@@ -199,13 +201,18 @@ int main( int argc, char *argv[] )
       logfile << "No socket specified" << endl << endl;
       exit(1);
     }
-    listen_socket = FCGX_OpenSocket( socket.c_str(), 10 );
+    int backlog = DEFAULT_BACKLOG;
+    if( argv[3] && (string(argv[3]) == "--backlog") ){
+      string bklg = argv[4];
+      if( bklg.length() ) backlog = atoi( bklg.c_str() );
+    }
+    listen_socket = FCGX_OpenSocket( socket.c_str(), backlog );
     if( listen_socket < 0 ){
       logfile << "Unable to open socket '" << socket << "'" << endl << endl;
       exit(1);
     }
     standalone = true;
-    logfile << "Running in standalone mode on socket: " << socket << endl << endl;
+    logfile << "Running in standalone mode on socket: " << socket << " with backlog: " << backlog << endl << endl;
   }
 
   if( FCGX_InitRequest( &request, listen_socket, 0 ) ) return(1);
@@ -263,12 +270,17 @@ int main( int argc, char *argv[] )
   string base_url = Environment::getBaseURL();
 
 
+  // Get requested HTTP Cache-Control setting
+  string cache_control = Environment::getCacheControl();
+
+
   // Print out some information
   if( loglevel >= 1 ){
     logfile << "Setting maximum image cache size to " << max_image_cache_size << "MB" << endl;
     logfile << "Setting filesystem prefix to '" << filesystem_prefix << "'" << endl;
     logfile << "Setting default JPEG quality to " << jpeg_quality << endl;
     logfile << "Setting maximum CVT size to " << max_CVT << endl;
+    logfile << "Setting HTTP Cache-Control header to '" << cache_control << "'" << endl;
     logfile << "Setting 3D file sequence name pattern to '" << filename_pattern << "'" << endl;
     if( !cors.empty() ) logfile << "Setting Cross Origin Resource Sharing to '" << cors << "'" << endl;
     if( !base_url.empty() ) logfile << "Setting base URL to '" << base_url << "'" << endl;
@@ -444,26 +456,9 @@ int main( int argc, char *argv[] )
     // As the commands return images etc, they handle their own responses.
     IIPResponse response;
     response.setCORS( cors );
+    response.setCacheControl( cache_control );
 
     try{
-      
-      // Get the query into a string
-#ifdef DEBUG
-      const string request_string = argv[1];
-#else
-      const string request_string = FCGX_GetParam( "QUERY_STRING", request.envp );
-#endif
-
-      // Check that we actually have a request string
-      if( request_string.length() == 0 ) {
-	throw string( "QUERY_STRING not set" );
-      }
-
-      if( loglevel >=2 ){
-	logfile << "Full Request is " << request_string << endl;
-      }
-
-      
 
       // Set up our session data object
       Session session;
@@ -477,28 +472,63 @@ int main( int argc, char *argv[] )
       session.tileCache = &tileCache;
       session.out = &writer;
       session.watermark = &watermark;
-      session.headers.empty();
+      session.headers.clear();
 
-      // Get certain HTTP headers, such as if_modified_since and the query_string
       char* header = NULL;
+
+      // Get the query into a string
+#ifdef DEBUG
+      header = argv[1];
+#else
+      header = FCGX_GetParam( "QUERY_STRING", request.envp );
+#endif
+
+      const string request_string = (header!=NULL)? header : "";
+
+      // Check that we actually have a request string
+      if( request_string.empty() ){
+	throw string( "QUERY_STRING not set" );
+      }
+
+      if( loglevel >=2 ){
+	logfile << "Full Request is " << request_string << endl;
+      }
+
+
+      // Store some headers
+      session.headers["QUERY_STRING"] = request_string;
+      session.headers["BASE_URL"] = base_url;
+
+      // Get several other HTTP headers
+      if( (header = FCGX_GetParam("SERVER_PROTOCOL", request.envp)) ){
+        session.headers["SERVER_PROTOCOL"] = string(header);
+      }
+      if( (header = FCGX_GetParam("HTTP_HOST", request.envp)) ){
+        session.headers["HTTP_HOST"] = string(header);
+      }
+      if( (header = FCGX_GetParam("REQUEST_URI", request.envp)) ){
+        session.headers["REQUEST_URI"] = string(header);
+      }
+      if ( (header = FCGX_GetParam("HTTPS", request.envp)) ) {
+        session.headers["HTTPS"] = string(header);
+      }
+      if ( (header = FCGX_GetParam("HTTP_X_IIIF_ID", request.envp)) ) {
+        session.headers["HTTP_X_IIIF_ID"] = string(header);
+      }
+
+      // Check for IF_MODIFIED_SINCE
       if( (header = FCGX_GetParam("HTTP_IF_MODIFIED_SINCE", request.envp)) ){
 	session.headers["HTTP_IF_MODIFIED_SINCE"] = string(header);
 	if( loglevel >= 2 ){
-	  logfile << "HTTP Header: If-Modified-Since: " << session.headers["HTTP_IF_MODIFIED_SINCE"] << endl;
+	  logfile << "HTTP Header: If-Modified-Since: " << header << endl;
 	}
       }
-      session.headers["QUERY_STRING"] = request_string;
-      session.headers["SERVER_PROTOCOL"] =  FCGX_GetParam("SERVER_PROTOCOL", request.envp);
-      session.headers["HTTP_HOST"] = FCGX_GetParam("HTTP_HOST", request.envp);
-      session.headers["REQUEST_URI"] = FCGX_GetParam("REQUEST_URI", request.envp);
-      session.headers["BASE_URL"] = base_url;
-
 
 
 #ifdef HAVE_MEMCACHED
       // Check whether this exists in memcached, but only if we haven't had an if_modified_since
       // request, which should always be faster to send
-      if( !header ){
+      if( !header || session.headers["HTTP_IF_MODIFIED_SINCE"].empty() ){
 	char* memcached_response = NULL;
 	if( (memcached_response = memcached.retrieve( request_string )) ){
 	  writer.putStr( memcached_response, memcached.length() );
@@ -645,7 +675,7 @@ int main( int argc, char *argv[] )
     catch( const string& error ){
 
       if( loglevel >= 1 ){
-	logfile << error << endl << endl;
+	logfile << endl << error << endl << endl;
       }
 
       if( response.errorIsSet() ){
@@ -729,7 +759,6 @@ int main( int argc, char *argv[] )
     if( loglevel >= 2 ){
       logfile << "image closed and deleted" << endl
 	      << "Server count is " << IIPcount << endl << endl;
-      
     }
 
 

@@ -1,7 +1,7 @@
 /*
     IIP Profile Command Handler Class Member Function
 
-    Copyright (C) 2013 Ruven Pillay.
+    Copyright (C) 2013-2015 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -120,7 +120,6 @@ void PFL::run( Session* session, const std::string& argument ){
   list <int> :: const_iterator i;
   unsigned int n = views.size();
 
-
   // Put the results into a string stream
   ostringstream profile;
   profile.precision(6);
@@ -144,6 +143,7 @@ void PFL::run( Session* session, const std::string& argument ){
     RawTile rawtile = tilemanager.getRegion( resolution, wavelength, session->view->yangle, session->view->getLayers(), x1, y1, width, height );
 
     // Loop through our pixels
+    length *= rawtile.channels;
     for( unsigned int j=0; j<length; j++ ){
 
       float intensity = 0.0;
@@ -192,10 +192,10 @@ void PFL::run( Session* session, const std::string& argument ){
   snprintf( str, 1024,
 	    "Server: iipsrv/%s\r\n"
 	    "Content-Type: application/json\r\n"
-	    "Cache-Control: max-age=%d\r\n"
 	    "Last-Modified: %s\r\n"
+	    "%s\r\n"
 	    "\r\n",
-	    VERSION, MAX_AGE, (*session->image)->getTimestamp().c_str() );
+	    VERSION, (*session->image)->getTimestamp().c_str(), session->response->getCacheControl().c_str() );
 
   session->out->printf( (const char*) str );
   session->out->flush();

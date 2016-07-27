@@ -7,7 +7,7 @@
     Culture of the Czech Republic.
 
 
-    Copyright (C) 2009-2015 IIPImage.
+    Copyright (C) 2009-2016 IIPImage.
     Author: Ruven Pillay
 
     This program is free software; you can redistribute it and/or modify
@@ -56,11 +56,6 @@ unsigned int get_nprocs_conf(){
 
 
 using namespace std;
-
-
-#ifdef DEBUG
-extern std::ofstream logfile;
-#endif
 
 
 void KakaduImage::openImage() throw (file_error)
@@ -131,10 +126,6 @@ void KakaduImage::loadImageInfo( int seq, int ang ) throw(file_error)
   j2k_colour = jpx_layer.access_colour(0);
   layer_size = jpx_layer.get_layer_size();
 
-  int cmp, plt, stream_id;
-  j2k_channels.get_colour_mapping(0,cmp,plt,stream_id);
-  j2k_palette = jpx_stream.access_palette();
-
   image_widths.push_back(layer_size.x);
   image_heights.push_back(layer_size.y);
   channels = codestream.get_num_components();
@@ -195,12 +186,45 @@ void KakaduImage::loadImageInfo( int seq, int ang ) throw(file_error)
   numResolutions = n;
 
 
+  // Check for a palette and LUT - only used for bilevel images for now
+  int cmp, plt, stream_id,format=0;
+#if defined(KDU_MAJOR_VERSION) && (KDU_MAJOR_VERSION >= 7) && (KDU_MINOR_VERSION >= 8)
+  // API change for get_colour_mapping in Kakadu 7.8
+  j2k_channels.get_colour_mapping(0,cmp,plt,stream_id,format);
+#else
+  j2k_channels.get_colour_mapping(0,cmp,plt,stream_id);
+#endif
+
+  j2k_palette = jpx_stream.access_palette();
+
+  if( j2k_palette.exists() && j2k_palette.get_num_luts()>0 ){
+    int entries = j2k_palette.get_num_entries();
+    float *lt = new float[entries];
+    j2k_palette.get_lut(0,lt);    // Note that we extract only first LUT
+    // Force to unsigned format, scale to 8 bit and load these into our LUT vector
+    for( int n=0; n<entries; n++ ){
+      lut.push_back((int)((lt[n]+0.5)*255));
+    }
+    delete[] lt;
+#ifdef DEBUG
+    logfile << "Kakadu :: Palette with " << j2k_palette.get_num_luts() << " LUT and " << entries
+	    << " entries/LUT with values " << lut[0] << "," << lut[1] << endl;
+#endif
+  }
+
+
   // Set our colour space - we let Kakadu automatically handle CIELAB->sRGB conversion for the time being
   if( channels == 1 ) colourspace = GREYSCALE;
   else{
     jp2_colour_space cs = j2k_colour.get_space();
-    if( cs == JP2_sRGB_SPACE || cs == JP2_CIELab_SPACE ) colourspace = sRGB;
+    if( cs == JP2_sRGB_SPACE || cs == JP2_iccRGB_SPACE || cs == JP2_esRGB_SPACE || cs == JP2_CIELab_SPACE ) colourspace = sRGB;
     //else if ( cs == JP2_CIELab_SPACE ) colourspace = CIELAB;
+    else {
+#ifdef DEBUG
+    	logfile << "WARNING : colour space not found, setting sRGB colour space value" << endl;
+#endif
+    	colourspace = sRGB;
+    }
   }
 
 
@@ -282,7 +306,7 @@ RawTile KakaduImage::getTile( int seq, int ang, unsigned int res, int layers, un
 
   if( res > numResolutions ){
     ostringstream tile_no;
-    tile_no << "Kakadu :: Asked for non-existant resolution: " << res;
+    tile_no << "Kakadu :: Asked for non-existent resolution: " << res;
     throw file_error( tile_no.str() );
   }
 
@@ -303,7 +327,7 @@ RawTile KakaduImage::getTile( int seq, int ang, unsigned int res, int layers, un
 
   if( tile >= ntlx*ntly ){
     ostringstream tile_no;
-    tile_no << "Kakadu :: Asked for non-existant tile: " << tile;
+    tile_no << "Kakadu :: Asked for non-existent tile: " << tile;
     throw file_error( tile_no.str() );
   }
 
@@ -500,6 +524,7 @@ void KakaduImage::process( unsigned int res, int layers, int xoffset, int yoffse
 #endif
 
     // Create our buffers
+
     if( obpc == 16 ){
       stripe_buffer = new kdu_uint16[tw*stripe_heights[0]*channels];
       buffer = new unsigned short[tw*th*channels];
@@ -509,11 +534,34 @@ void KakaduImage::process( unsigned int res, int layers, int xoffset, int yoffse
       buffer = new unsigned char[tw*th*channels];
     }
 
+    // Keep track of changes in stripe heights
+    int previous_stripe_heights = stripe_heights[0];
+
 
     while( continues ){
 
+      
       decompressor.get_recommended_stripe_heights( comp_dims.size.y,
 						   1024, stripe_heights, NULL );
+
+
+      // If we have a larger stripe height, allocate new memory for this
+      if( stripe_heights[0] > previous_stripe_heights ){
+
+	// First delete then re-allocate our buffers
+	delete_buffer( stripe_buffer );
+	if( obpc == 16 ){
+	  stripe_buffer = new kdu_uint16[tw*stripe_heights[0]*channels];
+	}
+	else if( obpc == 8 ){
+	  stripe_buffer = new kdu_byte[tw*stripe_heights[0]*channels];
+	}
+
+#ifdef DEBUG
+	logfile << "Kakadu :: Stripe height increase: re-allocating memory for height " << stripe_heights[0] << endl;
+#endif
+      }
+
 
       if( obpc == 16 ){
 	// Set these to false to get unsigned 16 bit values
@@ -530,31 +578,34 @@ void KakaduImage::process( unsigned int res, int layers, int xoffset, int yoffse
 #endif
 
       // Copy the data into the supplied buffer
-      void *b1 = NULL, *b2 = NULL;
+      void *b1, *b2;
       if( obpc == 16 ){
 	b1 = &( ((kdu_uint16*)stripe_buffer)[0] );
 	b2 = &( ((unsigned short*)buffer)[index] );
       }
-      else if( obpc == 8 ){
+      else{ // if( obpc == 8 ){
 	b1 = &( ((kdu_byte*)stripe_buffer)[0] );
 	b2 = &( ((unsigned char*)buffer)[index] );
+
+	/* Handle 1 bit bilevel images, which we output scaled to 8 bits
+	   - ideally we would do this in the Kakadu pull_stripe function,
+	   but the precisions parameter seems not to work as expected.
+	   When requesting OUTPUT_COMPONENTS, data is provided as 0 or 128,
+	   so simply scale this up to [0,255]
+	*/
 	if( bpc == 1 ){
-	  // Expand bilevel images to full 8 bit range
-	  // - ideally we would do this in the Kakadu pull_stripe function,
-	  // but the precisions parameter seems not to work as expected.
+
 	  unsigned int k = tw * stripe_heights[0] * channels;
-	  // Deal with rare 1 bit "sRGB space" first
-	  if( colourspace == sRGB ){
-	    for( unsigned int n=0; n<k; n++ ){
-	      kdu_uint16 p = (kdu_uint16)((kdu_byte*)stripe_buffer)[n];
-	      // Do integer arithetic to multiply by just under 2
-	      ((kdu_byte*)stripe_buffer)[n] = (kdu_byte)( (p<<1) - (p>>2) );
-	    }
-	  }
-	  // The usual 1 channel 1 band case
-	  else{
+
+	  // Deal with inverted LUTs - we should really handle LUTs more generally, however
+	  if( !lut.empty() && lut[0]>lut[1] ){
 	    for( unsigned int n=0; n<k; n++ ){
 	      ((kdu_byte*)stripe_buffer)[n] =  ~(-((kdu_byte*)stripe_buffer)[n] >> 8);
+	    }
+	  }
+	  else{
+	    for( unsigned int n=0; n<k; n++ ){
+	      ((kdu_byte*)stripe_buffer)[n] =  (-((kdu_byte*)stripe_buffer)[n] >> 8);
 	    }
 	  }
 	}
@@ -581,7 +632,7 @@ void KakaduImage::process( unsigned int res, int layers, int xoffset, int yoffse
     if( res < virtual_levels ){
 
 #ifdef DEBUG
-      logfile << "Kakadu :: resizing tile to virtual resolution" << endl;
+      logfile << "Kakadu :: resizing tile to virtual resolution with factor " << (1 << (virtual_levels-res)) << endl;
 #endif
 
       unsigned int n = 0;

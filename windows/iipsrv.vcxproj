@@ -46,6 +46,7 @@
     <UseDebugLibraries>false</UseDebugLibraries>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
+    <PlatformToolset>Windows7.1SDK</PlatformToolset>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
@@ -86,14 +87,14 @@
       </PrecompiledHeader>
       <WarningLevel>Level1</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;HAVE_MEMCACHED;HAVE_KAKADU;HAVE_TIME_H;VERSION="0.9.9";_BASETSD_H;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;HAVE_MEMCACHED;CORESYS_IMPORTS;HAVE_KAKADU;HAVE_TIME_H;VERSION="1.0";_BASETSD_H;_USE_MATH_DEFINES;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>$(ProjectDir)\dependencies\includes;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>$(ProjectDir)\dependencies\libs\x86;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>MemCacheClient.lib;kdu_v73R.lib;jpeg-static.lib;libfcgi.lib;libtiff.lib;zlibwapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>MemCacheClient.lib;kdu_v72R.lib;jpeg-static.lib;libfcgi.lib;libtiff.lib;zlibwapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <IgnoreSpecificDefaultLibraries>MSVCRT;</IgnoreSpecificDefaultLibraries>
       <AdditionalOptions>/LTCG %(AdditionalOptions)</AdditionalOptions>
     </Link>
@@ -104,14 +105,14 @@
       </PrecompiledHeader>
       <WarningLevel>Level1</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;HAVE_KAKADU;HAVE_MEMCACHED;HAVE_TIME_H;VERSION="0.9.9";_BASETSD_H;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;HAVE_KAKADU;CORESYS_IMPORTS;HAVE_MEMCACHED;HAVE_TIME_H;VERSION="1.0";_BASETSD_H;_USE_MATH_DEFINES;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>$(ProjectDir)\dependencies\includes;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>$(ProjectDir)\dependencies\libs\x64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>MemCacheClient.lib;kdu_v73R.lib;jpeg-static.lib;libfcgi.lib;libtiff.lib;zlibwapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>MemCacheClient.lib;kdu_v72R.lib;jpeg-static.lib;libfcgi.lib;libtiff.lib;zlibwapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <IgnoreSpecificDefaultLibraries>MSVCRT;%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
       <AdditionalOptions>/LTCG %(AdditionalOptions)</AdditionalOptions>
     </Link>
@@ -121,32 +122,24 @@
       <WarningLevel>Level2</WarningLevel>
       <PrecompiledHeader>
       </PrecompiledHeader>
-      <Optimization>MaxSpeed</Optimization>
+      <Optimization>Full</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;VERSION="0.9.9";HAVE_MEMCACHED;HAVE_KAKADU;HAVE_TIME_H;_BASETSD_H;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;VERSION="1.0";HAVE_MEMCACHED;HAVE_KAKADU;CORESYS_IMPORTS;HAVE_TIME_H;_BASETSD_H;_USE_MATH_DEFINES;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>$(ProjectDir)\dependencies\includes;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
       <OmitFramePointers>true</OmitFramePointers>
       <StringPooling>true</StringPooling>
       <BufferSecurityCheck>false</BufferSecurityCheck>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
-      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <GenerateDebugInformation>false</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-<<<<<<< HEAD
-      <AdditionalLibraryDirectories>$(ProjectDir)\dependencies\libs;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>MemCacheClient.lib;kdu_v64R.lib;jpeg.lib;libfcgi.lib;libtiff.lib;zlibwapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
-=======
       <AdditionalLibraryDirectories>$(ProjectDir)\dependencies\libs\x86;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-<<<<<<< HEAD
-      <AdditionalDependencies>MemCacheClient.lib;kdu_v73R.lib;jpeg.lib;libfcgi.lib;libtiff.lib;zlibstat.lib;%(AdditionalDependencies)</AdditionalDependencies>
->>>>>>> 5f92adc... Big cleaning of unified installers folder
-=======
-      <AdditionalDependencies>MemCacheClient.lib;kdu_v73R.lib;jpeg-static.lib;libfcgi.lib;libtiff.lib;zlibstat.lib;%(AdditionalDependencies)</AdditionalDependencies>
->>>>>>> 252035d... small fix of IIS script, removed redundant Time.h definition, changed
+      <AdditionalDependencies>MemCacheClient.lib;kdu_v72R.lib;jpeg-static.lib;libfcgi.lib;libtiff.lib;zlibstat.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalOptions>/LTCG %(AdditionalOptions)</AdditionalOptions>
       <IgnoreSpecificDefaultLibraries>
       </IgnoreSpecificDefaultLibraries>
@@ -158,32 +151,24 @@
       <WarningLevel>Level2</WarningLevel>
       <PrecompiledHeader>
       </PrecompiledHeader>
-      <Optimization>MaxSpeed</Optimization>
+      <Optimization>Full</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;HAVE_KAKADU;HAVE_MEMCACHED;VERSION="0.9.9";HAVE_TIME_H;_BASETSD_H;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;_USE_MATH_DEFINES;HAVE_KAKADU;CORESYS_IMPORTS;HAVE_MEMCACHED;VERSION="1.0";HAVE_TIME_H;_BASETSD_H;_USE_MATH_DEFINES;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>$(ProjectDir)\dependencies\includes;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
       <OmitFramePointers>true</OmitFramePointers>
       <StringPooling>true</StringPooling>
       <BufferSecurityCheck>false</BufferSecurityCheck>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
-      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <GenerateDebugInformation>false</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-<<<<<<< HEAD
-      <AdditionalLibraryDirectories>$(ProjectDir)\dependencies\libs;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>MemCacheClient.lib;kdu_v64R.lib;jpeg.lib;libfcgi.lib;libtiff.lib;zlibwapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
-=======
       <AdditionalLibraryDirectories>$(ProjectDir)\dependencies\libs\x64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-<<<<<<< HEAD
-      <AdditionalDependencies>MemCacheClient.lib;kdu_v73R.lib;jpeg.lib;libfcgi.lib;libtiff.lib;zlibstat.lib;%(AdditionalDependencies)</AdditionalDependencies>
->>>>>>> 5f92adc... Big cleaning of unified installers folder
-=======
-      <AdditionalDependencies>MemCacheClient.lib;kdu_v73R.lib;jpeg-static.lib;libfcgi.lib;libtiff.lib;zlibstat.lib;%(AdditionalDependencies)</AdditionalDependencies>
->>>>>>> 252035d... small fix of IIS script, removed redundant Time.h definition, changed
+      <AdditionalDependencies>MemCacheClient.lib;kdu_v72R.lib;jpeg-static.lib;libfcgi.lib;libtiff.lib;zlibstat.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalOptions>/LTCG %(AdditionalOptions)</AdditionalOptions>
     </Link>
   </ItemDefinitionGroup>
@@ -193,6 +178,7 @@
     <ClCompile Include="..\src\DSOImage.cc" />
     <ClCompile Include="..\src\FIF.cc" />
     <ClCompile Include="..\src\ICC.cc" />
+    <ClCompile Include="..\src\IIIF.cc" />
     <ClCompile Include="..\src\IIPImage.cc" />
     <ClCompile Include="..\src\IIPResponse.cc" />
     <ClCompile Include="..\src\JPEGCompressor.cc" />
@@ -200,6 +186,7 @@
     <ClCompile Include="..\src\KakaduImage.cc" />
     <ClCompile Include="..\src\Main.cc" />
     <ClCompile Include="..\src\OBJ.cc" />
+    <ClCompile Include="..\src\PFL.cc" />
     <ClCompile Include="..\src\SPECTRA.cc" />
     <ClCompile Include="..\src\Task.cc" />
     <ClCompile Include="..\src\TIL.cc" />

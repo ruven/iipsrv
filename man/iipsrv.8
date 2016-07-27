@@ -1,4 +1,4 @@
-.TH IIPSRV 8 "AUGUST 2014" Linux "User Manuals"
+.TH IIPSRV 8 "February 2016" "Ruven Pillay"
 .SH NAME
 
 IIPSRV \- IIPImage Image Server
@@ -9,7 +9,7 @@ images. It is designed to be fast and bandwidth-efficient with low processor and
 well as advanced image features such as 8, 16 and 32 bit depths, CIELAB colorimetric images and scientific imagery such as multispectral images.
 Source images can be either TIFF (tiled multi-resolution) or JPEG2000 (if enabled).
 
-The imaging server can also dynamically export images in JPEG format and perform basic image processing, such as contrast adjustment, gamma control, conversion from color to greyscale, color twist, region extraction and arbitrary rescaling. The server can also export spectral point or profile data from multispectral data and apply color maps or perform hillshading rendering.
+The image server can also dynamically export images in JPEG format and perform basic image processing, such as contrast adjustment, gamma control, conversion from color to greyscale, color twist, region extraction and arbitrary rescaling. The server can also export spectral point or profile data from multispectral data and apply color maps or perform hillshading rendering.
 
 .SH SYNOPSIS
 
@@ -73,10 +73,10 @@ component such as ../ is also filtered out. No default value.
 The maximum permitted image pixel size returned by the CVT command
 in conjunction with WID or HEI or RGN. The default is 5000. This
 prevents huge requests from overloading the server
-.IP LAYERS
-The number of quality layers to decode for image that support 
+.IP MAX_LAYERS
+The maximum number of quality layers to decode for image that support 
 progressive quality encoding, such as JPEG2000. Ignored for other file 
-formats. The default is 1.
+formats. By default half of the available layers are decoded. If set to -1, all the available layers will be decoded.
 .IP WATERMARK
 TIFF image to use as watermark file. This image should be not be 
 bigger the tile size used for TIFF tiling. If bigger, it will simply be 
@@ -107,6 +107,8 @@ See http://www.w3.org/TR/cors/ for more details on CORS.
 .IP BASE_URL
 Set a base URL for use in certain protocol requests if web server rewriting has taken place and the public URL is not the same as that supplied to
 .B iipsrv
+.IP CACHE_CONTROL
+Set the HTTP Cache-Control header. See http://www.w3.org/Protocols/rfc2616/rfc2616-sec14.html#sec14.9 for a full list of options. If not set, header defaults to "max-age=86400" (24 hours).
 
 
 .SH EXAMPLES
@@ -116,8 +118,7 @@ will be automatically started by both Apache and Lighttpd. But not by Nginx or J
 See the example configuration in the README or included with your distribution for the appropriate syntax.
 Note that Apache has two FCGI modules: mod_fastcgi and mod_fcgid which are configured differently.
 
-You may also wish to 
-run
+You may also wish to run
 .B iipsrv
 as a standalone program. To do this, use the following syntax to bind to a particular port and listen for FCGI (not HTTP) requests. 
 In the following example,
@@ -126,8 +127,21 @@ will bind to port 9000 on the machine's IP address 192.168.0.1:
 
 % iipsrv.fcgi --bind 192.168.0.1:9000
 
+There is additionally a
+.B --backlog
+parameter that is optional and sets the socket backlog value. The backlog value specifies the number of requests can be queued and, therefore, increases the number of concurrent connections that 
+.B iipsrv
+can handle and is set to 2048 by default. For example:
+
+% iipsrv.fcgi --bind 192.168.0.1:9000 --backlog 1024
+
+Note that the backlog parameter must be specified
+.B after the bind parameter and argument.
+Note also that this value may be limited by the operating system. On Linux kernels < 2.4.25 and Mac OS X, the backlog limit is hard-coded to 128, so any value above this will be limited to 128 by the OS. If you do provide a backlog value, verify whether the setting /proc/sys/net/core/somaxconn should be updated.
+
+
 It is also possible to run
-.Iiipsrv
+.I iipsrv
 via the
 .I spawn-fcgi
 program. Set up any parameters via environment variables and run the command as follows to bind, as in the previous example to port 9000 on IP address 192.168.0.1:
@@ -177,4 +191,3 @@ IIPImage website: http://iipimage.sourceforge.net
 
 .SH AUTHORS
 Ruven Pillay <ruven@users.sourceforge.net>
-

@@ -24,14 +24,18 @@
 using namespace std;
 
 
+/// Calculate optimal resolution for a given requested pixel dimension
 void View::calculateResolution( unsigned int dimension,
 				unsigned int requested_size ){
 
   unsigned int j = 1;
   unsigned int d = dimension;
 
+  if( requested_size < min_size ) requested_size = min_size;
+  unsigned int rs = (requested_size<min_size) ? min_size : requested_size;
+
   // Calculate the resolution number for this request
-  while( d >= requested_size ){
+  while( d >= rs ){
     d = d/2;
     j++;
   }
@@ -56,14 +60,14 @@ unsigned int View::getResolution(){
 
   resolution = max_resolutions - 1;
 
-  // Note that we use floor() as that is how our resolutions are calculated 
+  // Note that we use floor() as that is how our resolutions are calculated
   if( requested_width ) View::calculateResolution( width, floor((float)requested_width/(float)view_width) );
   if( requested_height ) View::calculateResolution( height, floor((float)requested_height/(float)view_height) );
 
   res_width = width;
   res_height = height;
 
-  // Caluclate our new width and height based on the calculated resolution
+  // Calculate our new width and height based on the calculated resolution
   for( i=1; i < (max_resolutions - resolution); i++ ){
     res_width = (int) floor(res_width / 2.0);
     res_height = (int) floor(res_height / 2.0);
@@ -109,9 +113,11 @@ float View::getScale(){
   }
   else rh = requested_height;
 
+
   float scale = static_cast<float>(rw) / static_cast<float>(width);
 
   if( static_cast<float>(rh) / static_cast<float>(res_height) < scale ) scale = static_cast<float>(rh) / static_cast<float>(res_height);
+
 
   // Sanity check
   if( scale <= 0 || scale > 1.0 ) scale = 1.0;
@@ -135,6 +141,10 @@ void View::setViewTop( float y ) {
 
 
 void View::setViewWidth( float w ) {
+  // Crop region widths > 100% of image size
+  if( view_left+w > 1.0 ) w = 1.0-view_left;
+
+  // Sanity check
   if( w > 1.0 ) view_width = 1.0;
   else if( w < 0.0 ) view_width = 0.0;
   else view_width = w;
@@ -142,6 +152,10 @@ void View::setViewWidth( float w ) {
 
 
 void View::setViewHeight( float h ) {
+  // Crop region heights > 100% of image size
+  //if( view_height+h > 1.0 ) h = 1.0-view_height;
+
+  // Sanity check
   if( h > 1.0 ) view_height = 1.0;
   else if( h < 0.0 ) view_height = 0.0;
   else view_height = h;

@@ -1,7 +1,7 @@
 /*
     Image View and Transform Parameters
 
-    Copyright (C) 2003-2014 Ruven Pillay.
+    Copyright (C) 2003-2016 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -60,7 +60,7 @@ class View{
 
 
   /// Internal function to calculate the resolution associated with a width
-  ///  or height request. This also takes into account maximum size limits.
+  ///  or height request. This also takes into account maximum & minimum size limits.
   /** @param m maximum size
       @param r requested size
    */
@@ -91,12 +91,12 @@ class View{
     resolution = 0; max_resolutions = 0;
     width = 0; height = 0;
     res_width = 0; res_height = 0;
-    min_size = 8; max_size = 0;
+    min_size = 1; max_size = 0;
     requested_width = 0; requested_height = 0;
     contrast = 1.0; gamma = 1.0;
     xangle = 0; yangle = 90;
     shaded = false; shade[0] = 0; shade[1] = 0; shade[2] = 0;
-    cmapped = false; inverted = false;
+    cmapped = false; cmap = HOT; inverted = false;
     max_layers = 0; layers = 0;
     rotation = 0.0; flip = 0;
     maintain_aspect = true;
@@ -113,6 +113,11 @@ class View{
   /// Set the maximum view port dimension
   /** @param m maximum viewport dimension */
   void setMaxSize( unsigned int m ){ max_size = m; };
+
+
+  /// Get the maximum allowed output size
+  /* @return maximum output dimension */
+  unsigned int getMaxSize(){ return max_size; };
 
 
   /// Set the maximum view port dimension
@@ -241,6 +246,14 @@ class View{
   /// Get rotation
   /* @return requested rotation angle in degrees */
   float getRotation(){ return rotation; };
+
+  /// Whether view requires floating point processing
+  bool floatProcessing(){
+    if( contrast != 1.0 || gamma != 1.0 || cmapped || shaded || inverted || ctw.size() ){
+      return true;
+    }
+    else return false;
+  }
 
 };
 

@@ -1,7 +1,7 @@
 /*
     IIP Generic Task Class
 
-    Copyright (C) 2006-2014 Ruven Pillay.
+    Copyright (C) 2006-2016 Ruven Pillay
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -107,7 +107,7 @@ class Task {
  public:
 
   /// Virtual destructor
-  virtual ~Task() {;};   
+  virtual ~Task() {;};
 
   /// Main public function
   virtual void run( Session* session, const std::string& argument ) {;};

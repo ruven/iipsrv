@@ -1,7 +1,7 @@
 /*
     IIP TIL Command Handler Class Member Function
 
-    Copyright (C) 2006-2013 Ruven Pillay.
+    Copyright (C) 2006-2015 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -113,10 +113,10 @@ void TIL::run( Session* session, const std::string& a ){
     snprintf( str, 1024,
 	      "Server: iipsrv/%s\r\n"
 	      "Content-Type: application/vnd.netfpx\r\n"
-	      "Cache-Control: max-age=%d\r\n"
 	      "Last-Modified: %s\r\n"
+	      "%s\r\n"
 	      "\r\n",
-	      VERSION, MAX_AGE, (*session->image)->getTimestamp().c_str() );
+	      VERSION, (*session->image)->getTimestamp().c_str(), session->response->getCacheControl().c_str() );
 
     session->out->printf( (const char*)str );
   }

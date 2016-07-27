@@ -2,7 +2,7 @@
 
 /*  IIP Image Server
 
-    Copyright (C) 2000-2013 Ruven Pillay.
+    Copyright (C) 2000-2016 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -141,11 +141,6 @@ class RawTile{
   /// Copy constructor - handles copying of data buffer
   RawTile( const RawTile& tile ) {
 
-    dataLength = tile.dataLength;
-    width = tile.width;
-    height = tile.height;
-    channels = tile.channels;
-    bpc = tile.bpc;
     tileNum = tile.tileNum;
     resolution = tile.resolution;
     hSequence = tile.hSequence;
@@ -154,6 +149,12 @@ class RawTile{
     quality = tile.quality;
     filename = tile.filename;
     timestamp = tile.timestamp;
+    memoryManaged = tile.memoryManaged;
+    dataLength = tile.dataLength;
+    width = tile.width;
+    height = tile.height;
+    channels = tile.channels;
+    bpc = tile.bpc;
     sampleType = tile.sampleType;
     padded = tile.padded;
 
@@ -180,11 +181,6 @@ class RawTile{
   /// Copy assignment constructor
   RawTile& operator= ( const RawTile& tile ) {
 
-    dataLength = tile.dataLength;
-    width = tile.width;
-    height = tile.height;
-    channels = tile.channels;
-    bpc = tile.bpc;
     tileNum = tile.tileNum;
     resolution = tile.resolution;
     hSequence = tile.hSequence;
@@ -193,6 +189,12 @@ class RawTile{
     quality = tile.quality;
     filename = tile.filename;
     timestamp = tile.timestamp;
+    memoryManaged = tile.memoryManaged;
+    dataLength = tile.dataLength;
+    width = tile.width;
+    height = tile.height;
+    channels = tile.channels;
+    bpc = tile.bpc;
     sampleType = tile.sampleType;
     padded = tile.padded;
 

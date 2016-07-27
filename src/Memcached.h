@@ -65,6 +65,8 @@ class Memcache {
   */
   Memcache( const std::string& servernames = "localhost", unsigned int timeout = 3600 ) {
 
+    _length = 0;
+
     // Set our timeout
     _timeout =  timeout;
 

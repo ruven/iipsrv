@@ -79,7 +79,7 @@ void Task::checkImage(){
 
 
 
-void QLT::run( Session* session, const std::string& argument ){
+void QLT::run( Session* session, const string& argument ){
 
   if( argument.length() ){
 
@@ -99,7 +99,7 @@ void QLT::run( Session* session, const std::string& argument ){
 }
 
 
-void SDS::run( Session* session, const std::string& argument ){
+void SDS::run( Session* session, const string& argument ){
 
   if( session->loglevel >= 3 ) *(session->logfile) << "SDS handler reached" << endl;
 
@@ -119,7 +119,7 @@ void SDS::run( Session* session, const std::string& argument ){
 }
 
 
-void MINMAX::run( Session* session, const std::string& argument ){
+void MINMAX::run( Session* session, const string& argument ){
 
   if( session->loglevel >= 3 ) *(session->logfile) << "MINMAX handler reached" << endl;
 
@@ -143,7 +143,7 @@ void MINMAX::run( Session* session, const std::string& argument ){
 }
 
 
-void CNT::run( Session* session, const std::string& argument ){
+void CNT::run( Session* session, const string& argument ){
 
   float contrast = (float) atof( argument.c_str() );
 
@@ -154,7 +154,7 @@ void CNT::run( Session* session, const std::string& argument ){
 }
 
 
-void GAM::run( Session* session, const std::string& argument ){
+void GAM::run( Session* session, const string& argument ){
 
   float gamma = (float) atof( argument.c_str() );
 
@@ -165,7 +165,7 @@ void GAM::run( Session* session, const std::string& argument ){
 }
 
 
-void CVT::run( Session* session, const std::string& src ){
+void CVT::run( Session* session, const string& src ){
 
   // Put the argument into lower case
   string argument = src;
@@ -184,7 +184,7 @@ void CVT::run( Session* session, const std::string& src ){
 }
 
 
-void WID::run( Session* session, const std::string& argument ){
+void WID::run( Session* session, const string& argument ){
 
   int requested_width = atoi( argument.c_str() );
 
@@ -196,7 +196,7 @@ void WID::run( Session* session, const std::string& argument ){
 }
 
 
-void HEI::run( Session* session, const std::string& argument ){
+void HEI::run( Session* session, const string& argument ){
 
   int requested_height = atoi( argument.c_str() );
 
@@ -218,7 +218,7 @@ void Upscale::run( Session* session, const std::string& argument ){
 }
 
 
-void RGN::run( Session* session, const std::string& argument ){
+void RGN::run( Session* session, const string& argument ){
 
   Tokenizer izer( argument, "," );
   int i = 0;
@@ -245,16 +245,21 @@ void RGN::run( Session* session, const std::string& argument ){
   }
 
   if( session->loglevel >= 3 ){
-    *(session->logfile) << "RGN :: requested region is " << region[0] << ", "
-			<< region[1] << ", " << region[2] << ", " << region[3] << endl;
+    *(session->logfile) << "RGN :: requested region is x:" << region[0] << ", y:"
+			<< region[1] << ", w:" << region[2] << ", h:" << region[3] << endl;
   }
 
 }
 
 
-void ROT::run( Session* session, const std::string& argument ){
+void ROT::run( Session* session, const string& argument ){
 
-  float rotation = (float) atof( argument.c_str() );
+  string rotationString = argument;
+  if( rotationString.substr(0,1) == "!" ){
+    session->view->flip = 1;
+    rotationString.erase(0,1);
+  }
+  float rotation = (float) atof( rotationString.c_str() );
 
   if( session->loglevel >= 2 ) *(session->logfile) << "ROT handler reached" << endl;
   if( session->loglevel >= 3 ) *(session->logfile) << "ROT :: requested rotation is " << rotation << " degrees" << endl;
@@ -263,7 +268,7 @@ void ROT::run( Session* session, const std::string& argument ){
 }
 
 
-void JTLS::run( Session* session, const std::string& argument ){
+void JTLS::run( Session* session, const string& argument ){
 
   /* The argument is comma separated into 4:
      1) xangle
@@ -301,7 +306,7 @@ void JTLS::run( Session* session, const std::string& argument ){
 }
 
 
-void JTL::run( Session* session, const std::string& argument ){
+void JTL::run( Session* session, const string& argument ){
 
   /* The argument should consist of 2 comma separated values:
      1) resolution
@@ -318,7 +323,7 @@ void JTL::run( Session* session, const std::string& argument ){
 }
 
 
-void SHD::run( Session* session, const std::string& argument ){
+void SHD::run( Session* session, const string& argument ){
 
   /* The argument is comma separated into the 3D angles of incidence of the
      light source in degrees for the angle in the horizontal plane from 12 o'clock
@@ -352,7 +357,7 @@ void SHD::run( Session* session, const std::string& argument ){
 }
 
 
-void CMP::run( Session* session, const std::string& argument ){
+void CMP::run( Session* session, const string& argument ){
 
   /* The argument is the colormap type: available colormaps are
      HOT, COLD, JET, BLUE, GREEN, RED
@@ -376,14 +381,14 @@ void CMP::run( Session* session, const std::string& argument ){
 }
 
 
-void INV::run( Session* session, const std::string& argument ){
+void INV::run( Session* session, const string& argument ){
   // Does not take an argument
   if( session->loglevel >= 2 ) *(session->logfile) << "INV handler reached" << endl;
   session->view->inverted = true;
 }
 
 
-void LYR::run( Session* session, const std::string& argument ){
+void LYR::run( Session* session, const string& argument ){
 
   if( argument.length() ){
 
@@ -406,9 +411,9 @@ void LYR::run( Session* session, const std::string& argument ){
 }
 
 
-void CTW::run( Session* session, const std::string& argument ){
+void CTW::run( Session* session, const string& argument ){
 
-  /* Matrices should be formated as CTW=[a,b,c;d,e,f;g,h,i] where commas separate row values
+  /* Matrices should be formatted as CTW=[a,b,c;d,e,f;g,h,i] where commas separate row values
      and semi-colons separate columns.
      Thus, the above argument represents the 3x3 square matrix:
      [ a b c

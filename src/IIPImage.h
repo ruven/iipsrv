@@ -2,7 +2,7 @@
 
 /*  IIP fcgi server module
 
-    Copyright (C) 2000-2014 Ruven Pillay.
+    Copyright (C) 2000-2016 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -93,13 +93,19 @@ class IIPImage {
   std::list <int> verticalAnglesList;
 
 
- public:
+ protected:
+
+  /// LUT
+  std::vector <int> lut;
 
   /// Number of resolution levels that don't physically exist in file
   unsigned int virtual_levels;
 
   /// Return the image format e.g. tif
   ImageFormat format;
+
+
+ public:
 
   /// The image pixel dimensions
   std::vector <unsigned int> image_widths, image_heights;
@@ -128,7 +134,7 @@ class IIPImage {
   /// Quality layers
   unsigned int quality_layers;
 
-  /// Indicate whether we have opened and initialised some paramters for this image
+  /// Indicate whether we have opened and initialised some parameters for this image
   bool isSet;
 
   /// If we have an image sequence, the current X and Y position
@@ -146,10 +152,15 @@ class IIPImage {
   /// Default Constructor
   IIPImage()
    : isFile( false ),
+    virtual_levels( 0 ),
+    format( UNSUPPORTED ),
     tile_width( 0 ),
     tile_height( 0 ),
+    colourspace( NONE ),
+    numResolutions( 0 ),
     bpc( 0 ),
     channels( 0 ),
+    sampleType( FIXEDPOINT ),
     quality_layers( 0 ),
     isSet( false ),
     currentX( 0 ),
@@ -163,10 +174,14 @@ class IIPImage {
    : imagePath( s ),
     isFile( false ),
     virtual_levels( 0 ),
+    format( UNSUPPORTED ),
     tile_width( 0 ),
     tile_height( 0 ),
+    colourspace( NONE ),
+    numResolutions( 0 ),
     bpc( 0 ),
     channels( 0 ),
+    sampleType( FIXEDPOINT ),
     quality_layers( 0 ),
     isSet( false ),
     currentX( 0 ),
@@ -184,6 +199,7 @@ class IIPImage {
     suffix( image.suffix ),
     horizontalAnglesList( image.horizontalAnglesList ),
     verticalAnglesList( image.verticalAnglesList ),
+    lut( image.lut ),
     virtual_levels( image.virtual_levels ),
     format( image.format ),
     image_widths( image.image_widths ),

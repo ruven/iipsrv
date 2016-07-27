@@ -1,6 +1,6 @@
 /*  JPEG class wrapper to ijg jpeg library
 
-    Copyright (C) 2000-2012 Ruven Pillay.
+    Copyright (C) 2000-2015 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -25,7 +25,7 @@
 using namespace std;
 
 
-#define MX 16536
+#define MX 32768
 
 
 /* My version of the JPEG error_exit function. We want to pass control back
@@ -173,6 +173,9 @@ void JPEGCompressor::InitCompression( const RawTile& rawtile, unsigned int strip
   if( ! ( (channels==1) || (channels==3) )  ){
     throw string( "JPEGCompressor: JPEG can only handle images of either 1 or 3 channels" );
   }
+
+  // JPEG can only handle 8 bit data
+  if( rawtile.bpc != 8 ) throw string( "JPEGCompressor: JPEG can only handle 8 bit images" );
 
 
   // We set up the normal JPEG error routines, then override error_exit.
@@ -324,6 +327,8 @@ int JPEGCompressor::Compress( RawTile& rawtile ) throw (string)
     throw string( "JPEGCompressor: JPEG can only handle images of either 1 or 3 channels" );
   }
 
+  // JPEG can only handle 8 bit data
+  if( rawtile.bpc != 8 ) throw string( "JPEGCompressor: JPEG can only handle 8 bit images" );
 
   // We set up the normal JPEG error routines, then override error_exit.
   cinfo.err = jpeg_std_error( &jerr );

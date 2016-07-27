@@ -4,7 +4,7 @@
 
 /*  IIP Server: Tile Cache Handler
 
-    Copyright (C) 2005-2014 Ruven Pillay.
+    Copyright (C) 2005-2016 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -350,6 +350,9 @@ RawTile TileManager::getRegion( unsigned int res, int seq, int ang, int layers, 
   unsigned int channels = image->getNumChannels();
   unsigned int bpc = image->getNumBitsPerPixel();
   SampleType sampleType = image->getSampleType();
+
+  // Assume 1 bit data has been unpacked to 8 bits per channel
+  if( bpc == 1 ) bpc = 8;
 
   // Create an empty tile with the correct dimensions
   RawTile region( 0, res, seq, ang, width, height, channels, bpc );

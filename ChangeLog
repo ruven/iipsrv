@@ -1,4 +1,117 @@
-19/02/2015:
+08/07/2016:
+	- Removed "gray" from IIIF list of supported features - already specified in the
+	  qualities list.
+
+
+07/06/2016:
+	- Added fix for API change in get_colour_mapping() function in Kakadu version 7.8
+
+
+02/06/2016:
+	- Type change of counter in filter_contrast to long to avoid overflows with large
+	  image exports.
+
+
+22/03/2016: Version 1.0 Released
+
+
+08/03/2016:
+	- Added sizes field to IIIF JSON responses giving list of exportable pyramid sizes
+	  smaller than MAX_CVT.
+
+
+29/02/2016:
+	- Added support for 1 bit bilevel TIFF
+
+
+11/02/2016:
+	- Added backlog parameter support for command line use through --backlog parameter.
+	- Fixed several more Coverity scan warnings.
+
+
+29/01/2016:
+	- Minor update to IIPImage.cc to reduce risk of race condition in stat -> fopen calls
+
+
+28/01/2016:
+	- Added ifdefs to Transform.cc to enforce either ivdep for icc or openmp for gcc
+
+
+15/01/2016:
+	- Fixed a series of minor issues identified by Coverity scan
+
+
+12/01/2016:
+	- Added check to JPEGCompressor to reject images that are not 8 bits per channel
+	- Added new floatProcessing() function to View.h to simplify code in JTL and CVT
+
+
+06/01/2016:
+	- Added extra parameter check for incoherent region sizes for IIIF protocol
+
+
+21/12/2015:
+	- Fixed infinite loop in View::calculateResolution if requested size = 0. Set
+	  minimum output size to 1px.
+
+
+07/09/2015:
+	- Fixed isfinite autoconf macro in acinclude.m4 to force float type
+
+
+06/08/2015:
+	- Added timestamp check and metadata reload for images that have been modified
+	- Added X-Powered-By header as a number of web servers strip out the Server header
+
+
+03/08/2015:
+	- Added palette support for bilevel images to handle cases where LUTs are inverted
+
+
+27/07/2015:
+	- Modified ROT command to accept horizontal flipping through "!" prefix as with IIIF.
+	- Cosmetic improvement to FIF logging.
+	- Modified TPTImage to disable use of memory mapping when opening images as this seems
+	  to be slower when opening very large TIFFs.
+
+
+24/07/2015:
+	- Added timers to all image processing functions in CVT.cc + code cleanup.
+
+
+21/07/2015:
+	- Fixed error in View.cc when setting regions sizes that extend beyond image boundaries:
+	  regions now cropped to boundaries.
+
+
+20/07/2015:
+	- More OpenMP parallelization and cleanups to Transform.cc
+
+
+17/07/2015:
+	- Increased buffer memory for JPEG encoding to handle certain images or tiles that
+	  encode at Q=100 to sizes significantly larger than the raw data.
+	- Added new CACHE_CONTROL server parameter to allow user control over this. If not
+	  set, it defaults to the previous default value of "max-age=86400".
+	- More image processing routines now parallelized with OpenMP: bilinear interpolation,
+	  for example, now parallelized and considerably faster.
+
+
+19/03/2015:
+	- Fix to KakaduImage.cc to check for increases in stripe heights and make sure
+	  sufficient memory is allocated.
+
+
+13/02/2015:
+	- Added checks for NULL FCGX_GetParam results and to empty HTTP_IF_MODIFIED_SINCE.
+	  See: https://github.com/ruven/iipsrv/issues/33 - thanks to Brian Helba.
+
+
+12/02/2015:
+	- Fixed @id decoding in IIIF.cc for paths containing slashes
+
+
+19/01/2015:
 	- Added missing <cctype> include in URL.h and replaced pow(2.0,x) with bit shifting in
 	  KakaduImage.cc and View.cc. Now compiles cleanly with VisualStudio Express.
 	- Added extra OpenMP parallel declarations to Transform.cc and autoconf directive to
@@ -58,7 +171,7 @@
 
 19/08/2014:
 	- Added aspect ratio flag in View.h for use in CVT.cc. Also cleaned up Main.cc to remove
-	  unnecesary logging and record extra http headers.
+	  unnecessary logging and record extra http headers.
 	- Added IIIF protocol version 2.0 support via the IIIF argument.
 
 
@@ -282,7 +395,7 @@
 
 
 30/10/2012:
-	- Autoconf cleanup. Removed unneccesary autoconf files: should now use
+	- Autoconf cleanup. Removed unnecessary autoconf files: should now use
 	  autogen.sh script first before ./configure
 
 
@@ -565,7 +678,7 @@
 	- Major changes to the HTTP headers sent by iipsrv. Added
 	  HTTP Server id and Last-Modified timestamps to all server output.
 	  Checks are now made for a If-Modified-Since response and a
-	  304 Not Modified reponse returned if the timestamps match.
+	  304 Not Modified response returned if the timestamps match.
 	  This should significantly improve server performance.
 
 
@@ -609,7 +722,7 @@
 
 
 05/11/2009:
-	- Updated the autoconf, aclocal, automake and libtool scripts to the 
+	- Updated the autoconf, aclocal, automake and libtool scripts to the
 	  latest versions.
 
 
@@ -631,7 +744,7 @@
 	- Security fixes to Task.cc to make sure while loop is limited to the
 	  expected number of arguments. (Thanks to Willem Hengeveld for pointing
 	  this out).
-	
+
 
 19/08/2009:
 	- Minor updates to IIPImage.h and IIPImage.cc. FIF.cc also now tests
@@ -962,8 +1075,8 @@
 01/04/2004:
         - Fixed length given by the error response. We now count both
           the code and the argument.
- 
- 
+
+
 30/03/2004:
         - Fixed TIL to only send the MIME type once before the tile
           sequence.
@@ -971,8 +1084,8 @@
           whenever we have a problem in Main.cc. Plus the catch
           clause now checks for an error in IIPResponse and sends
           this if available rather than the advertising banner.
- 
- 
+
+
 29/03/2004:
         - Changed the vertical and horizontal views syntax back to
           old style.
@@ -980,7 +1093,7 @@
           Apache complains if there are not 2 sets of CRLF.
         - Changed the IIPImage metadata map to use the string class
           rather than char* - seems to fix a freeze problem.
- 
+
 
 06/03/2004:
 	- More fixes to RGN code. Moved the verification logic into
@@ -1138,7 +1251,7 @@
 22/08/2003:
 	- Added extra variable to track the current vertical position as
 	  well as the horizontal. Fixes bug when switching between vertical
-	  angles on sequence zero.	
+	  angles on sequence zero.
 	- XHTMLified the advertising banner :-)
 
 
@@ -1183,7 +1296,7 @@
 	  so will mothball it till after the forthcoming release.
 
 
-10/11/2002: 
+10/11/2002:
 	- Changes to some header files etc to make it compatible with gcc 3.2:
 	  Mainly STL string specifiers, plus replacement of slist type
 	  with std::list.
@@ -1201,7 +1314,7 @@
 	  tiles. Sometimes the JPEG data is larger than the original
 	  so we need to allocate some extra memory just in case.
 	- Also fixed the iip_empty_output_buffer( j_compress_ptr cinfo )
-	  function. Now properly empties the buffer and returns TRUE.	
+	  function. Now properly empties the buffer and returns TRUE.
 	- The Compress() routine now passes the entire image buffer array
 	  into jpeg_write_scanlines rather than doing it row by
 	  row. The row array is dynamically allocated and deleted

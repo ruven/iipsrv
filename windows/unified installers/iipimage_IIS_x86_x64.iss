@@ -249,7 +249,7 @@ begin
       +'" "'+MemcachedPathPage.Values[0]+'"',
        '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
     if (ResultCode <> 0) then 
-      MsgBox('CRITICAL ERROR:' #13#13 'Error occured during installation or configuration of IIS.' #13 
+      MsgBox('CRITICAL ERROR:' #13#13 'Error occurred during installation or configuration of IIS.' #13
       'Please read Readme.txt file for information how to solve this problem.',
          mbCriticalError, MB_OK);
     // Create index.html, url shortcut to this file and configures configuration.ini for transcoder
@@ -379,7 +379,7 @@ begin
        1=First registry not found, second command failed,
        3=First command successful, second failed,
        5=Both commands failed}       
-        MsgBox('ERROR '+IntToStr(ErrorCode)+':' #13#13 'Error occured during removing virtual directory or FCGI application.'
+        MsgBox('ERROR '+IntToStr(ErrorCode)+':' #13#13 'Error occurred during removing virtual directory or FCGI application.'
           +' Please remove it manually.', mbInformation, MB_OK);
     end;
     //stop memcached so it can be uninstalled and remove memcached from Windows services

@@ -64,7 +64,7 @@ AS_IF([test "x$enable_openmp" != "xyes"], [
 
 
 AC_ARG_ENABLE([debug],
-     [  --enable-debug    Turn on debugging],
+     [  --enable-debug          turn on debugging],
      [case "${enableval}" in
        yes) debug=true ;;
        no)  debug=false ;;
@@ -105,7 +105,7 @@ AC_SEARCH_LIBS(gzopen, z)
 
 
 #************************************************************
-# Check for libmemecached
+# Check for libmemcached
 
 AC_CHECK_HEADERS( libmemcached/memcached.h,
 	AC_SEARCH_LIBS( memcached_create,
@@ -150,7 +150,7 @@ AC_CHECK_HEADERS(lcms2.h,
 		LCMS=true; AC_DEFINE(LCMS),
 		LCMS=false )
 )
-
+LCMS=false
 
 
 #************************************************************ 
@@ -186,7 +186,7 @@ AC_SUBST(LIBFCGI_LIBS)
 # Check for libdl for dynamic library loading
 
 AC_ARG_ENABLE(modules,
-    [  --enable-modules       enable dynamic module loading] )
+    [  --enable-modules        enable dynamic module loading] )
 
 if test "$enable_modules" = "yes"; then
 
@@ -207,10 +207,10 @@ AC_SUBST(DL_LIBS)
 
 #************************************************************
 
-# 	Check for Kakadu JPEG2000 library
+# Check for Kakadu JPEG2000 library
 
 AC_ARG_WITH( kakadu,
-   [  --with-kakadu=DIR          location of the kakadu source files],
+   [  --with-kakadu=DIR             location of the Kakadu source files],
    kakadu_path=$withval)
 
 
@@ -224,7 +224,26 @@ if test "x${KAKADU}" = xtrue; then
 	AC_DEFINE(HAVE_KAKADU)
 	INCLUDES="$INCLUDES -I$kakadu_path/managed/all_includes/"
 	EXTRAS="KakaduImage.o"
-	LIBS="$LIBS $kakadu_path/apps/make/jpx.o $kakadu_path/apps/make/jp2.o $kakadu_path/apps/make/kdu_stripe_decompressor.o $kakadu_path/apps/make/*.so -lpthread"
+	kakadu_lib_name=`basename $kakadu_path/apps/make/*.so | sed 's/^lib//' | sed 's/.so$//'`
+	LIBS="$LIBS $kakadu_path/apps/make/jpx.o $kakadu_path/apps/make/jp2.o $kakadu_path/apps/make/kdu_stripe_decompressor.o -L$kakadu_path/apps/make -l$kakadu_lib_name -lpthread"
+
+	# Check for SSSE3 support in Kakadu
+	AC_CHECK_FILE( $kakadu_path/apps/make/ssse3_stripe_transfer.o,
+		KDU_SSSE3=true
+	)
+	if test "x${KDU_SSSE3}" = xtrue; then
+		LIBS="$LIBS $kakadu_path/apps/make/ssse3_stripe_transfer.o"
+	fi
+
+	# Check for AVX2 support in Kakadu
+	AC_CHECK_FILE( $kakadu_path/apps/make/avx2_stripe_transfer.o,
+		AC_MSG_RESULT([configure: Kakadu is >= v7.5.]);
+		KDU_75=true,
+		AC_MSG_RESULT([configure: Kakadu is < v7.5])
+	)
+	if test "x${KDU_75}" = xtrue; then
+		LIBS="$LIBS $kakadu_path/apps/make/avx2_stripe_transfer.o $kakadu_path/apps/make/kdu_client_window.o"
+	fi
 fi
 
 INCLUDES="$INCLUDES -I."
@@ -239,13 +258,13 @@ AC_CHECK_LIB(c,get_nprocs_conf,AC_DEFINE(NPROCS))
 #     Check for PNG support
 #************************************************************
 
-AC_CHECK_HEADERS( png.h,
-	AC_SEARCH_LIBS(
-		png_create_read_struct,
-		png,
-		PNG=true,
-		PNG=false )
-)
+#AC_CHECK_HEADERS( png.h,
+#	AC_SEARCH_LIBS(
+#		png_create_read_struct,
+#		png,
+#		PNG=true,
+#		PNG=false )
+#)
 
 # Disable PNG for now
 PNG=false
@@ -327,6 +346,8 @@ Options Enabled:
 ---------------
  Memcached: 			${MEMCACHED}
  JPEG2000 (Kakadu):		${KAKADU}
- PNG Output:			${PNG}
- LitleCMS:			${LCMS}
 ])
+
+# PNG Output:			${PNG}
+# LitleCMS:			${LCMS}
+#])

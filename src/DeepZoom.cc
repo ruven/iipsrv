@@ -7,7 +7,7 @@
     Culture of the Czech Republic. 
 
 
-    Copyright (C) 2009-2014 Ruven Pillay.
+    Copyright (C) 2009-2015 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -109,15 +109,15 @@ void DeepZoom::run( Session* session, const std::string& argument ){
     snprintf( str, 1024,
 	      "Server: iipsrv/%s\r\n"
 	      "Content-Type: application/xml\r\n"
-	      "Cache-Control: max-age=%d\r\n"
 	      "Last-Modified: %s\r\n"
+	      "%s\r\n"
 	      "\r\n"
 	      "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n"
 	      "<Image xmlns=\"http://schemas.microsoft.com/deepzoom/2008\"\r\n"
 	      "TileSize=\"%d\" Overlap=\"0\" Format=\"jpg\">"
 	      "<Size Width=\"%d\" Height=\"%d\"/>"
 	      "</Image>",
-	      VERSION, MAX_AGE, (*session->image)->getTimestamp().c_str(), tw, width, height );
+	      VERSION, (*session->image)->getTimestamp().c_str(), session->response->getCacheControl().c_str(), tw, width, height );
 
     session->out->printf( (const char*) str );
     session->response->setImageSent();
@@ -148,7 +148,7 @@ void DeepZoom::run( Session* session, const std::string& argument ){
   // Take into account the extra zoom levels required by the DeepZoom spec
   resolution = resolution - (dzi_res-numResolutions) - 1;
   if( resolution < 0 ) resolution = 0;
-  if( (unsigned int)resolution > numResolutions ) resolution = numResolutions-1;
+  if( (unsigned int)resolution > numResolutions-1 ) resolution = numResolutions-1;
 
   if( session->loglevel >= 2 ){
     *(session->logfile) << "DeepZoom :: Tile request for resolution: "

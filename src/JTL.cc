@@ -1,7 +1,7 @@
 /*
     IIP JTL Command Handler Class Member Function
 
-    Copyright (C) 2006-2014 Ruven Pillay.
+    Copyright (C) 2006-2016 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -59,7 +59,7 @@ void JTL::send( Session* session, int resolution, int tile ){
   // Sanity check
   if( (resolution<0) || (tile<0) ){
     ostringstream error;
-    error << "JTL :: Invalid resolution/tile number: " << resolution << "," << tile; 
+    error << "JTL :: Invalid resolution/tile number: " << resolution << "," << tile;
     throw error.str();
   }
 
@@ -68,7 +68,7 @@ void JTL::send( Session* session, int resolution, int tile ){
   CompressionType ct;
   if( (*session->image)->getNumBitsPerPixel() > 8 || (*session->image)->getColourSpace() == CIELAB
       || (*session->image)->getNumChannels() == 2 || (*session->image)->getNumChannels() > 3
-      || session->view->getContrast() != 1.0 || session->view->getGamma() != 1.0 
+      || session->view->getContrast() != 1.0 || session->view->getGamma() != 1.0
       || session->view->getRotation() != 0.0 || session->view->shaded
       || session->view->cmapped || session->view->inverted
       || session->view->ctw.size() ) ct = UNCOMPRESSED;
@@ -104,8 +104,7 @@ void JTL::send( Session* session, int resolution, int tile ){
 
 
   // Only use our float pipeline if necessary
-  if( rawtile.bpc > 8 || session->view->getContrast() != 1.0 || session->view->getGamma() != 1.0 ||
-      session->view->cmapped || session->view->shaded || session->view->inverted || session->view->ctw.size() ){
+  if( rawtile.bpc > 8 || session->view->floatProcessing() ){
 
     // Apply normalization and float conversion
     if( session->loglevel >= 4 ){
@@ -131,7 +130,7 @@ void JTL::send( Session* session, int resolution, int tile ){
     }
 
 
-    // Apply color twist if requested                         
+    // Apply color twist if requested
     if( session->view->ctw.size() ){
       if( session->loglevel >= 4 ){
 	*(session->logfile) << "JTL :: Applying color twist";
@@ -238,7 +237,7 @@ void JTL::send( Session* session, int resolution, int tile ){
       *(session->logfile) << "JTL :: Flipping image ";
       if( session->view->flip == 1 ) *(session->logfile) << "horizontally";
       else *(session->logfile) << "vertically";
-      *(session->logfile) << " in " << flip_timer.getTime() << " microseconds" << endl; 
+      *(session->logfile) << " in " << flip_timer.getTime() << " microseconds" << endl;
     }
   }
 
@@ -265,7 +264,9 @@ void JTL::send( Session* session, int resolution, int tile ){
     }
     len = session->jpeg->Compress( rawtile );
     if( session->loglevel >= 4 ){
-      *(session->logfile) << " in " << function_timer.getTime() << " microseconds" << endl;
+      *(session->logfile) << " in " << function_timer.getTime() << " microseconds to "
+                          << rawtile.dataLength << " bytes" << endl;
+
     }
   }
 
@@ -275,12 +276,13 @@ void JTL::send( Session* session, int resolution, int tile ){
 
   snprintf( str, 1024,
 	    "Server: iipsrv/%s\r\n"
+	    "X-Powered-By: IIPImage\r\n"
 	    "Content-Type: image/jpeg\r\n"
             "Content-Length: %d\r\n"
-	    "Cache-Control: max-age=%d\r\n"
 	    "Last-Modified: %s\r\n"
+	    "%s\r\n"
 	    "\r\n",
-	    VERSION, len, MAX_AGE, (*session->image)->getTimestamp().c_str() );
+	    VERSION, len,(*session->image)->getTimestamp().c_str(), session->response->getCacheControl().c_str() );
 
   session->out->printf( str );
 #endif
