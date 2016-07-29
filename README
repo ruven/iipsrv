@@ -153,6 +153,10 @@ MAX_CVT: Limits the maximum image dimensions in pixels (the WID or HEI
 commands) allowable for dynamic JPEG export via the CVT command. This 
 prevents huge requests from overloading the server. The default is 5000.
 
+ALLOW_UPSCALING: Determines whether an individual images may be served at a 
+resolution above that of the source image. A value of 0 will prevent upscaling.
+The default is 1 (upscaling is allowed).
+
 MAX_LAYERS: The maximum number of quality layers to decode for images that support 
 progressive quality encoding, such as JPEG2000. Ignored for other file 
 formats. If not set, half of the available quality layers will be decoded by default.
