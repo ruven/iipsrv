@@ -60,7 +60,7 @@ AS_IF([test "x$enable_openmp" != "xyes"], [
 ])
 
 
-#************************************************************ 
+#************************************************************
 
 
 AC_ARG_ENABLE([debug],
@@ -73,7 +73,7 @@ AC_ARG_ENABLE([debug],
 AM_CONDITIONAL([DEBUG], [test x$debug = xtrue])
 
 
-#************************************************************ 
+#************************************************************
 
 
 # Check for a user specified location for libjpeg
@@ -95,12 +95,12 @@ FIND_JPEG(,[AC_MSG_ERROR([libjpeg not found])])
 
 
 
-#************************************************************ 
+#************************************************************
 # Check for a standard libz
 
 AC_SEARCH_LIBS(gzopen, z)
 
-#************************************************************ 
+#************************************************************
 
 
 
@@ -153,7 +153,7 @@ AC_CHECK_HEADERS(lcms2.h,
 LCMS=false
 
 
-#************************************************************ 
+#************************************************************
 
 # Check for user specified locations for fast cgi library
 
@@ -180,7 +180,7 @@ AC_SUBST(LIBFCGI_INCLUDES)
 AC_SUBST(LIBFCGI_LDFLAGS)
 AC_SUBST(LIBFCGI_LIBS)
 
-#************************************************************ 
+#************************************************************
 
 
 # Check for libdl for dynamic library loading
@@ -203,6 +203,56 @@ fi
 
 AM_CONDITIONAL( [ENABLE_MODULES], [test x$modules = xtrue] )
 AC_SUBST(DL_LIBS)
+
+
+#************************************************************
+
+# Check for OpenJPEG JPEG2000 library
+
+AC_ARG_ENABLE(openjpeg,
+    [  --enable-openjpeg       enable OpenJPEG] )
+
+OPENJPEG=false
+
+if test "$enable_openjpeg" = "yes"; then
+
+AC_ARG_WITH( openjpeg,
+   [  --with-openjpeg=DIR          location of the openjpeg source files],
+   openjpeg_path=$withval)
+
+if test -n "$openjpeg_path"; then
+    AC_CHECK_FILE($openjpeg_path/src/lib/openjp2/openjpeg.h,
+        AC_MSG_RESULT([configure: Found OpenJPEG sources. Will compile JPEG2000 support]); OPENJPEG=true,
+        AC_MSG_RESULT([configure: No OpenJPEG JPEG2000 Sources Found])
+    )
+    if test "x$OPENJPEG" = xtrue; then
+        INCLUDES="$INCLUDES -I$openjpeg_path/src/lib/openjp2/"
+        LIBS="$LIBS $openjpeg_path/bin/libopenjp2.so -lpthread"
+    fi
+else
+    PKG_CHECK_MODULES([OPENJPEG], [libopenjp2], [OPENJPEG=true], [OPENJPEG=false])
+    if test "x$OPENJPEG" = xtrue; then
+        INCLUDES="$INCLUDES $OPENJPEG_CFLAGS"
+        LIBS="$LIBS $OPENJPEG_LIBS"
+    fi
+fi
+
+if test "x$OPENJPEG" = xtrue; then
+    AC_DEFINE(HAVE_OPENJPEG)
+    EXTRAS="OpenJPEGImage.o"
+fi
+
+AM_CONDITIONAL([ENABLE_OPENJPEG], [test x$OPENJPEG = xtrue])
+
+AC_SUBST(EXTRAS)
+AC_SUBST(INCLUDES)
+AC_SUBST(LIBS)
+
+else
+
+AM_CONDITIONAL([ENABLE_OPENJPEG], [false])
+
+fi
 
 
 #************************************************************
@@ -286,23 +336,23 @@ AC_LANG([C++])
 
 # autoconf defaults CXX to 'g++', so its unclear whether it exists/works
 AC_MSG_CHECKING([whether $CXX works])
-AC_TRY_COMPILE([#include <iostream>], 
-               [std::cout << "ok";], 
+AC_TRY_COMPILE([#include <iostream>],
+               [std::cout << "ok";],
                [AC_MSG_RESULT(yes)
                 LIBFCGIXX=libfcgi++.la
                 ECHO_CPP=echo-cpp${EXEEXT}
                 AC_MSG_CHECKING([whether cin has a streambuf assignment operator])
-                AC_TRY_COMPILE([#include <iostream>], 
-                               [cin = static_cast<streambuf *>(0);], 
+                AC_TRY_COMPILE([#include <iostream>],
+                               [cin = static_cast<streambuf *>(0);],
                                [AC_MSG_RESULT(yes)
-                                AC_DEFINE([HAVE_IOSTREAM_WITHASSIGN_STREAMBUF],  [1], 
+                                AC_DEFINE([HAVE_IOSTREAM_WITHASSIGN_STREAMBUF],  [1],
                                           [Define if cin/cout/cerr has a streambuf assignment operator])],
-                               [AC_MSG_RESULT(no)]) 
+                               [AC_MSG_RESULT(no)])
                 AC_MSG_CHECKING([whether char_type is defined in the context of streambuf])
                 AC_TRY_COMPILE([#include <iostream>],
                                [class fcgi_streambuf : public std::streambuf { char_type ct; }],
                                [AC_MSG_RESULT(yes)
-                                AC_DEFINE([HAVE_STREAMBUF_CHAR_TYPE], [1], 
+                                AC_DEFINE([HAVE_STREAMBUF_CHAR_TYPE], [1],
                                           [Define if char_type is defined in the context of streambuf])],
                                [AC_MSG_RESULT(no)])],
                [AC_MSG_RESULT(no)])
@@ -312,7 +362,7 @@ AC_SUBST(ECHO_CPP)
 AC_LANG([C])
 
 AC_CHECK_LIB([nsl],       [gethostbyname])
-AC_CHECK_LIB([socket],    [socket]) 
+AC_CHECK_LIB([socket],    [socket])
 
 
 ACX_PTHREAD([THREADED=threaded${EXEEXT}])
@@ -346,6 +396,7 @@ Options Enabled:
 ---------------
  Memcached: 			${MEMCACHED}
  JPEG2000 (Kakadu):		${KAKADU}
+ JPEG2000 (OpenJPEG):		${OPENJPEG}
 ])
 
 # PNG Output:			${PNG}

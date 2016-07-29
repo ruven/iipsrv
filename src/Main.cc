@@ -291,6 +291,8 @@ int main( int argc, char *argv[] )
     }
 #ifdef HAVE_KAKADU
     logfile << "Setting up JPEG2000 support via Kakadu SDK" << endl;
+#elif defined(HAVE_OPENJPEG)
+    logfile << "Setting up JPEG2000 support via OpenJPEG" << endl;
 #endif
   }
 
