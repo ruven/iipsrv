@@ -118,6 +118,15 @@ class View{
   /// Get the maximum allowed output size
   /* @return maximum output dimension */
   unsigned int getMaxSize(){ return max_size; };
+  
+  /// Set the allow_upscaling flag
+  /** @param upscale allow upscaling of source image */
+  void setAllowUpscalingFlag( bool upscale ){ allow_upscaling = upscale; };
+
+
+  /// Get the allow_upscaling flag
+  /* @return true or false */
+  bool getAllowUpscalingFlag(){ return allow_upscaling; };
 
 
   /// Set the maximum view port dimension

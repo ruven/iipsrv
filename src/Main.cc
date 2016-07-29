@@ -272,6 +272,9 @@ int main( int argc, char *argv[] )
 
   // Get requested HTTP Cache-Control setting
   string cache_control = Environment::getCacheControl();
+  
+  // Get the allow upscaling setting
+  bool allow_upscaling = Environment::getAllowUpscaling();
 
 
   // Print out some information
@@ -292,6 +295,7 @@ int main( int argc, char *argv[] )
 #ifdef HAVE_KAKADU
     logfile << "Setting up JPEG2000 support via Kakadu SDK" << endl;
 #endif
+    logfile << "Setting Allow Upscaling to '" << allow_upscaling << "'" << endl;
   }
 
 
@@ -449,6 +453,8 @@ int main( int argc, char *argv[] )
     View view;
     if( max_CVT != -1 ) view.setMaxSize( max_CVT );
     if( max_layers != 0 ) view.setMaxLayers( max_layers );
+    
+    view.setAllowUpscalingFlag( allow_upscaling );
 
 
 
