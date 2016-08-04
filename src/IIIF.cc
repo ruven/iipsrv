@@ -184,14 +184,14 @@ void IIIF::run( Session* session, const string& src )
                      << "     { \"width\" : " << (*session->image)->image_widths[numResolutions - 1]
                      << ", \"height\" : " << (*session->image)->image_heights[numResolutions - 1] << " }";
 
-    for ( unsigned int i = numResolutions - 2; i > 0; i-- ){
+    for ( int i = numResolutions - 2; i > 0; i-- ){
       unsigned int w = (*session->image)->image_widths[i];
       unsigned int h = (*session->image)->image_heights[i];
       unsigned int max = session->view->getMaxSize();
       // Only advertise images below our max size value
-      if ( (max == 0) || (w < max && h < max) ){
-        infoStringStream << "," << endl
-                         << "     { \"width\" : " << w << ", \"height\" : " << h << " }";
+      if( (max == 0) || (w < max && h < max) ){
+	infoStringStream << "," << endl
+			 << "     { \"width\" : " << w << ", \"height\" : " << h << " }";
       }
     }
 
