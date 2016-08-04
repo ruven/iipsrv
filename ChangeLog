@@ -1,6 +1,7 @@
 04/08/2016:
 	- Fix to info.json code in IIIF.cc to avoid problems with images containing only
 	  one resolution level.
+	- Fixed bug in filter_contrast() due to incorrectly calculated buffer size.
 
 
 08/07/2016:
