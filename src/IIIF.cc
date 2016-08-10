@@ -336,15 +336,9 @@ void IIIF::run( Session* session, const string& src )
         requested_height = round( requested_height * scale / 100.0 );
       }
 
-      // "w,h", "w,", ",h", "!w,h", "w,h!" requests
+      // "w,h", "w,", ",h", "!w,h" requests
       else{
 
-        // w,h! request - remove !, remember it and continue as if w,h request
-        if( sizeString.substr(sizeString.size() - 1 ,1) == "!" ) {
-          sizeString.erase(sizeString.size(),1);
-          // Tell our view to prevent upscaling
-          session->view->allow_upscaling = false;
-        }
 
         // !w,h request - remove !, remember it and continue as if w,h request
         if ( sizeString.substr(0, 1) == "!" ) sizeString.erase(0, 1);

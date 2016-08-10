@@ -46,7 +46,6 @@ Task* Task::factory( const string& t ){
   else if( type == "gam" ) return new GAM;
   else if( type == "wid" ) return new WID;
   else if( type == "hei" ) return new HEI;
-  else if( type == "upscale" ) return new Upscale;
   else if( type == "rgn" ) return new RGN;
   else if( type == "rot" ) return new ROT;
   else if( type == "til" ) return new TIL;
@@ -204,16 +203,6 @@ void HEI::run( Session* session, const string& argument ){
   if( session->loglevel >= 3 ) *(session->logfile) << "HEI :: requested height is " << requested_height << endl;
 
   session->view->setRequestHeight( requested_height );
-
-}
-
-void Upscale::run( Session* session, const std::string& argument ){
-
-  if( session->loglevel >= 2 ) *(session->logfile) << "Upscale handler reached" << endl;
-  if( session->loglevel >= 3 ) *(session->logfile) << "Upscale :: Image upscaling prevented " << endl;
-
-  //not testing on argument, if the parameter is supplied override the default regardless of value
-  session->view->allow_upscaling = false;
 
 }
 
