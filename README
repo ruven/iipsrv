@@ -25,7 +25,7 @@ FEATURES
 * Multispectral image support
 * Dynamic watermarking
 * Memcached support
-* 3D panoramic views 
+* 3D panoramic views
 * Dynamic hillshading of 3D surface topologies
 * Dynamic decoder module capability
 
@@ -58,7 +58,6 @@ REQUIREMENTS
 ------------
 Requirements: libtiff, zlib and the IJG JPEG development libraries.
 Optional: libmemcached (for Memcached) and Kakadu or OpenJPEG (for JPEG2000).
-The support for OpenJPEG is highly experimental and not ready for production.
 
 Plus, of course, an fcgi-enabled web server. The server has been successfully
 tested on the following servers:
@@ -107,9 +106,9 @@ during the build process.
 OPTIONAL LIBRARIES: KAKADU
 --------------------------
 IIPImage is able to decode JPEG2000 images via the Kakadu SDK
-(http://www.kakadusoftware.com). This is, however, not open source and will
+(http://www.kakadusoftware.com). This is, however, not open source and you will
 need to purchase a license for the source code. In order to use, first build
-the Kakadu SDK as per the instructions supplied with the SDK. Then, the
+the Kakadu SDK as per the instructions supplied with the SDK. Then, supply the
 following parameters to the ./configure command
 
     --with-kakadu=/path/to/kakadu/distribution
@@ -118,9 +117,15 @@ following parameters to the ./configure command
 
 OPTIONAL LIBRARIES: OPENJPEG
 ----------------------------
-IIPImage is able to decode JPEG2000 images via the free software OpenJPEG
-(https://github.com/uclouvain/openjpeg). This is still much slower than
-decoding via the Kakadu SDK, and it is also highly experimental.
+
+IIPImage is able to decode JPEG2000 images via the open source OpenJPEG 
+library (http://www.openjpeg.org/). This is currently experimental and is 
+much slower than Kakadu. It is disabled by default: use --enable-openjpeg 
+or provide the path to the source code 
+(--with-openjpeg=/path/to/openjpeg/distribution) to enable. If no path is
+given, the default system verson of OpenJPEG will be used if available. 
+If Kakadu support has been requested, however, OpenJPEG will be automatically 
+disabled.
 
 
 

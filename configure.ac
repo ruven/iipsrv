@@ -1,6 +1,6 @@
 # Process this file with autoconf to produce a configure script.
 
-AC_INIT(iipsrv,1.0,ruven@users.sourceforge.net)
+AC_INIT(iipsrv,1.1,ruven@users.sourceforge.net)
 AC_CONFIG_MACRO_DIR([m4])
 AM_INIT_AUTOMAKE
 
@@ -61,7 +61,7 @@ AS_IF([test "x$enable_openmp" != "xyes"], [
 
 
 #************************************************************
-
+# Enable debugging
 
 AC_ARG_ENABLE([debug],
      [  --enable-debug          turn on debugging],
@@ -73,23 +73,9 @@ AC_ARG_ENABLE([debug],
 AM_CONDITIONAL([DEBUG], [test x$debug = xtrue])
 
 
+
 #************************************************************
-
-
-# Check for a user specified location for libjpeg
-
-# AC_ARG_WITH(libjpeg-incl,
-#   [  --with-libjpeg-incl=DIR     location of the jpeg library include files],
-#   jpeg_incl=-I$withval)
-
-# AC_ARG_WITH(libjpeg-lib,
-#   [  --with-libjpeg-lib=DIR     location of the jpeg library files],
-#   jpeg_lib=-L$withval)
-
-# AC_CHECK_LIB(jpeg, jpeg_destroy_decompress,
-#   LIBJPEG_INCL=$jpeg_incl; LIBJPEG_LIB="$jpeg_lib -ljpeg",
-#   AC_MSG_ERROR(unable to find libjpeg),
-#   $jpeg_lib)
+# Check for libjpeg
 
 FIND_JPEG(,[AC_MSG_ERROR([libjpeg not found])])
 
@@ -99,8 +85,6 @@ FIND_JPEG(,[AC_MSG_ERROR([libjpeg not found])])
 # Check for a standard libz
 
 AC_SEARCH_LIBS(gzopen, z)
-
-#************************************************************
 
 
 
@@ -118,45 +102,28 @@ if test "x${MEMCACHED}" = xtrue; then
 	AC_DEFINE(HAVE_MEMCACHED)
 	LIBS="$LIBS -lpthread"
 fi
+
+
+
 #************************************************************
-
-
-
-# Check for user specified location for libtiff
-
-# AC_ARG_WITH(libtiff-incl,
-#   [  --with-libtiff-incl=DIR     location of the tiff library include files],
-#   tiff_incl=-I$withval)
-
-# AC_ARG_WITH(libtiff-lib,
-#   [  --with-libtiff-lib=DIR     location of the tiff library files],
-#   tiff_lib=-L$withval)
-
-# AC_CHECK_LIB(tiff, TIFFReadScanline,
-#   LIBTIFF_INCL=$tiff_incl; LIBTIFF_LIB="$tiff_lib -ltiff -ljpeg -lm",
-#   AC_MSG_ERROR(unable to find libtiff),
-#   $tiff_lib -ljpeg -lm)
-
+# Check for libtiff
 
 FIND_TIFF(,[AC_MSG_ERROR([libtiff not found])])
 
 
 #************************************************************
-
 # Check for little cms library
 
-AC_CHECK_HEADERS(lcms2.h,
-	AC_SEARCH_LIBS( cmsOpenProfileFromMem, lcms2,
-		LCMS=true; AC_DEFINE(LCMS),
-		LCMS=false )
-)
-LCMS=false
+#AC_CHECK_HEADERS(lcms2.h,
+#	AC_SEARCH_LIBS( cmsOpenProfileFromMem, lcms2,
+#		LCMS=true; AC_DEFINE(LCMS),
+#		LCMS=false )
+#)
+#LCMS=false
 
 
 #************************************************************
-
 # Check for user specified locations for fast cgi library
-
 
 AC_ARG_WITH( fcgi-incl,
    [  --with-fcgi-incl=DIR          location of the fcgi include files],
@@ -180,9 +147,9 @@ AC_SUBST(LIBFCGI_INCLUDES)
 AC_SUBST(LIBFCGI_LDFLAGS)
 AC_SUBST(LIBFCGI_LIBS)
 
+
+
 #************************************************************
-
-
 # Check for libdl for dynamic library loading
 
 AC_ARG_ENABLE(modules,
@@ -197,7 +164,7 @@ if test "$enable_modules" = "yes"; then
 
 else
 	modules=false
-	AC_MSG_WARN( optional dynamic module loading not enabled)
+	AC_MSG_RESULT( [configure: optional dynamic module loading not enabled] )
 
 fi
 
@@ -205,103 +172,129 @@ AM_CONDITIONAL( [ENABLE_MODULES], [test x$modules = xtrue] )
 AC_SUBST(DL_LIBS)
 
 
+
+
 #************************************************************
+# Check for JPEG2000 support from either Kakadu or OpenJPEG
 
-# Check for OpenJPEG JPEG2000 library
+JPEG2000_CODEC=false
 
-AC_ARG_ENABLE(openjpeg,
-    [  --enable-openjpeg       enable OpenJPEG] )
+
+# First check for Kakadu
+
+AC_ARG_WITH( kakadu,
+   [  --with-kakadu=DIR             location of Kakadu source files (Kakadu will disable OpenJPEG support) ],
+   kakadu_path=$withval)
+
+if test -n "$kakadu_path"; then
+
+	AC_CHECK_FILE( $kakadu_path/managed/all_includes/jpx.h,
+		AC_MSG_RESULT([configure: Found Kakadu sources. Will compile JPEG2000 support]); KAKADU=true;,
+		AC_MSG_RESULT([configure: No Kakadu JPEG2000 Sources Found]); KAKADU=false
+	)
+	AM_CONDITIONAL([ENABLE_KAKADU],[test x$KAKADU=xtrue])
+
+	if test "x${KAKADU}" = xtrue; then
+		AC_DEFINE(HAVE_KAKADU)
+		INCLUDES="$INCLUDES -I$kakadu_path/managed/all_includes/"
+		EXTRAS="KakaduImage.o"
+		kakadu_lib_name=`basename $kakadu_path/apps/make/*.so | sed 's/^lib//' | sed 's/.so$//'`
+		LIBS="$LIBS $kakadu_path/apps/make/jpx.o $kakadu_path/apps/make/jp2.o $kakadu_path/apps/make/kdu_stripe_decompressor.o -L$kakadu_path/apps/make -l$kakadu_lib_name -lpthread"
+
+		# Check for SSSE3 support in Kakadu
+		AC_CHECK_FILE( $kakadu_path/apps/make/ssse3_stripe_transfer.o,
+			KDU_SSSE3=true
+		)
+		if test "x${KDU_SSSE3}" = xtrue; then
+			LIBS="$LIBS $kakadu_path/apps/make/ssse3_stripe_transfer.o"
+		fi
+
+		# Check for AVX2 support in Kakadu
+		AC_CHECK_FILE( $kakadu_path/apps/make/avx2_stripe_transfer.o,
+			AC_MSG_RESULT([configure: Kakadu is >= v7.5.]);
+			KDU_75=true,
+			AC_MSG_RESULT([configure: Kakadu is < v7.5])
+		)
+		if test "x${KDU_75}" = xtrue; then
+			LIBS="$LIBS $kakadu_path/apps/make/avx2_stripe_transfer.o $kakadu_path/apps/make/kdu_client_window.o"
+		fi
+
+		JPEG2000_CODEC="true (Kakadu)"
+
+		INCLUDES="$INCLUDES -I."
+		AC_SUBST(INCLUDES)
+		AC_SUBST(EXTRAS)
+
+		AC_CHECK_LIB(c,get_nprocs_conf,AC_DEFINE(NPROCS))
+	fi
+else
+	AM_CONDITIONAL([ENABLE_KAKADU],[false])
+fi
+
+
+
+
+
+# Check for OpenJPEG if no Kakadu support has been found
 
 OPENJPEG=false
 
-if test "$enable_openjpeg" = "yes"; then
+AC_ARG_ENABLE(openjpeg,
+    [  --enable-openjpeg       enable OpenJPEG (disabled by default)] )
 
 AC_ARG_WITH( openjpeg,
-   [  --with-openjpeg=DIR          location of the openjpeg source files],
-   openjpeg_path=$withval)
-
-if test -n "$openjpeg_path"; then
-    AC_CHECK_FILE($openjpeg_path/src/lib/openjp2/openjpeg.h,
-        AC_MSG_RESULT([configure: Found OpenJPEG sources. Will compile JPEG2000 support]); OPENJPEG=true,
-        AC_MSG_RESULT([configure: No OpenJPEG JPEG2000 Sources Found])
-    )
-    if test "x$OPENJPEG" = xtrue; then
-        INCLUDES="$INCLUDES -I$openjpeg_path/src/lib/openjp2/"
-        LIBS="$LIBS $openjpeg_path/bin/libopenjp2.so -lpthread"
-    fi
-else
-    PKG_CHECK_MODULES([OPENJPEG], [libopenjp2], [OPENJPEG=true], [OPENJPEG=false])
-    if test "x$OPENJPEG" = xtrue; then
-        INCLUDES="$INCLUDES $OPENJPEG_CFLAGS"
-        LIBS="$LIBS $OPENJPEG_LIBS"
-    fi
-fi
-
-if test "x$OPENJPEG" = xtrue; then
-    AC_DEFINE(HAVE_OPENJPEG)
-    EXTRAS="OpenJPEGImage.o"
-fi
-
-AM_CONDITIONAL([ENABLE_OPENJPEG], [test x$OPENJPEG = xtrue])
-
-AC_SUBST(EXTRAS)
-AC_SUBST(INCLUDES)
-AC_SUBST(LIBS)
-
-else
-
-AM_CONDITIONAL([ENABLE_OPENJPEG], [false])
-
-fi
+   [  --with-openjpeg=DIR           location of OpenJPEG source files],
+   openjpeg_path=$withval )
 
 
-#************************************************************
-
-# Check for Kakadu JPEG2000 library
-
-AC_ARG_WITH( kakadu,
-   [  --with-kakadu=DIR             location of the Kakadu source files],
-   kakadu_path=$withval)
-
-
-AC_CHECK_FILE( $kakadu_path/managed/all_includes/jpx.h,
-	AC_MSG_RESULT([configure: Found Kakadu sources. Will compile JPEG2000 support]); KAKADU=true,
-	AC_MSG_RESULT([configure: No Kakadu JPEG2000 Sources Found]); KAKADU=false
-)
-AM_CONDITIONAL([ENABLE_KAKADU], [test x$KAKADU = xtrue])
-
+# Only check for OpenJPEG if Kakadu has not been enabled
 if test "x${KAKADU}" = xtrue; then
-	AC_DEFINE(HAVE_KAKADU)
-	INCLUDES="$INCLUDES -I$kakadu_path/managed/all_includes/"
-	EXTRAS="KakaduImage.o"
-	kakadu_lib_name=`basename $kakadu_path/apps/make/*.so | sed 's/^lib//' | sed 's/.so$//'`
-	LIBS="$LIBS $kakadu_path/apps/make/jpx.o $kakadu_path/apps/make/jp2.o $kakadu_path/apps/make/kdu_stripe_decompressor.o -L$kakadu_path/apps/make -l$kakadu_lib_name -lpthread"
+	AM_CONDITIONAL([ENABLE_OPENJPEG], [false])
+else
 
-	# Check for SSSE3 support in Kakadu
-	AC_CHECK_FILE( $kakadu_path/apps/make/ssse3_stripe_transfer.o,
-		KDU_SSSE3=true
-	)
-	if test "x${KDU_SSSE3}" = xtrue; then
-		LIBS="$LIBS $kakadu_path/apps/make/ssse3_stripe_transfer.o"
+	if test -n "$openjpeg_path"; then
+		enable_openjpeg="yes";
 	fi
 
-	# Check for AVX2 support in Kakadu
-	AC_CHECK_FILE( $kakadu_path/apps/make/avx2_stripe_transfer.o,
-		AC_MSG_RESULT([configure: Kakadu is >= v7.5.]);
-		KDU_75=true,
-		AC_MSG_RESULT([configure: Kakadu is < v7.5])
-	)
-	if test "x${KDU_75}" = xtrue; then
-		LIBS="$LIBS $kakadu_path/apps/make/avx2_stripe_transfer.o $kakadu_path/apps/make/kdu_client_window.o"
+	if test "$enable_openjpeg" = "yes"; then
+		AC_MSG_RESULT([configure: Enabling OpenJPEG])
+
+		if test -n "$openjpeg_path"; then
+		    AC_CHECK_FILE($openjpeg_path/src/lib/openjp2/openjpeg.h,
+		        AC_MSG_RESULT([configure: Using specified OpenJPEG sources. Will compile JPEG2000 support]); OPENJPEG=true,
+		        AC_MSG_RESULT([configure: No OpenJPEG JPEG2000 Sources Found])
+		    )
+		    if test "x$OPENJPEG" = xtrue; then
+		        INCLUDES="$INCLUDES -I$openjpeg_path/src/lib/openjp2/"
+		        LIBS="$LIBS $openjpeg_path/bin/libopenjp2.so -lpthread"
+		    fi
+		else
+		    PKG_CHECK_MODULES([OPENJPEG], [libopenjp2], [OPENJPEG=true], [OPENJPEG=false])
+		    if test "x$OPENJPEG" = xtrue; then
+			AC_MSG_RESULT([configure: OpenJPEG installed in system. Will compile JPEG2000 support])
+		        INCLUDES="$INCLUDES $OPENJPEG_CFLAGS"
+		        LIBS="$LIBS $OPENJPEG_LIBS"
+		    else
+			AC_MSG_RESULT([configure: Unable to find OpenJPEG development files])
+		    fi
+		fi
+
+		if test "x$OPENJPEG" = xtrue; then
+		    AC_DEFINE(HAVE_OPENJPEG)
+		    EXTRAS="OpenJPEGImage.o"
+		    JPEG2000_CODEC="true (OpenJPEG)"
+		    AM_CONDITIONAL([ENABLE_OPENJPEG], [test x$OPENJPEG = xtrue])
+		    AC_SUBST(EXTRAS)
+		    AC_SUBST(INCLUDES)
+		    AC_SUBST(LIBS)
+		else
+		    AM_CONDITIONAL([ENABLE_OPENJPEG], [false])
+		fi
+
+	else
+		AM_CONDITIONAL([ENABLE_OPENJPEG], [false])
 	fi
 fi
-
-INCLUDES="$INCLUDES -I."
-AC_SUBST(INCLUDES)
-AC_SUBST(EXTRAS)
-
-AC_CHECK_LIB(c,get_nprocs_conf,AC_DEFINE(NPROCS))
-
 
 
 #************************************************************
@@ -317,20 +310,20 @@ AC_CHECK_LIB(c,get_nprocs_conf,AC_DEFINE(NPROCS))
 #)
 
 # Disable PNG for now
-PNG=false
+#PNG=false
 
-if test "x${PNG}" = xtrue; then
-	AM_CONDITIONAL([ENABLE_PNG], [true])
-	AC_DEFINE(HAVE_PNG)
-else
-	AM_CONDITIONAL([ENABLE_PNG], [false])
-fi
+#if test "x${PNG}" = xtrue; then
+#	AM_CONDITIONAL([ENABLE_PNG], [true])
+#	AC_DEFINE(HAVE_PNG)
+#else
+#	AM_CONDITIONAL([ENABLE_PNG], [false])
+#fi
+
 
 
 #************************************************************
 #     FCGI library configure
 #************************************************************
-
 
 AC_LANG([C++])
 
@@ -394,9 +387,8 @@ AC_OUTPUT
 AC_MSG_RESULT([
 Options Enabled:
 ---------------
- Memcached: 			${MEMCACHED}
- JPEG2000 (Kakadu):		${KAKADU}
- JPEG2000 (OpenJPEG):		${OPENJPEG}
+ Memcached:  ${MEMCACHED}
+ JPEG2000 :  ${JPEG2000_CODEC}
 ])
 
 # PNG Output:			${PNG}

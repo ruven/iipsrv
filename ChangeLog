@@ -1,3 +1,7 @@
+10/08/2016:
+	- Update to configure.ac script for OpenJPEG
+
+
 04/08/2016:
 	- Fix to info.json code in IIIF.cc to avoid problems with images containing only
 	  one resolution level.
