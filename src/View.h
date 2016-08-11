@@ -82,6 +82,7 @@ class View{
   std::vector< std::vector<float> > ctw;      /// Colour twist matrix
   int flip;                                   /// Flip (1=horizontal, 2=vertical)
   bool maintain_aspect;                       /// Indicate whether aspect ratio should be maintained
+  bool allow_upscaling;                       /// Indicate whether images may be served larger than the source file
 
 
   /// Constructor
@@ -99,6 +100,7 @@ class View{
     max_layers = 0; layers = 0;
     rotation = 0.0; flip = 0;
     maintain_aspect = true;
+    allow_upscaling = true;
     colourspace = NONE;
   };
 
@@ -116,6 +118,15 @@ class View{
   /// Get the maximum allowed output size
   /* @return maximum output dimension */
   unsigned int getMaxSize(){ return max_size; };
+  
+  /// Set the allow_upscaling flag
+  /** @param upscale allow upscaling of source image */
+  void setAllowUpscalingFlag( bool upscale ){ allow_upscaling = upscale; };
+
+
+  /// Get the allow_upscaling flag
+  /* @return true or false */
+  bool getAllowUpscalingFlag(){ return allow_upscaling; };
 
 
   /// Set the maximum view port dimension

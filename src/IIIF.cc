@@ -339,6 +339,7 @@ void IIIF::run( Session* session, const string& src )
       // "w,h", "w,", ",h", "!w,h" requests
       else{
 
+
         // !w,h request - remove !, remember it and continue as if w,h request
         if ( sizeString.substr(0, 1) == "!" ) sizeString.erase(0, 1);
         // Otherwise tell our view to break aspect ratio

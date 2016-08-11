@@ -103,6 +103,13 @@ void CVT::send( Session* session ){
   }
 
 
+  //If we have requested that upscaling of images be prevented adjust requested size accordingly
+  //n.b  im_width and height here are from the requested resolution and not the max resolution
+  if( !session->view->allow_upscaling ){
+  	if(resampled_width > im_width) resampled_width = im_width;
+  	if(resampled_height > im_height) resampled_height = im_height;
+  }
+
   // If we have requested that the aspect ratio be maintained, make sure the final image fits *within* the requested size
   if( session->view->maintain_aspect ){
     if( ((float)resampled_height/(float)view_height) > ((float)resampled_width/(float)view_width) ){
