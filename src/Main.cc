@@ -297,7 +297,7 @@ int main( int argc, char *argv[] )
 #elif defined(HAVE_OPENJPEG)
     logfile << "Setting up JPEG2000 support via OpenJPEG" << endl;
 #endif
-    logfile << "Setting Allow Upscaling to '" << allow_upscaling << "'" << endl;
+    logfile << "Setting Allow Upscaling to " << (allow_upscaling? "true" : "false") << endl;
   }
 
 
@@ -455,8 +455,7 @@ int main( int argc, char *argv[] )
     View view;
     if( max_CVT != -1 ) view.setMaxSize( max_CVT );
     if( max_layers != 0 ) view.setMaxLayers( max_layers );
-    
-    view.setAllowUpscalingFlag( allow_upscaling );
+    view.setAllowUpscaling( allow_upscaling );
 
 
 
