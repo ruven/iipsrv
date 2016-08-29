@@ -247,6 +247,19 @@ AC_ARG_WITH( openjpeg,
    openjpeg_path=$withval )
 
 
+# Testing presence of pkg-config
+AC_MSG_CHECKING([pkg-config m4 macros])
+if test m4_ifdef([PKG_CHECK_MODULES], [yes], [no]) == yes; then
+	AC_MSG_RESULT([yes]);
+else
+	AC_MSG_RESULT([no]);
+	AC_MSG_ERROR([
+		pkg-config is required.
+		See pkg-config.freedesktop.org])
+fi
+
+
+
 # Only check for OpenJPEG if Kakadu has not been enabled
 if test "x${KAKADU}" = xtrue; then
 	AM_CONDITIONAL([ENABLE_OPENJPEG], [false])

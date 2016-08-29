@@ -1,5 +1,6 @@
 29/08/2016:
 	- Fix to bug in rotation code for 270 degs introduced when parallelization added.
+	- Added test for pkg-config to configure.ac script.
 
 
 10/08/2016:
