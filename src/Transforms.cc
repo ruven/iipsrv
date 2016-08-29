@@ -664,8 +664,8 @@ void filter_rotate( RawTile& in, float angle=0.0 ){
 #pragma omp parallel for if( in.width*in.height > PARALLEL_THRESHOLD )
 #endif
       for( int i=in.width-1; i>=0; i-- ){
-	unsigned int n = i*in.height*in.channels;
-	for( unsigned int j=0; j < in.height; j++ ){
+	unsigned int n = (in.width-1-i)*in.height*in.channels;
+	for( unsigned int j=0; j<in.height; j++ ){
 	  unsigned int index = (in.width*j + i)*in.channels;
 	  for( int k=0; k < in.channels; k++ ){
 	    ((unsigned char*)buffer)[n++] = ((unsigned char*)in.data)[index+k];

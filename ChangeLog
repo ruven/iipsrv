@@ -1,3 +1,7 @@
+29/08/2016:
+	- Fix to bug in rotation code for 270 degs introduced when parallelization added.
+
+
 10/08/2016:
 	- Update to configure.ac script for OpenJPEG
 
