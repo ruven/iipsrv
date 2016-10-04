@@ -210,7 +210,7 @@ void IIIF::run( Session* session, const string& src )
                      << "     \"" << IIIF_PROFILE << "\"," << endl
                      << "     { \"formats\" : [ \"jpg\" ]," << endl
                      << "       \"qualities\" : [ \"native\",\"color\",\"gray\" ]," << endl
-                     << "       \"supports\" : [\"regionByPct\",\"sizeByForcedWh\",\"sizeByWh\",\"sizeAboveFull\",\"rotationBy90s\",\"mirroring\"] }" << endl
+                     << "       \"supports\" : [\"regionByPx\",\"regionByPct\",\"sizeByForcedWh\",\"sizeByWh\",\"sizeByW\",\"sizeByH\",\"sizeAboveFull\",\"rotationBy90s\",\"mirroring\"] }" << endl
                      << "  ]" << endl
                      << "}";
 
