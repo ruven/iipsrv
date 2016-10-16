@@ -1,3 +1,7 @@
+16/10/2016:
+	- Added IIIF 2.1 square region support
+
+
 29/08/2016:
 	- Fix to bug in rotation code for 270 degs introduced when parallelization added.
 	- Added test for pkg-config to configure.ac script.
