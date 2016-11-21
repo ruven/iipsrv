@@ -354,6 +354,7 @@ void IIIF::run( Session* session, const string& src )
       // "w,h", "w,", ",h", "!w,h" requests
       else{
 
+	unsigned int max_size = session->view->getMaxSize();
 
         // !w,h request - remove !, remember it and continue as if w,h request
         if ( sizeString.substr(0, 1) == "!" ) sizeString.erase(0, 1);
@@ -371,7 +372,10 @@ void IIIF::run( Session* session, const string& src )
         else if ( pos == 0 ){
           istringstream i( sizeString.substr( 1, string::npos ) );
           if ( !(i >> requested_height) ) throw invalid_argument( "invalid height" );
-          requested_width = round( (float)requested_height * session->view->getViewWidth() / session->view->getViewHeight() );
+	  if( requested_height > max_size ){
+	    requested_width = round( (float)max_size * session->view->getViewWidth() / session->view->getViewHeight() );
+	  }
+          else requested_width = round( (float)requested_height * session->view->getViewWidth() / session->view->getViewHeight() );
         }
 
         // If comma is not at the beginning, we must have a "width,height" or "width," request
@@ -379,7 +383,10 @@ void IIIF::run( Session* session, const string& src )
         else if ( pos == sizeString.length() - 1 ){
           istringstream i( sizeString.substr( 0, string::npos - 1 ) );
           if ( !(i >> requested_width ) ) throw invalid_argument( "invalid width" );
-          requested_height = round( (float)requested_width * session->view->getViewHeight() / session->view->getViewWidth() );
+	  if( requested_width > max_size ){
+	    requested_height = round( (float)max_size * session->view->getViewHeight() / session->view->getViewWidth() );
+	  }
+          else requested_height = round( (float)requested_width * session->view->getViewHeight() / session->view->getViewWidth() );
         }
 
         // Remaining case is "width,height"
@@ -396,6 +403,7 @@ void IIIF::run( Session* session, const string& src )
       if ( requested_width == 0 || requested_height == 0 ){
         throw invalid_argument( "IIIF: invalid size" );
       }
+
 
       session->view->setRequestWidth( requested_width );
       session->view->setRequestHeight( requested_height );

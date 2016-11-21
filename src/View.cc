@@ -1,7 +1,7 @@
 /*
     View Member Functions
 
-    Copyright (C) 2004-2015 Ruven Pillay.
+    Copyright (C) 2004-2016 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -249,7 +249,7 @@ unsigned int View::getRequestHeight(){
   }
 
   // Limit our requested height to the maximum export size
-  if( h > max_size ) requested_height = max_size;
+  if( h > max_size ) h = max_size;
 
   return h;
 }

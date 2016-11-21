@@ -143,8 +143,7 @@ class View{
   /// Set the size of the requested width
   /** @param w requested image width */
   void setRequestWidth( unsigned int w ){
-    if( (max_size > 0) && (w > max_size) ) requested_width = max_size;
-    else requested_width = w;
+    requested_width = w;
   };
 
 
@@ -156,8 +155,7 @@ class View{
   /// Set the size of the requested height
   /** @param h requested image height */
   void setRequestHeight( unsigned int h ){
-    if( (max_size > 0) && (h > max_size) ) requested_height = max_size;
-    else requested_height = h;
+    requested_height = h;
   };
 
 
