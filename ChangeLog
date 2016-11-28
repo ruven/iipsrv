@@ -1,3 +1,7 @@
+28/11/2016:
+	- Update to aspect ratio code for sizes exceeding max CVT limit
+
+
 18/11/2016:
 	- Modified IIIF.cc to respect aspect ratio when only width or height size
 	  parameter is given and size exceeds server max CVT limit.
