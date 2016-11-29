@@ -334,7 +334,7 @@ void IIIF::run( Session* session, const string& src )
       // Calculate the width and height of our region
       requested_width = session->view->getViewWidth();
       requested_height = session->view->getViewHeight();
-      float ratio = requested_width / requested_height;
+      float ratio = (float)requested_width / (float)requested_height;
       unsigned int max_size = session->view->getMaxSize();
 
       // "full" request
