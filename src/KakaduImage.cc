@@ -83,9 +83,16 @@ void KakaduImage::openImage() throw (file_error)
     throw file_error( "Kakadu :: Unable to open '"+filename+"'"); // Rethrow the exception
   }
 
+
   // Get our JPX codestream
-  jpx_stream = jpx_input.access_codestream(0);
-  if( !jpx_stream.exists() ) throw file_error( "Kakadu :: No codestream in file '"+filename+"'"); // Throw exception
+  try{
+    jpx_stream = jpx_input.access_codestream(0);
+    if( !jpx_stream.exists() ) throw 1;
+  }
+  catch (...){
+    throw file_error( "Kakadu :: No codestream in file '"+filename+"'"); // Rethrow exception
+  }
+
 
   // Open the underlying JPEG2000 codestream
   input = NULL;
