@@ -163,6 +163,12 @@ JPEG_QUALITY: The default JPEG quality factor for compression when the
 client does not specify one . The value should be between 1 (highest level of
 compression) and 100 (highest image quality). The default is 75.
 
+ICC_PROFILE: Path to an ICC color profile which is embedded in ALL JPEG tiles.
+In the future, the color profile from the zoom source file should probably 
+be read and either embedded automatically based on an on/off option for auto-
+embedding or color conversion should be applied to convert between the original 
+color profile and the one specified as the desired system default.
+
 MAX_CVT: Limits the maximum image dimensions in pixels (the WID or HEI 
 commands) allowable for dynamic JPEG export via the CVT command. This 
 prevents huge requests from overloading the server. The default is 5000.

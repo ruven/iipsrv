@@ -1,3 +1,7 @@
+12/02/2017:
+        - Added option to specify a path to an ICC color profile that is then embedded
+          in all tiles generated via CVT
+
 08/02/2017:
 	- Extra try/catch in KakaduImage for images with missing codestreams
 
