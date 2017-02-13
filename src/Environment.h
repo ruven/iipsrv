@@ -29,6 +29,7 @@
 #define MAX_IMAGE_CACHE_SIZE 10.0
 #define FILENAME_PATTERN "_pyr_"
 #define JPEG_QUALITY 75
+#define ICC_PROFILE ""
 #define MAX_CVT 5000
 #define MAX_LAYERS 0
 #define FILESYSTEM_PREFIX ""
@@ -107,6 +108,30 @@ class Environment {
     return jpeg_quality;
   }
 
+  static unsigned char *getICCProfile(long *profileSize){
+    char* envpara = getenv( "ICC_PROFILE" );
+
+    std::string iccfilename;
+    if ( envpara )
+        iccfilename = std::string( envpara );
+    else
+        iccfilename = ICC_PROFILE;
+
+    // open the given icc profile and load into an unsigned char*
+    if ( !iccfilename.empty() ) {
+        FILE *f = fopen(iccfilename.c_str(), "rb");
+        if ( f ) {
+            fseek(f, 0, SEEK_END);
+            *profileSize = ftell(f);
+            fseek(f, 0, SEEK_SET);  // same as rewind(f);
+            unsigned char *iccProfile = (unsigned char *) malloc(*profileSize);
+            fread(iccProfile, *profileSize, 1, f);
+            fclose(f);
+            return iccProfile;
+        }
+    }
+    return NULL;
+  }
 
   static int getMaxCVT(){
     char* envpara = getenv( "MAX_CVT" );

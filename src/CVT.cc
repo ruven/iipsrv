@@ -357,8 +357,8 @@ void CVT::send( Session* session ){
 
 
 
-  // Initialise our JPEG compression object
-  session->jpeg->InitCompression( complete_image, resampled_height );
+  // Initialise our JPEG compression object and embed a system-wide ICC color profile if one is specified in config
+  session->jpeg->InitCompression( complete_image, resampled_height, session->iccProfile, session->iccProfileSize );
 
   // Add XMP metadata if this exists
   if( (*session->image)->getMetadata("xmp").size() > 0 ){
