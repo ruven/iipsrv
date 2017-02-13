@@ -243,6 +243,9 @@ int main( int argc, char *argv[] )
   // Get our default quality variable
   int jpeg_quality = Environment::getJPEGQuality();
 
+  // Get our ICC profile to embed in JPEG tils if one is specified
+  long icc_profile_size = 0;
+  unsigned char *icc_profile = Environment::getICCProfile(&icc_profile_size);
 
   // Get our max CVT size
   int max_CVT = Environment::getMaxCVT();
@@ -260,7 +263,6 @@ int main( int argc, char *argv[] )
   Watermark watermark( Environment::getWatermark(),
 		       Environment::getWatermarkOpacity(),
 		       Environment::getWatermarkProbability() );
-
 
   // Get the CORS setting
   string cors = Environment::getCORS();
@@ -298,6 +300,10 @@ int main( int argc, char *argv[] )
     logfile << "Setting up JPEG2000 support via OpenJPEG" << endl;
 #endif
     logfile << "Setting Allow Upscaling to " << (allow_upscaling? "true" : "false") << endl;
+
+    if ( icc_profile_size > 0)
+        logfile << "Size of ICC profile to embed in all CVT tiles:" << icc_profile_size << endl;
+
   }
 
 
@@ -480,6 +486,8 @@ int main( int argc, char *argv[] )
       session.out = &writer;
       session.watermark = &watermark;
       session.headers.clear();
+      session.iccProfile = icc_profile;
+      session.iccProfileSize = icc_profile_size;
 
       char* header = NULL;
 
