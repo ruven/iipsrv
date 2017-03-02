@@ -1,3 +1,8 @@
+02/03/2017:
+	- Added extra conditions to JTL uncompressed tile request and slightly
+	  refactored code to fix bug when greyscale conversion requested
+
+
 08/02/2017:
 	- Extra try/catch in KakaduImage for images with missing codestreams
 
