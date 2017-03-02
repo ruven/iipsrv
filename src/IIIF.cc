@@ -547,6 +547,7 @@ void IIIF::run( Session* session, const string& src )
   if ( ( session->view->maintain_aspect && (requested_res > 0) &&
          (requested_width == tw) && (requested_height == th) &&
          (view_left % tw == 0) && (view_top % th == 0) &&
+         (session->view->getViewWidth() % tw == 0) && (session->view->getViewHeight() % th == 0) &&
          (session->view->getViewWidth() < im_width) && (session->view->getViewHeight() < im_height) )
        ||
        ( session->view->maintain_aspect && (requested_res == 0) &&
