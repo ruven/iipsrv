@@ -23,8 +23,6 @@
 
 #define TILESIZE 256
 
-extern std::ofstream logfile;
-
 // Image class for JPEG 2000 Images:
 // Inherits from IIPImage. Uses the OpenJPEG library.
 class OpenJPEGImage : public IIPImage {
@@ -168,5 +166,6 @@ public:
   RawTile getRegion(int ha, int va, unsigned int res, int layers,
                     int x, int y, unsigned int w, unsigned int h) throw(file_error);
 };
+
 
 #endif

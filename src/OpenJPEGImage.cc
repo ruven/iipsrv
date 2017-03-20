@@ -167,6 +167,10 @@ void OpenJPEGImage::loadImageInfo(int /*seq*/, int /*ang*/) throw(file_error)
   logfile << "OpenJPEG :: " << max_layers << " quality layers detected" << endl
           << flush;
 #endif
+
+  // IDEALLY WE WOULD READ THE ICC PROFILE AT THIS POINT, BUT IT SEEMS NECESSARY TO CALL opj_decode IN ORDER
+  // TO GET THE ICC PROFILE AND WE DO THAT IN THE PROCESS() CALL ANYWAY SO WE SET IT THERE INSTEAD
+
   opj_destroy_cstr_info(&cst_info); // We already read everything we needed from info structure
 
   // Check whether image parameters make sense
@@ -483,10 +487,12 @@ void OpenJPEGImage::process(unsigned int res, int layers,
     // Read main header
     throw file_error("ERROR :: OpenJPEG :: process() :: opj_read_header() failed");
   }
+
   if (!opj_set_decoded_resolution_factor(l_codec, vipsres)) {
     // Setup resolution
     throw file_error("ERROR :: OpenJPEG :: process() :: opj_set_decoded_resolution_factor() failed");
   }
+
 #ifdef DEBUG
   Timer timer;
   timer.start();
@@ -503,6 +509,7 @@ void OpenJPEGImage::process(unsigned int res, int layers,
     if (!opj_set_decode_area(l_codec, out_image, xoffset, yoffset, xoffset + tw, yoffset + th)) {
       throw file_error("ERROR :: OpenJPEG :: process() :: opj_set_decode_area() failed");
     }
+
     // Decode region from image
     if (!opj_decode(l_codec, l_stream, out_image)) {
       throw file_error("ERROR :: OpenJPEG :: process() :: opj_decode() failed");
@@ -563,4 +570,14 @@ void OpenJPEGImage::process(unsigned int res, int layers,
   logfile << "INFO :: OpenJPEG :: process() :: Copying image data took " << timer.getTime() << " microseconds" << endl
           << flush;
 #endif
+
+  // if the ICC color profile hasn't already been set for this image yet, try to read it from out_image and save it if it exists
+  if ( icc_profile_buf == NULL && out_image->icc_profile_len > 0 ) {
+    // make a copy of the icc profile
+    icc_profile_buf = new unsigned char[out_image->icc_profile_len];
+    memcpy(&icc_profile_buf[0], out_image->icc_profile_buf, out_image->icc_profile_len);
+    icc_profile_len = out_image->icc_profile_len;
+  }
+
 }
+

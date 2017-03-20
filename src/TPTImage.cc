@@ -24,19 +24,18 @@
 #include "TPTImage.h"
 #include <sstream>
 
-
 using namespace std;
-
 
 void TPTImage::openImage() throw (file_error)
 {
+
+  string filename = getFileName( currentX, currentY );
 
   // Insist that the tiff and tile_buf be NULL
   if( tiff || tile_buf ){
     throw file_error( "TPT::openImage: tiff or tile_buf is not NULL" );
   }
 
-  string filename = getFileName( currentX, currentY );
 
   // Update our timestamp
   updateTimestamp( filename );
@@ -46,8 +45,23 @@ void TPTImage::openImage() throw (file_error)
     throw file_error( "tiff open failed for: " + filename );
   }
 
+  // if the ICC color profile hasn't already been set for this image yet, try to read it 
+  if ( icc_profile_buf == NULL ) {
+    unsigned long proflen=0;
+    unsigned char *buf=NULL;
+    TIFFGetField( tiff, TIFFTAG_ICCPROFILE, &proflen, &buf);
+
+    // make a copy of the icc profile since changing TIFF directory frees the original memory
+    if ( proflen > 0 ) {
+      icc_profile_buf = new unsigned char[proflen];
+      memcpy(&icc_profile_buf[0], buf, proflen);
+      icc_profile_len = proflen;
+    }
+  }
+
   // Load our metadata if not already loaded
-  if( bpc == 0 ) loadImageInfo( currentX, currentY );
+  if( bpc == 0 )
+    loadImageInfo( currentX, currentY );
 
   // Insist on a tiled image
   if( (tile_width == 0) && (tile_height == 0) ){
@@ -57,7 +71,6 @@ void TPTImage::openImage() throw (file_error)
   isSet = true;
 
 }
-
 
 void TPTImage::loadImageInfo( int seq, int ang ) throw(file_error)
 {
@@ -172,7 +185,6 @@ void TPTImage::loadImageInfo( int seq, int ang ) throw(file_error)
 
 }
 
-
 void TPTImage::closeImage()
 {
   if( tiff != NULL ){
@@ -186,13 +198,12 @@ void TPTImage::closeImage()
 }
 
 
-RawTile TPTImage::getTile( int seq, int ang, unsigned int res, int layers, unsigned int tile ) throw (file_error)
+RawTile TPTImage::getTile( int seq, int ang, unsigned int res, int layers, unsigned int tile) throw (file_error)
 {
   uint32 im_width, im_height, tw, th, ntlx, ntly;
   uint32 rem_x, rem_y;
   uint16 colour;
   string filename;
-
 
   // Check the resolution exists
   if( res > numResolutions ){
@@ -200,7 +211,6 @@ RawTile TPTImage::getTile( int seq, int ang, unsigned int res, int layers, unsig
     error << "TPTImage :: Asked for non-existent resolution: " << res;
     throw file_error( error.str() );
   }
-
 
   // If we are currently working on a different sequence number, then
   //  close and reload the image.
@@ -217,7 +227,6 @@ RawTile TPTImage::getTile( int seq, int ang, unsigned int res, int layers, unsig
     }
   }
 
-
   // Reload our image information in case the tile size etc is different
   if( (currentX != seq) || (currentY != ang) ){
     loadImageInfo( seq, ang );
@@ -228,13 +237,11 @@ RawTile TPTImage::getTile( int seq, int ang, unsigned int res, int layers, unsig
   //  the resolution - can avoid this if we store our images with
   //  the smallest image first. 
   int vipsres = ( numResolutions - 1 ) - res;
-  
 
   // Change to the right directory for the resolution
   if( !TIFFSetDirectory( tiff, vipsres ) ) {
     throw file_error( "TIFFSetDirectory failed" );
   }
-
 
   // Check that a valid tile number was given  
   if( tile >= TIFFNumberOfTiles( tiff ) ) {
@@ -242,7 +249,6 @@ RawTile TPTImage::getTile( int seq, int ang, unsigned int res, int layers, unsig
     tile_no << "Asked for non-existent tile: " << tile;
     throw file_error( tile_no.str() );
   } 
-
 
   // Get the size of this tile, the current image,
   //  the number of samples and the colourspace.
@@ -256,7 +262,6 @@ RawTile TPTImage::getTile( int seq, int ang, unsigned int res, int layers, unsig
 //   TIFFGetField( tiff, TIFFTAG_SAMPLESPERPIXEL, &channels );
 //   TIFFGetField( tiff, TIFFTAG_BITSPERSAMPLE, &bpc );
 
-
   // Total number of bytes in tile
   unsigned int np = tw * th;
 
@@ -264,7 +269,6 @@ RawTile TPTImage::getTile( int seq, int ang, unsigned int res, int layers, unsig
   // Get the width and height for last row and column tiles
   rem_x = im_width % tw;
   rem_y = im_height % th;
-
 
   // Calculate the number of tiles in each direction
   ntlx = (im_width / tw) + (rem_x == 0 ? 0 : 1);
@@ -282,7 +286,6 @@ RawTile TPTImage::getTile( int seq, int ang, unsigned int res, int layers, unsig
     th = rem_y;
   }
 
-
   // Handle various colour spaces
   if( colour == PHOTOMETRIC_CIELAB ) colourspace = CIELAB;
   else if( colour == PHOTOMETRIC_MINISBLACK ) colourspace = GREYSCALE;
@@ -299,7 +302,6 @@ RawTile TPTImage::getTile( int seq, int ang, unsigned int res, int layers, unsig
   }
   else colourspace = sRGB;
 
-
   // Allocate memory for our tile.
   if( !tile_buf ){
     if( ( tile_buf = _TIFFmalloc( TIFFTileSize(tiff) ) ) == NULL ){
@@ -313,7 +315,6 @@ RawTile TPTImage::getTile( int seq, int ang, unsigned int res, int layers, unsig
   if( length == -1 ) {
     throw file_error( "TIFFReadEncodedTile failed for " + getFileName( seq, ang ) );
   }
-
 
   RawTile rawtile( tile, res, seq, ang, tw, th, channels, bpc );
   rawtile.data = tile_buf;
@@ -358,7 +359,6 @@ RawTile TPTImage::getTile( int seq, int ang, unsigned int res, int layers, unsig
     rawtile.bpc = 8;
     rawtile.memoryManaged = 1;
   }
-
 
   return( rawtile );
 

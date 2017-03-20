@@ -24,7 +24,7 @@
 using namespace std;
 
 
-
+// 2017-03-20 beaudet - "TIL" ISN'T DEFINED IN THE IIP SPEC AND I HAVEN'T TESTED IT SINCE ADDING THE ICC COLOR PROFILE OPERATIONS
 void TIL::run( Session* session, const std::string& a ){
 
   int resolution, start_tile, end_tile;
@@ -121,6 +121,22 @@ void TIL::run( Session* session, const std::string& a ){
     session->out->printf( (const char*)str );
   }
 
+  unsigned long iccLen=0;
+  unsigned char *iccBuf=NULL;
+
+  // fetch ICC profile from the original image if one exists and if we are retaining ICC profiles
+  // and haven't applied any color manipulation filters
+  if ( session->retain_source_icc_profile == 1 ) {
+    // attempt to save the color profile to the session if it's not already set
+    if ( session->icc_profile_buf == NULL )
+      (*session->image)->getICCProfile( &(session->icc_profile_len), &(session->icc_profile_buf) );
+
+    // apply the color profile to the JPEG
+    if ( session->icc_profile_buf != NULL ) {
+      iccLen = session->icc_profile_len;
+      iccBuf = session->icc_profile_buf;
+    }
+  }
 
   for( int i = startx; i <= endx; i++ ){
     for( int j = starty; j <= endy; j++ ){
@@ -130,7 +146,7 @@ void TIL::run( Session* session, const std::string& a ){
       // Get our tile using our tile manager
       TileManager tilemanager( session->tileCache, *session->image, session->watermark, session->jpeg, session->logfile, session->loglevel );
       RawTile rawtile = tilemanager.getTile( resolution, n, session->view->xangle,
-					     session->view->yangle, session->view->getLayers(), JPEG );
+					     session->view->yangle, session->view->getLayers(), JPEG, iccLen, iccBuf );
 
       int len = rawtile.dataLength;
 

@@ -46,9 +46,6 @@
 using namespace kdu_supp; // Also includes the `kdu_core' namespace
 #endif
 
-extern std::ofstream logfile;
-
-
 /// Wrapper class to handle error messages from Kakadu
 class kdu_stream_message : public kdu_message {
  private: // Data

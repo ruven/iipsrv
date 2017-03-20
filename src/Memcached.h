@@ -116,12 +116,27 @@ class Memcache {
                         _timeout, 0 );
   }
 
+  /// Insert binary data into our cache
+  /** @param key key used for cache
+      @param data pointer to the data to be stored
+      @param length length of data to be stored
+  */
+  void storeblob( const std::string key, unsigned char* buff, unsigned long bufflen ){
+
+    if( !_connected ) return;
+ 
+    std::string k = "iipsrv::" + key;
+    _rc = memcached_set( _memc, k.c_str(), k.length(),
+                        reinterpret_cast<const char*>(buff), bufflen,
+                        _timeout, 0 );
+  }
+
 
   /// Retrieve data from our cache
   /** @param key key for cache data
       @return pointer to data
   */
-  char* retrieve( const std::string& key ){
+  void* retrieve( const std::string& key ){
 
     if( !_connected ) return NULL;
 
@@ -130,6 +145,20 @@ class Memcache {
     return memcached_get( _memc, k.c_str(), k.length(), &_length, &flags, &_rc );
   }
 
+  /// Retrieve data from our cache
+  /** @param key key for cache data
+      @return pointer to data
+  */
+  unsigned char* retrieveblob( std::string key, unsigned long &bufflen ){
+
+    if( !_connected ) return NULL;
+
+    uint32_t flags;
+    std::string k = "iipsrv::" + key;
+    unsigned char* blob = reinterpret_cast<unsigned char*>(memcached_get( _memc, k.c_str(), k.length(), &_length, &flags, &_rc ));
+    bufflen = _length;
+    return blob;
+  }
 
   /// Get error string
   const char* error(){

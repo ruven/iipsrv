@@ -27,9 +27,10 @@
 #define VERBOSITY 1
 #define LOGFILE "/tmp/iipsrv.log"
 #define MAX_IMAGE_CACHE_SIZE 10.0
+#define MAX_IMAGES_IN_METADATA_CACHE 1000
 #define FILENAME_PATTERN "_pyr_"
 #define JPEG_QUALITY 75
-#define ICC_PROFILE ""
+#define RETAIN_SOURCE_ICC_PROFILE 0
 #define MAX_CVT 5000
 #define MAX_LAYERS 0
 #define FILESYSTEM_PREFIX ""
@@ -41,8 +42,10 @@
 #define INTERPOLATION 1
 #define CORS "";
 #define BASE_URL "";
+#define IIIF_PREFIX ""; // e.g. /iiif
 #define CACHE_CONTROL "max-age=86400"; // 24 hours
 #define ALLOW_UPSCALING true
+#define DISABLE_PRIMARY_MEMCACHE 0 // disble memcache to diagnose performance or functional issues
 
 
 #include <string>
@@ -108,7 +111,36 @@ class Environment {
     return jpeg_quality;
   }
 
-  static unsigned char *getICCProfile(long *profileSize){
+  static int getRetainSourceICCProfile(){
+    char* envpara = getenv( "RETAIN_SOURCE_ICC_PROFILE" );
+    int retainICC;
+    if ( envpara ) {
+      retainICC = atoi( envpara );
+      if ( retainICC != 1 ) 
+        retainICC = 0;
+    }
+    else 
+      retainICC = RETAIN_SOURCE_ICC_PROFILE;
+
+    return retainICC;
+  }
+
+  static int getDisablePrimaryMemcache(){
+    char* envpara = getenv( "DISABLE_PRIMARY_MEMCACHE" );
+    int disableMem;
+    if ( envpara ) {
+      disableMem = atoi( envpara );
+      if ( disableMem != 1 ) 
+        disableMem = 0;
+    }
+    else 
+      disableMem = DISABLE_PRIMARY_MEMCACHE;
+
+    return disableMem;
+  }
+
+/// If we want a system wide ICC profile that will be used for standardized color transformation
+/*  static unsigned char *getSystemICCProfile(long *profileSize){
     char* envpara = getenv( "ICC_PROFILE" );
 
     std::string iccfilename;
@@ -132,6 +164,7 @@ class Environment {
     }
     return NULL;
   }
+*/
 
   static int getMaxCVT(){
     char* envpara = getenv( "MAX_CVT" );
@@ -143,6 +176,20 @@ class Environment {
     else max_CVT = MAX_CVT;
 
     return max_CVT;
+  }
+
+  static int getMaxImagesInMetadataCache(){
+    char* envpara = getenv( "MAX_IMAGES_IN_METADATA_CACHE" );
+    int max_image_metadata_cache_elems;
+    if( envpara ){
+      max_image_metadata_cache_elems = atoi( envpara );
+      if ( max_image_metadata_cache_elems < 0 ) 
+        max_image_metadata_cache_elems = 0;
+    }
+    else 
+      max_image_metadata_cache_elems = MAX_IMAGES_IN_METADATA_CACHE;
+
+    return max_image_metadata_cache_elems;
   }
 
 
@@ -257,6 +304,13 @@ class Environment {
     return base_url;
   }
 
+  static std::string getIIIFPrefix(){
+    char* envpara = getenv( "IIIF_PREFIX" );
+    std::string iiif_prefix;
+    if( envpara ) iiif_prefix = std::string( envpara );
+    else iiif_prefix = IIIF_PREFIX;
+    return iiif_prefix;
+  }
 
   static std::string getCacheControl(){
     char* envpara = getenv( "CACHE_CONTROL" );

@@ -148,9 +148,17 @@ LOGFILE: the server will log its output to the file specified, if it can.
 VERBOSITY: 0 means no logging, 1 is minimal logging, 2 lots of debugging stuff,
 3 even more debugging stuff and 10 a very large amount indeed ;-)
 
+MAX_IMAGES_IN_METADATA_CACHEE: Maximum number of image metadata records to cache
+in memory.  This improves performance by avoiding the opening and reading of 
+metdata from image sources with each request.  Defaults to 1000.
+
 MAX_IMAGE_CACHE_SIZE: Max image cache size to be held in RAM in MB. This is
 a cache of the compressed JPEG image tiles requested by the client.
-The default is 10MB.
+The default is 10MB. If set to 0 and memcached is enabled, memcached will be used
+instead of per-process in-memory caching.  In some cases, memcached has shown
+to perform better than the per process cache.  In addition, using memcache for 
+JPEG image tile caching will permit multiple processes to share a common cache, 
+significantly reducing the overall amount of RAM required by all IIP processes.
 
 FILESYSTEM_PREFIX: This is a prefix automatically added by the server to the 
 beginning of each file system path. This can be useful for security reasons to 
@@ -163,11 +171,26 @@ JPEG_QUALITY: The default JPEG quality factor for compression when the
 client does not specify one . The value should be between 1 (highest level of
 compression) and 100 (highest image quality). The default is 75.
 
-ICC_PROFILE: Path to an ICC color profile which is embedded in ALL JPEG tiles.
-In the future, the color profile from the zoom source file should probably 
-be read and either embedded automatically based on an on/off option for auto-
-embedding or color conversion should be applied to convert between the original 
-color profile and the one specified as the desired system default.
+RETAIN_SOURCE_ICC_PROFILE: Read the embedded ICC profile from the source image
+and insert it into all generated JPEG tiles.  Currently only implemented for
+PTIF source images and has not been tested with color operations. Defaults to 0.
+
+DISABLE_PRIMARY_MEMCACHE: Set to 1 to disable the primary memcache used to cache 
+responses in order to diagnose problems or to assess performance. This will not 
+disable the image tile cache if MAX_IMAGE_CACHE_SIZE is set to 0. To disable ALL 
+memcaching, remove the MEMCACHED_SERVERS configuration and to remove all caching
+of any sort, set the MAX_IMAGE_CACHE_SIZE and MAX_IMAGES_IN_METADATA_CACHE to 0 as 
+well as disabling other caching external to IIP like varnish, squid, etc.  Default
+is 0.
+
+IIIF_PREFIX: The URL prefix for this server's IIIF service, e.g. "/iiif". When no
+query string is supplied to a URL, setting this configuration parameter will cause 
+IIP Server to interpret the portion of the REQUEST_URI after the IIIF_PREFIX 
+as if it had been supplied to the IIIF command.  Use in conjunction with a 
+ScriptAlias (or equivalent) directive to force resolution of the IIIF_PREFIX 
+to the IIP FCGI path, e.g. ScriptAlias /iiif /var/www/fastcgi/iipsrv.fcgi 
+This configuration option enables you to directly handle IIIF URLs without
+having to rewrite or proxy them to use a query string. Defaults to "".
 
 MAX_CVT: Limits the maximum image dimensions in pixels (the WID or HEI 
 commands) allowable for dynamic JPEG export via the CVT command. This 
@@ -212,7 +235,7 @@ Set to * to enable for all domains or specify a single domain.
 See http://www.w3.org/TR/cors/ for more details on CORS.
 
 BASE_URL: Set a base URL for use in certain protocol requests if web server rewriting 
-has taken place and the public URL is not the same as that supplied to iipsrv.
+has taken place and the public URL is not the same as that supplied to iipsrv. Defaults to "".
 
 CACHE_CONTROL: Set the HTTP Cache-Control header. See http://www.w3.org/Protocols/rfc2616/rfc2616-sec14.html#sec14.9 for 
 a full list of options. If not set, header defaults to "max-age=86400" (24 hours).

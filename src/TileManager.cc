@@ -31,7 +31,7 @@ using namespace std;
 
 
 
-RawTile TileManager::getNewTile( int resolution, int tile, int xangle, int yangle, int layers, CompressionType c ){
+RawTile TileManager::getNewTile( int resolution, int tile, int xangle, int yangle, int layers, CompressionType c, unsigned long icc_profile_len, unsigned char *icc_profile_buf ){
 
   if( loglevel >= 2 ) *logfile << "TileManager :: Cache Miss for resolution: " << resolution << ", tile: " << tile << endl
 			       << "TileManager :: Cache Size: " << tileCache->getNumElements()
@@ -60,7 +60,7 @@ RawTile TileManager::getNewTile( int resolution, int tile, int xangle, int yangl
 
   // We need to crop our edge tiles if they are padded
   if( ((ttt.width != image->getTileWidth()) || (ttt.height != image->getTileHeight())) && ttt.padded ){
-    if( loglevel >= 5 ) * logfile << "TileManager :: Cropping tile" << endl;
+    if( loglevel >= 5 ) *logfile << "TileManager :: Cropping tile" << endl;
     this->crop( &ttt );
   }
 
@@ -80,10 +80,10 @@ RawTile TileManager::getNewTile( int resolution, int tile, int xangle, int yangl
 
   case JPEG:
 
-    // Do our JPEG compression iff we have an 8 bit per channel image
+    // Do our JPEG compression if we have an 8 bit per channel image
     if( ttt.bpc == 8 && (ttt.channels==1 || ttt.channels==3) ){
       if( loglevel >=2 ) compression_timer.start();
-      jpeg->Compress( ttt );
+      jpeg->Compress( ttt, icc_profile_len, icc_profile_buf );
       if( loglevel >= 2 ) *logfile << "TileManager :: JPEG Compression Time: "
 				   << compression_timer.getTime() << " microseconds" << endl;
     }
@@ -155,7 +155,7 @@ void TileManager::crop( RawTile *ttt ){
 
 
 
-RawTile TileManager::getTile( int resolution, int tile, int xangle, int yangle, int layers, CompressionType c ){
+RawTile TileManager::getTile( int resolution, int tile, int xangle, int yangle, int layers, CompressionType c, unsigned long icc_profile_len, unsigned char *icc_profile_buf ){
 
   RawTile* rawtile = NULL;
   string tileCompression;
@@ -183,7 +183,6 @@ RawTile TileManager::getTile( int resolution, int tile, int xangle, int yangle, 
 
 
     case DEFLATE:
-
       if( (rawtile = tileCache->getTile( image->getImagePath(), resolution, tile,
 					 xangle, yangle, DEFLATE, 0 )) ) break;
       if( (rawtile = tileCache->getTile( image->getImagePath(), resolution, tile,
@@ -192,7 +191,6 @@ RawTile TileManager::getTile( int resolution, int tile, int xangle, int yangle, 
 
 
     case UNCOMPRESSED:
-
       if( (rawtile = tileCache->getTile( image->getImagePath(), resolution, tile,
 					 xangle, yangle, UNCOMPRESSED, 0 )) ) break;
       break;
@@ -203,8 +201,7 @@ RawTile TileManager::getTile( int resolution, int tile, int xangle, int yangle, 
 
     }
 
-
-  // If we haven't been able to get a tile, get a raw one
+  // If we haven't been able to get a tile, get a new one and return it
   if( !rawtile || (rawtile && (rawtile->timestamp < image->timestamp)) ){
 
     if( rawtile && (rawtile->timestamp < image->timestamp) ){
@@ -213,13 +210,13 @@ RawTile TileManager::getTile( int resolution, int tile, int xangle, int yangle, 
                                    << " ... updating" << endl;
     }
 
-    RawTile newtile = this->getNewTile( resolution, tile, xangle, yangle, layers, c );
+    // an ICC profile is only applied when a JPEG is being requested and that shouldn't happen if we have color filters to apply
+    RawTile newtile = this->getNewTile( resolution, tile, xangle, yangle, layers, c, icc_profile_len, icc_profile_buf );
 
     if( loglevel >= 2 ) *logfile << "TileManager :: Total Tile Access Time: "
 				 << tile_timer.getTime() << " microseconds" << endl;
     return newtile;
   }
-
 
   // Define our compression names
   switch( rawtile->compressionType ){
@@ -229,16 +226,15 @@ RawTile TileManager::getTile( int resolution, int tile, int xangle, int yangle, 
     default: break;
   }
 
-  if( loglevel >= 2 ) *logfile << "TileManager :: Cache Hit for resolution: " << resolution
-			       << ", tile: " << tile
-			       << ", compression: " << compName << endl
-			       << "TileManager :: Cache Size: "
-			       << tileCache->getNumElements() << " tiles, "
-			       << tileCache->getMemorySize() << " MB" << endl;
-
+  if( loglevel >= 2 ) {
+    *logfile << "TileManager :: Cache Hit for resolution: " << resolution
+             << ", tile: " << tile
+             << ", compression: " << compName << endl
+             << "TileManager :: Cache Size: " << tileCache->getNumElements() << " tiles, " << tileCache->getMemorySize() << " MB" << endl;
+  }
 
   // Check whether the compression used for out tile matches our requested compression type.
-  // If not, we must convert
+  // If not, we must convert and we'll cache that too
 
   if( c == JPEG && rawtile->compressionType == UNCOMPRESSED ){
 
@@ -256,7 +252,7 @@ RawTile TileManager::getTile( int resolution, int tile, int xangle, int yangle, 
 
       if( loglevel >=2 ) compression_timer.start();
       unsigned int oldlen = rawtile->dataLength;
-      unsigned int newlen = jpeg->Compress( ttt );
+      unsigned int newlen = jpeg->Compress( ttt, icc_profile_len, icc_profile_buf );
       if( loglevel >= 2 ) *logfile << "TileManager :: JPEG requested, but UNCOMPRESSED compression found in cache." << endl
 				   << "TileManager :: JPEG Compression Time: "
 				   << compression_timer.getTime() << " microseconds" << endl
@@ -271,15 +267,26 @@ RawTile TileManager::getTile( int resolution, int tile, int xangle, int yangle, 
 
       if( loglevel >= 2 ) *logfile << "TileManager :: Total Tile Access Time: "
 				   << tile_timer.getTime() << " microseconds" << endl;
-      return RawTile( ttt );
+
+      // calls delete on rawtile if memcache is actually in use since in that case rawtile is a copy of the tile in the cache
+      tileCache->cleanup( &rawtile );
+
+      // return a copy of ttt since ttt will be destroyed when this method exits
+      return RawTile ( ttt ); 
     }
   }
 
   if( loglevel >= 2 ) *logfile << "TileManager :: Total Tile Access Time: "
 			       << tile_timer.getTime() << " microseconds" << endl;
 
-  return RawTile( *rawtile );
+  // create a copy of the cached tile before cleaning up the cached tile
+  RawTile rt = RawTile( *rawtile );
 
+  // cleanup the cached tile if we're using memcache for tile caching since it is already a copy
+  tileCache->cleanup( &rawtile );
+
+  // and finally return the tile
+  return rt;
 
 }
 
@@ -346,7 +353,6 @@ RawTile TileManager::getRegion( unsigned int res, int seq, int ang, int layers, 
     endy = ntly;
   }
 
-
   unsigned int channels = image->getNumChannels();
   unsigned int bpc = image->getNumBitsPerPixel();
   SampleType sampleType = image->getSampleType();
@@ -381,8 +387,9 @@ RawTile TileManager::getRegion( unsigned int res, int seq, int ang, int layers, 
       // Time the tile retrieval
       if( loglevel >= 2 ) tile_timer.start();
 
-      // Get an uncompressed tile
-      RawTile rawtile = this->getTile( res, (i*ntlx) + j, seq, ang, layers, UNCOMPRESSED );
+      // Get an uncompressed tile - never needs an ICC profile 
+      RawTile rawtile = this->getTile( res, (i*ntlx) + j, seq, ang, layers, UNCOMPRESSED, 0, NULL);
+
 
       if( loglevel >= 2 ){
 	*logfile << "TileManager getRegion :: Tile access time " << tile_timer.getTime() << " microseconds for tile "

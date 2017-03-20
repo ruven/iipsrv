@@ -235,6 +235,8 @@ int main( int argc, char *argv[] )
   float max_image_cache_size = Environment::getMaxImageCacheSize();
   imageCacheMapType imageCache;
 
+  // max number of images to save in the in-memory image metadata cache
+  unsigned int max_images_in_metadata_cache = Environment::getMaxImagesInMetadataCache();
 
   // Get our image pattern variable
   string filename_pattern = Environment::getFileNamePattern();
@@ -243,9 +245,17 @@ int main( int argc, char *argv[] )
   // Get our default quality variable
   int jpeg_quality = Environment::getJPEGQuality();
 
+/*
   // Get our ICC profile to embed in JPEG tils if one is specified
-  long icc_profile_size = 0;
-  unsigned char *icc_profile = Environment::getICCProfile(&icc_profile_size);
+  long system_icc_profile_size = 0;
+  unsigned char *system_icc_profile = Environment::getICCProfile(&icc_profile_size);
+*/
+
+  // Find out whether we should read source image ICC profiles and embed in JPEG tiles
+  unsigned int retain_source_icc_profile = Environment::getRetainSourceICCProfile();
+
+  // Discover whether we should disable the primary memcache for diagnostic purposes
+  unsigned int disable_primary_memcache = Environment::getDisablePrimaryMemcache();
 
   // Get our max CVT size
   int max_CVT = Environment::getMaxCVT();
@@ -271,6 +281,8 @@ int main( int argc, char *argv[] )
   // Get any Base URL setting
   string base_url = Environment::getBaseURL();
 
+  // Get any Base URL setting
+  string iiif_prefix = Environment::getIIIFPrefix();
 
   // Get requested HTTP Cache-Control setting
   string cache_control = Environment::getCacheControl();
@@ -282,6 +294,7 @@ int main( int argc, char *argv[] )
   // Print out some information
   if( loglevel >= 1 ){
     logfile << "Setting maximum image cache size to " << max_image_cache_size << "MB" << endl;
+    logfile << "Setting maximum images in image metdata cache to " << max_images_in_metadata_cache << " images" << endl;
     logfile << "Setting filesystem prefix to '" << filesystem_prefix << "'" << endl;
     logfile << "Setting default JPEG quality to " << jpeg_quality << endl;
     logfile << "Setting maximum CVT size to " << max_CVT << endl;
@@ -301,8 +314,8 @@ int main( int argc, char *argv[] )
 #endif
     logfile << "Setting Allow Upscaling to " << (allow_upscaling? "true" : "false") << endl;
 
-    if ( icc_profile_size > 0)
-        logfile << "Size of ICC profile to embed in all CVT tiles:" << icc_profile_size << endl;
+//    if ( system_icc_profile_size > 0)
+//        logfile << "Size of ICC profile to embed in all CVT tiles:" << icc_profile_size << endl;
 
   }
 
@@ -420,11 +433,14 @@ int main( int argc, char *argv[] )
   Timer request_timer;
   srand( request_timer.getTime() );
 
-  // Create our tile cache
+// Create our memcached object and tile cache
+#ifdef HAVE_MEMCACHED
+  Cache tileCache( max_image_cache_size, &memcached );
+#else
   Cache tileCache( max_image_cache_size );
+#endif
+
   Task* task = NULL;
-
-
 
   /****************
     Main FCGI loop
@@ -453,7 +469,7 @@ int main( int argc, char *argv[] )
 
     // Declare our image pointer here outside of the try scope
     //  so that we can close the image on exceptions
-    IIPImage *image = NULL;
+    IIPImage *image = NULL; // need to initialize here because if we have a memcache hit we don't want to free random memory
     JPEGCompressor jpeg( jpeg_quality );
 
 
@@ -486,8 +502,13 @@ int main( int argc, char *argv[] )
       session.out = &writer;
       session.watermark = &watermark;
       session.headers.clear();
-      session.iccProfile = icc_profile;
-      session.iccProfileSize = icc_profile_size;
+      session.retain_source_icc_profile = retain_source_icc_profile;
+      session.icc_profile_buf = NULL;
+      session.icc_profile_len = 0;
+
+//  if we decide to accept a system wide color profile and convert to it, we can store that data in the session
+//      session.system_icc_profile_len
+//      session.system_icc_profile_buf
 
       char* header = NULL;
 
@@ -498,12 +519,41 @@ int main( int argc, char *argv[] )
       header = FCGX_GetParam( "QUERY_STRING", request.envp );
 #endif
 
-      const string request_string = (header!=NULL)? header : "";
-
-      // Check that we actually have a request string
+      string request_string = (header!=NULL) ? header : "";
       if( request_string.empty() ){
-	throw string( "QUERY_STRING not set" );
+        /***************************************************************************************************************** 
+         if we don't have a query string, check for a match to the IIIF prefix before giving up
+         this prevents having to configure a mod_rewrite and / or mod_proxy configuration to handle native IIIF URLs
+         and it's important on heavily loaded servers for two reasons:
+           * mod_rewrite doesn't pool proxy connections which means it can double or more the number of ports 
+             required to fullfill the request
+           * mod_proxy doesn't really support query strings so while it is possible to create a ProxyPassMatch request
+             that saves the query string in a substitution parameter, it escapes the ? in the proxied URL and renders it
+             useless as a query string - other trickery might work to unescape this on the subsequent request but that is
+             starting to become quite complex when all we really want is to handle a IIIF URL according to the spec - thus
+             this enhancement...
+        ******************************************************************************************************************/
+        if ( !iiif_prefix.empty() ) {
+          char *requri = FCGX_GetParam( "REQUEST_URI", request.envp );
+          const string request_uri = (requri!=NULL) ? requri : "";
+
+          // try to find the iiif_prefix in the request uri 
+          unsigned int loc = request_uri.find(iiif_prefix);
+          if ( loc == 0 ) {
+            // this is indeed a IIIF request
+            unsigned iLen = iiif_prefix.length();
+            unsigned rLen = request_uri.length();
+            string new_request_string = "IIIF=" + request_uri.substr(iLen,rLen-iLen);
+            request_string = new_request_string;
+            if (loglevel > 3)
+              logfile << "SYNTHESIZED QUERY STRING:" << request_string;
+          }
+        }
       }
+
+      // Check that we actually have a query string
+      if ( request_string.empty() )
+        throw string( "QUERY_STRING not set" );
 
       if( loglevel >=2 ){
 	logfile << "Full Request is " << request_string << endl;
@@ -543,17 +593,18 @@ int main( int argc, char *argv[] )
 #ifdef HAVE_MEMCACHED
       // Check whether this exists in memcached, but only if we haven't had an if_modified_since
       // request, which should always be faster to send
-      if( !header || session.headers["HTTP_IF_MODIFIED_SINCE"].empty() ){
-	char* memcached_response = NULL;
-	if( (memcached_response = memcached.retrieve( request_string )) ){
-	  writer.putStr( memcached_response, memcached.length() );
-	  writer.flush();
-	  free( memcached_response );
-	  throw( 100 );
-	}
+      if (!disable_primary_memcache) {
+        if( !header || session.headers["HTTP_IF_MODIFIED_SINCE"].empty() ){
+	  char* memcached_response = NULL;
+	  if( (memcached_response = (char*) memcached.retrieve( request_string )) ){
+	    writer.putStr( memcached_response, memcached.length() );
+	    writer.flush();
+	    free( memcached_response );
+	    throw( 100 );
+	  }
+        }
       }
 #endif
-
 
       // Parse up the command list
 
@@ -590,7 +641,6 @@ int main( int argc, char *argv[] )
 	  // Unsupported command error code is 2 2
 	  response.setError( "2 2", command );
 	}
-
 
 	// Delete our task
 	if( task ){
@@ -637,22 +687,23 @@ int main( int argc, char *argv[] )
       ////////////////////////////////////////////////////////
 
 #ifdef HAVE_MEMCACHED
-      if( memcached.connected() ){
-	Timer memcached_timer;
-	memcached_timer.start();
-	memcached.store( session.headers["QUERY_STRING"], writer.buffer, writer.sz );
-	if( loglevel >= 3 ){
-	  logfile << "Memcached :: stored " << writer.sz << " bytes in "
-		  << memcached_timer.getTime() << " microseconds" << endl;
-	}
+      if (!disable_primary_memcache) {
+        if( memcached.connected() ){
+	  Timer memcached_timer;
+	  memcached_timer.start();
+	  memcached.store( session.headers["QUERY_STRING"], writer.buffer, writer.sz );
+	  if( loglevel >= 3 ){
+	    logfile << "Memcached :: stored " << writer.sz << " bytes in "
+		    << memcached_timer.getTime() << " microseconds" << endl;
+	  }
+        }
       }
 #endif
-
-
 
       //////////////////////////////////////////////////////
       //////////////// End of try block ////////////////////
       //////////////////////////////////////////////////////
+
     }
 
     /* Use this for sending various HTTP status codes
@@ -685,6 +736,7 @@ int main( int argc, char *argv[] )
        }
     }
 
+
     /* Catch any errors
      */
     catch( const string& error ){
@@ -695,12 +747,10 @@ int main( int argc, char *argv[] )
 
       if( response.errorIsSet() ){
 	if( loglevel >= 4 ){
-	  logfile << "---" << endl <<
-	    response.formatResponse() <<
-	    endl << "---" << endl;
+	  logfile << "---" << endl << response.formatResponse() << endl << "---" << endl;
 	}
 	if( writer.printf( response.formatResponse().c_str() ) == -1 ){
-	  if( loglevel >= 1 ) logfile << "Error sending IIPResponse" << endl;
+	  if( loglevel >= 1 ) logfile << " Error sending IIPResponse" << endl;
 	}
       }
       else{
@@ -713,24 +763,24 @@ int main( int argc, char *argv[] )
 
     // Image file errors
     catch( const file_error& error ){
-      string status = "Status: 404 Not Found\r\nServer: iipsrv/" + version + "\r\n\r\n" + error.what();
-      writer.printf( status.c_str() );
-      writer.flush();
       if( loglevel >= 2 ){
 	logfile << error.what() << endl;
 	logfile << "Sending HTTP 404 Not Found" << endl;
       }
+      string status = "Status: 404 Not Found\r\nServer: iipsrv/" + version + "\r\n\r\n" + error.what();
+      writer.printf( status.c_str() );
+      writer.flush();
     }
 
     // Parameter errors
     catch( const invalid_argument& error ){
-      string status = "Status: 400 Bad Request\r\nServer: iipsrv/" + version + "\r\n\r\n" + error.what();
-      writer.printf( status.c_str() );
-      writer.flush();
       if( loglevel >= 2 ){
 	logfile << error.what() << endl;
 	logfile << "Sending HTTP 400 Bad Request" << endl;
       }
+      string status = "Status: 400 Bad Request\r\nServer: iipsrv/" + version + "\r\n\r\n" + error.what();
+      writer.printf( status.c_str() );
+      writer.flush();
     }
 
     /* Default catch
@@ -751,37 +801,35 @@ int main( int argc, char *argv[] )
     /* Do some cleaning up etc. here after all the potential exceptions
        have been handled
      */
-    if( task ){
+    if ( image != NULL ) {
+      delete image;
+      image = NULL; 
+    }
+    if ( task ){
       delete task;
       task = NULL;
     }
-    delete image;
-    image = NULL;
     IIPcount ++;
 
 #ifdef DEBUG
     fclose( f );
 #endif
 
-
-
     // How long did this request take?
     if( loglevel >= 2 ){
-      logfile << "Total Request Time: " << request_timer.getTime() << " microseconds" << endl;
+      logfile << "MAIN :: Total Request Time: " << request_timer.getTime() << " microseconds" << endl;
     }
 
 
     if( loglevel >= 2 ){
-      logfile << "image closed and deleted" << endl
-	      << "Server count is " << IIPcount << endl << endl;
+      logfile << "MAIN :: Image closed and deleted" << endl
+	      << "MAIN :: Server count is " << IIPcount << endl << endl;
     }
 
 
 
     ///////// End of FCGI_ACCEPT while loop or for loop in debug mode //////////
   }
-
-
 
   if( loglevel >= 1 ){
     logfile << endl << "Terminating after " << IIPcount << " iterations" << endl;

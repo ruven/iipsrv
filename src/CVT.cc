@@ -23,6 +23,8 @@
 #include "Environment.h"
 #include <cmath>
 #include <algorithm>
+#include <iostream>
+#include <fstream>
 
 //#define CHUNKED 1
 
@@ -35,7 +37,6 @@ void CVT::send( Session* session ){
   if( session->loglevel >= 2 ) *(session->logfile) << "CVT handler reached" << endl;
 
   Timer function_timer;
-
 
   this->session = session;
   checkImage();
@@ -165,17 +166,21 @@ void CVT::send( Session* session ){
 
   // Get our requested region from our TileManager
   TileManager tilemanager( session->tileCache, *session->image, session->watermark, session->jpeg, session->logfile, session->loglevel );
+
+  // Note: if the source image is a TIFF, pulling a region results in libTIFF changing the memory contents of the ICC profile which is one
+  // reason a copy of the ICC profile is created in the Session
   RawTile complete_image = tilemanager.getRegion( requested_res,
 						  session->view->xangle, session->view->yangle,
 						  session->view->getLayers(),
 						  view_left, view_top, view_width, view_height );
 
-
-
-  // Convert CIELAB to sRGB
+  bool appliedColorFilters = false;
+  // Convert CIELAB to sRGB <-- not sure how to reconcile this colorspace conversion when embedded ICC profiles are present.. 
+  // perhaps just disable embedding in cases where CIELAB is in use?
   if( (*session->image)->getColourSpace() == CIELAB ){
     if( session->loglevel >= 5 ) function_timer.start();
     filter_LAB2sRGB( complete_image );
+    appliedColorFilters = true;
     if( session->loglevel >= 5 ){
       *(session->logfile) << "CVT :: Converting from CIELAB->sRGB in "
 			  << function_timer.getTime() << " microseconds" << endl;
@@ -191,6 +196,7 @@ void CVT::send( Session* session ){
     {
       if( session->loglevel >= 5 ) function_timer.start();
       filter_normalize( complete_image, (*session->image)->max, (*session->image)->min );
+      appliedColorFilters = true;
       if( session->loglevel >= 5 ){
 	*(session->logfile) << "CVT :: Converting to floating point and normalizing in "
 			    << function_timer.getTime() << " microseconds" << endl;
@@ -202,6 +208,7 @@ void CVT::send( Session* session ){
     if( session->view->shaded ){
       if( session->loglevel >= 5 ) function_timer.start();
       filter_shade( complete_image, session->view->shade[0], session->view->shade[1] );
+      appliedColorFilters = true;
       if( session->loglevel >= 5 ){
 	*(session->logfile) << "CVT :: Applying hill-shading in " << function_timer.getTime() << " microseconds" << endl;
       }
@@ -212,6 +219,7 @@ void CVT::send( Session* session ){
     if( session->view->ctw.size() ){
       if( session->loglevel >= 5 ) function_timer.start();
       filter_twist( complete_image, session->view->ctw );
+      appliedColorFilters = true;
       if( session->loglevel >= 5 ){
 	*(session->logfile) << "CVT :: Applying color twist in " << function_timer.getTime() << " microseconds" << endl;
       }
@@ -223,6 +231,7 @@ void CVT::send( Session* session ){
       float gamma = session->view->getGamma();
       if( session->loglevel >= 5 ) function_timer.start();
       filter_gamma( complete_image, gamma );
+      appliedColorFilters = true;
       if( session->loglevel >= 5 ){
 	*(session->logfile) << "CVT :: Applying gamma of " << gamma << " in "
 			    << function_timer.getTime() << " microseconds" << endl;
@@ -234,6 +243,7 @@ void CVT::send( Session* session ){
     if( session->view->inverted ){
       if( session->loglevel >= 5 ) function_timer.start();
       filter_inv( complete_image );
+      appliedColorFilters = true;
       if( session->loglevel >= 5 ){
 	*(session->logfile) << "CVT :: Applying inversion in " << function_timer.getTime() << " microseconds" << endl;
       }
@@ -244,6 +254,7 @@ void CVT::send( Session* session ){
     if( session->view->cmapped ){
       if( session->loglevel >= 5 ) function_timer.start();
       filter_cmap( complete_image, session->view->cmap );
+      appliedColorFilters = true;
       if( session->loglevel >= 5 ){
 	*(session->logfile) << "CVT :: Applying color map in " << function_timer.getTime() << " microseconds" << endl;
       }
@@ -254,6 +265,7 @@ void CVT::send( Session* session ){
     {
       if( session->loglevel >= 5 ) function_timer.start();
       filter_contrast( complete_image, session->view->getContrast() );
+      appliedColorFilters = true;
       if( session->loglevel >= 5 ){
 	*(session->logfile) << "CVT :: Applying contrast of " << session->view->getContrast()
 			    << " and converting to 8bit in " << function_timer.getTime() << " microseconds" << endl;
@@ -296,6 +308,7 @@ void CVT::send( Session* session ){
     if( session->loglevel >= 5 ) function_timer.start();
 
     filter_flatten( complete_image, output_channels );
+    appliedColorFilters = true;
 
     if( session->loglevel >= 5 ){
       *(session->logfile) << "CVT :: Flattening to " << output_channels << " channel"
@@ -304,14 +317,13 @@ void CVT::send( Session* session ){
     }
   }
 
-
-
   // Convert to greyscale if requested
   if( (*session->image)->getColourSpace() == sRGB && session->view->colourspace == GREYSCALE ){
 
     if( session->loglevel >= 5 ) function_timer.start();
 
     filter_greyscale( complete_image );
+    appliedColorFilters = true;
 
     if( session->loglevel >= 5 ){
       *(session->logfile) << "CVT :: Converting to greyscale in "
@@ -355,10 +367,35 @@ void CVT::send( Session* session ){
     }
   }
 
+  unsigned long iccLen=0;
+  unsigned char *iccBuf=NULL;
 
+  // fetch ICC profile from the original image if one exists and if we are retaining ICC profiles
+  // and haven't applied any color manipulation filters
+  if ( session->retain_source_icc_profile == 1 ) {
 
-  // Initialise our JPEG compression object and embed a system-wide ICC color profile if one is specified in config
-  session->jpeg->InitCompression( complete_image, resampled_height, session->iccProfile, session->iccProfileSize );
+    if ( !appliedColorFilters ) {
+        // attempt to save the color profile to the session if it's not already set
+      if ( session->icc_profile_buf == NULL ) 
+        (*session->image)->getICCProfile( &(session->icc_profile_len), &(session->icc_profile_buf) );
+      
+      // apply the color profile to the JPEG
+      if ( session->icc_profile_buf != NULL ) {
+        iccLen = session->icc_profile_len;
+        iccBuf = session->icc_profile_buf;
+      }
+
+      if( session->loglevel >= 2 ) 
+        (*session->logfile) << "CVT :: ICC Profile Length (bytes): " << iccLen << endl;
+    }
+    else {
+      if( session->loglevel >= 2 ) 
+        (*session->logfile) << "CVT :: Did NOT retain original embedded Color Profile since color filters were applied: " << endl;
+    }
+  }
+
+  // Initialise our JPEG compression object and embed the ICC color profile of the original image if one exists
+  session->jpeg->InitCompression( complete_image, resampled_height, iccLen, iccBuf );
 
   // Add XMP metadata if this exists
   if( (*session->image)->getMetadata("xmp").size() > 0 ){
@@ -427,9 +464,11 @@ void CVT::send( Session* session ){
 #endif
 
     // Send this strip out to the client
-    if( len != session->out->putStr( (const char*) output, len ) ){
+    int wLen = session->out->putStr( (const char*) output, len );
+    if( len != wLen ) {
       if( session->loglevel >= 1 ){
 	*(session->logfile) << "CVT :: Error writing jpeg strip data: " << len << endl;
+        *(session->logfile) << "CVT :: wrote " << wLen << " bytes of jpeg strip data" << endl;
       }
     }
 
@@ -452,7 +491,8 @@ void CVT::send( Session* session ){
 
 #ifdef CHUNKED
   snprintf( str, 1024, "%X\r\n", len );
-  if( session->loglevel >= 4 ) *(session->logfile) << "CVT :: Final Data Chunk : " << str << endl;
+  if( session->loglevel >= 4 ) 
+    *(session->logfile) << "CVT :: Final Data Chunk : " << str << endl;
   session->out->printf( str );
 #endif
 
@@ -481,13 +521,10 @@ void CVT::send( Session* session ){
   // Inform our response object that we have sent something to the client
   session->response->setImageSent();
 
-
-
   // Total CVT response time
   if( session->loglevel >= 2 ){
     *(session->logfile) << "CVT :: Total command time " << command_timer.getTime() << " microseconds" << endl;
   }
-
 
 }
 

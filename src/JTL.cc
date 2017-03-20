@@ -65,6 +65,8 @@ void JTL::send( Session* session, int resolution, int tile ){
 
   TileManager tilemanager( session->tileCache, *session->image, session->watermark, session->jpeg, session->logfile, session->loglevel );
 
+  // set compressiontype to uncompressed basically if there are filters to apply
+  // otherwise set to JPEG - JPEG has the implication of 
   CompressionType ct;
   if( (*session->image)->getNumBitsPerPixel() > 8 || (*session->image)->getColourSpace() == CIELAB
       || (*session->image)->getNumChannels() == 2 || (*session->image)->getNumChannels() > 3
@@ -74,10 +76,28 @@ void JTL::send( Session* session, int resolution, int tile ){
       || session->view->ctw.size() ) ct = UNCOMPRESSED;
   else ct = JPEG;
 
+  // fetch ICC profile from the original image if one exists and if we are retaining ICC profiles
+  // and haven't applied any color manipulation filters
+  unsigned long iccLen=0;
+  unsigned char *iccBuf=NULL;
+  if ( session->retain_source_icc_profile == 1 ) {
+    if ( session->icc_profile_buf == NULL )
+      (*session->image)->getICCProfile( &(session->icc_profile_len), &(session->icc_profile_buf) );
 
+    // apply the color profile to the JPEG
+    if ( session->icc_profile_buf != NULL ) {
+      iccLen = session->icc_profile_len;
+      iccBuf = session->icc_profile_buf;
+    }
+  }
+
+
+  // if compression type is uncompressed, no ICC will be applied to the uncompressed raw tile
+  // and the code block at the end of this function might apply ICC but only if no color operations
+  // were performed - otherwise, a cached JPEG with ICC already applied might be created here and
+  // we want the ICC profile embedded in that JPEG
   RawTile rawtile = tilemanager.getTile( resolution, tile, session->view->xangle,
-					 session->view->yangle, session->view->getLayers(), ct );
-
+					 session->view->yangle, session->view->getLayers(), ct, iccLen, iccBuf );
 
   int len = rawtile.dataLength;
 
@@ -89,6 +109,8 @@ void JTL::send( Session* session, int resolution, int tile ){
   }
 
 
+  bool appliedColorFilters = false;
+
   // Convert CIELAB to sRGB
   if( (*session->image)->getColourSpace() == CIELAB ){
 
@@ -97,6 +119,7 @@ void JTL::send( Session* session, int resolution, int tile ){
       function_timer.start();
     }
     filter_LAB2sRGB( rawtile );
+    appliedColorFilters = true;
     if( session->loglevel >= 4 ){
       *(session->logfile) << " in " << function_timer.getTime() << " microseconds" << endl;
     }
@@ -112,6 +135,7 @@ void JTL::send( Session* session, int resolution, int tile ){
       function_timer.start();
     }
     filter_normalize( rawtile, (*session->image)->max, (*session->image)->min );
+    appliedColorFilters = true;
     if( session->loglevel >= 4 ){
       *(session->logfile) << " in " << function_timer.getTime() << " microseconds" << endl;
     }
@@ -124,6 +148,7 @@ void JTL::send( Session* session, int resolution, int tile ){
 	function_timer.start();
       }
       filter_shade( rawtile, session->view->shade[0], session->view->shade[1] );
+      appliedColorFilters = true;
       if( session->loglevel >= 4 ){
 	*(session->logfile) << " in " << function_timer.getTime() << " microseconds" << endl;
       }
@@ -137,6 +162,7 @@ void JTL::send( Session* session, int resolution, int tile ){
 	function_timer.start();
       }
       filter_twist( rawtile, session->view->ctw );
+      appliedColorFilters = true;
       if( session->loglevel >= 4 ){
 	*(session->logfile) << " in " << function_timer.getTime() << " microseconds" << endl;
       }
@@ -151,6 +177,7 @@ void JTL::send( Session* session, int resolution, int tile ){
 	function_timer.start();
       }
       filter_gamma( rawtile, gamma);
+      appliedColorFilters = true;
       if( session->loglevel >= 4 ){
 	*(session->logfile) << " in " << function_timer.getTime() << " microseconds" << endl;
       }
@@ -164,6 +191,7 @@ void JTL::send( Session* session, int resolution, int tile ){
 	function_timer.start();
       }
       filter_inv( rawtile );
+      appliedColorFilters = true;
       if( session->loglevel >= 4 ){
 	*(session->logfile) << " in " << function_timer.getTime() << " microseconds" << endl;
       }
@@ -177,6 +205,7 @@ void JTL::send( Session* session, int resolution, int tile ){
 	function_timer.start();
       }
       filter_cmap( rawtile, session->view->cmap );
+      appliedColorFilters = true;
       if( session->loglevel >= 4 ){
 	*(session->logfile) << " in " << function_timer.getTime() << " microseconds" << endl;
       }
@@ -190,6 +219,7 @@ void JTL::send( Session* session, int resolution, int tile ){
       function_timer.start();
     }
     filter_contrast( rawtile, contrast );
+    appliedColorFilters = true;
     if( session->loglevel >= 4 ){
       *(session->logfile) << " in " << function_timer.getTime() << " microseconds" << endl;
     }
@@ -205,6 +235,7 @@ void JTL::send( Session* session, int resolution, int tile ){
       function_timer.start();
     }
     filter_flatten( rawtile, bands );
+    appliedColorFilters = true;
     if( session->loglevel >= 4 ){
       *(session->logfile) << " in " << function_timer.getTime() << " microseconds" << endl;
     }
@@ -218,6 +249,7 @@ void JTL::send( Session* session, int resolution, int tile ){
       function_timer.start();
     }
     filter_greyscale( rawtile );
+    appliedColorFilters = true;
     if( session->loglevel >= 4 ){
       *(session->logfile) << " in " << function_timer.getTime() << " microseconds" << endl;
     }
@@ -258,15 +290,21 @@ void JTL::send( Session* session, int resolution, int tile ){
 
   // Compress to JPEG
   if( rawtile.compressionType == UNCOMPRESSED ){
-    if( session->loglevel >= 4 ){
-      *(session->logfile) << "JTL :: Compressing UNCOMPRESSED to JPEG";
+    if( session->loglevel >= 4 )
       function_timer.start();
+    // if we applied color filters, then we DONT re-apply the embedded ICC color profile
+    if ( appliedColorFilters ) {
+      len = session->jpeg->Compress( rawtile, 0, NULL );
+      if ( session->loglevel >= 2 )
+        *(session->logfile) << "JTL :: did NOT attempt to apply ICC profile since color filters were applied" << endl;
     }
-    len = session->jpeg->Compress( rawtile );
+    else {
+      len = session->jpeg->Compress( rawtile, iccLen, iccBuf );
+      if ( session->loglevel >= 2 )
+        *(session->logfile) << "JTL :: attempted to apply ICC profile of " << iccLen << " bytes when creating JPEG" << endl;
+    }
     if( session->loglevel >= 4 ){
-      *(session->logfile) << " in " << function_timer.getTime() << " microseconds to "
-                          << rawtile.dataLength << " bytes" << endl;
-
+      *(session->logfile) << "JTL :: Compressing UNCOMPRESSED to JPEG in " << function_timer.getTime() << " microseconds to " << rawtile.dataLength << " bytes" << endl;
     }
   }
 

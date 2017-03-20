@@ -219,12 +219,30 @@ void KakaduImage::loadImageInfo( int seq, int ang ) throw(file_error)
 #endif
   }
 
+  // if the ICC color profile hasn't already been set for this image, try to read it
+  if ( icc_profile_buf == NULL ) {
+    int proflen=0;
+    unsigned char *buf=NULL;
+
+    // Kakadu's method for fetching the ICC color profile
+    buf = const_cast<unsigned char*>(j2k_colour.get_icc_profile(&proflen));
+
+    // make a copy of the icc profile since changing TIFF directory frees the original memory
+    if ( proflen > 0 ) {
+      icc_profile_buf = new unsigned char[proflen];
+      memcpy(&icc_profile_buf[0], buf, proflen);
+      icc_profile_len = proflen;
+    }
+  }
 
   // Set our colour space - we let Kakadu automatically handle CIELAB->sRGB conversion for the time being
-  if( channels == 1 ) colourspace = GREYSCALE;
+  if( channels == 1 ) 
+    colourspace = GREYSCALE;
   else{
     jp2_colour_space cs = j2k_colour.get_space();
-    if( cs == JP2_sRGB_SPACE || cs == JP2_iccRGB_SPACE || cs == JP2_esRGB_SPACE || cs == JP2_CIELab_SPACE ) colourspace = sRGB;
+    // Granted this doesn't take much processing time, but it seems color space will be set to sRGB in all cases
+    if( cs == JP2_sRGB_SPACE || cs == JP2_iccRGB_SPACE || cs == JP2_esRGB_SPACE || cs == JP2_CIELab_SPACE ) 
+      colourspace = sRGB;
     //else if ( cs == JP2_CIELab_SPACE ) colourspace = CIELAB;
     else {
 #ifdef DEBUG

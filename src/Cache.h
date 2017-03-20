@@ -32,8 +32,6 @@
 #define snprintf _snprintf
 #endif
 
-
-
 // Test for available map types. Try to use an efficient hashed map type if possible
 // and define this as HASHMAP, which we can then use elsewhere.
 #if defined(HAVE_UNORDERED_MAP)
@@ -48,6 +46,7 @@
 #elif defined(HAVE_EXT_HASH_MAP)
 #include <ext/hash_map>
 #define HASHMAP __gnu_cxx::hash_map
+
 
 /* Explicit template specialization of hash of a string class,
    which just uses the internal char* representation as a wrapper.
@@ -78,13 +77,22 @@ namespace __gnu_cxx {
 #endif
 
 
-
 #include <iostream>
 #include <list>
 #include <string>
 #include "RawTile.h"
+#include "Timer.h"
+#include "IIPImage.h"
 
+#ifdef HAVE_MEMCACHED
+#ifdef WIN32
+#include "../windows/MemcachedWindows.h"
+#else
+#include "Memcached.h"
+#endif
+#endif
 
+using namespace std;
 
 /// Cache to store raw tile data
 
@@ -92,6 +100,7 @@ class Cache {
 
 
  private:
+
 
   /// Basic object storage size
   int tileSize;
@@ -101,6 +110,11 @@ class Cache {
 
   /// Current memory running total
   unsigned long currentSize;
+
+#ifdef HAVE_MEMCACHED
+  /// Memcache rather than per-process cache
+  Memcache* memcached;
+#endif
 
   /// Main cache storage typedef
 #ifdef HAVE_EXT_POOL_ALLOCATOR
@@ -168,19 +182,29 @@ class Cache {
     this->_remove( miter );
   }
 
-
-
- public:
-
-  /// Constructor
-  /** @param max Maximum cache size in MB */
-  Cache( float max ) {
+  void initCache(float max) {
     maxSize = (unsigned long)(max*1024000) ; currentSize = 0;
     // 64 chars added at the end represents an average string length
     tileSize = sizeof( RawTile ) + sizeof( std::pair<const std::string,RawTile> ) +
       sizeof( std::pair<const std::string, List_Iter> ) + sizeof(char)*64 + sizeof(List_Iter);
+  }
+
+ public:
+
+
+  /// Constructor
+  /** @param max Maximum cache size in MB */
+  Cache( float max ) {
+    initCache(max);
   };
 
+#ifdef HAVE_MEMCACHED
+  /// Constructor accepting memcache - used in cases when MAX CACHE is set to 0 (default)
+  Cache( float max, Memcache* memcache ) {
+    initCache(max);
+    memcached = memcache;
+  };
+#endif
 
   /// Destructor
   ~Cache() {
@@ -191,12 +215,41 @@ class Cache {
 
   /// Insert a tile
   /** @param r Tile to be inserted */
-  void insert( const RawTile& r ) {
+  void insert( const RawTile &r ) {
 
-    if( maxSize == 0 ) return;
+    // generate key into the cache regardless of the cache we're using
+    std::string key = this->getKey( r.filename, r.resolution, r.tileNum,
+                                    r.hSequence, r.vSequence, r.compressionType, r.quality );
 
-    std::string key = this->getIndex( r.filename, r.resolution, r.tileNum,
-				      r.hSequence, r.vSequence, r.compressionType, r.quality );
+#ifdef HAVE_MEMCACHED
+    if ( maxSize <= 0 && ( memcached == NULL || !memcached->connected() ) )
+      return;
+
+    if ( maxSize <= 0 ) {
+      // USE MEMCACHE SINCE MEMORY CACHE SIZE = 0
+      if ( memcached->connected() ) {
+        // Timer memcached_timer;
+        // memcached_timer.start();
+
+        unsigned char *buffer;
+        unsigned long bufferlength;
+        buffer = ((RawTile) r).serialize(bufferlength);
+        if (buffer != NULL && bufferlength > 0)
+          memcached->storeblob( key, buffer, bufferlength );
+
+        // free the memory associated with the serialized representation
+        if (buffer != NULL)
+          free(buffer);
+
+        // logfile << "TileCache :: stored " << bufferlength << " bytes in key:" << key << endl;
+      }
+    }
+
+#endif
+
+    // USE IN MEMORY CACHE
+    if ( maxSize <= 0)
+      return;
 
     // Touch the key, if it exists
     TileMap::iterator miter = this->_touch( key );
@@ -256,9 +309,39 @@ class Cache {
    */
   RawTile* getTile( std::string f, int r, int t, int h, int v, CompressionType c, int q ) {
 
-    if( maxSize == 0 ) return NULL;
+    std::string key = this->getKey( f, r, t, h, v, c, q );
 
-    std::string key = this->getIndex( f, r, t, h, v, c, q );
+#ifdef HAVE_MEMCACHED
+    if ( maxSize <= 0 && ( memcached == NULL || !memcached->connected() ) )
+      return NULL;
+
+    if ( maxSize <= 0 ) {
+      // Check whether this exists in memcached
+      unsigned char *buffer = NULL;
+      unsigned long bufflen = 0;
+      if (  buffer = memcached->retrieveblob( key, bufflen ) ) {
+        if ( bufflen > 0 ) {
+          // cache hit
+          // logfile << "TileCache :: MemCache hit for key:"<< key << endl;
+
+          // create a new empty tile object and attempt to deserialize into it
+          RawTile *newTile = new RawTile();
+          if ( !newTile->deserialize(buffer, bufflen) ) {
+              logfile << "ERROR: TileCache :: !!! UNSUCCESSFUL MemCache deserialization of " << bufflen << " bytes for key:"<< key << endl;
+              delete newTile;
+              newTile = NULL;
+          }
+          free(buffer);
+          return newTile;
+        }
+      }
+    }
+
+#endif
+
+    // CHECK IN MEMORY CACHE
+    if ( maxSize == 0)
+      return NULL;
 
     TileMap::iterator miter = tileMap.find( key );
     if( miter == tileMap.end() ) return NULL;
@@ -268,7 +351,7 @@ class Cache {
   }
 
 
-  /// Create a hash index
+  /// Create a hash key for the structure of the RawTile
   /** 
    *  @param f filename
    *  @param r resolution number
@@ -279,16 +362,22 @@ class Cache {
    *  @param q compression quality
    *  @return string
    */
-  std::string getIndex( std::string f, int r, int t, int h, int v, CompressionType c, int q ) {
+  std::string getKey( std::string f, int r, int t, int h, int v, CompressionType c, int q ) {
     char tmp[1024];
     snprintf( tmp, 1024, "%s:%d:%d:%d:%d:%d:%d", f.c_str(), r, t, h, v, c, q );
     return std::string( tmp );
   }
 
-
+  /// Cleanup memory in case we're using memcache rather than in memory cache
+  void cleanup(RawTile **rawtile) {
+#ifdef HAVE_MEMCACHED
+    if ( maxSize <= 0 && memcached != NULL && memcached->connected() ) {
+      delete *rawtile;
+      *rawtile = NULL;
+    }
+#endif
+  }
 
 };
-
-
 
 #endif
