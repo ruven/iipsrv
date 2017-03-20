@@ -1,3 +1,10 @@
+20/03/2017:
+        - Added support for Native IIIF URL handling
+        - Modified IIC Color profile handling to read the original ICC from the source
+          and use that to embed in the JPEGs (rather than a system-wide profile)
+        - Support for memcached's use in Tile Caching and more control over caching in
+          general
+
 12/02/2017:
         - Added option to specify a path to an ICC color profile that is then embedded
           in all tiles generated via CVT

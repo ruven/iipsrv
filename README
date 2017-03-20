@@ -148,7 +148,7 @@ LOGFILE: the server will log its output to the file specified, if it can.
 VERBOSITY: 0 means no logging, 1 is minimal logging, 2 lots of debugging stuff,
 3 even more debugging stuff and 10 a very large amount indeed ;-)
 
-MAX_IMAGES_IN_METADATA_CACHEE: Maximum number of image metadata records to cache
+MAX_IMAGES_IN_METADATA_CACHE: Maximum number of image metadata records to cache
 in memory.  This improves performance by avoiding the opening and reading of 
 metdata from image sources with each request.  Defaults to 1000.
 
