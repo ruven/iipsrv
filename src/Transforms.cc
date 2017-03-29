@@ -517,8 +517,8 @@ void filter_interpolate_bilinear( RawTile& in, unsigned int resampled_width, uns
   unsigned char *output = new unsigned char[resampled_width*resampled_height*in.channels];
 
   // Calculate our scale
-  float xscale = (float)(width-1) / (float)resampled_width;
-  float yscale = (float)(height-1) / (float)resampled_height;
+  float xscale = (float)(width) / (float)resampled_width;
+  float yscale = (float)(height) / (float)resampled_height;
 
 
   // Do not parallelize for small images (256x256 pixels) as this can be slower that single threaded

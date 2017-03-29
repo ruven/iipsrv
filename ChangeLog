@@ -1,3 +1,7 @@
+29/03/2017:
+	- Fixed scaling factor for bilinear interpolation in Transforms.cc
+
+
 02/03/2017:
 	- Added extra conditions to JTL uncompressed tile request and slightly
 	  refactored code to fix bug when greyscale conversion requested
