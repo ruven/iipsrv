@@ -1,3 +1,7 @@
+05/04/2017:
+	- Fixed crash in KakaduImage.cc when zero sized images are requested
+
+
 29/03/2017:
 	- Fixed scaling factor for bilinear interpolation in Transforms.cc
 
