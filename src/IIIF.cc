@@ -470,9 +470,18 @@ void IIIF::run( Session* session, const string& src )
       if ( pos != string::npos ){
         format = quality.substr( pos + 1, string::npos );
         quality.erase( pos, string::npos );
-        if ( format != "jpg" ){
+#ifdef HAVE_PNG
+        if ( format != "jpg" && format != "png" ) {
+          throw invalid_argument( "IIIF :: Only JPEG and PNG output supported" );
+#else
+        if ( format != "jpg" ) {
           throw invalid_argument( "IIIF :: Only JPEG output supported" );
+#endif
         }
+#ifdef HAVE_PNG
+        if ( format == "png" )
+            session->outputcompressor=session->png;
+#endif
       }
 
       // Quality

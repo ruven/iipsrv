@@ -172,8 +172,12 @@ void CVT::run( Session* session, const string& src ){
 
   // For the moment, only deal with JPEG. If we have specified something else, give a warning
   // and send JPEG anyway
-  if( argument != "jpeg" ){
-    if( session->loglevel >= 1 ) *(session->logfile) << "CVT :: Unsupported request: '" << argument << "'. Sending JPEG." << endl;
+#ifdef HAVE_PNG
+  if( argument != "jpeg" && argument != "png" ) {
+#else
+  if( argument != "jpeg" ) {
+#endif
+    if( session->loglevel >= 1 ) *(session->logfile) << "CVT :: Unsupported output format request: '" << argument << "'. Sending JPEG." << endl;
   }
   else{
     if( session->loglevel >= 3 ) *(session->logfile) << "CVT :: JPEG output" << endl;

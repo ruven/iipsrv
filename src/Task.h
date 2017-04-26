@@ -64,6 +64,7 @@ typedef HASHMAP <std::string,IIPImage> imageCacheMapType;
 /// Structure to hold our session data
 struct Session {
   IIPImage **image;
+  Compressor* outputcompressor;
   JPEGCompressor* jpeg;
 #ifdef HAVE_PNG
   PNGCompressor* png;

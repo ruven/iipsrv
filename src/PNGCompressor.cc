@@ -139,13 +139,6 @@ void PNGCompressor::InitCompression( const RawTile& rawtile, unsigned int strip_
        the best implementation so we should probably change that
  */
 unsigned int PNGCompressor::CompressStrip( unsigned char* inputbuff, unsigned char* outputbuff, unsigned long outputbufflen, unsigned int tile_height ) throw (std::string)
-
-// the reason this isn't working is because we need to return the actual output back to the caller every time - this means
-// compress strip needs to either take the output from PNG or return it all at the end
-
-  // assumption here is that there can be multiple writes made to the PNG via our write method
-  // and that method will continue to grow the buffer as necessary in order to 
-
 {
 
   Timer partoffunction;
@@ -155,59 +148,23 @@ unsigned int PNGCompressor::CompressStrip( unsigned char* inputbuff, unsigned ch
   png_uint_32     ulRowBytes = width * channels;
   png_byte        **ppbRowPointers = NULL;
 
-  // dest.size = 0;  //rewind output buffer - DPB - nope, we shouldn't do this
-
   if( (ppbRowPointers = (png_bytepp) malloc(tile_height * sizeof(png_bytep))) == NULL ){
     throw "PNGCompressor:: Out of memory";
   }
 
-/*
-  for( int i = 0; i < tile_height; i++ ){
-    ppbRowPointers[i] = (png_byte*)(inputbuff + i *ulRowBytes);
-  }
-
-  // Write out the entire image data in one call
-  png_write_rows (dest.png_ptr, ppbRowPointers, tile_height);
-
-  free (ppbRowPointers);
-  ppbRowPointers = NULL;
-
-  logfile << "PNGCOMPRESSOR::CompressStrip Total strip compression time " << entirefunction.getTime() << " microseconds" << endl;
-
-  return dest.size;
-*/
-
-
-  // temporarily override the png write method in order to run in parallel
-  // each output call should be passed a structure that has an order - if this is possible - perhaps it is
-  // DPB
+  // ensure that the output buffer is set properly
   setOutputBuffer(outputbuff, outputbufflen);
 
-// multi-threaded doesn't work here because it jams everything into same structure out of order
-// but we might be able to assign a new output method temporarily 
-//  #if defined(__ICC) || defined(__INTEL_COMPILER)
-//  #pragma ivdep
-//  #elif defined(_OPENMP)
-//  #pragma omp parallel for
-//  #endif
   for( int i = 0; i < tile_height; i++ ) {
-    png_write_row( dest.png_ptr, (png_byte*) &inputbuff[i*ulRowBytes] ); // &row_pointers[y], 1);
+    png_write_row( dest.png_ptr, (png_byte*) &inputbuff[i*ulRowBytes] ); 
   }
-
-  //  ppbRowPointers[i] = (png_byte*)(inputbuff + i *ulRowBytes);
-
-  // logfile << "PNGCOMPRESSOR::CompressStrip Total strip compression time " << entirefunction.getTime() << " microseconds" << endl;
 
   return dest.size;
 }
 
-
-
-// o is output buffer and not currently used
 unsigned int PNGCompressor::Finish(unsigned char *o, unsigned long olen) throw (std::string) {
 
   setOutputBuffer(o, olen);
-  // dest.size = 0;
   
   // Write any additional chunks to the PNG file 
   png_write_end(dest.png_ptr,  dest.info_ptr);
