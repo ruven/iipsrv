@@ -46,7 +46,7 @@ using namespace std;
 /// Base class for IIP output images
 
 class Compressor {
-	
+
     public:
 
         virtual ~Compressor() {};
@@ -98,6 +98,13 @@ class Compressor {
         /// Add metadata to the image header
         /** @param m metadata */
         virtual string getMimeType() {};
+
+        /// Set the compression quality
+        /** @param factor Quality factor (0-100) */
+        virtual void setQuality( int factor ) { };
+
+        /// Get the current quality level
+        virtual int getQuality() { return 0; }
 
 };
 

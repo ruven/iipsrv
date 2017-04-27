@@ -489,7 +489,7 @@ int main( int argc, char *argv[] )
 #endif
       // default the compressor to jpeg - if png is requested in a IIIF request, compressor will be set there
       // prior to generating the output - otherwise, all operations such as JTL should continue to work
-      session.outputcompressor = &jpeg;
+      session.outputCompressor = &jpeg;
       session.loglevel = loglevel;
       session.logfile = &logfile;
       session.imageCache = &imageCache;

@@ -87,7 +87,7 @@ public:
     channels = 0;
 
     this->compressionLevel = compressionLevel;
-    this->filterType = filterType;
+    setQuality(filterType);
   };
 
 
@@ -146,6 +146,20 @@ public:
     dest.size = 0;
     dest.mx = 0;
   };
+
+  int getQuality( ) OVERRIDE {
+    return filterType;
+  }
+
+  void setQuality( int quality ) OVERRIDE {
+    filterType = quality;
+    if ( quality != PNG_FILTER_SUB   && 
+         quality != PNG_FILTER_UP    && 
+         quality != PNG_FILTER_AVG   && 
+         quality != PNG_FILTER_PAETH && 
+         quality != PNG_ALL_FILTERS )
+      filterType = PNG_FILTER_NONE;
+  }
 
 
 };

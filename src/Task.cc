@@ -81,18 +81,38 @@ void Task::checkImage(){
 void QLT::run( Session* session, const string& argument ){
 
   if( argument.length() ){
+    int factor;
 
-    int factor = atoi( argument.c_str() );
+    // we would need a PTL command in order to support this
+    if ( session->outputCompressor == session->png ) {
+      factor = Environment::PNGFilterTypeToInt(argument.c_str() );
 
-    // Check the value is realistic
-    if( factor < 0 || factor > 100 ){
-      if( session->loglevel >= 2 ){
-	*(session->logfile) << "QLT :: JPEG Quality factor of " << argument
-			    << " out of bounds. Must be 0-100" << endl;
+      // Check the value is realistic
+      int unrecognizedValue = NO_FILTER_DEFINED;
+      if( factor == unrecognizedValue ) {
+        if( session->loglevel >= 2 ){
+	  *(session->logfile) << "QLT :: PNG Image Quality factor of " << argument
+			    << " unrecognized. Consult the IIP Server documentation for a list of permitted values." << endl;
+        }
       }
     }
 
-    session->jpeg->setQuality( factor );
+    // JPEG is default
+    else {
+
+      factor = atoi( argument.c_str() );
+
+      // Check the value is realistic
+      if( factor < 0 || factor > 100 ){
+        if( session->loglevel >= 2 ){
+	  *(session->logfile) << "QLT :: Image Quality factor of " << argument
+			    << " out of bounds. Must be 0-100" << endl;
+        }
+      }
+    }
+
+    session->outputCompressor->setQuality( factor );
+
   }
 
 }

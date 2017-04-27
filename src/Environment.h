@@ -42,6 +42,7 @@
 #define BASE_URL "";
 #define CACHE_CONTROL "max-age=86400"; // 24 hours
 #define ALLOW_UPSCALING true
+#define NO_FILTER_DEFINED -999;
 
 
 #include <string>
@@ -284,28 +285,36 @@ class Environment {
    #define PNG_ALL_FILTERS (PNG_FILTER_NONE | PNG_FILTER_SUB | PNG_FILTER_UP | \
                             PNG_FILTER_AVG | PNG_FILTER_PAETH)
   ****************************************/
-  static int getPNGFilterType(){
-    int png_ftype = PNG_NO_FILTERS;
-    char *envval = getenv( "PNG_FILTER_TYPE" );
-    if ( envval != NULL ) {
-      string envpara = string(envval);
-      if ( envpara.compare("PNG_FILTER_NONE") )
+  static int PNGFilterTypeToInt( const char *filterType ) {
+    int png_ftype = NO_FILTER_DEFINED;
+    if ( filterType != NULL ) {
+      string filter = string(filterType);
+      if ( filter.compare("PNG_FILTER_NONE") )
         png_ftype = PNG_FILTER_NONE;
-      else if ( envpara.compare("PNG_FILTER_SUB") )
+      else if ( filter.compare("PNG_FILTER_SUB") )
         png_ftype = PNG_FILTER_SUB;
-      else if ( envpara.compare("PNG_FILTER_UP") )
+      else if ( filter.compare("PNG_FILTER_UP") )
         png_ftype = PNG_FILTER_UP;
-      else if ( envpara.compare("PNG_FILTER_AVG") )
+      else if ( filter.compare("PNG_FILTER_AVG") )
         png_ftype = PNG_FILTER_AVG;
-      else if ( envpara.compare("PNG_FILTER_PAETH") )
+      else if ( filter.compare("PNG_FILTER_PAETH") )
         png_ftype = PNG_FILTER_PAETH;
-      else if ( envpara.compare("PNG_ALL_FILTERS") )
+      else if ( filter.compare("PNG_ALL_FILTERS") )
         png_ftype = PNG_ALL_FILTERS;
     }
     return png_ftype;
   }
 
-#endif
+  static int getPNGFilterType() {
+    int filterType = PNGFilterTypeToInt( getenv( "PNG_FILTER_TYPE" ) );
+    int checkType = NO_FILTER_DEFINED;
+    if ( filterType == checkType ) {
+        filterType = PNG_NO_FILTERS;
+    }
+    return 0;
+  }
+
+#endif // HAVE_PNG
 
 };
 

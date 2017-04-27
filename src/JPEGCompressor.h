@@ -39,6 +39,10 @@ extern "C"{
 #include <jpeglib.h>
 }
 
+// it has been suggested on the technical IIIF slack channel that we might want to evaluate
+// alternative JPEG library implementations, particularly mozjpeg since there has been 
+// some work has been done in that library to reduce JPEG artifacting without significant
+// performance penalties - @beaudet
 
 
 /// Expanded data destination object for buffered output used by IJG JPEG library
@@ -96,17 +100,6 @@ class JPEGCompressor : public Compressor {
     setQuality(quality);
   };
 
-  /// Set the compression quality
-  /** @param factor Quality factor (0-100) */
-  void setQuality( int factor ) {
-    if( factor < 0 ) Q = 0;
-    else if( factor > 100 ) Q = 100;
-    else Q = factor;
-  };
-
-  /// Get the current quality level
-  int getQuality() { return Q; }
-
   /*********************************************
   overriding virtual methods in Compressor class
   *********************************************/
@@ -157,6 +150,16 @@ class JPEGCompressor : public Compressor {
   /// Return mime type for this compressor
   string getMimeType() OVERRIDE { 
     return "image/jpeg"; 
+  }
+
+  void setQuality( int factor ) OVERRIDE {
+    if( factor < 0 ) Q = 0;
+    else if( factor > 100 ) Q = 100;
+    else Q = factor;
+  }
+
+  int getQuality( ) OVERRIDE {
+    return Q;
   }
 
 

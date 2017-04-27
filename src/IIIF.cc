@@ -480,7 +480,7 @@ void IIIF::run( Session* session, const string& src )
         }
 #ifdef HAVE_PNG
         if ( format == "png" )
-            session->outputcompressor=session->png;
+            session->outputCompressor=session->png;
 #endif
       }
 
@@ -492,6 +492,12 @@ void IIIF::run( Session* session, const string& src )
         session->view->colourspace = GREYSCALE;
       }
       else{
+        // IIIF image spec 2.1 says the image server SHOULD return a 400 error but if we want to support JPG and PNG
+        // lossy quality we might consider enabling a syntax that allows clients to fine tune the quality
+        // by manipulating the URL as the QLT factor of the IIP Protocol currently allows, e.g. default.90.jpg for JPEG 
+        // or default.PNG_FILTER_AVG.png for PNG, etc.  In consulting with the IIIF spec authors, this has been discussed
+        // but there were insufficient use cases to justify the spec taking it up right now.
+        // see https://github.com/IIIF/iiif.io/issues/294 for the history - @beaudet
         throw invalid_argument( "unsupported quality parameter - must be one of native, color or grey" );
       }
 
