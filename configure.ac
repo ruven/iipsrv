@@ -322,7 +322,7 @@ AC_CHECK_HEADERS( png.h,
 		PNG=false )
 )
 
-# Disable PNG for now
+# uncomment if PNG needs to be explicitly disabled
 # PNG=false
 
 if test "x${PNG}" = xtrue; then
