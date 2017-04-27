@@ -1,6 +1,6 @@
 /*  PNG class wrapper to libpng library
 
-    Copyright (C) 2012-2013 Ruven Pillay.
+    Copyright (C) 2012-2013 Ruven Pillay with extensions by Dave Beaudet
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
