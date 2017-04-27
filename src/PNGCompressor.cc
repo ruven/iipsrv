@@ -41,7 +41,7 @@ static void png_write_data(png_structp png_ptr, png_bytep payload, png_size_t le
     dest->data=(unsigned char*)realloc(dest->data, dest->mx); 
   }
   if (!memcpy(&(dest->data[dest->size]), payload, length))
-    throw std::string( "png_write_data: error writing to buffer.");
+    throw string( "png_write_data: error writing to buffer.");
   dest->size += length;
 
 }
@@ -56,11 +56,11 @@ png_cexcept_error(png_structp png_ptr, png_const_charp msg)
 #ifndef PNG_NO_CONSOLE_IO
 #endif
    {
-     throw std::string(msg);
+     throw string(msg);
    }
 }
 
-void PNGCompressor::InitCompression( const RawTile& rawtile, unsigned int strip_height ) throw (std::string)
+void PNGCompressor::InitCompression( const RawTile& rawtile, unsigned int strip_height ) throw (string)
 {
 
   ofstream ofs;
@@ -80,7 +80,7 @@ void PNGCompressor::InitCompression( const RawTile& rawtile, unsigned int strip_
 
   // Make sure we only try to compress images with 1 or 3 channels with ir without alpha
   if( ! ( (channels==1) || (channels==2) || (channels==3) || (channels==4))  ){
-    throw std::string( "PNGCompressor:: currently only either 1 or 3 channels are supported with or without alpha values." );
+    throw string( "PNGCompressor:: currently only either 1 or 3 channels are supported with or without alpha values." );
   }
 
   const int ciBitDepth = 8;
@@ -89,12 +89,12 @@ void PNGCompressor::InitCompression( const RawTile& rawtile, unsigned int strip_
                                           (png_error_ptr)png_cexcept_error, (png_error_ptr)NULL );
 
 
-  if (!dest.png_ptr) throw std::string( "PNGCompressor:: Error allocacating png_structp." );
+  if (!dest.png_ptr) throw string( "PNGCompressor:: Error allocacating png_structp." );
 
   dest.info_ptr = png_create_info_struct(dest.png_ptr);
   if (! dest.info_ptr) {
     png_destroy_write_struct(&dest.png_ptr, (png_infopp) NULL);
-    throw std::string( "PNGCompressor:: Error creating png_infop." );
+    throw string( "PNGCompressor:: Error creating png_infop." );
   }
 
   /*********************************************************
@@ -110,7 +110,7 @@ void PNGCompressor::InitCompression( const RawTile& rawtile, unsigned int strip_
    I choose no filter here because I'm defaulting to no compression
    but it probably makes sense to provide a tunable configuration for this
   *******************************************************************/
-  png_set_filter(dest.png_ptr, NULL, filterType );
+  png_set_filter(dest.png_ptr, 0, filterType );
 
   png_set_write_fn( dest.png_ptr, (png_voidp) &dest, png_write_data, png_flush );
 
@@ -138,7 +138,7 @@ void PNGCompressor::InitCompression( const RawTile& rawtile, unsigned int strip_
    o = output buffer - not used - just here for compliance with Compressor class which isn't 
        the best implementation so we should probably change that
  */
-unsigned int PNGCompressor::CompressStrip( unsigned char* inputbuff, unsigned char* outputbuff, unsigned long outputbufflen, unsigned int tile_height ) throw (std::string)
+unsigned int PNGCompressor::CompressStrip( unsigned char* inputbuff, unsigned char* outputbuff, unsigned long outputbufflen, unsigned int tile_height ) throw (string)
 {
 
   Timer partoffunction;
@@ -155,14 +155,14 @@ unsigned int PNGCompressor::CompressStrip( unsigned char* inputbuff, unsigned ch
   // ensure that the output buffer is set properly
   setOutputBuffer(outputbuff, outputbufflen);
 
-  for( int i = 0; i < tile_height; i++ ) {
+  for( unsigned int i = 0; i < tile_height; i++ ) {
     png_write_row( dest.png_ptr, (png_byte*) &inputbuff[i*ulRowBytes] ); 
   }
 
   return dest.size;
 }
 
-unsigned int PNGCompressor::Finish(unsigned char *o, unsigned long olen) throw (std::string) {
+unsigned int PNGCompressor::Finish(unsigned char *o, unsigned long olen) throw (string) {
 
   setOutputBuffer(o, olen);
   
@@ -176,7 +176,7 @@ unsigned int PNGCompressor::Finish(unsigned char *o, unsigned long olen) throw (
 }
 
 
-int PNGCompressor::Compress( RawTile& rawtile ) throw (std::string) {
+int PNGCompressor::Compress( RawTile& rawtile ) throw (string) {
 
   logfile << "PNGCompressor::Compress - !!!!!!!! NOT IMPLEMENTED - IIP DOESN'T !!!!!!" << endl;
 
@@ -204,18 +204,18 @@ int PNGCompressor::Compress( RawTile& rawtile ) throw (std::string) {
 
   // Make sure we only try to compress images with 1 or 3 channels
   if( ! ( (channels==1) || (channels==2) || (channels==3) || (channels==4))  ){
-    throw std::string( "PNGCompressor:: currently only either 1 or 3 channels are supported with or without alpha values." );
+    throw string( "PNGCompressor:: currently only either 1 or 3 channels are supported with or without alpha values." );
   }
 
   dest.png_ptr = png_create_write_struct(PNG_LIBPNG_VER_STRING, NULL,
                                          (png_error_ptr)png_cexcept_error, (png_error_ptr)NULL);
 
-  if( !dest.png_ptr ) throw std::string( "PNGCompressor:: Error allocacating png_structp" );
+  if( !dest.png_ptr ) throw string( "PNGCompressor:: Error allocacating png_structp" );
 
   dest.info_ptr = png_create_info_struct(dest.png_ptr);
   if (! dest.info_ptr) {
     png_destroy_write_struct(&(dest.png_ptr), (png_infopp) NULL);
-    throw std::string( "PNGCompressor:: Error creating png_infop" );
+    throw string( "PNGCompressor:: Error creating png_infop" );
   }
 
   dest.size = 0;
@@ -296,6 +296,7 @@ int PNGCompressor::Compress( RawTile& rawtile ) throw (std::string) {
   // Return the size of the data we have compressed
   return rawtile.dataLength;
 */
+  return 0;
 }
 
 void PNGCompressor::addXMPMetadata( const string& xmp_metadata ){
@@ -322,7 +323,7 @@ void PNGCompressor::addXMPMetadata( const string& xmp_metadata ){
      Text:                0 or more bytes
   ************************************************************/
 
-  std:string xmp_keyword = "XML:com.adobe.xmp";
+  string xmp_keyword = "XML:com.adobe.xmp";
 
   int chunksize = xmp_keyword.size() + 5 + xmp_metadata.size() + 1;
   png_byte chunk[chunksize];

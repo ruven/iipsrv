@@ -139,7 +139,7 @@ public:
   };
 
   /// Dump any header data
-  void deleteHeader() OVERRIDE { 
+  void finishHeader() OVERRIDE { 
     if ( dest.data != NULL )
       delete[] dest.data;
     dest.data = NULL;

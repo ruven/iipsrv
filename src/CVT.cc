@@ -390,6 +390,8 @@ void CVT::send( Session* session ){
     }
   }
 
+  // release the header pointer which is a no-op with JPG but important for PNG
+  session->outputCompressor->finishHeader();
 
   // Send out the data per strip of fixed height.
   // Allocate enough memory for this plus an extra 64k for instances where compressed
@@ -398,10 +400,6 @@ void CVT::send( Session* session ){
   unsigned int channels = complete_image.channels;
   unsigned int strip_size = resampled_width*channels*strip_height+65636;
   unsigned char* output = new unsigned char[strip_size];
-
-  // release the header pointer which is a no-op with JPG but important for PNG
-  session->outputCompressor->deleteHeader();
-
 
   // there is an opportunity to go parallel with this but it would require a different approach
   // in the Compressor classes - might be worth pursuing at some point - @beaudet

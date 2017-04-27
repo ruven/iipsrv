@@ -61,8 +61,8 @@ class Compressor {
         /// Return a pointer to the image header itself
         virtual unsigned char* getHeader() { return NULL; }; 
 
-        /// Clear the header data
-        virtual void deleteHeader() { }; 
+        /// Release the header data
+        virtual void finishHeader() { }; 
 
         /// Initialise strip based compression
         /** If we are doing a strip based encoding, we need to first initialise
@@ -79,29 +79,29 @@ class Compressor {
             @param olen output buffer length
             @param tile_height pixel height of the tile we are compressing
         */
-        virtual unsigned int CompressStrip( unsigned char* s, unsigned char* o, unsigned long olen, unsigned int tile_height ) throw (string) {};
+        virtual unsigned int CompressStrip( unsigned char* s, unsigned char* o, unsigned long olen, unsigned int tile_height ) throw (string) { return 0; }
 
         /// Finish the strip based compression and free memory
         /** @param output output buffer
             @return size of output generated
         */
-        virtual unsigned int Finish( unsigned char* output, unsigned long outputlen ) throw (string) {};
+        virtual unsigned int Finish( unsigned char* output, unsigned long outputlen ) throw (string) { return 0; }
 
         /// Compress an entire buffer of image data at once in one command
         /** @param t tile of image data */
-        virtual int Compress( RawTile& t ) throw (string) {};
+        virtual int Compress( RawTile& t ) throw (string) { return 0; }
 
         /// Add metadata to the image header
         /** @param m metadata */
-        virtual void addXMPMetadata( const string& m ) {};
+        virtual void addXMPMetadata( const string& m ) { }
 
         /// Add metadata to the image header
         /** @param m metadata */
-        virtual string getMimeType() {};
+        virtual string getMimeType() { return ""; }
 
         /// Set the compression quality
         /** @param factor Quality factor (0-100) */
-        virtual void setQuality( int factor ) { };
+        virtual void setQuality( int factor ) { }
 
         /// Get the current quality level
         virtual int getQuality() { return 0; }
