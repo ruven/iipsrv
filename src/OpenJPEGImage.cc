@@ -167,6 +167,10 @@ void OpenJPEGImage::loadImageInfo(int /*seq*/, int /*ang*/) throw(file_error)
   logfile << "OpenJPEG :: " << max_layers << " quality layers detected" << endl
           << flush;
 #endif
+
+  // ideally, the ICC profile would be read at this point, but it seems necessary to call opj_decode
+  // in order to get the icc profile.  Since we do that in the process() call, we get it there instead
+
   opj_destroy_cstr_info(&cst_info); // We already read everything we needed from info structure
 
   // Check whether image parameters make sense
@@ -557,6 +561,14 @@ void OpenJPEGImage::process(unsigned int res, int layers,
       // Increment write position indicator for each pixel's component we have written to the buffer
       buffer_write_pos += channels;
     }
+  }
+
+  // if the ICC color profile hasn't already been set for this image yet, try to read it from out_image and save it if it exists
+  if ( icc_profile_buf == NULL && out_image->icc_profile_len > 0 ) {
+    // make a copy of the icc profile
+    icc_profile_buf = new unsigned char[out_image->icc_profile_len];
+    memcpy(&icc_profile_buf[0], out_image->icc_profile_buf, out_image->icc_profile_len);
+    icc_profile_len = out_image->icc_profile_len;
   }
 
 #ifdef DEBUG

@@ -106,7 +106,6 @@ class IIPImage {
 
 
  public:
-
   /// The image pixel dimensions
   std::vector <unsigned int> image_widths, image_heights;
 
@@ -146,6 +145,9 @@ class IIPImage {
   /// Image modification timestamp
   time_t timestamp;
 
+  /// ICC Color Profile Data that is copied from the source image once when it is first opened
+  unsigned long icc_profile_len;
+  unsigned char *icc_profile_buf;
 
  public:
 
@@ -165,7 +167,10 @@ class IIPImage {
     isSet( false ),
     currentX( 0 ),
     currentY( 90 ),
-    timestamp( 0 ) {};
+    timestamp( 0 ),
+    icc_profile_len( 0 ),
+    icc_profile_buf( NULL ) { };
+
 
   /// Constructer taking the image path as parameter
   /** @param s image path
@@ -186,7 +191,10 @@ class IIPImage {
     isSet( false ),
     currentX( 0 ),
     currentY( 90 ),
-    timestamp( 0 ) {};
+    timestamp( 0 ),
+    icc_profile_len( 0 ),
+    icc_profile_buf( NULL ) { };
+
 
   /// Copy Constructor taking reference to another IIPImage object
   /** @param im IIPImage object
@@ -218,10 +226,24 @@ class IIPImage {
     currentX( image.currentX ),
     currentY( image.currentY ),
     metadata( image.metadata ),
-    timestamp( image.timestamp ) {};
+    timestamp( image.timestamp ) {
+      // create a copy of the ICC profile for the new image
+      icc_profile_buf = NULL;
+      icc_profile_len = 0;
+      if ( image.icc_profile_buf != NULL ) {
+        icc_profile_buf = new unsigned char[image.icc_profile_len];
+        memcpy(&icc_profile_buf[0], image.icc_profile_buf, image.icc_profile_len);
+        icc_profile_len = image.icc_profile_len;
+      }
+    };
 
   /// Virtual Destructor
-  virtual ~IIPImage() { ; };
+  virtual ~IIPImage() 
+  { 
+    if ( icc_profile_buf != NULL ) {
+      free( icc_profile_buf );
+    }
+  };
 
   /// Test the image and initialise some parameters
   void Initialise();
@@ -377,6 +399,18 @@ class IIPImage {
 
   /// Comparison non-equality operator
   friend int operator != ( const IIPImage&, const IIPImage& );
+
+  /// Return ICC Color Profile data
+  /** Return void
+      @param icc_len address of variable to hold length in bytes
+      @param icc_buf address of variable to hold start to profile data
+  */
+  virtual void getICCProfile(unsigned long *icc_len, unsigned char **icc_buf)
+  {
+    *icc_len = icc_profile_len;
+    *icc_buf = icc_profile_buf;
+  };
+
 
 };
 
