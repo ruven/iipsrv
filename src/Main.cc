@@ -243,6 +243,14 @@ int main( int argc, char *argv[] )
   // Get our default quality variable
   int jpeg_quality = Environment::getJPEGQuality();
 
+/*
+  // Future possibility: Get a system wide ICC profile to embed in JPEG tils if one is specified
+  long system_icc_profile_size = 0;
+  unsigned char *system_icc_profile = Environment::getICCProfile(&icc_profile_size);
+*/
+
+  // Find out whether we should read source image ICC profiles and embed in JPEG tiles
+  unsigned int retain_source_icc_profile = Environment::getRetainSourceICCProfile();
 
   // Get our max CVT size
   int max_CVT = Environment::getMaxCVT();
@@ -298,6 +306,10 @@ int main( int argc, char *argv[] )
     logfile << "Setting up JPEG2000 support via OpenJPEG" << endl;
 #endif
     logfile << "Setting Allow Upscaling to " << (allow_upscaling? "true" : "false") << endl;
+
+//  if ( system_icc_profile_size > 0)
+//    logfile << "Size of ICC profile to embed in all CVT tiles:" << icc_profile_size << endl;
+
   }
 
 
@@ -480,6 +492,14 @@ int main( int argc, char *argv[] )
       session.out = &writer;
       session.watermark = &watermark;
       session.headers.clear();
+      session.retain_source_icc_profile = retain_source_icc_profile;
+      session.icc_profile_buf = NULL;
+      session.icc_profile_len = 0;
+
+      //  if we decide to accept a system wide color profile and convert to it, we can store that 
+      //  profile in the session...
+      //  session.system_icc_profile_len = ...
+      //  session.system_icc_profile_buf = ...
 
       char* header = NULL;
 

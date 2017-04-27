@@ -73,6 +73,8 @@ void IIPImage::swap( IIPImage& first, IIPImage& second ) // nothrow
   std::swap( first.timestamp, second.timestamp );
   std::swap( first.min, second.min );
   std::swap( first.max, second.max );
+  std::swap( first.icc_profile_len, second.icc_profile_len );
+  std::swap( first.icc_profile_buf, second.icc_profile_buf );
 }
 
 

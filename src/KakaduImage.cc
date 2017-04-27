@@ -219,6 +219,21 @@ void KakaduImage::loadImageInfo( int seq, int ang ) throw(file_error)
 #endif
   }
 
+  // if the ICC color profile hasn't already been set for this image, try to read it
+  if ( icc_profile_buf == NULL ) {
+    int proflen=0;
+    unsigned char *buf=NULL;
+
+    // Kakadu's method for fetching the ICC color profile
+    buf = const_cast<unsigned char*>(j2k_colour.get_icc_profile(&proflen));
+
+    // make a copy of the icc profile since changing TIFF directory frees the original memory
+    if ( proflen > 0 ) {
+      icc_profile_buf = new unsigned char[proflen];
+      memcpy(&icc_profile_buf[0], buf, proflen);
+      icc_profile_len = proflen;
+    }
+  }
 
   // Set our colour space - we let Kakadu automatically handle CIELAB->sRGB conversion for the time being
   if( channels == 1 ) colourspace = GREYSCALE;
