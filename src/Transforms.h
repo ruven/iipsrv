@@ -89,6 +89,12 @@ void filter_interpolate_nearestneighbour( RawTile& in, unsigned int w, unsigned 
 */
 void filter_interpolate_bilinear( RawTile& in, unsigned int w, unsigned int h );
 
+/// Resize image using Lanczos filter
+/** @param in tile input data
+    @param w target width
+    @param h target height
+*/
+void filter_interpolate_lanczos( RawTile& in, int w, int h );
 
 /// Rotate image - currently only by 90, 180 or 270 degrees, other values will do nothing
 /** @param in tile input data
