@@ -280,12 +280,12 @@ void JTL::send( Session* session, int resolution, int tile ){
   snprintf( str, 1024,
 	    "Server: iipsrv/%s\r\n"
 	    "X-Powered-By: IIPImage\r\n"
-	    "Content-Type: image/jpeg\r\n"
+	    "Content-Type: %s\r\n"
             "Content-Length: %d\r\n"
 	    "Last-Modified: %s\r\n"
 	    "%s\r\n"
 	    "\r\n",
-	    VERSION, len,(*session->image)->getTimestamp().c_str(), session->response->getCacheControl().c_str() );
+	    VERSION, session->jpeg->getMimeType().c_str(),len,(*session->image)->getTimestamp().c_str(), session->response->getCacheControl().c_str() );
 
   session->out->printf( str );
 #endif

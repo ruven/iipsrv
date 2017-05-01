@@ -26,9 +26,9 @@
 
 #include <fstream>
 
+#include "JPEGCompressor.h"
 #include "RawTile.h"
 #include "IIPImage.h"
-#include "JPEGCompressor.h"
 #include "Cache.h"
 #include "Timer.h"
 #include "Watermark.h"
@@ -52,7 +52,7 @@ class TileManager{
 
   /// Get a new tile from the image file
   /**
-   *  If the JPEG tile already exists in the cache, use that, otherwise check for
+   *  If the image tile already exists in the cache, use that, otherwise check for
    *  an uncompressed tile. If that does not exist either, extract a tile from the
    *  image. If this is an edge tile, crop it.
    *  @param resolution resolution number
@@ -97,7 +97,7 @@ class TileManager{
 
   /// Get a tile from the cache
   /**
-   *  If the JPEG tile already exists in the cache, use that, otherwise check for
+   *  If the image tile already exists in the cache, use that, otherwise check for
    *  an uncompressed tile. If that does not exist either, extract a tile from the
    *  image. If this is an edge tile, crop it.
    *  @param resolution resolution number

@@ -151,13 +151,13 @@ void CVT::send( Session* session ){
 	    "X-Powered-By: IIPImage\r\n"
 	    "%s\r\n"
 	    "Last-Modified: %s\r\n"
-	    "Content-Type: image/jpeg\r\n"
+	    "Content-Type: %s\r\n"
 	    "Content-Disposition: inline;filename=\"%s.jpg\"\r\n"
 #ifdef CHUNKED
 	    "Transfer-Encoding: chunked\r\n"
 #endif
 	    "\r\n",
-	    VERSION, session->response->getCacheControl().c_str(), (*session->image)->getTimestamp().c_str(), basename.c_str() );
+	    VERSION, session->response->getCacheControl().c_str(), (*session->image)->getTimestamp().c_str(), session->outputCompressor->getMimeType().c_str(), basename.c_str() );
 
   session->out->printf( (const char*) str );
 #endif
@@ -355,28 +355,27 @@ void CVT::send( Session* session ){
     }
   }
 
+  // Initialise our output compression object - this should set the header of the image as well which is
+  // immediately pushed to the client
+  session->outputCompressor->InitCompression( complete_image, resampled_height );
 
-
-  // Initialise our JPEG compression object
-  session->jpeg->InitCompression( complete_image, resampled_height );
-
-  // Add XMP metadata if this exists
+  // Add any XMP metadata to the image there is any in the original 
   if( (*session->image)->getMetadata("xmp").size() > 0 ){
     if( session->loglevel >= 4 ) *(session->logfile) << "CVT :: Adding XMP metadata" << endl;
-    session->jpeg->addMetadata( (*session->image)->getMetadata("xmp") );
+    session->outputCompressor->addXMPMetadata( (*session->image)->getMetadata("xmp") );
   }
 
-  len = session->jpeg->getHeaderSize();
+  len = session->outputCompressor->getHeaderSize();
 
 #ifdef CHUNKED
   snprintf( str, 1024, "%X\r\n", len );
-  if( session->loglevel >= 4 ) *(session->logfile) << "CVT :: JPEG Header Chunk : " << str;
+  if( session->loglevel >= 4 ) *(session->logfile) << "CVT :: Image Header Chunk : " << str;
   session->out->printf( str );
 #endif
 
-  if( session->out->putStr( (const char*) session->jpeg->getHeader(), len ) != len ){
+  if( session->out->putStr( (const char*) session->outputCompressor->getHeader(), len ) != len ){
     if( session->loglevel >= 1 ){
-      *(session->logfile) << "CVT :: Error writing jpeg header" << endl;
+      *(session->logfile) << "CVT :: Error writing output image header" << endl;
     }
   }
 
@@ -387,19 +386,24 @@ void CVT::send( Session* session ){
   // Flush our block of data
   if( session->out->flush() == -1 ) {
     if( session->loglevel >= 1 ){
-      *(session->logfile) << "CVT :: Error flushing jpeg data" << endl;
+      *(session->logfile) << "CVT :: Error flushing output image data" << endl;
     }
   }
 
+  // release the header pointer which is a no-op with JPG but important for PNG
+  session->outputCompressor->finishHeader();
 
   // Send out the data per strip of fixed height.
   // Allocate enough memory for this plus an extra 64k for instances where compressed
-  // data is greater than uncompressed
+  // data is greater than uncompressed - for PNG, we need to supply the output pointer
   unsigned int strip_height = 128;
   unsigned int channels = complete_image.channels;
-  unsigned char* output = new unsigned char[resampled_width*channels*strip_height+65636];
-  int strips = (resampled_height/strip_height) + (resampled_height%strip_height == 0 ? 0 : 1);
+  unsigned int strip_size = resampled_width*channels*strip_height+65636;
+  unsigned char* output = new unsigned char[strip_size];
 
+  // there is an opportunity to go parallel with this but it would require a different approach
+  // in the Compressor classes - might be worth pursuing at some point - @beaudet
+  int strips = (resampled_height/strip_height) + (resampled_height%strip_height == 0 ? 0 : 1);
   for( int n=0; n<strips; n++ ){
 
     // Get the starting index for this strip of data
@@ -409,11 +413,11 @@ void CVT::send( Session* session ){
     if( (n==strips-1) && (resampled_height%strip_height!=0) ) strip_height = resampled_height % strip_height;
 
     if( session->loglevel >= 3 ){
-      *(session->logfile) << "CVT :: About to JPEG compress strip with height " << strip_height << endl;
+      *(session->logfile) << "CVT :: About to compress strip with height " << strip_height << endl;
     }
 
     // Compress the strip
-    len = session->jpeg->CompressStrip( input, output, strip_height );
+    len = session->outputCompressor->CompressStrip( input, output, strip_size, strip_height );
 
     if( session->loglevel >= 3 ){
       *(session->logfile) << "CVT :: Compressed data strip length is " << len << endl;
@@ -429,7 +433,7 @@ void CVT::send( Session* session ){
     // Send this strip out to the client
     if( len != session->out->putStr( (const char*) output, len ) ){
       if( session->loglevel >= 1 ){
-	*(session->logfile) << "CVT :: Error writing jpeg strip data: " << len << endl;
+	*(session->logfile) << "CVT :: Error writing output image strip data: " << len << endl;
       }
     }
 
@@ -441,14 +445,14 @@ void CVT::send( Session* session ){
     // Flush our block of data
     if( session->out->flush() == -1 ) {
       if( session->loglevel >= 1 ){
-	*(session->logfile) << "CVT :: Error flushing jpeg data" << endl;
+	*(session->logfile) << "CVT :: Error flushing output image data" << endl;
       }
     }
 
   }
 
   // Finish off the image compression
-  len = session->jpeg->Finish( output );
+  len = session->outputCompressor->Finish( output, strip_size );
 
 #ifdef CHUNKED
   snprintf( str, 1024, "%X\r\n", len );
@@ -458,7 +462,7 @@ void CVT::send( Session* session ){
 
   if( session->out->putStr( (const char*) output, len ) != len ){
     if( session->loglevel >= 1 ){
-      *(session->logfile) << "CVT :: Error writing jpeg EOI markers" << endl;
+      *(session->logfile) << "CVT :: Error writing output image EOI markers" << endl;
     }
   }
 
@@ -474,7 +478,7 @@ void CVT::send( Session* session ){
 
   if( session->out->flush()  == -1 ) {
     if( session->loglevel >= 1 ){
-      *(session->logfile) << "CVT :: Error flushing jpeg tile" << endl;
+      *(session->logfile) << "CVT :: Error flushing output image tile" << endl;
     }
   }
 

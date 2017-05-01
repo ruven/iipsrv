@@ -33,7 +33,9 @@
 #include <map>
 
 #include "TPTImage.h"
+#include "Compressor.h"
 #include "JPEGCompressor.h"
+#include "PNGCompressor.h"
 #include "Tokenizer.h"
 #include "IIPResponse.h"
 #include "View.h"
@@ -276,6 +278,13 @@ int main( int argc, char *argv[] )
   // Get the allow upscaling setting
   bool allow_upscaling = Environment::getAllowUpscaling();
 
+#ifdef HAVE_PNG
+  // Get PNG Compression Level
+  int png_compression_level = Environment::getPNGCompressionLevel();
+
+  // Get PNG Filter Type
+  int png_filter_type = Environment::getPNGFilterType();
+#endif
 
   // Print out some information
   if( loglevel >= 1 ){
@@ -449,7 +458,9 @@ int main( int argc, char *argv[] )
     //  so that we can close the image on exceptions
     IIPImage *image = NULL;
     JPEGCompressor jpeg( jpeg_quality );
-
+#ifdef HAVE_PNG
+    PNGCompressor png( png_compression_level, png_filter_type ); // PNG provides lossless compression
+#endif
 
     // View object for use with the CVT command etc
     View view;
@@ -473,6 +484,12 @@ int main( int argc, char *argv[] )
       session.response = &response;
       session.view = &view;
       session.jpeg = &jpeg;
+#ifdef HAVE_PNG
+      session.png = &png;
+#endif
+      // default the compressor to jpeg - if png is requested in a IIIF request, compressor will be set there
+      // prior to generating the output - otherwise, all operations such as JTL should continue to work
+      session.outputCompressor = &jpeg;
       session.loglevel = loglevel;
       session.logfile = &logfile;
       session.imageCache = &imageCache;
@@ -577,6 +594,7 @@ int main( int argc, char *argv[] )
 	task = Task::factory( command );
 	if( task ) task->run( &session, argument );
 
+
 	if( !task ){
 	  if( loglevel >= 1 ) logfile << "Unsupported command: " << command << endl;
 	  // Unsupported command error code is 2 2
@@ -589,6 +607,7 @@ int main( int argc, char *argv[] )
 	  delete task;
 	  task = NULL;
 	}
+
 
       }
 
@@ -646,6 +665,7 @@ int main( int argc, char *argv[] )
       //////////////// End of try block ////////////////////
       //////////////////////////////////////////////////////
     }
+
 
     /* Use this for sending various HTTP status codes
      */

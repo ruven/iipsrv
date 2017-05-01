@@ -81,18 +81,38 @@ void Task::checkImage(){
 void QLT::run( Session* session, const string& argument ){
 
   if( argument.length() ){
+    int factor;
 
-    int factor = atoi( argument.c_str() );
+    // we would need a PTL command in order to support this
+    if ( session->outputCompressor == session->png ) {
+      factor = Environment::PNGFilterTypeToInt(argument.c_str() );
 
-    // Check the value is realistic
-    if( factor < 0 || factor > 100 ){
-      if( session->loglevel >= 2 ){
-	*(session->logfile) << "QLT :: JPEG Quality factor of " << argument
-			    << " out of bounds. Must be 0-100" << endl;
+      // Check the value is realistic
+      int unrecognizedValue = NO_FILTER_DEFINED;
+      if( factor == unrecognizedValue ) {
+        if( session->loglevel >= 2 ){
+	  *(session->logfile) << "QLT :: PNG Image Quality factor of " << argument
+			    << " unrecognized. Consult the IIP Server documentation for a list of permitted values." << endl;
+        }
       }
     }
 
-    session->jpeg->setQuality( factor );
+    // JPEG is default
+    else {
+
+      factor = atoi( argument.c_str() );
+
+      // Check the value is realistic
+      if( factor < 0 || factor > 100 ){
+        if( session->loglevel >= 2 ){
+	  *(session->logfile) << "QLT :: Image Quality factor of " << argument
+			    << " out of bounds. Must be 0-100" << endl;
+        }
+      }
+    }
+
+    session->outputCompressor->setQuality( factor );
+
   }
 
 }
@@ -172,8 +192,12 @@ void CVT::run( Session* session, const string& src ){
 
   // For the moment, only deal with JPEG. If we have specified something else, give a warning
   // and send JPEG anyway
-  if( argument != "jpeg" ){
-    if( session->loglevel >= 1 ) *(session->logfile) << "CVT :: Unsupported request: '" << argument << "'. Sending JPEG." << endl;
+#ifdef HAVE_PNG
+  if( argument != "jpeg" && argument != "png" ) {
+#else
+  if( argument != "jpeg" ) {
+#endif
+    if( session->loglevel >= 1 ) *(session->logfile) << "CVT :: Unsupported output format request: '" << argument << "'. Sending JPEG." << endl;
   }
   else{
     if( session->loglevel >= 3 ) *(session->logfile) << "CVT :: JPEG output" << endl;

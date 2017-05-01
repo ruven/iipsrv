@@ -245,7 +245,7 @@ RawTile TileManager::getTile( int resolution, int tile, int xangle, int yangle, 
     // Rawtile is a pointer to the cache data, so we need to create a copy of it in case we compress it
     RawTile ttt( *rawtile );
 
-    // Do our JPEG compression iff we have an 8 bit per channel image and either 1 or 3 bands
+    // Do our JPEG compression if we have an 8 bit per channel image and either 1 or 3 bands
     if( rawtile->bpc==8 && (rawtile->channels==1 || rawtile->channels==3) ){
 
       // Crop if this is an edge tile
