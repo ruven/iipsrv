@@ -38,7 +38,6 @@
 #ifdef HAVE_PNG
 #include "PNGCompressor.h"
 #endif
-#include "Environment.h"
 
 
 // Define our http header cache max age (24 hours)
@@ -65,7 +64,6 @@ typedef HASHMAP <std::string,IIPImage> imageCacheMapType;
 /// Structure to hold our session data
 struct Session {
   IIPImage **image;
-  Compressor* outputCompressor;
   JPEGCompressor* jpeg;
 #ifdef HAVE_PNG
   PNGCompressor* png;

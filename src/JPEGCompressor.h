@@ -27,9 +27,6 @@
 #include <cstdio>
 #include <string>
 #include "RawTile.h"
-#include "Compressor.h"
-
-using namespace std;
 
 
 extern "C"{
@@ -39,10 +36,6 @@ extern "C"{
 #include <jpeglib.h>
 }
 
-// it has been suggested on the technical IIIF slack channel that we might want to evaluate
-// alternative JPEG library implementations, particularly mozjpeg since there has been 
-// some work has been done in that library to reduce JPEG artifacting without significant
-// performance penalties - @beaudet
 
 
 /// Expanded data destination object for buffered output used by IJG JPEG library
@@ -64,7 +57,7 @@ typedef iip_destination_mgr * iip_dest_ptr;
 
 /// Wrapper class to the IJG JPEG library
 
-class JPEGCompressor : public Compressor {
+class JPEGCompressor{
 	
  private:
 
@@ -94,15 +87,21 @@ class JPEGCompressor : public Compressor {
 
   /// Constructor
   /** @param quality JPEG Quality factor (0-100) */
-  JPEGCompressor( int quality ) : Compressor( ) {
-    data = NULL;
-    header_size = 0;
-    setQuality(quality);
+   JPEGCompressor( int quality ) { Q = quality; dest = NULL; };
+
+
+  /// Set the compression quality
+  /** @param factor Quality factor (0-100) */
+  void setQuality( int factor ) {
+    if( factor < 0 ) Q = 0;
+    else if( factor > 100 ) Q = 100;
+    else Q = factor;
   };
 
-  /*********************************************
-  overriding virtual methods in Compressor class
-  *********************************************/
+
+  /// Get the current quality level
+  int getQuality() { return Q; }
+
 
   /// Initialise strip based compression
   /** If we are doing a strip based encoding, we need to first initialise
@@ -110,57 +109,39 @@ class JPEGCompressor : public Compressor {
       CompressStrip and finally clean up using Finish
       @param rawtile tile containing the image to be compressed
       @param strip_height pixel height of the strip we want to compress
+      @return header size
    */
-  void InitCompression( const RawTile& rawtile, unsigned int strip_height ) throw (string) OVERRIDE;
+  void InitCompression( const RawTile& rawtile, unsigned int strip_height ) throw (std::string);
 
   /// Compress a strip of image data
   /** @param s source image data
       @param o output buffer
       @param tile_height pixel height of the tile we are compressing
    */
-  unsigned int CompressStrip( unsigned char* s, unsigned char* o, unsigned long olen, unsigned int tile_height ) throw (string) OVERRIDE;
+  unsigned int CompressStrip( unsigned char* s, unsigned char* o, unsigned int tile_height ) throw (std::string);
 
   /// Finish the strip based compression and free memory
   /** @param output output buffer
       @return size of output generated
    */
-  unsigned int Finish( unsigned char* output, unsigned long outputlen ) throw (string) OVERRIDE;
+  unsigned int Finish( unsigned char* output ) throw (std::string);
 
 
   /// Compress an entire buffer of image data at once in one command
   /** @param t tile of image data */
-  int Compress( RawTile& t ) throw (string) OVERRIDE;
+  int Compress( RawTile& t ) throw (std::string);
 
 
   /// Add metadata to the JPEG header
   /** @param m metadata */
-  void addXMPMetadata( const string& m ) OVERRIDE;
+  void addMetadata( const std::string& m );
 
 
   /// Return the JPEG header size
-  inline unsigned int getHeaderSize()  OVERRIDE { 
-    return header_size; 
-  }
+  unsigned int getHeaderSize() { return header_size; }
 
   /// Return a pointer to the header itself
-  inline unsigned char* getHeader() OVERRIDE { 
-    return header; 
-  }
-
-  /// Return mime type for this compressor
-  string getMimeType() OVERRIDE { 
-    return "image/jpeg"; 
-  }
-
-  void setQuality( int factor ) OVERRIDE {
-    if( factor < 0 ) Q = 0;
-    else if( factor > 100 ) Q = 100;
-    else Q = factor;
-  }
-
-  int getQuality( ) OVERRIDE {
-    return Q;
-  }
+  inline unsigned char* getHeader() { return header; }
 
 
 };
