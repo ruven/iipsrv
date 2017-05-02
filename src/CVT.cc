@@ -263,8 +263,14 @@ void CVT::send( Session* session ){
 
 
 
-  // Resize our image as requested. Use the interpolation method requested in the server configuration.
-  //  - Use bilinear interpolation by default
+  /*********************************************************************************************************
+   Resize our image as requested. Use the interpolation method requested in the server configuration.
+   - Use bilinear interpolation by default
+   - Lanczos approximation produces the best visual results of the three options
+   - it would be relatively straightforward to generalize the lanczos method for use with the other 
+     interpolation functions defined in Filters.h, e.g. Mitchell, etc. although Lanczos produces the 
+     best results of all of the FreeImage options - or more accurately - it does for paintings - @beaudet
+  *********************************************************************************************************/
   if( (view_width!=resampled_width) || (view_height!=resampled_height) ){
 
     string interpolation_type;
@@ -276,6 +282,9 @@ void CVT::send( Session* session ){
       interpolation_type = "nearest neighbour";
       filter_interpolate_nearestneighbour( complete_image, resampled_width, resampled_height );
       break;
+     case 2:
+      interpolation_type = "Lanczos approximation";
+      filter_interpolate_lanczos( complete_image, resampled_width, resampled_height );
      default:
       interpolation_type = "bilinear";
       filter_interpolate_bilinear( complete_image, resampled_width, resampled_height );

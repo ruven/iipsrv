@@ -22,6 +22,8 @@
 
 #include <cmath>
 #include "Transforms.h"
+#include "Filters.h"
+#include "Timer.h"
 
 
 // Define something similar to C99 std::isfinite if this does not exist
@@ -854,3 +856,196 @@ void filter_flip( RawTile& rawtile, int orientation ){
   delete[] (unsigned char*) rawtile.data;
   rawtile.data = (void*) buffer;
 }
+
+/***************************************************************************************************************************
+ Adapted from resizing filters of the FreeImage project: http://freeimage.sourceforge.net/
+ Integer approximation and other optimizations by @beaudet
+
+ Resize image using integer implementation of lanczos filter 
+ The algorithms for 24 bit color resizing were copied from the FreeImage project and modified to align with IIP's
+ variable names and image storage format - optimizations using integer math scaled with a multiplier were used to 
+ approximate floating point precision rather than relying on floating point math exclusively. The optimized 
+ approximation still produces excellent image quality at good performance levels and runs many times faster than 
+ the original Lanczos implementation from the FreeImage project
+ Dave Beaudet (github: @beaudet)
+***************************************************************************************************************************/
+void filter_interpolate_lanczos( RawTile& in, int resampled_width, int resampled_height ){
+
+    // Pointer to input buffer
+    byte *input = (byte*) in.data;
+
+    byte bytesPerColor = in.bpc / 8;
+    byte bytesPerPixel = bytesPerColor * in.channels;
+
+    // pitch is the number of bytes in a scan line
+    const int src_pitch = in.width * bytesPerPixel;
+    const int dst_pitch = resampled_width * bytesPerPixel;
+
+    // Create a new buffer for the temporary output that is identical to the height of the input since
+    // we're first going to shrink along the X axis, then secondarily along the Y axis
+    byte *xscaled_output = new byte[in.height * dst_pitch];
+
+    // build our filter and weights table
+    CGenericFilter *filter = new(std::nothrow) CLanczos3Filter();
+
+    // initialize weight caching table
+    CWeightsTable xweightsTable(filter, resampled_width,  in.width);
+
+    // cache all weights across the horizontal sampling line
+    Weight xweights[resampled_width];
+    for ( int x =0; x < resampled_width; x++ ) {
+        int xleft  = CLAMP<int>(xweightsTable.getLeftBoundary(x), 0, in.width-1);
+        int xright = CLAMP<int>(xweightsTable.getRightBoundary(x), 0, in.width-1);
+        int numsamples = xright-xleft+1;
+        xweights[x].newWeights(numsamples);
+        for ( int i=0; i < numsamples; i++ ) {
+            int w = xweightsTable.getIntWeight(x, i);
+            xweights[x].addWeight(xleft + i, w);
+        }
+    }
+
+    CWeightsTable yweightsTable(filter, resampled_height, in.height);
+    // cache all weights across the vertical sampling line for faster access
+    Weight yweights[resampled_height];
+    for ( int y =0; y < resampled_height; y++ ) {
+        int yleft  = CLAMP<int>(yweightsTable.getLeftBoundary(y), 0, in.height-1);
+        int yright = CLAMP<int>(yweightsTable.getRightBoundary(y), 0, in.height-1);
+        int numsamples = yright-yleft+1;
+        yweights[y].newWeights(numsamples);                 
+        for ( int i = 0; i < numsamples; i++ ) {
+            int w = yweightsTable.getIntWeight(y, i);
+            yweights[y].addWeight(yleft + i, w);
+        }
+    }
+
+    /********************************************************************************************************************
+     resampling first operates on the X-axis and then on the Y-axis since we are almost always downsampling with IIP
+     rather than upscaling -- I'm amazed that the algorithm works as well as it does by only sampling images on a line
+     rather than all the pixels surrounding it since it would seem that throws away image data that could be used in the
+     resampling.  It's certainly faster using line sampling rather than area sampling and it still produces very good results.
+     FreeImage claims that the code runs faster by scaling in the X direction first (presumably due to proximity of bytes to
+     each other in RAM)
+
+     The difference that the parallel compiler instructions make cannot be understated - the speed up is roughly linear 
+     with the number of cores. Since we have approximately 4x number of samples here than in bilinear resizing, 
+     we don't even bother checking whether the size of the image is below a parallel threshold - it pretty much always 
+     will make sense to parallelize Lanczos
+    ********************************************************************************************************************/
+    #if defined(__ICC) || defined(__INTEL_COMPILER)
+    #pragma ivdep
+    #elif defined(_OPENMP)
+    #pragma omp parallel for
+    #endif
+    for (int y = 0; y < in.height; y++) {
+
+        // since we are scaling each row we get the start of the current scan line
+        const byte * const src_bits = &input[y*src_pitch];
+        byte *dst_pixel = &xscaled_output[y*dst_pitch];
+
+        for (int x = 0; x < resampled_width; x++) {
+            // loop through the source sample's pixels using the source scanline only
+            const int sample_iLeft = xweights[x].minIdx;
+            const int sample_width = xweights[x].maxIdx - sample_iLeft + 1;       // width of sample in pixels
+
+            const byte *src_pixel = src_bits + ( sample_iLeft * bytesPerPixel );  // byte index of the start of sample
+
+            // accumulate r,g,b values as we move along the sample horizontally
+            int rint = 0, gint = 0, bint = 0;
+
+            for (int i = 0; i < sample_width; i++) {
+                const int intWeight = xweights[x].weights[i];
+                if (intWeight != 0) {
+                    rint += (intWeight * src_pixel[0]);
+                    if ( in.channels > 1 ) {
+                        gint += (intWeight * src_pixel[1]);
+                        bint += (intWeight * src_pixel[2]);
+                    }
+                }
+                src_pixel += bytesPerPixel;
+            }
+
+            // clamp and place result in destination pixel so it stays within 0->255 range of a byte without wrapping
+            // adding 0.5 forces a rounding operation 
+            dst_pixel[0] = (byte) CLAMP<int>( (int) ( rint / INTSCALER ), 0, 0xFF );
+            dst_pixel[0] = (byte) CLAMP<int>( (int) ( rint / INTSCALER ), 0, 0xFF );
+            if ( in.channels > 1 ) {
+                dst_pixel[1] = (byte) CLAMP<int>( (int) ( gint / INTSCALER ), 0, 0xFF );
+                dst_pixel[2] = (byte) CLAMP<int>( (int) ( bint / INTSCALER ), 0, 0xFF );
+            }
+            dst_pixel += bytesPerPixel;
+        }
+    }
+
+    // safe to delete the original input buffer now
+    delete[] (byte*) input;
+
+    // switch the input to the now-x-scaled output from above and resample again along Y axis to get the final image
+    input = xscaled_output;
+
+    // and the pitch of our src is now the same as dst_pitch since we already scaled along X axis but in order to keep our
+    // const declaration valid we just use dst_pitch below even though it might read a little bit funny
+    // essentially the new src_pitch = dst_pitch at this point
+
+    // create the final output buffer
+    byte *output = new byte[resampled_height * dst_pitch];
+
+    // scale the 24-bit transparent image into a 24 bpp destination image
+    const byte *const src_base = &input[0];
+
+    // inject performance enhancing steroids here
+    #if defined(__ICC) || defined(__INTEL_COMPILER)
+    #pragma ivdep
+    #elif defined(_OPENMP)
+    #pragma omp parallel for
+    #endif
+    for (int x = 0; x < resampled_width; x++) {
+
+        // work on column x in destination
+        const int bytesFromLeft = x * bytesPerPixel;   // the number of bytes into the current scanline for both dst and src
+        byte *dst_pixel = output + bytesFromLeft;      // the pixel address in destination that we're going to set
+
+        // loop through each column, scaling it as we go
+        for (int y = 0; y < resampled_height; y++) {
+            const int sample_iLower = yweights[y].minIdx;
+            const int sample_height = yweights[y].maxIdx - sample_iLower + 1;              // width of sample 
+
+            // pixel working with is base byte + this scan line start byte + bytes in from left side
+            const byte *src_pixel = src_base + sample_iLower * dst_pitch + bytesFromLeft;  
+
+            // accumulate r,g,b values as we move along the sample vertically
+            int rint = 0, gint = 0, bint = 0;
+
+            for (int i = 0; i < sample_height; i++) {
+                const int intWeight = yweights[y].weights[i];
+                if (intWeight != 0) {
+                    rint += (intWeight * src_pixel[0]);
+                    if ( in.channels > 1 ) {
+                        gint += (intWeight * src_pixel[1]);
+                        bint += (intWeight * src_pixel[2]);
+                    }
+                }
+                src_pixel += dst_pitch;
+            }
+
+            // clamp and place result in destination pixel so it stays within 0->255 range of a byte without wrapping
+            // adding 0.5 forces a rounding operation
+            dst_pixel[0] = (byte) CLAMP<int>( (int) ( rint /  INTSCALER ), 0, 0xFF );
+            if ( in.channels > 1 ) {
+                dst_pixel[1] = (byte) CLAMP<int>( (int) ( gint /  INTSCALER ), 0, 0xFF );
+                dst_pixel[2] = (byte) CLAMP<int>( (int) ( bint /  INTSCALER ), 0, 0xFF );
+            }
+            dst_pixel += dst_pitch;
+        }
+    }
+
+    // delete the intermediately resized bitmap and the filter that we allocated
+    delete[] (byte*) input;
+    delete filter;
+
+    // set the resulting dimensions and data of the resampled image
+    in.width    = resampled_width;
+    in.height   = resampled_height;
+    in.data     = output;
+    in.dataLength = resampled_height * dst_pitch;
+}
+
