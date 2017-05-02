@@ -24,11 +24,19 @@
 #define _RAWTILE_H
 
 #include <cstring>
+#include <fstream>
 #include <string>
 #include <cstdlib>
 #include <ctime>
 
+// convenience defines
+#define byte unsigned char
+#define uint unsigned int
+#define ulong unsigned long
 
+using namespace std;
+
+extern ofstream logfile;
 
 /// Colour spaces - GREYSCALE, sRGB and CIELAB
 enum ColourSpaces { NONE, GREYSCALE, sRGB, CIELAB };
@@ -118,6 +126,99 @@ class RawTile{
     timestamp = 0; sampleType = FIXEDPOINT; padded = false;
   };
 
+  byte* serialize(unsigned long &bufferlength) {
+    bufferlength =    sizeof(bool)
+                    + sizeof(int)*9
+                    + sizeof(unsigned int)*2
+                    + sizeof(time_t)
+                    + sizeof(SampleType)
+                    + sizeof(CompressionType)
+                    + dataLength
+                    + filename.size();
+
+    // allocate our buffer space
+    byte* buff = new byte[bufferlength];
+
+    long i = 0;
+    memcpy(&buff[i], &padded,            sizeof(bool));              i+=sizeof(bool);
+    memcpy(&buff[i], &tileNum,           sizeof(int));               i+=sizeof(int);
+    memcpy(&buff[i], &resolution,        sizeof(int));               i+=sizeof(int);
+    memcpy(&buff[i], &hSequence,         sizeof(int));               i+=sizeof(int);
+    memcpy(&buff[i], &vSequence,         sizeof(int));               i+=sizeof(int);
+    memcpy(&buff[i], &quality,           sizeof(int));               i+=sizeof(int);
+    memcpy(&buff[i], &memoryManaged,     sizeof(int));               i+=sizeof(int);
+    memcpy(&buff[i], &channels,          sizeof(int));               i+=sizeof(int);
+    memcpy(&buff[i], &bpc,               sizeof(int));               i+=sizeof(int);
+    memcpy(&buff[i], &width,             sizeof(unsigned int));      i+=sizeof(unsigned int);
+    memcpy(&buff[i], &height,            sizeof(unsigned int));      i+=sizeof(unsigned int);
+    memcpy(&buff[i], &timestamp,         sizeof(time_t));            i+=sizeof(time_t);
+    memcpy(&buff[i], &sampleType,        sizeof(SampleType));        i+=sizeof(SampleType);
+    memcpy(&buff[i], &compressionType,   sizeof(CompressionType));   i+=sizeof(CompressionType);
+    memcpy(&buff[i], &dataLength,        sizeof(int));               i+=sizeof(int);
+    memcpy(&buff[i], data,               dataLength);                i+=dataLength;
+    memcpy(&buff[i], filename.c_str(),   filename.size());           i+=filename.size();
+
+    // return the serialized structure to the caller
+    if ( i == bufferlength ) {
+      return buff;
+    }
+
+    // else Houston, we have a problem
+    logfile << "ERROR: Could not serialize!!!" << endl;
+    bufferlength = 0;
+    if ( buff != NULL )
+      delete[] buff;
+    return NULL;
+  }
+
+  bool deserialize(byte *buff, unsigned long bufferlength) {
+    long i = 0;
+    memcpy(&padded,          &buff[i], sizeof(bool));              i+=sizeof(bool);
+    memcpy(&tileNum,         &buff[i], sizeof(int));               i+=sizeof(int);
+    memcpy(&resolution,      &buff[i], sizeof(int));               i+=sizeof(int);
+    memcpy(&hSequence,       &buff[i], sizeof(int));               i+=sizeof(int);
+    memcpy(&vSequence,       &buff[i], sizeof(int));               i+=sizeof(int);
+    memcpy(&quality,         &buff[i], sizeof(int));               i+=sizeof(int);
+    memcpy(&memoryManaged,   &buff[i], sizeof(int));               i+=sizeof(int);
+    memcpy(&channels,        &buff[i], sizeof(int));               i+=sizeof(int);
+    memcpy(&bpc,             &buff[i], sizeof(int));               i+=sizeof(int);
+    memcpy(&width,           &buff[i], sizeof(unsigned int));      i+=sizeof(unsigned int);
+    memcpy(&height,          &buff[i], sizeof(unsigned int));      i+=sizeof(unsigned int);
+    memcpy(&timestamp,       &buff[i], sizeof(time_t));            i+=sizeof(time_t);
+    memcpy(&sampleType,      &buff[i], sizeof(SampleType));        i+=sizeof(SampleType);
+    memcpy(&compressionType, &buff[i], sizeof(CompressionType));   i+=sizeof(CompressionType);
+    memcpy(&dataLength,      &buff[i], sizeof(int));               i+=sizeof(int);
+
+    // get the tile data
+    if (dataLength > 0) {
+        data = new byte[dataLength];
+        memcpy(data,         &buff[i], dataLength);                i+=dataLength;
+        memoryManaged = 1;
+    }
+    else {
+        data = NULL;
+    }
+
+    // get the filename
+    long flen = bufferlength-i;
+    char fname[flen+1];
+    memcpy(fname,        &buff[i], flen);
+    fname[flen] = '\0';
+    filename = fname;
+    i+=filename.size();
+
+    // return the deserialized structure to the caller
+    if ( i == bufferlength ) {
+      return true;
+    }
+
+    // Houston, we have a problem
+    logfile << "ERROR: Could not deserialize!!!" << endl;
+    dataLength = 0;
+    if (data != NULL)
+      free( data );
+    return false;
+  }
 
   /// Destructor to free the data array if is has previously be allocated locally
   ~RawTile() {

@@ -27,6 +27,7 @@
 #define VERBOSITY 1
 #define LOGFILE "/tmp/iipsrv.log"
 #define MAX_IMAGE_CACHE_SIZE 10.0
+#define MAX_HEADERS_IN_METADATA_CACHE 1000
 #define FILENAME_PATTERN "_pyr_"
 #define JPEG_QUALITY 75
 #define MAX_CVT 5000
@@ -37,6 +38,7 @@
 #define WATERMARK_OPACITY 1.0
 #define LIBMEMCACHED_SERVERS "localhost"
 #define LIBMEMCACHED_TIMEOUT 86400  // 24 hours
+#define DISABLE_PRIMARY_MEMCACHE 0 // disble memcache to diagnose performance or functional issues
 #define INTERPOLATION 1
 #define CORS "";
 #define BASE_URL "";
@@ -81,6 +83,19 @@ class Environment {
     return max_image_cache_size;
   }
 
+  static int getMaxHeadersInMetadataCache(){
+    char* envpara = getenv( "MAX_HEADERS_IN_METADATA_CACHE" );
+    int max_headers_metadata_cache_elems;
+    if( envpara ){
+      max_headers_metadata_cache_elems = atoi( envpara );
+      if ( max_headers_metadata_cache_elems < 0 )
+        max_headers_metadata_cache_elems = 0;
+    }
+    else
+      max_headers_metadata_cache_elems = MAX_HEADERS_IN_METADATA_CACHE;
+
+    return max_headers_metadata_cache_elems;
+  }
 
   static std::string getFileNamePattern(){
     char* envpara = getenv( "FILENAME_PATTERN" );
@@ -204,6 +219,19 @@ class Environment {
     return memcached_timeout;
   }
 
+  static int getDisablePrimaryMemcache(){
+    char* envpara = getenv( "DISABLE_PRIMARY_MEMCACHE" );
+    int disableMem;
+    if ( envpara ) {
+      disableMem = atoi( envpara );
+      if ( disableMem != 1 )
+        disableMem = 0;
+    }
+    else
+      disableMem = DISABLE_PRIMARY_MEMCACHE;
+
+    return disableMem;
+  }
 
   static unsigned int getInterpolation(){
     char* envpara = getenv( "INTERPOLATION" );

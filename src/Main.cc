@@ -235,6 +235,8 @@ int main( int argc, char *argv[] )
   float max_image_cache_size = Environment::getMaxImageCacheSize();
   imageCacheMapType imageCache;
 
+  // max number of images to save in the in-memory image metadata cache
+  unsigned int max_headers_in_metadata_cache = Environment::getMaxHeadersInMetadataCache();
 
   // Get our image pattern variable
   string filename_pattern = Environment::getFileNamePattern();
@@ -280,6 +282,7 @@ int main( int argc, char *argv[] )
   // Print out some information
   if( loglevel >= 1 ){
     logfile << "Setting maximum image cache size to " << max_image_cache_size << "MB" << endl;
+    logfile << "Setting maximum headers in image metadata cache to " << max_headers_in_metadata_cache << " images" << endl;
     logfile << "Setting filesystem prefix to '" << filesystem_prefix << "'" << endl;
     logfile << "Setting default JPEG quality to " << jpeg_quality << endl;
     logfile << "Setting maximum CVT size to " << max_CVT << endl;
@@ -316,6 +319,8 @@ int main( int argc, char *argv[] )
     }
   }
 
+  // Discover whether we should disable the primary memcache for diagnostic purposes
+  unsigned int disable_primary_memcache = Environment::getDisablePrimaryMemcache();
 
 #ifdef HAVE_MEMCACHED
 
@@ -414,11 +419,14 @@ int main( int argc, char *argv[] )
   Timer request_timer;
   srand( request_timer.getTime() );
 
-  // Create our tile cache
+// Create our memcached object and tile cache
+#ifdef HAVE_MEMCACHED
+  Cache tileCache( max_image_cache_size, &memcached );
+#else
   Cache tileCache( max_image_cache_size );
+#endif
+
   Task* task = NULL;
-
-
 
   /****************
     Main FCGI loop
@@ -447,7 +455,7 @@ int main( int argc, char *argv[] )
 
     // Declare our image pointer here outside of the try scope
     //  so that we can close the image on exceptions
-    IIPImage *image = NULL;
+    IIPImage *image = NULL; // need to initialize here because if we have a memcache hit we don't want to free random memory
     JPEGCompressor jpeg( jpeg_quality );
 
 
@@ -535,17 +543,18 @@ int main( int argc, char *argv[] )
 #ifdef HAVE_MEMCACHED
       // Check whether this exists in memcached, but only if we haven't had an if_modified_since
       // request, which should always be faster to send
-      if( !header || session.headers["HTTP_IF_MODIFIED_SINCE"].empty() ){
-	char* memcached_response = NULL;
-	if( (memcached_response = memcached.retrieve( request_string )) ){
-	  writer.putStr( memcached_response, memcached.length() );
-	  writer.flush();
-	  free( memcached_response );
-	  throw( 100 );
-	}
+      if (!disable_primary_memcache) {
+        if( !header || session.headers["HTTP_IF_MODIFIED_SINCE"].empty() ){
+          char* memcached_response = NULL;
+          if( (memcached_response = (char*) memcached.retrieve( request_string )) ){
+            writer.putStr( memcached_response, memcached.length() );
+            writer.flush();
+            free( memcached_response );
+            throw( 100 );
+          }
+        }
       }
 #endif
-
 
       // Parse up the command list
 
@@ -582,7 +591,6 @@ int main( int argc, char *argv[] )
 	  // Unsupported command error code is 2 2
 	  response.setError( "2 2", command );
 	}
-
 
 	// Delete our task
 	if( task ){
@@ -629,22 +637,23 @@ int main( int argc, char *argv[] )
       ////////////////////////////////////////////////////////
 
 #ifdef HAVE_MEMCACHED
-      if( memcached.connected() ){
-	Timer memcached_timer;
-	memcached_timer.start();
-	memcached.store( session.headers["QUERY_STRING"], writer.buffer, writer.sz );
-	if( loglevel >= 3 ){
-	  logfile << "Memcached :: stored " << writer.sz << " bytes in "
-		  << memcached_timer.getTime() << " microseconds" << endl;
-	}
+      if (!disable_primary_memcache) {
+        if( memcached.connected() ){
+          Timer memcached_timer;
+          memcached_timer.start();
+          memcached.store( session.headers["QUERY_STRING"], writer.buffer, writer.sz );
+          if( loglevel >= 3 ){
+            logfile << "Memcached :: stored " << writer.sz << " bytes in "
+                    << memcached_timer.getTime() << " microseconds" << endl;
+          }
+        }
       }
 #endif
-
-
 
       //////////////////////////////////////////////////////
       //////////////// End of try block ////////////////////
       //////////////////////////////////////////////////////
+
     }
 
     /* Use this for sending various HTTP status codes
@@ -687,9 +696,7 @@ int main( int argc, char *argv[] )
 
       if( response.errorIsSet() ){
 	if( loglevel >= 4 ){
-	  logfile << "---" << endl <<
-	    response.formatResponse() <<
-	    endl << "---" << endl;
+	  logfile << "---" << endl << response.formatResponse() << endl << "---" << endl;
 	}
 	if( writer.printf( response.formatResponse().c_str() ) == -1 ){
 	  if( loglevel >= 1 ) logfile << "Error sending IIPResponse" << endl;
@@ -743,19 +750,19 @@ int main( int argc, char *argv[] )
     /* Do some cleaning up etc. here after all the potential exceptions
        have been handled
      */
-    if( task ){
+    if ( image ) {
+      delete image;
+      image = NULL;
+    }
+    if ( task ) {
       delete task;
       task = NULL;
     }
-    delete image;
-    image = NULL;
     IIPcount ++;
 
 #ifdef DEBUG
     fclose( f );
 #endif
-
-
 
     // How long did this request take?
     if( loglevel >= 2 ){
@@ -772,8 +779,6 @@ int main( int argc, char *argv[] )
 
     ///////// End of FCGI_ACCEPT while loop or for loop in debug mode //////////
   }
-
-
 
   if( loglevel >= 1 ){
     logfile << endl << "Terminating after " << IIPcount << " iterations" << endl;

@@ -1,13 +1,11 @@
 TODO:
 
 * Multiprocess capabilty using either:
-   - threads
-   - multiple instances using shared memory to share a cache
+   - threads (particularly in CVT and *TL that call CompressStrip and Compress )
    - Asynchronous via asio or libevent
-* ICC profile integration via lcms library
+* ICC transformation via lcms library
 * Lossless Rotation / transposition support for JPEG tiles
 * JPEG source image support
 * Look into using malloc_usable_size to trace real allocated space
-* Lanczos, bilinear etc interpolation for CVT
 * Copy EXIF, IPTC data for CVT exports
 * Rewrite JPEG writer code for better buffered output

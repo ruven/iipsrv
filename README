@@ -148,9 +148,18 @@ LOGFILE: the server will log its output to the file specified, if it can.
 VERBOSITY: 0 means no logging, 1 is minimal logging, 2 lots of debugging stuff,
 3 even more debugging stuff and 10 a very large amount indeed ;-)
 
+MAX_HEADERS_IN_METADATA_CACHE: Maximum number of image header records to cache
+in memory.  This improves performance by avoiding the opening and reading of
+metadata from image sources with each request.  Defaults to 1000.
+
 MAX_IMAGE_CACHE_SIZE: Max image cache size to be held in RAM in MB. This is
-a cache of the compressed JPEG image tiles requested by the client.
-The default is 10MB.
+a cache of the compressed JPEG image tiles that are loaded from source images.
+The default is 10MB. If set to 0 and memcached is enabled, memcached will be used
+instead of per-process in-memory caching.  In some cases, memcached may actually
+perform better than the per process cache.  In addition, using memcache for
+tile caching permits multiple IIP processes, even those running on different servers,
+to share a common cache, significantly reducing the overall RAM footprint required 
+by IIP processes.
 
 FILESYSTEM_PREFIX: This is a prefix automatically added by the server to the 
 beginning of each file system path. This can be useful for security reasons to 
@@ -196,6 +205,13 @@ port numbers. For example: localhost,192.168.0.1:8888,192.168.0.2.
 
 MEMCACHED_TIMEOUT: Time in seconds that cache remains fresh.
 Default is 86400 seconds (24 hours).
+
+DISABLE_PRIMARY_MEMCACHE: Defaults to 0. Set to 1 to disable the primary memcache used 
+to cache responses in order to diagnose problems or to run targeted performance tests. This 
+will not disable the image tile cache if MAX_IMAGE_CACHE_SIZE is set to 0. To disable ALL
+memcache, remove the MEMCACHED_SERVERS configuration and set the MAX_IMAGE_CACHE_SIZE 
+and MAX_IMAGES_IN_METADATA_CACHE to 0 as well as disabling other caching layers that
+are external to IIP such as varnish, squid, etc.
 
 INTERPOLATION: Interpolation method to use for rescaling when using image export.
 Integer value. 0 for fastest nearest neighbour interpolation. 1 for bilinear
