@@ -27,11 +27,8 @@
 #include <string>
 #include <cstdlib>
 #include <ctime>
-#include <fstream>
 
-using namespace std;
 
-extern ofstream logfile;
 
 /// Colour spaces - GREYSCALE, sRGB and CIELAB
 enum ColourSpaces { NONE, GREYSCALE, sRGB, CIELAB };
