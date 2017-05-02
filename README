@@ -17,7 +17,7 @@ FEATURES
 * Fast lightweight embeddable FastCGI server module
 * High performance with inbuilt configurable cache
 * Support for gigapixel images
-* Dynamic JPEG export of whole or regions of images at any resolution
+* Dynamic JPEG and PNG export of whole or regions of images at any resolution
 * Supports IIP, Zoomify, DeepZoom and IIIF protocols
 * 1, 8, 16 and 32 bit image support including 32 bit floating point support
 * CIELAB support with automatic CIELAB->sRGB colour space conversion
@@ -57,7 +57,7 @@ See COPYING.FCGI for licensing information for these libraries.
 REQUIREMENTS
 ------------
 Requirements: libtiff, zlib and the IJG JPEG development libraries.
-Optional: libmemcached (for Memcached) and Kakadu or OpenJPEG (for JPEG2000).
+Optional: libmemcached (for Memcached) and Kakadu or OpenJPEG (for JPEG2000). libpng for PNG output support.
 
 Plus, of course, an fcgi-enabled web server. The server has been successfully
 tested on the following servers:
@@ -127,6 +127,21 @@ given, the default system verson of OpenJPEG will be used if available.
 If Kakadu support has been requested, however, OpenJPEG will be automatically 
 disabled.
 
+OPTIONAL LIBRARIES: LIBPNG
+----------------------------
+
+IIPImage is able to produce PNG images via the open source libpng
+library (http://www.libpng.org/).  If the libpng development libraries
+have been installed they should be detected during the configuration stage
+and included automatically. PNG support is currently enabled only for the
+purpose of ensuring full compliance with the IIIF protocol although it 
+would be relatively straightforward for someone to add a PTL command to 
+the IIP Protocol specification to complement the JTL command which produces 
+JPG tile output.  With the default PNG export settings of no compression
+and no compression filter, the output format is still roughly 2x slower
+than JPEG output due to the size of files.  With compression enabled at 
+the "fast" setting and no compression filter enabled, file size can be
+reduced by about 40% but encoding is approximately 3x slower.
 
 
 INSTALLATION
@@ -216,7 +231,18 @@ other image formats. This is only necessary if you have activated
 --enable-modules for ./configure and written your own image format 
 handler(s).
 
+PNG_COMPRESSION_LEVEL: The PNG compression level to use for PNG output.
+Options include Z_NO_COMPRESSION (IIP Server default), 
+Z_BEST_SPEED (compress, but not optimally), Z_BEST_COMPRESSION (smaller files, takes longer)
+Z_DEFAULT_COMPRESSION (the zlib default).
+Note: libpng uses zlib for compression; see zlib.h for more information about
+these settings.
 
+PNG_FILTER_TYPE: The PNG compression filter applied by libpng to help 
+increase the compression ratio. 
+Options include PNG_NO_FILTERS (IIP Server default), PNG_FILTER_NONE, 
+PNG_FILTER_SUB, PNG_FILTER_UP, PNG_FILTER_AVG, PNG_FILTER_PAETH, PNG_ALL_FILTERS 
+Note: see the libpng documentation for full information about these settings.
 
 
 IMAGE PATHS

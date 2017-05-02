@@ -42,6 +42,7 @@
 #define BASE_URL "";
 #define CACHE_CONTROL "max-age=86400"; // 24 hours
 #define ALLOW_UPSCALING true
+#define NO_FILTER_DEFINED -999;
 
 
 #include <string>
@@ -248,6 +249,72 @@ class Environment {
     else allow_upscaling = ALLOW_UPSCALING;
     return allow_upscaling;
   }
+
+#ifdef HAVE_PNG
+
+  /****************************************
+   from zlib.h
+   #define Z_NO_COMPRESSION         0
+   #define Z_BEST_SPEED             1
+   #define Z_BEST_COMPRESSION       9
+   #define Z_DEFAULT_COMPRESSION  (-1)
+  ****************************************/
+  static int getPNGCompressionLevel(){
+    int png_compression_level = Z_NO_COMPRESSION;
+    char *envval = getenv( "PNG_COMPRESSION_LEVEL" );
+    if ( envval != NULL ) {
+      string envpara = string(envval);
+      if ( envpara.compare("Z_BEST_SPEED") )
+        png_compression_level = Z_BEST_SPEED;
+      else if ( envpara.compare("Z_BEST_COMPRESSION") )
+        png_compression_level = Z_BEST_COMPRESSION;
+      else if ( envpara.compare("Z_DEFAULT_COMPRESSION") )
+        png_compression_level = Z_DEFAULT_COMPRESSION;
+    }
+    return png_compression_level;
+  }
+
+  /****************************************
+   from png.h
+   #define PNG_NO_FILTERS     0x00
+   #define PNG_FILTER_NONE    0x08
+   #define PNG_FILTER_SUB     0x10
+   #define PNG_FILTER_UP      0x20
+   #define PNG_FILTER_AVG     0x40
+   #define PNG_FILTER_PAETH   0x80
+   #define PNG_ALL_FILTERS (PNG_FILTER_NONE | PNG_FILTER_SUB | PNG_FILTER_UP | \
+                            PNG_FILTER_AVG | PNG_FILTER_PAETH)
+  ****************************************/
+  static int PNGFilterTypeToInt( const char *filterType ) {
+    int png_ftype = NO_FILTER_DEFINED;
+    if ( filterType != NULL ) {
+      string filter = string(filterType);
+      if ( filter.compare("PNG_FILTER_NONE") )
+        png_ftype = PNG_FILTER_NONE;
+      else if ( filter.compare("PNG_FILTER_SUB") )
+        png_ftype = PNG_FILTER_SUB;
+      else if ( filter.compare("PNG_FILTER_UP") )
+        png_ftype = PNG_FILTER_UP;
+      else if ( filter.compare("PNG_FILTER_AVG") )
+        png_ftype = PNG_FILTER_AVG;
+      else if ( filter.compare("PNG_FILTER_PAETH") )
+        png_ftype = PNG_FILTER_PAETH;
+      else if ( filter.compare("PNG_ALL_FILTERS") )
+        png_ftype = PNG_ALL_FILTERS;
+    }
+    return png_ftype;
+  }
+
+  static int getPNGFilterType() {
+    int filterType = PNGFilterTypeToInt( getenv( "PNG_FILTER_TYPE" ) );
+    int checkType = NO_FILTER_DEFINED;
+    if ( filterType == checkType ) {
+        filterType = PNG_NO_FILTERS;
+    }
+    return 0;
+  }
+
+#endif // HAVE_PNG
 
 };
 

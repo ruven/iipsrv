@@ -21,10 +21,6 @@
 
 #include "JPEGCompressor.h"
 
-
-using namespace std;
-
-
 #define MX 32768
 
 
@@ -160,6 +156,7 @@ void iip_term_destination( j_compress_ptr cinfo )
 
 void JPEGCompressor::InitCompression( const RawTile& rawtile, unsigned int strip_height ) throw (string)
 {
+
   // Do some initialisation
   dest = &dest_mgr;
 
@@ -254,7 +251,7 @@ void JPEGCompressor::InitCompression( const RawTile& rawtile, unsigned int strip
   We use a separate tile_height from the predefined strip_height because
   the tile height for the final row can be different
  */
-unsigned int JPEGCompressor::CompressStrip( unsigned char* input, unsigned char* output, unsigned int tile_height ) throw (string)
+unsigned int JPEGCompressor::CompressStrip( unsigned char* input, unsigned char* output, unsigned long outputlen, unsigned int tile_height ) throw (string)
 {
   JSAMPROW row[1];
   int row_stride = width * channels;
@@ -286,7 +283,7 @@ unsigned int JPEGCompressor::CompressStrip( unsigned char* input, unsigned char*
 
 
 
-unsigned int JPEGCompressor::Finish( unsigned char* output ) throw (string)
+unsigned int JPEGCompressor::Finish( unsigned char* output, unsigned long output_len ) throw (string)
 {
   dest->source = output;
 
@@ -448,6 +445,6 @@ int JPEGCompressor::Compress( RawTile& rawtile ) throw (string)
 
 
 
-void JPEGCompressor::addMetadata( const string& metadata ){
+void JPEGCompressor::addXMPMetadata( const string& metadata ){
   jpeg_write_marker( &cinfo, JPEG_APP0, (const JOCTET*) metadata.c_str(), metadata.size() );
 }
