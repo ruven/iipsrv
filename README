@@ -200,7 +200,8 @@ Default is 86400 seconds (24 hours).
 INTERPOLATION: Interpolation method to use for rescaling when using image export.
 Integer value. 0 for fastest nearest neighbour interpolation. 1 for bilinear
 interpolation (better quality but about 2.5x slower). 2 for approximated Lanczos 
-interpolation (best quality but about 30% slower than bilinear). Bilinear (2) is default.
+interpolation (best quality but about 20% slower than bilinear). 
+Bilinear (1) is default.
 
 CORS: Cross Origin Resource Sharing setting. Disabled by default.
 Set to * to enable for all domains or specify a single domain.
