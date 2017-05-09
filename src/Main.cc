@@ -276,6 +276,10 @@ int main( int argc, char *argv[] )
   // Get the allow upscaling setting
   bool allow_upscaling = Environment::getAllowUpscaling();
 
+  // Get the oversampling factor which will result in requesting a tile 
+  // N times larger than would otherwise be requested prior to resize operations
+  int oversamplingFactor = Environment::getOversamplingFactor();
+
 
   // Print out some information
   if( loglevel >= 1 ){
@@ -479,6 +483,7 @@ int main( int argc, char *argv[] )
       session.tileCache = &tileCache;
       session.out = &writer;
       session.watermark = &watermark;
+      session.oversamplingFactor = oversamplingFactor;
       session.headers.clear();
 
       char* header = NULL;
