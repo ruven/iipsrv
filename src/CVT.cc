@@ -50,8 +50,9 @@ void CVT::send( Session* session ){
 
 
   // Calculate the number of tiles at the requested resolution
-  unsigned int im_width = (*session->image)->getImageWidth();
-  unsigned int im_height = (*session->image)->getImageHeight();
+  unsigned int im_width = (*session->image)->getImageWidth() / session->oversamplingFactor;
+  unsigned int im_height = (*session->image)->getImageHeight() / session->oversamplingFactor;
+
   int num_res = (*session->image)->getNumResolutions();
 
   // Setup our view with some basic info

@@ -42,6 +42,7 @@
 #define BASE_URL "";
 #define CACHE_CONTROL "max-age=86400"; // 24 hours
 #define ALLOW_UPSCALING true
+#define OVERSAMPLING_FACTOR 1; // no oversampling is default
 
 
 #include <string>
@@ -247,6 +248,18 @@ class Environment {
     if( envpara ) allow_upscaling =  atoi( envpara ); //implicit cast to boolean, all values other than '0' treated as true
     else allow_upscaling = ALLOW_UPSCALING;
     return allow_upscaling;
+  }
+
+  static int getOversamplingFactor(){
+    int os = OVERSAMPLING_FACTOR;
+    char *envpara = getenv( "OVERSAMPLING_FACTOR" );
+    if( envpara ){
+      os = atoi( envpara );
+      // If not a realistic oversampling factor, set to default
+      if( os < 1 ) os = 1;
+      if( os > 4 ) os = 4;
+    }
+    return os;
   }
 
 };
