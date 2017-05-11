@@ -46,6 +46,20 @@ void TPTImage::openImage() throw (file_error)
     throw file_error( "tiff open failed for: " + filename );
   }
 
+  // if the ICC color profile hasn't already been set for this image yet, try to read it
+  if ( icc_profile_buf == NULL ) {
+    unsigned long proflen=0;
+    unsigned char *buf=NULL;
+    TIFFGetField( tiff, TIFFTAG_ICCPROFILE, &proflen, &buf);
+
+    // make a copy of the icc profile since changing TIFF directory frees the original memory
+    if ( proflen > 0 ) {
+      icc_profile_buf = new unsigned char[proflen];
+      memcpy(&icc_profile_buf[0], buf, proflen);
+      icc_profile_len = proflen;
+    }
+  }
+
   // Load our metadata if not already loaded
   if( bpc == 0 ) loadImageInfo( currentX, currentY );
 

@@ -68,6 +68,9 @@ struct Session {
 #ifdef HAVE_PNG
   PNGCompressor* png;
 #endif
+  unsigned char* icc_profile_buf;
+  unsigned long icc_profile_len;
+  unsigned int retain_source_icc_profile;
   View* view;
   IIPResponse* response;
   Watermark* watermark;

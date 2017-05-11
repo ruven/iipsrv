@@ -216,6 +216,10 @@ other image formats. This is only necessary if you have activated
 --enable-modules for ./configure and written your own image format 
 handler(s).
 
+RETAIN_SOURCE_ICC_PROFILE: Read the embedded ICC profile from the source image
+and insert it into all generated JPEG tiles.  Currently only implemented for
+PTIF source images and has not been tested with color operations. Defaults to 0.
+
 
 
 
