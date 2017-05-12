@@ -285,6 +285,7 @@ void CVT::send( Session* session ){
      case 2:
       interpolation_type = "Lanczos approximation";
       filter_interpolate_lanczos( complete_image, resampled_width, resampled_height );
+      break;
      default:
       interpolation_type = "bilinear";
       filter_interpolate_bilinear( complete_image, resampled_width, resampled_height );
