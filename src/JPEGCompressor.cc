@@ -451,3 +451,12 @@ int JPEGCompressor::Compress( RawTile& rawtile ) throw (string)
 void JPEGCompressor::addMetadata( const string& metadata ){
   jpeg_write_marker( &cinfo, JPEG_APP0, (const JOCTET*) metadata.c_str(), metadata.size() );
 }
+
+
+// for XMP metadata, the XMP packet is prefixed with a null-terminated ID string -
+// hence the size() call in the regular JPEGCompressor::addMetadata function defined
+// above will return an incorrect value.
+//
+void JPEGCompressor::addGenericMetadata(int marker, char * metadata, unsigned int datalen ) {
+  jpeg_write_marker( &cinfo, marker, (const JOCTET*) metadata, datalen);
+}
