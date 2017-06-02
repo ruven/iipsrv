@@ -362,8 +362,21 @@ void CVT::send( Session* session ){
 
   // Add XMP metadata if this exists
   if( (*session->image)->getMetadata("xmp").size() > 0 ){
+  	// the XMP data in a JPEG stream needs to be prefixed with a zero-terminated ID string
+	// ref http://www.adobe.com/content/dam/Adobe/en/devnet/xmp/pdfs/cs6/XMPSpecificationPart3.pdf (pp13-14)
+	// so have to copy it into a larger buffer
+    char xmpstr[65536];	// per spec, XMP max size is 65502; namespace prefix/id is 29 bytes
+
     if( session->loglevel >= 4 ) *(session->logfile) << "CVT :: Adding XMP metadata" << endl;
-    session->jpeg->addMetadata( (*session->image)->getMetadata("xmp") );
+    
+	// '0' should be 0, but snprintf is too smart...
+	snprintf( xmpstr, 65536, "http://ns.adobe.com/xap/1.0/%c%s", '0', (*session->image)->getMetadata("xmp").c_str() );
+	xmpstr[28] = 0; // overwrite '0'
+
+	// can't use regular addMetadata, because of the zero term after the namespace id; and the APP1 marker
+	//	session->jpeg->addMetadata( xmpstr );
+
+	session->jpeg->addGenericMetadata(JPEG_APP0+1, xmpstr, 29 + (*session->image)->getMetadata("xmp").size());
   }
 
   len = session->jpeg->getHeaderSize();

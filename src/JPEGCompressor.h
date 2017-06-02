@@ -136,6 +136,12 @@ class JPEGCompressor{
   /** @param m metadata */
   void addMetadata( const std::string& m );
 
+  /// Add metadata to the JPEG header, with explicit marker and size
+  /** @param marker JPEG marker
+      @param m metadata
+      @param datalen length of metadata
+   */
+  void addGenericMetadata(int marker, char * metadata, unsigned int datalen );
 
   /// Return the JPEG header size
   unsigned int getHeaderSize() { return header_size; }
