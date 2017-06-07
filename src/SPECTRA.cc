@@ -100,7 +100,7 @@ void SPECTRA::run( Session* session, const std::string& argument ){
 
     int n = *i;
 
-    RawTile rawtile = tilemanager.getTile( resolution, tile, n, session->view->yangle, session->view->getLayers(), UNCOMPRESSED );
+    RawTile rawtile = tilemanager.getTile( resolution, tile, n, session->view->yangle, session->view->getLayers(), UNCOMPRESSED, 0, NULL );
 
     unsigned int tw = (*session->image)->getTileWidth();
     unsigned int index = y*tw + x;

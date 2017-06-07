@@ -42,7 +42,7 @@
 #define BASE_URL "";
 #define CACHE_CONTROL "max-age=86400"; // 24 hours
 #define ALLOW_UPSCALING true
-
+#define RETAIN_SOURCE_ICC_PROFILE 0
 
 #include <string>
 
@@ -106,6 +106,47 @@ class Environment {
 
     return jpeg_quality;
   }
+
+  static int getRetainSourceICCProfile(){
+    char* envpara = getenv( "RETAIN_SOURCE_ICC_PROFILE" );
+    int retainICC;
+    if ( envpara ) {
+      retainICC = atoi( envpara );
+      if ( retainICC != 1 )
+        retainICC = 0;
+    }
+    else
+      retainICC = RETAIN_SOURCE_ICC_PROFILE;
+
+    return retainICC;
+  }
+
+  // If we want a system wide ICC profile that will be used for standardized color transformation
+  /*  static unsigned char *getSystemICCProfile(long *profileSize){
+    char* envpara = getenv( "ICC_PROFILE" );
+
+    std::string iccfilename;
+    if ( envpara )
+        iccfilename = std::string( envpara );
+    else
+        iccfilename = ICC_PROFILE;
+
+    // open the given icc profile and load into an unsigned char*
+    if ( !iccfilename.empty() ) {
+        FILE *f = fopen(iccfilename.c_str(), "rb");
+        if ( f ) {
+            fseek(f, 0, SEEK_END);
+            *profileSize = ftell(f);
+            fseek(f, 0, SEEK_SET);  // same as rewind(f);
+            unsigned char *iccProfile = (unsigned char *) malloc(*profileSize);
+            fread(iccProfile, *profileSize, 1, f);
+            fclose(f);
+            return iccProfile;
+        }
+    }
+    return NULL;
+  }
+  */
 
 
   static int getMaxCVT(){

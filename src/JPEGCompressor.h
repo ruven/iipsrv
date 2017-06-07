@@ -27,7 +27,7 @@
 #include <cstdio>
 #include <string>
 #include "RawTile.h"
-
+#include "iccjpeg.h"
 
 extern "C"{
 /* Undefine this to prevent compiler warning
@@ -111,7 +111,7 @@ class JPEGCompressor{
       @param strip_height pixel height of the strip we want to compress
       @return header size
    */
-  void InitCompression( const RawTile& rawtile, unsigned int strip_height ) throw (std::string);
+  void InitCompression( const RawTile& rawtile, unsigned int strip_height, unsigned long icc_profile_len, unsigned char *icc_profile_buf ) throw (std::string);
 
   /// Compress a strip of image data
   /** @param s source image data
@@ -129,7 +129,7 @@ class JPEGCompressor{
 
   /// Compress an entire buffer of image data at once in one command
   /** @param t tile of image data */
-  int Compress( RawTile& t ) throw (std::string);
+  int Compress( RawTile& t, unsigned long icc_profile_len, unsigned char *icc_profile_buf ) throw (std::string);
 
 
   /// Add metadata to the JPEG header
