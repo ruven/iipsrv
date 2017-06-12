@@ -125,8 +125,15 @@ void KakaduImage::loadImageInfo( int seq, int ang ) throw(file_error)
   jp2_resolution j2k_resolution;
   jp2_colour j2k_colour;
   kdu_coords layer_size;
+  jpx_layer_source jpx_layer;
 
-  jpx_layer_source jpx_layer = jpx_input.access_layer(0);
+  // Malformed images can throw exceptions here with older versions of Kakadu 
+  try{
+    jpx_layer = jpx_input.access_layer(0);
+  }
+  catch( ... ){
+    throw file_error( "Kakadu :: Core Exception Caught During Metadata Extraction"); // Rethrow the exception
+  }
 
   j2k_channels = jpx_layer.access_channels();
   j2k_resolution = jpx_layer.access_resolution();

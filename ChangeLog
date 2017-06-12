@@ -1,3 +1,8 @@
+12/06/2017:
+	- Added try block to avoid crashes with malformed images in older
+	  versions of Kakadu.
+
+
 05/04/2017:
 	- Fixed crash in KakaduImage.cc when zero sized images are requested
 
