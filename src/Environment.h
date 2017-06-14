@@ -1,7 +1,7 @@
 /*
     IIP Environment Variable Class
 
-    Copyright (C) 2006-2016 Ruven Pillay.
+    Copyright (C) 2006-2017 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -42,6 +42,7 @@
 #define BASE_URL "";
 #define CACHE_CONTROL "max-age=86400"; // 24 hours
 #define ALLOW_UPSCALING true
+#define URI_MAP ""
 
 
 #include <string>
@@ -240,13 +241,23 @@ class Environment {
     else cache_control = CACHE_CONTROL;
     return cache_control;
   }
-  
+
+
   static bool getAllowUpscaling(){
     char* envpara = getenv( "ALLOW_UPSCALING" );
     bool allow_upscaling;
-    if( envpara ) allow_upscaling =  atoi( envpara ); //implicit cast to boolean, all values other than '0' treated as true
+    if( envpara ) allow_upscaling =  atoi( envpara ); // Implicit cast to boolean, all values other than '0' treated as true
     else allow_upscaling = ALLOW_UPSCALING;
     return allow_upscaling;
+  }
+
+
+  static std::string getURIMap(){
+    char* envpara = getenv( "URI_MAP" );
+    std::string uri_map;
+    if( envpara ) uri_map = std::string( envpara );
+    else uri_map = URI_MAP;
+    return uri_map;
   }
 
 };

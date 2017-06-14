@@ -1,7 +1,7 @@
 /*
     IIP FCGI server module - Main loop.
 
-    Copyright (C) 2000-2016 Ruven Pillay
+    Copyright (C) 2000-2017 Ruven Pillay
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -31,6 +31,7 @@
 #include <string>
 #include <utility>
 #include <map>
+#include <algorithm>
 
 #include "TPTImage.h"
 #include "JPEGCompressor.h"
@@ -272,7 +273,13 @@ int main( int argc, char *argv[] )
 
   // Get requested HTTP Cache-Control setting
   string cache_control = Environment::getCacheControl();
-  
+
+
+  // Get URI mapping if we are not using query strings
+  string uri_map_string = Environment::getURIMap();
+  map<string,string> uri_map;
+
+
   // Get the allow upscaling setting
   bool allow_upscaling = Environment::getAllowUpscaling();
 
@@ -300,6 +307,41 @@ int main( int argc, char *argv[] )
     logfile << "Setting Allow Upscaling to " << (allow_upscaling? "true" : "false") << endl;
   }
 
+
+  // Setup our URI mapping for non-CGI requests
+  if( !uri_map_string.empty() ){
+
+    // Check map is well-formed: maps must be of the form "prefix=>protocol"
+    size_t pos;
+    if( (pos = uri_map_string.find("=>")) != string::npos ){
+
+      // Extract protocol
+      string prefix = uri_map_string.substr( 0, pos );
+      string protocol = uri_map_string.substr( pos+2 );
+      bool supported_protocol = false;
+
+      // Make sure the command is one of our supported protocols: "IIP", "IIIF", "Zoomify", "DeepZoom"
+      string prtcl = protocol;
+      transform( prtcl.begin(), prtcl.end(), prtcl.begin(), ::tolower );
+      if( prtcl == "iip" || prtcl == "iiif" || prtcl == "zoomify" || prtcl == "deepzoom" ){
+	supported_protocol = true;
+      }
+
+      if( loglevel > 0 ){
+	logfile << "Setting URI mapping to " << uri_map_string << ". "
+		<< ((supported_protocol)?"S":"Uns") << "upported protocol: " << protocol << endl;
+      }
+
+      // IIP protocol requires "FIF" as first argument
+      if( prtcl == "iip" ) prtcl = "fif";
+
+      // Initialize our map
+      if( supported_protocol ) uri_map[prefix] = prtcl;
+    }
+    else if( loglevel > 0 ) logfile << "Malformed URI map: " << uri_map_string << endl;
+
+  }
+  
 
   // Try to load our watermark
   if( watermark.getImage().length() > 0 ){
@@ -490,7 +532,36 @@ int main( int argc, char *argv[] )
       header = FCGX_GetParam( "QUERY_STRING", request.envp );
 #endif
 
-      const string request_string = (header!=NULL)? header : "";
+      string request_string = (header!=NULL)? header : "";
+
+      /* If we don't have a CGI query starting with "?", check for a match to any URI prefix mapping.
+	 This allows iipsrv to be used without requiring use of mod_rewrite or mod_proxy. This can be more
+	 efficient than relying on the web server to handle this as mod_rewrite doesn't pool proxy connections
+	 which increases the potentially required number of ports.
+       */
+      if( request_string.empty() && !uri_map.empty() ){
+
+	if( loglevel >= 1 ) logfile << "No query string: checking for URI map" << endl;
+
+	string prefix = uri_map.begin()->first;
+	string command = uri_map.begin()->second;
+
+	char *req = FCGX_GetParam( "REQUEST_URI", request.envp );
+	const string request_uri = (req!=NULL) ? req : "";
+
+	// Try to find the prefix at the beginning of request URI
+	// Note that the first character will always be "/"
+	size_t len = prefix.length();
+	if( (len==0) || (request_uri.find(prefix)==1) ){
+	  // This is indeed a mapped request, so map our prefix with the appropriate protocol
+	  unsigned int start = (len>0) ? len+2 : 1; // Add 2 to remove both leading and trailing slashes
+	  unsigned int end = request_uri.length();
+	  string new_request_string = command + "=" + request_uri.substr( start, end-start );
+	  request_string = new_request_string;
+	  if( loglevel >= 2 ) logfile << "Request mapped to " << request_string << endl;
+	}
+      }
+
 
       // Check that we actually have a request string
       if( request_string.empty() ){
@@ -516,10 +587,10 @@ int main( int argc, char *argv[] )
       if( (header = FCGX_GetParam("REQUEST_URI", request.envp)) ){
         session.headers["REQUEST_URI"] = string(header);
       }
-      if ( (header = FCGX_GetParam("HTTPS", request.envp)) ) {
+      if( (header = FCGX_GetParam("HTTPS", request.envp)) ) {
         session.headers["HTTPS"] = string(header);
       }
-      if ( (header = FCGX_GetParam("HTTP_X_IIIF_ID", request.envp)) ) {
+      if( (header = FCGX_GetParam("HTTP_X_IIIF_ID", request.envp)) ){
         session.headers["HTTP_X_IIIF_ID"] = string(header);
       }
 

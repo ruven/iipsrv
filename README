@@ -208,6 +208,12 @@ See http://www.w3.org/TR/cors/ for more details on CORS.
 BASE_URL: Set a base URL for use in certain protocol requests if web server rewriting 
 has taken place and the public URL is not the same as that supplied to iipsrv.
 
+URI_MAP: Set a mapping from a URL prefix to a supported protocol. This enables iipsrv to
+be able to work without requring full CGI query strings. Map must be of the form
+"prefix=>protocol" where prefix can be either empty or any string prefix and protocol must
+be one of IIP,IIIF,DeepZoom, Zoomify. Used, for example, to map requests of the form
+http://server/iiif/ to the IIIF protocol handler without requiring web server rewriting.
+
 CACHE_CONTROL: Set the HTTP Cache-Control header. See http://www.w3.org/Protocols/rfc2616/rfc2616-sec14.html#sec14.9 for 
 a full list of options. If not set, header defaults to "max-age=86400" (24 hours).
 

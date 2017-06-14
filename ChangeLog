@@ -1,3 +1,8 @@
+14/06/2017:
+	- Added URI_MAP environment variable to enable mapping of URL prefixes
+	  to specific protocol handlers without requiring web server rewriting.
+
+
 12/06/2017:
 	- Added try block to avoid crashes with malformed images in older
 	  versions of Kakadu.
