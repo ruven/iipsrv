@@ -32,11 +32,13 @@ using namespace std;
 
 void CVT::send( Session* session ){
 
-  if( session->loglevel >= 2 ) *(session->logfile) << "CVT handler reached" << endl;
-
   Timer function_timer;
 
 
+  if( session->loglevel >= 2 ) *(session->logfile) << "CVT handler reached" << endl;
+
+
+  // Make sure we have set our image
   this->session = session;
   checkImage();
 

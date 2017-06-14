@@ -1,6 +1,7 @@
 14/06/2017:
 	- Added URI_MAP environment variable to enable mapping of URL prefixes
 	  to specific protocol handlers without requiring web server rewriting.
+	- Added missing checkImage() function to JTL and harmonized with CVT.cc.
 
 
 12/06/2017:

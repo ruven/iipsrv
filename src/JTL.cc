@@ -29,9 +29,14 @@ using namespace std;
 
 void JTL::send( Session* session, int resolution, int tile ){
 
+  Timer function_timer;
+  
   if( session->loglevel >= 3 ) (*session->logfile) << "JTL handler reached" << endl;
 
-  Timer function_timer;
+
+  // Make sure we have set our image
+  this->session = session;
+  checkImage();
 
 
   // Time this command
