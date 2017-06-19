@@ -524,30 +524,18 @@ int main( int argc, char *argv[] )
       session.headers.clear();
 
       char* header = NULL;
+      string request_string;
 
-      // Get the query into a string
-#ifdef DEBUG
-      header = argv[1];
-#else
-      header = FCGX_GetParam( "QUERY_STRING", request.envp );
-#endif
 
-      string request_string = (header!=NULL)? header : "";
-
-      /* If we don't have a CGI query starting with "?", check for a match to any URI prefix mapping.
-	 This allows iipsrv to be used without requiring use of mod_rewrite or mod_proxy. This can be more
-	 efficient than relying on the web server to handle this as mod_rewrite doesn't pool proxy connections
-	 which increases the potentially required number of ports.
-       */
-      if( request_string.empty() && !uri_map.empty() ){
-
-	if( loglevel >= 1 ) logfile << "No query string: checking for URI map" << endl;
+      // If we have a URI prefix mapping, first test for a match between the map prefix string
+      //  and the full REQUEST_URI variable
+      if( !uri_map.empty() ){
 
 	string prefix = uri_map.begin()->first;
 	string command = uri_map.begin()->second;
 
-	char *req = FCGX_GetParam( "REQUEST_URI", request.envp );
-	const string request_uri = (req!=NULL) ? req : "";
+	header = FCGX_GetParam( "REQUEST_URI", request.envp );
+	const string request_uri = (header!=NULL) ? header : "";
 
 	// Try to find the prefix at the beginning of request URI
 	// Note that the first character will always be "/"
@@ -555,12 +543,27 @@ int main( int argc, char *argv[] )
 	if( (len==0) || (request_uri.find(prefix)==1) ){
 	  // This is indeed a mapped request, so map our prefix with the appropriate protocol
 	  unsigned int start = (len>0) ? len+2 : 1; // Add 2 to remove both leading and trailing slashes
-	  unsigned int end = request_uri.length();
-	  string new_request_string = command + "=" + request_uri.substr( start, end-start );
-	  request_string = new_request_string;
-	  if( loglevel >= 2 ) logfile << "Request mapped to " << request_string << endl;
+	  // Strip out any query string if we are in prefix mode
+	  size_t q = request_uri.find_first_of('?');
+	  unsigned int end = (q==string::npos) ? request_uri.length() : q;
+	  request_string = command + "=" + request_uri.substr( start, end-start );
+	  if( loglevel >= 2 ) logfile << "Request URI mapped to " << request_string << endl;
 	}
       }
+
+
+      // If the request string hasn't been set through a URI map, get it from the QUERY_STRING variable
+      if( request_string.empty() ){
+	// Get the query into a string
+#ifdef DEBUG
+	header = argv[1];
+#else
+	header = FCGX_GetParam( "QUERY_STRING", request.envp );
+#endif
+
+	request_string = (header!=NULL)? header : "";
+      }
+
 
 
       // Check that we actually have a request string

@@ -1,3 +1,9 @@
+19/06/2017:
+	- Modified URI_MAP to parse this prefix first and only if not present,
+	  to use the query string. This allows query strings to be appended for
+	  caching purposes etc.
+
+
 14/06/2017:
 	- Added URI_MAP environment variable to enable mapping of URL prefixes
 	  to specific protocol handlers without requiring web server rewriting.
