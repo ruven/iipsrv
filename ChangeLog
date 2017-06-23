@@ -1,3 +1,8 @@
+23/06/2017:
+	- Added new OBJ metadata request for IIP protocol to return full list
+	  of existing image resolutions.
+
+
 19/06/2017:
 	- Modified URI_MAP to parse this prefix first and only if not present,
 	  to use the query string. This allows query strings to be appended for
