@@ -1,6 +1,6 @@
 /*  JPEG class wrapper to ijg jpeg library
 
-    Copyright (C) 2000-2012 Ruven Pillay.
+    Copyright (C) 2000-2017 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -67,6 +67,12 @@ class JPEGCompressor{
   /// The JPEG quality factor
   int Q;
 
+  /// ICC Profile
+  std::string icc;
+
+  /// XMP metadata
+  std::string xmp;
+
   /// Buffer for the JPEG header
   unsigned char header[1024];
 
@@ -82,12 +88,18 @@ class JPEGCompressor{
   iip_destination_mgr dest_mgr;
   iip_dest_ptr dest;
 
+  /// Write ICC profile
+  void writeICCProfile();
+
+  /// Write XMP metadata
+  void writeXMPMetadata();
+
 
  public:
 
   /// Constructor
   /** @param quality JPEG Quality factor (0-100) */
-   JPEGCompressor( int quality ) { Q = quality; dest = NULL; };
+  JPEGCompressor( int quality ) { Q = quality; dest = NULL; };
 
 
   /// Set the compression quality
@@ -101,6 +113,19 @@ class JPEGCompressor{
 
   /// Get the current quality level
   int getQuality() { return Q; }
+
+
+  /// Set the ICC profile
+  /** @param profile ICC profile string */
+  void setICCProfile( const std::string& profile ){
+    icc = profile;
+  }
+
+  /// Set XMP metadata
+  /** @param xmp XMP metadata string */
+  void setXMPMetadata( const std::string& x ){
+    xmp = x;
+  }
 
 
   /// Initialise strip based compression
@@ -126,29 +151,15 @@ class JPEGCompressor{
    */
   unsigned int Finish( unsigned char* output ) throw (std::string);
 
-
   /// Compress an entire buffer of image data at once in one command
   /** @param t tile of image data */
   int Compress( RawTile& t ) throw (std::string);
-
-
-  /// Add metadata to the JPEG header
-  /** @param m metadata */
-  void addMetadata( const std::string& m );
-
-  /// Add metadata to the JPEG header, with explicit marker and size
-  /** @param marker JPEG marker
-      @param m metadata
-      @param datalen length of metadata
-   */
-  void addGenericMetadata(int marker, char * metadata, unsigned int datalen );
 
   /// Return the JPEG header size
   unsigned int getHeaderSize() { return header_size; }
 
   /// Return a pointer to the header itself
   inline unsigned char* getHeader() { return header; }
-
 
 };
 

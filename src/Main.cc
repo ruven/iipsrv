@@ -284,6 +284,10 @@ int main( int argc, char *argv[] )
   bool allow_upscaling = Environment::getAllowUpscaling();
 
 
+  // Get the ICC embedding setting
+  bool embed_icc = Environment::getEmbedICC();
+
+
   // Print out some information
   if( loglevel >= 1 ){
     logfile << "Setting maximum image cache size to " << max_image_cache_size << "MB" << endl;
@@ -305,6 +309,7 @@ int main( int argc, char *argv[] )
     logfile << "Setting up JPEG2000 support via OpenJPEG" << endl;
 #endif
     logfile << "Setting Allow Upscaling to " << (allow_upscaling? "true" : "false") << endl;
+    logfile << "Setting ICC profile embedding to " << (embed_icc? "true" : "false") << endl;
   }
 
 
@@ -498,6 +503,7 @@ int main( int argc, char *argv[] )
     if( max_CVT != -1 ) view.setMaxSize( max_CVT );
     if( max_layers != 0 ) view.setMaxLayers( max_layers );
     view.setAllowUpscaling( allow_upscaling );
+    view.setEmbedICC( embed_icc );
 
 
 

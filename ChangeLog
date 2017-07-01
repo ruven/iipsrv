@@ -1,3 +1,12 @@
+30/06/2017:
+	- Added ICC profile embedding support in JPEGCompressor for both JTL
+	  and CVT commands using an implementation based on IJG's iccjpeg.
+	  TPTImage and KakaduImage now extract the profile into the metadata map.
+	  Added also new EMBED_ICC environment variable to allow user to disable
+	  embedding. Thanks to Dave Beaudet for initial implementation.
+	- Refactored XMP metadata handling within JPEG.
+
+
 23/06/2017:
 	- Added new OBJ metadata request for IIP protocol to return full list
 	  of existing image resolutions.

@@ -1,13 +1,13 @@
 /*  IIP Server: Kakadu JPEG2000 handler
 
 
-    Development supported by Moravian Library in Brno (Moravska zemska
+    Initial development supported by Moravian Library in Brno (Moravska zemska
     knihovna v Brne, http://www.mzk.cz/) R&D grant MK00009494301 & Old
     Maps Online (http://www.oldmapsonline.org/) from the Ministry of
     Culture of the Czech Republic.
 
 
-    Copyright (C) 2009-2016 IIPImage.
+    Copyright (C) 2009-2017 IIPImage.
     Author: Ruven Pillay
 
     This program is free software; you can redistribute it and/or modify
@@ -225,6 +225,12 @@ void KakaduImage::loadImageInfo( int seq, int ang ) throw(file_error)
 	    << " entries/LUT with values " << lut[0] << "," << lut[1] << endl;
 #endif
   }
+
+
+  // Extract any ICC profile and add it to our metadata map
+  int icc_length = 0;
+  const char* icc = (const char*) j2k_colour.get_icc_profile( &icc_length );
+  if( icc_length > 0 ) metadata["icc"] = string( icc, icc_length );
 
 
   // Set our colour space - we let Kakadu automatically handle CIELAB->sRGB conversion for the time being

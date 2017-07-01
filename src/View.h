@@ -1,7 +1,7 @@
 /*
     Image View and Transform Parameters
 
-    Copyright (C) 2003-2016 Ruven Pillay.
+    Copyright (C) 2003-2017 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -83,6 +83,7 @@ class View{
   int flip;                                   /// Flip (1=horizontal, 2=vertical)
   bool maintain_aspect;                       /// Indicate whether aspect ratio should be maintained
   bool allow_upscaling;                       /// Indicate whether images may be served larger than the source file
+  bool embed_icc;                             /// Indicate whether we should embed ICC profiles
 
 
   /// Constructor
@@ -102,6 +103,7 @@ class View{
     maintain_aspect = true;
     allow_upscaling = true;
     colourspace = NONE;
+    embed_icc = true;
   };
 
 
@@ -127,7 +129,23 @@ class View{
 
   /// Get the allow_upscaling flag
   /* @return true or false */
-  bool getAllowUpscaling(){ return allow_upscaling; };
+  bool allowUpscaling(){ return allow_upscaling; };
+
+
+  /// Set the embed_icc flag
+  /** @param embed embed icc profile flag
+   */
+  void setEmbedICC( bool embed ){ embed_icc = embed; };
+
+
+  /// Get the embed_icc flag - disable in case of certain types of processing
+  /** @param embed embed icc profile flag
+   */
+  bool embedICC(){
+    // Disable if colour-mapping, twist, hill-shading or greyscale conversion applied
+    if( cmapped || shaded || ctw.size() || colourspace==GREYSCALE ) return false;
+    return embed_icc;
+  };
 
 
   /// Set the maximum view port dimension

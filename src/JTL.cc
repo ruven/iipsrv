@@ -68,6 +68,7 @@ void JTL::send( Session* session, int resolution, int tile ){
     throw error.str();
   }
 
+
   TileManager tilemanager( session->tileCache, *session->image, session->watermark, session->jpeg, session->logfile, session->loglevel );
 
   CompressionType ct;
@@ -81,6 +82,16 @@ void JTL::send( Session* session, int resolution, int tile ){
       || session->view->getRotation() != 0.0 || session->view->flip != 0
       ) ct = UNCOMPRESSED;
   else ct = JPEG;
+
+
+  // Embed ICC profile
+  if( session->view->embedICC() && ((*session->image)->getMetadata("icc").size()>0) ){
+    if( session->loglevel >= 3 ){
+      *(session->logfile) << "JTL :: Embedding ICC profile with size "
+			  << (*session->image)->getMetadata("icc").size() << " bytes" << endl;
+    }
+    session->jpeg->setICCProfile( (*session->image)->getMetadata("icc") );
+  }
 
 
   RawTile rawtile = tilemanager.getTile( resolution, tile, session->view->xangle,

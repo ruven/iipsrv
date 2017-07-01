@@ -2,7 +2,7 @@
 
 /*  IIP Server: Tiled Pyramidal TIFF handler
 
-    Copyright (C) 2000-2016 Ruven Pillay.
+    Copyright (C) 2000-2017 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -169,6 +169,7 @@ void TPTImage::loadImageInfo( int seq, int ang ) throw(file_error)
   if( TIFFGetField( tiff, TIFFTAG_IMAGEDESCRIPTION, &tmp ) ) metadata["subject"] = tmp;
   if( TIFFGetField( tiff, TIFFTAG_SOFTWARE, &tmp ) ) metadata["app-name"] = tmp;
   if( TIFFGetField( tiff, TIFFTAG_XMLPACKET, &count, &tmp ) ) metadata["xmp"] = string(tmp,count);
+  if( TIFFGetField( tiff, TIFFTAG_ICCPROFILE, &count, &tmp ) ) metadata["icc"] = string(tmp,count);
 
 }
 

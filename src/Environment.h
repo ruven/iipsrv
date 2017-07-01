@@ -37,12 +37,13 @@
 #define WATERMARK_OPACITY 1.0
 #define LIBMEMCACHED_SERVERS "localhost"
 #define LIBMEMCACHED_TIMEOUT 86400  // 24 hours
-#define INTERPOLATION 1
+#define INTERPOLATION 1  // 1: Bilinear
 #define CORS "";
 #define BASE_URL "";
 #define CACHE_CONTROL "max-age=86400"; // 24 hours
 #define ALLOW_UPSCALING true
 #define URI_MAP ""
+#define EMBED_ICC true
 
 
 #include <string>
@@ -258,6 +259,15 @@ class Environment {
     if( envpara ) uri_map = std::string( envpara );
     else uri_map = URI_MAP;
     return uri_map;
+  }
+
+
+  static unsigned int getEmbedICC(){
+    char* envpara = getenv( "EMBED_ICC" );
+    bool embed;
+    if( envpara ) embed = atoi( envpara );
+    else embed = EMBED_ICC;
+    return embed;
   }
 
 };
