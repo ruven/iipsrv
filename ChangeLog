@@ -1,3 +1,7 @@
+02/07/2017:
+	- Added OpenMP threading info to startup in Main.cc.
+
+
 30/06/2017:
 	- Added ICC profile embedding support in JPEGCompressor for both JTL
 	  and CVT commands using an implementation based on IJG's iccjpeg.

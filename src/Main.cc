@@ -56,6 +56,9 @@
 #include "DSOImage.h"
 #endif
 
+#ifdef _OPENMP
+#include <omp.h>
+#endif
 
 // If necessary, define missing setenv and unsetenv functions
 #ifndef HAVE_SETENV
@@ -303,13 +306,21 @@ int main( int argc, char *argv[] )
       if( max_layers < 0 ) logfile << "all layers" << endl;
       else logfile << max_layers << endl;
     }
+    logfile << "Setting Allow Upscaling to " << (allow_upscaling? "true" : "false") << endl;
+    logfile << "Setting ICC profile embedding to " << (embed_icc? "true" : "false") << endl;
 #ifdef HAVE_KAKADU
     logfile << "Setting up JPEG2000 support via Kakadu SDK" << endl;
 #elif defined(HAVE_OPENJPEG)
     logfile << "Setting up JPEG2000 support via OpenJPEG" << endl;
 #endif
-    logfile << "Setting Allow Upscaling to " << (allow_upscaling? "true" : "false") << endl;
-    logfile << "Setting ICC profile embedding to " << (embed_icc? "true" : "false") << endl;
+#ifdef _OPENMP
+    int num_threads = 0;
+#pragma omp parallel
+    {
+      num_threads = omp_get_num_threads();
+    }
+    if( num_threads > 1 ) logfile << "OpenMP enabled for parallelized image processing with " << num_threads << " threads" << endl;
+#endif
   }
 
 
