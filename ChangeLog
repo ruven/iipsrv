@@ -1,3 +1,8 @@
+05/07/2017:
+	- Added "Access-Control-Allow-Headers" field if CORS has been set to
+	  fix CORS Ajax problems with js libraries such as JQuery, Mootools.
+
+
 02/07/2017:
 	- Added OpenMP threading info to startup in Main.cc.
 
