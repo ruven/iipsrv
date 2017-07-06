@@ -1,4 +1,4 @@
-.TH IIPSRV 8 "February 2016" "Ruven Pillay"
+.TH IIPSRV 8 "July 2017" "Ruven Pillay"
 .SH NAME
 
 IIPSRV \- IIPImage Image Server
@@ -73,6 +73,10 @@ component such as ../ is also filtered out. No default value.
 The maximum permitted image pixel size returned by the CVT command
 in conjunction with WID or HEI or RGN. The default is 5000. This
 prevents huge requests from overloading the server
+.IP ALLOW_UPSCALING
+Determines whether an image may be rendered at a size greater
+than that of the source image. A value of 0 will prevent upscaling.
+The default is 1 (upscaling is allowed).
 .IP MAX_LAYERS
 The maximum number of quality layers to decode for image that support 
 progressive quality encoding, such as JPEG2000. Ignored for other file 
@@ -100,6 +104,10 @@ eg: "_pyr_" for
 In this example, just supply FZ1 to the FIF command. The "000"
 indicates the vertical angle and "090" the horizontal. This is only
 relevant to 3D image sequences. The default is "_pyr_".
+.IP INTERPOLATION
+Interpolation method to use for rescaling when using image export.
+Integer value. 0 for fastest nearest neighbour interpolation. 1 for bilinear
+interpolation (better quality but about 2.5x slower). Bilinear by default.
 .IP CORS
 Cross Origin Resource Sharing setting. Disabled by default.
 Set to "*" to enable for all domains or specify a single domain.
@@ -107,8 +115,17 @@ See http://www.w3.org/TR/cors/ for more details on CORS.
 .IP BASE_URL
 Set a base URL for use in certain protocol requests if web server rewriting has taken place and the public URL is not the same as that supplied to
 .B iipsrv
+.IP URI_MAP
+Set a mapping from a URL prefix to a supported protocol. This enables iipsrv to
+be able to work without requring full CGI query strings. Map must be of the form
+"prefix=>protocol" where prefix can be either empty or any string prefix and protocol must
+be one of IIP,IIIF,DeepZoom, Zoomify. Used, for example, to map requests of the form
+http://server/iiif/ to the IIIF protocol handler without requiring web server rewriting.
 .IP CACHE_CONTROL
 Set the HTTP Cache-Control header. See http://www.w3.org/Protocols/rfc2616/rfc2616-sec14.html#sec14.9 for a full list of options. If not set, header defaults to "max-age=86400" (24 hours).
+.IP EMBED_ICC
+Set whether the ICC profile is embedded within the output image.
+0 to strip profile, 1 to embed profile. The default is 1 (embedded profiles).
 
 
 .SH EXAMPLES
