@@ -160,8 +160,8 @@ class IIPResponse{
 
 
   /// Display our advertising banner ;-)
-  /** @param version server version */
-  std::string getAdvert( const std::string& version );
+  /** @return HTML string */
+  std::string getAdvert();
 
 
 };
