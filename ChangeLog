@@ -1,3 +1,9 @@
+14/07/2017:
+	- Added Compressor class from which JPEGCompressor is now derived.
+	  Abstracting this will enable easier integration of PNG output.
+	  Output format now specified in View class.
+
+
 06/07/2017:
 	- Enabled CORS for error responses.
 

@@ -23,10 +23,9 @@
 #define _JPEGCOMPRESSOR_H
 
 
+#include "Compressor.h"
 
-#include <cstdio>
-#include <string>
-#include "RawTile.h"
+
 
 
 extern "C"{
@@ -57,7 +56,7 @@ typedef iip_destination_mgr * iip_dest_ptr;
 
 /// Wrapper class to the IJG JPEG library
 
-class JPEGCompressor{
+class JPEGCompressor: public Compressor{
 	
  private:
 
@@ -66,12 +65,6 @@ class JPEGCompressor{
 
   /// The JPEG quality factor
   int Q;
-
-  /// ICC Profile
-  std::string icc;
-
-  /// XMP metadata
-  std::string xmp;
 
   /// Buffer for the JPEG header
   unsigned char header[1024];
@@ -104,7 +97,7 @@ class JPEGCompressor{
 
   /// Set the compression quality
   /** @param factor Quality factor (0-100) */
-  void setQuality( int factor ) {
+  inline void setQuality( int factor ) {
     if( factor < 0 ) Q = 0;
     else if( factor > 100 ) Q = 100;
     else Q = factor;
@@ -112,20 +105,7 @@ class JPEGCompressor{
 
 
   /// Get the current quality level
-  int getQuality() { return Q; }
-
-
-  /// Set the ICC profile
-  /** @param profile ICC profile string */
-  void setICCProfile( const std::string& profile ){
-    icc = profile;
-  }
-
-  /// Set XMP metadata
-  /** @param xmp XMP metadata string */
-  void setXMPMetadata( const std::string& x ){
-    xmp = x;
-  }
+  inline int getQuality() { return Q; }
 
 
   /// Initialise strip based compression
@@ -156,10 +136,16 @@ class JPEGCompressor{
   int Compress( RawTile& t ) throw (std::string);
 
   /// Return the JPEG header size
-  unsigned int getHeaderSize() { return header_size; }
+  inline unsigned int getHeaderSize() { return header_size; }
 
   /// Return a pointer to the header itself
   inline unsigned char* getHeader() { return header; }
+
+  /// Return the JPEG mime type
+  inline const char* getMimeType(){ return "image/jpeg"; }
+
+  /// Return the image filename suffix
+  inline const char* getSuffix(){ return "jpg"; }
 
 };
 

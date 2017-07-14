@@ -176,6 +176,7 @@ void CVT::run( Session* session, const string& src ){
     if( session->loglevel >= 1 ) *(session->logfile) << "CVT :: Unsupported request: '" << argument << "'. Sending JPEG." << endl;
   }
   else{
+    session->view->output_format = JPEG;
     if( session->loglevel >= 3 ) *(session->logfile) << "CVT :: JPEG output" << endl;
   }
 

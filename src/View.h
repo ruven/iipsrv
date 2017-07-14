@@ -84,6 +84,7 @@ class View{
   bool maintain_aspect;                       /// Indicate whether aspect ratio should be maintained
   bool allow_upscaling;                       /// Indicate whether images may be served larger than the source file
   bool embed_icc;                             /// Indicate whether we should embed ICC profiles
+  CompressionType output_format;              /// Requested output format
 
 
   /// Constructor
@@ -104,6 +105,7 @@ class View{
     allow_upscaling = true;
     colourspace = NONE;
     embed_icc = true;
+    output_format = JPEG;
   };
 
 

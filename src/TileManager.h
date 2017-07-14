@@ -43,7 +43,7 @@ class TileManager{
  private:
 
   Cache* tileCache;
-  JPEGCompressor* jpeg;
+  Compressor* jpeg;
   IIPImage* image;
   Watermark* watermark;
   std::ofstream* logfile;
@@ -84,7 +84,7 @@ class TileManager{
    * @param s  pointer to output file stream
    * @param l  logging level
    */
-  TileManager( Cache* tc, IIPImage* im, Watermark* w, JPEGCompressor* j, std::ofstream* s, int l ){
+  TileManager( Cache* tc, IIPImage* im, Watermark* w, Compressor* j, std::ofstream* s, int l ){
     tileCache = tc; 
     image = im;
     watermark = w;
