@@ -220,6 +220,10 @@ a full list of options. If not set, header defaults to "max-age=86400" (24 hours
 EMBED_ICC: Set whether the ICC profile is embedded within the output image.
 0 to strip profile, 1 to embed profile. The default is 1 (embedded profiles).
 
+OMP_NUM_THREADS: Set the number of OpenMP threads to be used by the iipsrv image
+processing routines (See OpenMP specification for details). All available processor
+threads are used by default.
+
 DECODER_MODULES: Comma separated list of external modules for decoding 
 other image formats. This is only necessary if you have activated 
 --enable-modules for ./configure and written your own image format 

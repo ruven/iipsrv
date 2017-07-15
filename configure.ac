@@ -54,9 +54,11 @@ AX_CXX_HAVE_ISFINITE
 
 # Check for OpenMP
 AC_OPENMP
+OPENMP=false
 AS_IF([test "x$enable_openmp" != "xyes"], [
  INCLUDES="$INCLUDES $OPENMP_CFLAGS"
  LIBS="$LIBS $OPENMP_CFLAGS"
+ OPENMP=true
 ])
 
 
@@ -96,13 +98,13 @@ AC_CHECK_HEADERS( libmemcached/memcached.h,
 		memcached,
 		MEMCACHED=true,
 		MEMCACHED=false,
-		-lpthread )
+		-lpthread ),
+	MEMCACHED=false
 )
 if test "x${MEMCACHED}" = xtrue; then
 	AC_DEFINE(HAVE_MEMCACHED)
 	LIBS="$LIBS -lpthread"
 fi
-
 
 
 #************************************************************
@@ -400,8 +402,9 @@ AC_OUTPUT
 AC_MSG_RESULT([
 Options Enabled:
 ---------------
- Memcached:  ${MEMCACHED}
- JPEG2000 :  ${JPEG2000_CODEC}
+ Memcached :  ${MEMCACHED}
+ JPEG2000  :  ${JPEG2000_CODEC}
+ OpenMP    :  ${OPENMP}
 ])
 
 # PNG Output:			${PNG}
