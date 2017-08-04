@@ -1,3 +1,8 @@
+04/08/2017:
+	- Increased JPEG buffer size to handle large markers such as XMP metadata.
+	- XMP metadata size now reported in CVT.cc.
+
+
 14/07/2017:
 	- Added Compressor class from which JPEGCompressor is now derived.
 	  Abstracting this will enable easier integration of PNG output.

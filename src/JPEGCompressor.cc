@@ -25,7 +25,7 @@
 using namespace std;
 
 
-#define MX 32768
+#define MX 65535
 
 
 /* Since an ICC profile can be larger than the maximum size of a JPEG marker

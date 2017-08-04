@@ -377,7 +377,10 @@ void CVT::send( Session* session ){
 
   // Add XMP metadata if this exists
   if( (*session->image)->getMetadata("xmp").size() > 0 ){
-    if( session->loglevel >= 3 ) *(session->logfile) << "CVT :: Embedding XMP metadata" << endl;
+    if( session->loglevel >= 3 ){
+      *(session->logfile) << "CVT :: Embedding XMP metadata with size "
+			  << (*session->image)->getMetadata("xmp").size() << " bytes" << endl;
+    }
     compressor->setXMPMetadata( (*session->image)->getMetadata("xmp") );
   }
 
