@@ -543,7 +543,7 @@ int main( int argc, char *argv[] )
       char* header = NULL;
       string request_string;
 
-
+#ifndef DEBUG
       // If we have a URI prefix mapping, first test for a match between the map prefix string
       //  and the full REQUEST_URI variable
       if( !uri_map.empty() ){
@@ -567,7 +567,7 @@ int main( int argc, char *argv[] )
 	  if( loglevel >= 2 ) logfile << "Request URI mapped to " << request_string << endl;
 	}
       }
-
+#endif
 
       // If the request string hasn't been set through a URI map, get it from the QUERY_STRING variable
       if( request_string.empty() ){
@@ -597,6 +597,7 @@ int main( int argc, char *argv[] )
       session.headers["QUERY_STRING"] = request_string;
       session.headers["BASE_URL"] = base_url;
 
+#ifndef DEBUG
       // Get several other HTTP headers
       if( (header = FCGX_GetParam("SERVER_PROTOCOL", request.envp)) ){
         session.headers["SERVER_PROTOCOL"] = string(header);
@@ -621,7 +622,7 @@ int main( int argc, char *argv[] )
 	  logfile << "HTTP Header: If-Modified-Since: " << header << endl;
 	}
       }
-
+#endif
 
 #ifdef HAVE_MEMCACHED
       // Check whether this exists in memcached, but only if we haven't had an if_modified_since
