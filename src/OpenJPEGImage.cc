@@ -499,8 +499,18 @@ void OpenJPEGImage::process(unsigned int res, int layers,
     logfile << "INFO :: OpenJPEG :: process() :: Decoding a region (not a single tile)" << endl
             << flush;
 #endif
+
+    // Hack for openjpeg up to 2.2.0
+    for (OPJ_UINT32 i_comp = 0; i_comp < out_image->numcomps; i_comp++){
+      out_image->comps[i_comp].factor = vipsres;
+    }
+
     // Tell OpenJPEG what region we want to decode
-    if (!opj_set_decode_area(l_codec, out_image, xoffset, yoffset, xoffset + tw, yoffset + th)) {
+    if (!opj_set_decode_area(l_codec, out_image,
+                             xoffset << vipsres,
+                             yoffset << vipsres,
+                             (xoffset + tw) << vipsres,
+                             (yoffset + th) << vipsres)) {
       throw file_error("ERROR :: OpenJPEG :: process() :: opj_set_decode_area() failed");
     }
     // Decode region from image
