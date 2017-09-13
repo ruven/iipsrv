@@ -310,7 +310,7 @@ void KakaduImage::closeImage()
 }
 
 
-// Get an invidual tile
+// Get an individual tile
 RawTile KakaduImage::getTile( int seq, int ang, unsigned int res, int layers, unsigned int tile )
 {
 

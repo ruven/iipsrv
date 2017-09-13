@@ -950,7 +950,7 @@
 
 
 06/06/2008:
-	- Modifed the way the image dimensions are stored in the IIPImage class.
+	- Modified the way the image dimensions are stored in the IIPImage class.
 	  Rather than simply storing the max size, a vector of available dimensions
 	  is saved making it easier to get the size for a given resolution.
 
