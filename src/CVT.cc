@@ -366,13 +366,21 @@ void CVT::send( Session* session ){
   }
 
 
-  // Set ICC profile
+  // Set ICC profile if of a reasonable size
   if( session->view->embedICC() && ((*session->image)->getMetadata("icc").size()>0) ){
-    if( session->loglevel >= 3 ){
-      *(session->logfile) << "CVT :: Embedding ICC profile with size "
-			  << (*session->image)->getMetadata("icc").size() << " bytes" << endl;
+    if( (*session->image)->getMetadata("icc").size() < 65536 ){
+      if( session->loglevel >= 3 ){
+	*(session->logfile) << "CVT :: Embedding ICC profile with size "
+			    << (*session->image)->getMetadata("icc").size() << " bytes" << endl;
+      }
+      compressor->setICCProfile( (*session->image)->getMetadata("icc") );
     }
-    compressor->setICCProfile( (*session->image)->getMetadata("icc") );
+    else{
+      if( session->loglevel >= 3 ){
+	*(session->logfile) << "CVT :: ICC profile with size "
+			    << (*session->image)->getMetadata("icc").size() << " bytes is too large: Not embedding" << endl;
+      }
+    }
   }
 
   // Add XMP metadata if this exists
@@ -420,7 +428,7 @@ void CVT::send( Session* session ){
   // data is greater than uncompressed
   unsigned int strip_height = 128;
   unsigned int channels = complete_image.channels;
-  unsigned char* output = new unsigned char[resampled_width*channels*strip_height+65636];
+  unsigned char* output = new unsigned char[resampled_width*channels*strip_height+65536];
   int strips = (resampled_height/strip_height) + (resampled_height%strip_height == 0 ? 0 : 1);
 
   for( int n=0; n<strips; n++ ){

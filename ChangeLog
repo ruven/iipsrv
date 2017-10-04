@@ -1,3 +1,7 @@
+04/10/2017:
+	- Set an upper size limit to ICC profiles accepted for embedding
+
+
 04/08/2017:
 	- Increased JPEG buffer size to handle large markers such as XMP metadata.
 	- XMP metadata size now reported in CVT.cc.
