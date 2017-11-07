@@ -61,11 +61,11 @@ Optional: libmemcached (for Memcached) and Kakadu or OpenJPEG (for JPEG2000).
 
 Plus, of course, an fcgi-enabled web server. The server has been successfully
 tested on the following servers:
-- Apache (http://httpd.apache.org),
-- Lighttpd (http://www.lighttpd.net)
-- IIS (http://www.iis.net)
-- NginX (http://www.nginx.org)
-- MyServer (http://www.myserverproject.net)
+- [Apache](https://httpd.apache.org),
+- [Lighttpd](https://www.lighttpd.net)
+- [IIS](https://www.iis.net)
+- [NginX](https://nginx.org)
+- [MyServer](http://www.myserverproject.net)
 - Java Application Servers (Tomcat, JBoss)
 
 Example server configurations are shown below.
