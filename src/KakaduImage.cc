@@ -435,6 +435,7 @@ RawTile KakaduImage::getRegion( int seq, int ang, unsigned int res, int layers, 
 // Main processing function
 void KakaduImage::process( unsigned int res, int layers, int xoffset, int yoffset, unsigned int tw, unsigned int th, void *d ) throw (file_error)
 {
+
   // Scale up our output bit depth to the nearest factor of 8
   unsigned int obpc = bpc;
   if( bpc <= 16 && bpc > 8 ) obpc = 16;
@@ -529,6 +530,14 @@ void KakaduImage::process( unsigned int res, int layers, int xoffset, int yoffse
     logfile << "Kakadu :: mapped resolution region size: " << comp_dims.size.x << "x" << comp_dims.size.y << endl;
     logfile << "Kakadu :: About to pull stripes" << endl;
 #endif
+
+    // Make sure we don't have zero-sized images
+    if( comp_dims.size.x == 0 || comp_dims.size.y == 0 ){
+#ifdef DEBUG
+      logfile << "Kakadu :: Error: region of zero size requested" << endl;
+#endif
+      throw 1;
+    }
 
     int index = 0;
     bool continues = true;

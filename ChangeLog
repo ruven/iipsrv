@@ -1,3 +1,7 @@
+17/11/2017:
+	- Added a check to KakaduImage.cc for zero-sized regions
+
+
 04/10/2017:
 	- Set an upper size limit to ICC profiles accepted for embedding
 
