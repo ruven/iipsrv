@@ -1,7 +1,7 @@
 /*
     IIP Profile Command Handler Class Member Function
 
-    Copyright (C) 2013-2015 Ruven Pillay.
+    Copyright (C) 2013-2017 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -87,8 +87,14 @@ void PFL::run( Session* session, const std::string& argument ){
     error << "PFL :: Invalid resolution number: " << resolution; 
     throw error.str();
   }
-  // Or impossible coordinates
-  if( x1<0 || x2<0 || y1<0 || y2<0 ){
+
+  // Get the width and height for this resolution
+  unsigned int num_res = (*session->image)->getNumResolutions();
+  int im_width = (int)(*session->image)->image_widths[num_res-resolution-1];
+  int im_height = (int)(*session->image)->image_heights[num_res-resolution-1];
+
+  // Check for impossible coordinates
+  if( x1<0 || x2<0 || y1<0 || y2<0 || x1>im_width || x2>im_width || y1>im_height || y2>im_height ){
     ostringstream error;
     error << "PFL :: Invalid coordinates: " << x1 << "," << y1 << "-" << x2 << "," << y2 << endl;
     throw error.str();

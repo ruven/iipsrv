@@ -1,3 +1,8 @@
+24/11/2017:
+	- Added input validation for SPECTRA, PFL and MINMAX commands to avoid
+	  possible access to unmapped memory - thanks to John Heasman at DocuSign.
+
+
 17/11/2017:
 	- Added a check to KakaduImage.cc for zero-sized regions
 

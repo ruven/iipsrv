@@ -1,7 +1,7 @@
 /*
     IIP Command Handler Member Functions
 
-    Copyright (C) 2006-2014 Ruven Pillay.
+    Copyright (C) 2006-2017 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -122,10 +122,18 @@ void MINMAX::run( Session* session, const string& argument ){
 
   if( session->loglevel >= 3 ) *(session->logfile) << "MINMAX handler reached" << endl;
 
-  // Parse the argument list
+  // Parse the argument list: command is of the form MINXMAX=<channel>:<min>,<max>
   int delimitter = argument.find( ":" );
   string tmp = argument.substr( 0, delimitter );
   int nchan = atoi( tmp.c_str() ) - 1;
+
+  // Sanity check for channel index
+  if( nchan < 0 || nchan > (int)(*session->image)->getNumChannels() ){
+    if( session->loglevel >= 1 ) *(session->logfile) << "MINMAX :: Error: channel number out of bounds: "
+						     << tmp.c_str() << endl;
+    return;
+  }
+
   string arg2 = argument.substr( delimitter + 1, argument.length() );
 
   delimitter = arg2.find( "," );

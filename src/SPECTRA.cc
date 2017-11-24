@@ -1,7 +1,7 @@
 /*
     IIP SPECTRA Command Handler Class Member Function
 
-    Copyright (C) 2009-2015 Ruven Pillay.
+    Copyright (C) 2009-2017 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -61,10 +61,16 @@ void SPECTRA::run( Session* session, const std::string& argument ){
   y = atoi( arg.substr(0,arg.length()).c_str() );
 
   if( session->loglevel >= 5 ){ 
-    (*session->logfile) << "SPECTRA :: resolution:" << resolution
-			<< ",tile: " << tile
-			<< ",x:" << x
-			<< ",y:" << y << endl;
+    (*session->logfile) << "SPECTRA :: resolution: " << resolution
+			<< ", tile: " << tile
+			<< ", x: " << x
+			<< ", y: " << y << endl;
+  }
+
+  // Make sure our x,y coordinates are within the tile dimensions
+  if( x < 0 || x >= (int)(*session->image)->getTileWidth() ||
+      y < 0 || y >= (int)(*session->image)->getTileHeight() ){
+    throw invalid_argument( "SPECTRA :: Error: x,y coordinates outside of tile boundaries" );
   }
   
 
@@ -101,6 +107,15 @@ void SPECTRA::run( Session* session, const std::string& argument ){
     int n = *i;
 
     RawTile rawtile = tilemanager.getTile( resolution, tile, n, session->view->yangle, session->view->getLayers(), UNCOMPRESSED );
+
+    // Make sure our x,y coordinates are within the tile dimensions
+    if( x >= (int)rawtile.width || y >= (int)rawtile.height ){
+      if( session->loglevel >= 1 ){
+	(*session->logfile) << "SPECTRA :: Error: x,y coordinates outside of tile boundaries" << endl;
+      }
+      break;
+    }
+
 
     unsigned int tw = (*session->image)->getTileWidth();
     unsigned int index = y*tw + x;
@@ -139,7 +154,7 @@ void SPECTRA::run( Session* session, const std::string& argument ){
     session->out->printf( tmp );
     session->out->flush();
 
-    if( session->loglevel >= 3 ) (*session->logfile) << "SPECTRA :: " << n << " with reflectance " << reflectance << endl;
+    if( session->loglevel >= 3 ) (*session->logfile) << "SPECTRA :: Band: " << n << ", reflectance: " << reflectance << endl;
   }
 
 
