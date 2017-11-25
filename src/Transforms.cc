@@ -356,6 +356,7 @@ void filter_cmap( RawTile& in, enum cmap_type cmap ){
   float *outv = outptr;
 
   switch(cmap){
+
     case HOT:
 #if defined(__ICC) || defined(__INTEL_COMPILER)
 #pragma ivdep
@@ -375,6 +376,7 @@ void filter_cmap( RawTile& in, enum cmap_type cmap ){
         else { outv[0]=outv[1]=outv[2]=1.; }
       }
       break;
+
     case COLD:
 #if defined(__ICC) || defined(__INTEL_COMPILER)
 #pragma ivdep
@@ -394,6 +396,7 @@ void filter_cmap( RawTile& in, enum cmap_type cmap ){
         else {outv[0]=outv[1]=outv[2]=1.;}
       }
       break;
+
     case JET:
 #if defined(__ICC) || defined(__INTEL_COMPILER)
 #pragma ivdep
@@ -415,10 +418,44 @@ void filter_cmap( RawTile& in, enum cmap_type cmap ){
         else { outv[0]=0.5; outv[1]=outv[2]=0.; }
       }
       break;
+
+    case RED:
+#if defined(__ICC) || defined(__INTEL_COMPILER)
+#pragma ivdep
+#endif
+      for( unsigned int n=0; n<ndata; n+=in_chan, outv+=3 ){
+	value = fptr[n];
+	outv[0] = value;
+	outv[1] = outv[2] = 0.;
+      }
+      break;
+
+    case GREEN:
+#if defined(__ICC) || defined(__INTEL_COMPILER)
+#pragma ivdep
+#endif
+      for( unsigned int n=0; n<ndata; n+=in_chan, outv+=3 ) {
+	value = fptr[n];
+	outv[0] = outv[2] = 0.;
+	outv[1] = value;
+      }
+      break;
+
+    case BLUE:
+#if defined(__ICC) || defined(__INTEL_COMPILER)
+#pragma ivdep
+#endif
+      for( unsigned int n=0; n<ndata; n+=in_chan, outv+=3 ) {
+	value = fptr[n];
+	outv[0] = outv[1] = 0;
+	outv[2] = value;
+      }
+      break;
+
     default:
       break;
-    };
 
+  };
 
   // Delete old data buffer
   delete[] (float*) in.data;
