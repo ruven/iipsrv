@@ -116,24 +116,24 @@ class JPEGCompressor: public Compressor{
       @param strip_height pixel height of the strip we want to compress
       @return header size
    */
-  void InitCompression( const RawTile& rawtile, unsigned int strip_height ) throw (std::string);
+  void InitCompression( const RawTile& rawtile, unsigned int strip_height );
 
   /// Compress a strip of image data
   /** @param s source image data
       @param o output buffer
       @param tile_height pixel height of the tile we are compressing
    */
-  unsigned int CompressStrip( unsigned char* s, unsigned char* o, unsigned int tile_height ) throw (std::string);
+  unsigned int CompressStrip( unsigned char* s, unsigned char* o, unsigned int tile_height );
 
   /// Finish the strip based compression and free memory
   /** @param output output buffer
       @return size of output generated
    */
-  unsigned int Finish( unsigned char* output ) throw (std::string);
+  unsigned int Finish( unsigned char* output );
 
   /// Compress an entire buffer of image data at once in one command
   /** @param t tile of image data */
-  int Compress( RawTile& t ) throw (std::string);
+  int Compress( RawTile& t );
 
   /// Return the JPEG header size
   inline unsigned int getHeaderSize() { return header_size; }

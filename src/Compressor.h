@@ -85,7 +85,7 @@ class Compressor {
       @param rawtile tile containing the image to be compressed
       @param strip_height pixel height of the strip we want to compress
   */
-  virtual void InitCompression( const RawTile& rawtile, unsigned int strip_height ) throw (std::string) {};
+  virtual void InitCompression( const RawTile& rawtile, unsigned int strip_height ) {};
 
 
   /// Compress a strip of image data
@@ -95,21 +95,21 @@ class Compressor {
       @param tile_height pixel height of the tile we are compressing
       @return number of bytes used for strip
   */
-  virtual unsigned int CompressStrip( unsigned char* s, unsigned char* o, unsigned int tile_height ) throw (std::string) { return 0; };
+  virtual unsigned int CompressStrip( unsigned char* s, unsigned char* o, unsigned int tile_height ) { return 0; };
 
 
   /// Finish the strip based compression and free memory
   /** @param output output buffer
       @return size of output generated in bytes
   */
-  virtual unsigned int Finish( unsigned char* output ) throw (std::string) { return 0; };
+  virtual unsigned int Finish( unsigned char* output ) { return 0; };
 
 
   /// Compress an entire buffer of image data at once in one command
   /** @param t tile of image data
       @return number of bytes used
    */
-  virtual int Compress( RawTile& t ) throw (std::string) { return 0; };
+  virtual int Compress( RawTile& t ) { return 0; };
 
 
   /// Add metadata to the image header

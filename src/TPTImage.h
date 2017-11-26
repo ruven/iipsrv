@@ -2,7 +2,7 @@
 
 /*  IIPImage Tiled Pyramidal TIFF Class
 
-    Copyright (C) 2000-2016 Ruven Pillay.
+    Copyright (C) 2000-2017 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -82,13 +82,13 @@ class TPTImage : public IIPImage {
   ~TPTImage() { closeImage(); };
 
   /// Overloaded function for opening a TIFF image
-  void openImage() throw (file_error);
+  void openImage();
 
   /// Overloaded function for loading TIFF image information
   /** @param x horizontal sequence angle
       @param y vertical sequence angle
    */
-  void loadImageInfo( int x, int y ) throw (file_error);
+  void loadImageInfo( int x, int y );
 
   /// Overloaded function for closing a TIFF image
   void closeImage();
@@ -100,7 +100,7 @@ class TPTImage : public IIPImage {
       @param l quality layers
       @param t tile number
    */
-  RawTile getTile( int x, int y, unsigned int r, int l, unsigned int t ) throw (file_error);
+  RawTile getTile( int x, int y, unsigned int r, int l, unsigned int t );
 
 };
 

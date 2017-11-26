@@ -58,7 +58,7 @@ unsigned int get_nprocs_conf(){
 using namespace std;
 
 
-void KakaduImage::openImage() throw (file_error)
+void KakaduImage::openImage()
 {
   string filename = getFileName( currentX, currentY );
 
@@ -118,7 +118,7 @@ void KakaduImage::openImage() throw (file_error)
 }
 
 
-void KakaduImage::loadImageInfo( int seq, int ang ) throw(file_error)
+void KakaduImage::loadImageInfo( int seq, int ang )
 {
   jp2_channels j2k_channels;
   jp2_palette j2k_palette;
@@ -311,7 +311,7 @@ void KakaduImage::closeImage()
 
 
 // Get an invidual tile
-RawTile KakaduImage::getTile( int seq, int ang, unsigned int res, int layers, unsigned int tile ) throw (file_error)
+RawTile KakaduImage::getTile( int seq, int ang, unsigned int res, int layers, unsigned int tile )
 {
 
   // Scale up our output bit depth to the nearest factor of 8
@@ -399,7 +399,7 @@ RawTile KakaduImage::getTile( int seq, int ang, unsigned int res, int layers, un
 
 
 // Get an entire region and not just a tile
-RawTile KakaduImage::getRegion( int seq, int ang, unsigned int res, int layers, int x, int y, unsigned int w, unsigned int h ) throw (file_error)
+RawTile KakaduImage::getRegion( int seq, int ang, unsigned int res, int layers, int x, int y, unsigned int w, unsigned int h )
 {
   // Scale up our output bit depth to the nearest factor of 8
   unsigned int obpc = bpc;
@@ -433,7 +433,7 @@ RawTile KakaduImage::getRegion( int seq, int ang, unsigned int res, int layers, 
 
 
 // Main processing function
-void KakaduImage::process( unsigned int res, int layers, int xoffset, int yoffset, unsigned int tw, unsigned int th, void *d ) throw (file_error)
+void KakaduImage::process( unsigned int res, int layers, int xoffset, int yoffset, unsigned int tw, unsigned int th, void *d )
 {
 
   // Scale up our output bit depth to the nearest factor of 8

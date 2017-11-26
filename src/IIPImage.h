@@ -2,7 +2,7 @@
 
 /*  IIP fcgi server module
 
-    Copyright (C) 2000-2016 Ruven Pillay.
+    Copyright (C) 2000-2017 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -78,7 +78,7 @@ class IIPImage {
   std::string suffix;
 
   /// Private function to determine the image type
-  void testImageType() throw( file_error );
+  void testImageType();
 
   /// If we have a sequence of images, determine which horizontal angles exist
   void measureHorizontalAngles();
@@ -254,7 +254,7 @@ class IIPImage {
   /// Get the image timestamp
   /** @param s file path
    */
-  void updateTimestamp( const std::string& s ) throw( file_error );
+  void updateTimestamp( const std::string& s );
 
   /// Get a HTTP RFC 1123 formatted timestamp
   const std::string getTimestamp();

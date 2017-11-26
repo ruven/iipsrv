@@ -176,7 +176,7 @@ void iip_term_destination( j_compress_ptr cinfo )
 
 
 
-void JPEGCompressor::InitCompression( const RawTile& rawtile, unsigned int strip_height ) throw (string)
+void JPEGCompressor::InitCompression( const RawTile& rawtile, unsigned int strip_height )
 {
   // Do some initialisation
   dest = &dest_mgr;
@@ -278,7 +278,7 @@ void JPEGCompressor::InitCompression( const RawTile& rawtile, unsigned int strip
   We use a separate tile_height from the predefined strip_height because
   the tile height for the final row can be different
  */
-unsigned int JPEGCompressor::CompressStrip( unsigned char* input, unsigned char* output, unsigned int tile_height ) throw (string)
+unsigned int JPEGCompressor::CompressStrip( unsigned char* input, unsigned char* output, unsigned int tile_height )
 {
   JSAMPROW row[1];
   int row_stride = width * channels;
@@ -310,7 +310,7 @@ unsigned int JPEGCompressor::CompressStrip( unsigned char* input, unsigned char*
 
 
 
-unsigned int JPEGCompressor::Finish( unsigned char* output ) throw (string)
+unsigned int JPEGCompressor::Finish( unsigned char* output )
 {
   dest->source = output;
 
@@ -329,7 +329,7 @@ unsigned int JPEGCompressor::Finish( unsigned char* output ) throw (string)
 
 
 
-int JPEGCompressor::Compress( RawTile& rawtile ) throw (string)
+int JPEGCompressor::Compress( RawTile& rawtile )
 {
   // Do some initialisation
   data = (unsigned char*) rawtile.data;

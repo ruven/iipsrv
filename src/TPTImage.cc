@@ -28,7 +28,7 @@
 using namespace std;
 
 
-void TPTImage::openImage() throw (file_error)
+void TPTImage::openImage()
 {
 
   // Insist that the tiff and tile_buf be NULL
@@ -59,7 +59,7 @@ void TPTImage::openImage() throw (file_error)
 }
 
 
-void TPTImage::loadImageInfo( int seq, int ang ) throw(file_error)
+void TPTImage::loadImageInfo( int seq, int ang )
 {
   tdir_t current_dir;
   int count;
@@ -187,7 +187,7 @@ void TPTImage::closeImage()
 }
 
 
-RawTile TPTImage::getTile( int seq, int ang, unsigned int res, int layers, unsigned int tile ) throw (file_error)
+RawTile TPTImage::getTile( int seq, int ang, unsigned int res, int layers, unsigned int tile )
 {
   uint32 im_width, im_height, tw, th, ntlx, ntly;
   uint32 rem_x, rem_y;

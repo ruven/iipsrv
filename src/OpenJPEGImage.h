@@ -29,7 +29,7 @@ extern std::ofstream logfile;
 // Inherits from IIPImage. Uses the OpenJPEG library.
 class OpenJPEGImage : public IIPImage {
 
-private:
+ private:
   unsigned int raster_width; // Image size
   unsigned int raster_height;
 
@@ -42,28 +42,29 @@ private:
 
   bool sgnd; // Whether the data are signed
 
-  /**
-     Main processing function
-    \param res              resolution
-    \param layers           number of quality levels to decode
-    \param xoffset          x coordinate
-    \param yoffset          y coordinate
-    \param tw               width of region
-    \param th               height of region
-    \param tile             specific tile to decode (-1 if deconding a region)
-    \param d                buffer to fill
-*/
-  void process(unsigned int res, int layers,
-               unsigned int tw, unsigned int th,
-               unsigned int xoffset, unsigned int yoffset,
-               int tile, void* d) throw(file_error);
 
-public:
+  /**
+    Main processing function
+    @param res              resolution
+    @param layers           number of quality levels to decode
+    @param xoffset          x coordinate
+    @param yoffset          y coordinate
+    @param tw               width of region
+    @param th               height of region
+    @param tile             specific tile to decode (-1 if deconding a region)
+    @param d                buffer to fill
+  */
+  void process( unsigned int res, int layers,
+                unsigned int tw, unsigned int th,
+                unsigned int xoffset, unsigned int yoffset,
+                int tile, void* d );
+
+ public:
+
   /**
     Constructor
   */
-  OpenJPEGImage()
-      : IIPImage()
+  OpenJPEGImage() : IIPImage()
   {
     image_tile_width = 0;
     image_tile_height = 0;
@@ -76,12 +77,12 @@ public:
     virtual_levels = 0;
   };
 
+
   /**
     Constructor
-    \param path             image path
+    @param path image path
   */
-  OpenJPEGImage(const std::string& path)
-      : IIPImage(path)
+  OpenJPEGImage(const std::string& path) : IIPImage(path)
   {
     image_tile_width = 0;
     image_tile_height = 0;
@@ -93,13 +94,13 @@ public:
     numResolutions = 0;
     virtual_levels = 0;
   };
+
 
   /**
     Copy Constructor
-    \param image            IIPImage object
+    @param image IIPImage object
   */
-  OpenJPEGImage(const IIPImage& image)
-      : IIPImage(image)
+  OpenJPEGImage(const IIPImage& image) : IIPImage(image)
   {
     image_tile_width = 0;
     image_tile_height = 0;
@@ -112,6 +113,7 @@ public:
     virtual_levels = 0;
   };
 
+
   /**
     Destructor
   */
@@ -120,28 +122,32 @@ public:
     closeImage();
   };
 
+
   /**
     Overloaded function for opening a JP2 image
   */
-  void openImage() throw(file_error);
+  void openImage();
+
 
   /**
     Overloaded function for loading JP2 image information
-    \param x horizontal sequence angle
-    \param y vertical sequence angle
+    @param x horizontal sequence angle
+    @param y vertical sequence angle
   */
-  void loadImageInfo(int x, int y) throw(file_error);
+  void loadImageInfo( int x, int y );
+
 
   /**
     Overloaded function for closing a JP2 image
   */
   void closeImage();
 
+
   /// Return whether this image type directly handles region decoding.
-  bool regionDecoding()
-  {
+  bool regionDecoding(){
     return true;
   };
+
 
   /// Overloaded function for getting a particular tile
   /** @param x horizontal sequence angle
@@ -150,23 +156,23 @@ public:
       @param l number of quality layers to decode
       @param t tile number
    */
-  RawTile getTile(int x, int y, unsigned int r, int l,
-                  unsigned int t) throw(file_error);
+  RawTile getTile( int x, int y, unsigned int r, int l, unsigned int t );
+
 
   /**
     Overloaded function for returning a region from image
-    \param ha       horizontal angle
-    \param va       vertical angle
-    \param res      resolution
-    \param layers   number of quality layers to decode
-    \param x        x coordinate
-    \param y        y coordinate
-    \param w        width of region
-    \param h        height of region
-    \return         a RawTile object
+    @param ha       horizontal angle
+    @param va       vertical angle
+    @param res      resolution
+    @param layers   number of quality layers to decode
+    @param x        x coordinate
+    @param y        y coordinate
+    @param w        width of region
+    @param h        height of region
+    @return         a RawTile object
   */
-  RawTile getRegion(int ha, int va, unsigned int res, int layers,
-                    int x, int y, unsigned int w, unsigned int h) throw(file_error);
+  RawTile getRegion( int ha, int va, unsigned int res, int layers, int x, int y, unsigned int w, unsigned int h );
+
 };
 
 #endif

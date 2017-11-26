@@ -62,7 +62,7 @@ static void info_callback(const char* msg, void* /*client_data*/)
 /************************************************************************/
 // Opens file with image and calls loadImageInfo()
 
-void OpenJPEGImage::openImage() throw(file_error)
+void OpenJPEGImage::openImage()
 {
 #ifdef DEBUG
   Timer timer;
@@ -107,7 +107,7 @@ void OpenJPEGImage::closeImage()
 /************************************************************************/
 // Saves important image information to IIPImage and OpenJPEGImage variables
 
-void OpenJPEGImage::loadImageInfo(int /*seq*/, int /*ang*/) throw(file_error)
+void OpenJPEGImage::loadImageInfo(int /*seq*/, int /*ang*/)
 {
 #ifdef DEBUG
   Timer timer;
@@ -252,7 +252,7 @@ void OpenJPEGImage::loadImageInfo(int /*seq*/, int /*ang*/) throw(file_error)
 // Get one individual tile from the opened picture
 
 RawTile OpenJPEGImage::getTile(int seq, int ang, unsigned int res, int layers,
-                               unsigned int tile) throw(file_error)
+                               unsigned int tile)
 {
 #ifdef DEBUG
   Timer timer;
@@ -349,7 +349,7 @@ RawTile OpenJPEGImage::getTile(int seq, int ang, unsigned int res, int layers,
 
 RawTile OpenJPEGImage::getRegion(int ha, int va, unsigned int res, int layers,
                                  int x, int y,
-                                 unsigned int w, unsigned int h) throw(file_error)
+                                 unsigned int w, unsigned int h)
 {
 #ifdef DEBUG
   Timer timer;
@@ -418,7 +418,7 @@ RawTile OpenJPEGImage::getRegion(int ha, int va, unsigned int res, int layers,
 void OpenJPEGImage::process(unsigned int res, int layers,
                             unsigned int xoffset, unsigned int yoffset,
                             unsigned int tw, unsigned int th, int tile,
-                            void* d) throw(file_error)
+                            void* d)
 {
   static opj_image_t* out_image; // Decoded image
   static opj_stream_t* l_stream; // File stream
