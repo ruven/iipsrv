@@ -1,3 +1,8 @@
+28/11/2017:
+	- Modified bilinear interpolation code to avoid risk of unallocated buffer
+	  reads at edges and to use replicated pixels.
+
+
 26/11/2017:
 	- Removed exception specifications from the IIPImage and Compressor class
 	  declarations as well as from their derived classes. Dynamic exception
