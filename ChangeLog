@@ -1,3 +1,7 @@
+13/12/2017:
+	- Update to configure.ac to fix compilation with Kakadu 7.10
+
+
 28/11/2017:
 	- Modified bilinear interpolation code to avoid risk of unallocated buffer
 	  reads at edges and to use replicated pixels.

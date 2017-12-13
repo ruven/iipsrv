@@ -213,12 +213,21 @@ if test -n "$kakadu_path"; then
 
 		# Check for AVX2 support in Kakadu
 		AC_CHECK_FILE( $kakadu_path/apps/make/avx2_stripe_transfer.o,
-			AC_MSG_RESULT([configure: Kakadu is >= v7.5.]);
+			AC_MSG_RESULT([configure: Kakadu is >= v7.5]);
 			KDU_75=true,
 			AC_MSG_RESULT([configure: Kakadu is < v7.5])
 		)
 		if test "x${KDU_75}" = xtrue; then
 			LIBS="$LIBS $kakadu_path/apps/make/avx2_stripe_transfer.o $kakadu_path/apps/make/kdu_client_window.o"
+		fi
+
+		AC_CHECK_FILE( $kakadu_path/apps/make/supp_local.o,
+			AC_MSG_RESULT([configure: Kakadu is >= v7.10]);
+			KDU_7A=true,
+                        AC_MSG_RESULT([configure: Kakadu is < v7.10])
+                )
+		if test "x${KDU_7A}" = xtrue; then
+			LIBS="$LIBS $kakadu_path/apps/make/supp_local.o"
 		fi
 
 		JPEG2000_CODEC="true (Kakadu)"
