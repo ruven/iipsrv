@@ -186,7 +186,7 @@ cropped to the tile size. If smaller, the watermark will be positioned
 randomly within the available space. The image can be either colour or 
 grayscale.
 
-WATERMARK_PROBABILITY: The probability that a particilar tile will have a watermark
+WATERMARK_PROBABILITY: The probability that a particular tile will have a watermark
 applied to it. 0 means never, 1 means always.
 
 WATERMARK_OPACITY: The opacity (between 0 and 1) applied to the watermark image.

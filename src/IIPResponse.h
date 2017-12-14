@@ -67,7 +67,7 @@ class IIPResponse{
 
 
   /// Set the Last Modified header
-  /** @param m Last modifed date as a HTTP RFC 1123 formatted timestamp */
+  /** @param m Last modified date as a HTTP RFC 1123 formatted timestamp */
   void setLastModified( const std::string& m ) { modified = "Last-Modified: " + m; };
 
 

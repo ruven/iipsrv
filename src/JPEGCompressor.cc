@@ -200,7 +200,7 @@ void JPEGCompressor::InitCompression( const RawTile& rawtile, unsigned int strip
   cinfo.err = jpeg_std_error( &jerr );
 
 
-  // Overide the error_exit function with our own.
+  // Override the error_exit function with our own.
   // Hmmm, we have to do this assignment in C due to the strong type checking of C++
   //  or something like that. So, we use an extern "C" function declared at the top
   //  of this file and pass our arguments through this. I'm sure there's a better
@@ -356,7 +356,7 @@ int JPEGCompressor::Compress( RawTile& rawtile )
   cinfo.err = jpeg_std_error( &jerr );
 
 
-  // Overide the error_exit function with our own.
+  // Override the error_exit function with our own.
   // Hmmm, we have to do this assignment in C due to the strong type checking of C++
   //  or something like that. So, we use an extern "C" function declared at the top
   //  of this file and pass our arguments through this. I'm sure there's a better
