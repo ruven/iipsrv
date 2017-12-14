@@ -322,7 +322,8 @@ void IIIF::run( Session* session, const string& src )
 
     }
 
-    // Size Parameter: { "full"; "w,"; ",h"; "pct:n"; "w,h"; "!w,h" }
+    // Size Parameter: { "full/max"; "w,"; ",h"; "pct:n"; "w,h"; "!w,h" }
+    // Note that "full" will be deprecated in favour of "max" in version 3.0
     if ( izer.hasMoreTokens() ){
 
       string sizeString = izer.nextToken();
@@ -334,8 +335,8 @@ void IIIF::run( Session* session, const string& src )
       float ratio = (float)requested_width / (float)requested_height;
       unsigned int max_size = session->view->getMaxSize();
 
-      // "full" request
-      if ( sizeString == "full" ){
+      // "full" or "max" request
+      if ( sizeString == "full" || sizeString == "max" ){
         // No need to do anything
       }
 

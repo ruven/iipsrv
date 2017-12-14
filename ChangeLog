@@ -1,3 +1,8 @@
+14/12/2017:
+	- Added the "max" parameter for the size section to the IIIF parser ahead of
+	  deprecation in IIIF version 3.0: http://iiif.io/api/image/2.1/#size
+
+
 13/12/2017:
 	- Update to configure.ac to fix compilation with Kakadu 7.10
 
