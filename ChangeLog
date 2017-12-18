@@ -1,3 +1,7 @@
+18/12/2017:
+	- Added missing snprintf definition for Windows in JPEGCompressor.h
+
+
 14/12/2017:
 	- Added the "max" parameter for the size section to the IIIF parser ahead of
 	  deprecation in IIIF version 3.0: http://iiif.io/api/image/2.1/#size

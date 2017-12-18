@@ -26,6 +26,10 @@
 #include "Compressor.h"
 
 
+// Fix missing snprintf in Windows
+#if _MSC_VER
+#define snprintf _snprintf
+#endif
 
 
 extern "C"{
