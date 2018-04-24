@@ -2066,7 +2066,7 @@ int FCGX_InitRequest(FCGX_Request *request, int sock, int flags)
  *
  * FCGX_Init --
  *
- *      Initilize the FCGX library.  This is called by FCGX_Accept()
+ *      Initialize the FCGX library.  This is called by FCGX_Accept()
  *      but must be called by the user when using FCGX_Accept_r().
  *
  * Results:

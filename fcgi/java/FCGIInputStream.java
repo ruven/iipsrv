@@ -362,7 +362,7 @@ public class FCGIInputStream extends InputStream
     /*
     * Close the stream. This method does not really exist for BufferedInputStream in java,
     * but is implemented here for compatibility with the FCGI structures being used. It
-    * doent really throw any IOExceptions either, but that's there for compatiblity with
+    * doesn't really throw any IOExceptions either, but that's there for compatibility with
     * the InputStreamInterface.
     */
     public void close() throws IOException{

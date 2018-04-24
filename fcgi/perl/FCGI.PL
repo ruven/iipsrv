@@ -433,7 +433,7 @@ Creates a request handle. It has the following optional parameters:
 =item error perl file handle (default: \*STDERR)
 
 These filehandles will be setup to act as input/output/error
-on succesful Accept.
+on successful Accept.
 
 =item environment hash reference (default: \%ENV)
 

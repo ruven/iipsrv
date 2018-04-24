@@ -2476,8 +2476,8 @@ EOF
 	      fi
 	    done
 	  else
-	    # Error occured in the first compile.  Let's try to salvage the situation:
-	    # Compile a seperate program for each library.
+	    # Error occurred in the first compile.  Let's try to salvage the situation:
+	    # Compile a separate program for each library.
 	    for i in $deplibs; do
 	      name="`expr $i : '-l\(.*\)'`"
 	     # If $name is empty we are operating on a -L argument.
@@ -4567,7 +4567,7 @@ relink_command=\"$relink_command\""
 	eval "export $shlibpath_var"
       fi
 
-      # Restore saved enviroment variables
+      # Restore saved environment variables
       if test "${save_LC_ALL+set}" = set; then
 	LC_ALL="$save_LC_ALL"; export LC_ALL
       fi
