@@ -174,7 +174,7 @@ public class FCGIInterface
         isNewConnection = false;
 
         /*
-         * if connection isnt open accept a new connection (blocking)
+         * if connection isn't open accept a new connection (blocking)
          */
         for(;;) {
             if (request.socket == null){

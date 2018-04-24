@@ -25,7 +25,7 @@ public class FCGIRequest
     * is refrenced by an FCGIInterface class variable . All of this
     * object's data could just as easily be declared directly there.
     * When we thread, this will change, so we might as well use a
-    * seperate class. In line with this thinking, though somewhat
+    * separate class. In line with this thinking, though somewhat
     * more perversely, we kept the socket here.
     */
     /*

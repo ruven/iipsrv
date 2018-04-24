@@ -676,7 +676,7 @@ void filter_rotate( RawTile& in, float angle=0.0 ){
   // Currently implemented only for rectangular rotations
   if( (int)angle % 90 == 0 && (int)angle % 360 != 0 ){
 
-    // Intialize our counter
+    // Initialize our counter
     unsigned int n = 0;
 
     // Allocate memory for our temporary buffer - rotate function only ever operates on 8bit data

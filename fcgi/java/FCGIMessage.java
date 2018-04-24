@@ -21,7 +21,7 @@ import java.util.Properties;
  * For reading incoming mesages, we pass the input
  * stream as a param to the constructor rather than to each method.
  * Methods that build messages use and return internal buffers, so they
- * dont need a stream.
+ * don't need a stream.
  */
 
 public class FCGIMessage
@@ -240,8 +240,8 @@ public class FCGIMessage
         }
         /*
          * No guarantee that we have a request yet, so
-         * dont use fcgi output stream to reference socket, instead
-         * use the FileInputStream that refrences it. Also
+         * don't use fcgi output stream to reference socket, instead
+         * use the FileInputStream that references it. Also
          * nowhere to save exception, since this is not FCGI stream.
          */
 

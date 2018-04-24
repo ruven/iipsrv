@@ -55,7 +55,7 @@ public:
 
     // Note that if no buf is assigned (the default), iostream methods
     // such as peek(), unget() and putback() will fail.  If a buf is
-    // assigned, I/O is a bit less effecient and output streams will
+    // assigned, I/O is a bit less efficient and output streams will
     // have to be flushed (or the streambuf destroyed) before the next 
     // call to "accept".
     fcgi_streambuf(FCGX_Stream * fcgx, char * buf, int len);
