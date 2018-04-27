@@ -1,9 +1,9 @@
-// IIPImage.cc 
+// IIPImage.cc
 
 
 /*  IIP fcgi server module
 
-    Copyright (C) 2000-2017 Ruven Pillay.
+    Copyright (C) 2000-2018 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -330,5 +330,3 @@ int operator != ( const IIPImage& A, const IIPImage& B )
   if( A.imagePath != B.imagePath ) return( 1 );
   else return( 0 );
 }
-
-

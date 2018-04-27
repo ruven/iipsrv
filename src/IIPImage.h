@@ -2,7 +2,7 @@
 
 /*  IIP fcgi server module
 
-    Copyright (C) 2000-2017 Ruven Pillay.
+    Copyright (C) 2000-2018 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -25,7 +25,7 @@
 
 
 // Fix missing snprintf in Windows
-#if _MSC_VER
+#if defined _MSC_VER &&_MSC_VER<1900
 #define snprintf _snprintf
 #endif
 

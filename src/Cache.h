@@ -2,7 +2,7 @@
 
 /*  IIP Image Server
 
-    Copyright (C) 2005-2014 Ruven Pillay.
+    Copyright (C) 2005-2018 Ruven Pillay.
     Based on an LRU cache by Patrick Audley <http://blackcat.ca/lifeline/query.php/tag=LRU_CACHE>
     Copyright (C) 2004 by Patrick Audley
 
@@ -28,7 +28,7 @@
 
 
 // Fix missing snprintf in Windows
-#if _MSC_VER
+#if defined _MSC_VER && _MSC_VER<1900
 #define snprintf _snprintf
 #endif
 

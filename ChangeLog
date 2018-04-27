@@ -1,3 +1,9 @@
+27/04/2018:
+	- Updates to Windows build files: removed Kakadu dependencies.
+	- Added version check for snprintf Windows redefinition as this is now
+	  supported in recent versions of Visual Studio.
+
+
 18/12/2017:
 	- Added missing snprintf definition for Windows in JPEGCompressor.h
 
