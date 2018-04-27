@@ -1,13 +1,13 @@
 /*
     IIP DeepZoom Request Command Handler Class Member Function
 
-    Development supported by Moravian Library in Brno (Moravska zemska 
-    knihovna v Brne, http://www.mzk.cz/) R&D grant MK00009494301 & Old 
-    Maps Online (http://www.oldmapsonline.org/) from the Ministry of 
-    Culture of the Czech Republic. 
+    Development supported by Moravian Library in Brno (Moravska zemska
+    knihovna v Brne, http://www.mzk.cz/) R&D grant MK00009494301 & Old
+    Maps Online (http://www.oldmapsonline.org/) from the Ministry of
+    Culture of the Czech Republic.
 
 
-    Copyright (C) 2009-2015 Ruven Pillay.
+    Copyright (C) 2009-2018 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -35,7 +35,7 @@ using namespace std;
 
 
 // Windows does not provide a log2 function!
-#if (!defined HAVE_LOG2) || (defined _MSC_VER)
+#if (!defined HAVE_LOG2 && !defined _MSC_VER) || (defined _MSC_VER && _MSC_VER<1900)
 double log2(double max){
   return log((double)max)/log((double)2);
 }
