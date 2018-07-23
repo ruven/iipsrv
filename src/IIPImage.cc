@@ -1,4 +1,4 @@
-// IIPImage.cc
+// IIPImage.cc 
 
 
 /*  IIP fcgi server module
@@ -119,7 +119,7 @@ void IIPImage::testImageType()
     // Magic file signatures for TIFF (See http://www.garykessler.net/library/file_sigs.html)
     static const unsigned char stdtiff[3] = {0x49,0x20,0x49};       // TIFF
     static const unsigned char lsbtiff[4] = {0x49,0x49,0x2A,0x00};  // Little Endian TIFF
-    static const unsigned char msbtiff[4] = {0x49,0x49,0x2A,0x00};  // Big Endian TIFF
+    static const unsigned char msbtiff[4] = {0x4D,0x4D,0x00,0x2A};  // Big Endian TIFF
     static const unsigned char lbigtiff[4] = {0x4D,0x4D,0x00,0x2B}; // Little Endian BigTIFF
     static const unsigned char bbigtiff[4] = {0x49,0x49,0x2B,0x00}; // Big Endian BigTIFF
 
@@ -330,3 +330,5 @@ int operator != ( const IIPImage& A, const IIPImage& B )
   if( A.imagePath != B.imagePath ) return( 1 );
   else return( 0 );
 }
+
+
