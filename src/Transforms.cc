@@ -533,7 +533,7 @@ void filter_interpolate_nearestneighbour( RawTile& in, unsigned int resampled_wi
   // Correctly set our Rawtile info
   in.width = resampled_width;
   in.height = resampled_height;
-  in.dataLength = resampled_width * resampled_height * channels * in.bpc/8;
+  in.dataLength = resampled_width * resampled_height * channels * (in.bpc/8);
   in.data = output;
 }
 
@@ -616,7 +616,7 @@ void filter_interpolate_bilinear( RawTile& in, unsigned int resampled_width, uns
   // Correctly set our Rawtile info
   in.width = resampled_width;
   in.height = resampled_height;
-  in.dataLength = resampled_width * resampled_height * channels * in.bpc/8;
+  in.dataLength = resampled_width * resampled_height * channels * (in.bpc/8);
   in.data = output;
 }
 
@@ -643,7 +643,7 @@ void filter_contrast( RawTile& in, float c ){
   delete[] (float*) in.data;
   in.data = buffer;
   in.bpc = 8;
-  in.dataLength = np * in.bpc/8;
+  in.dataLength = np * (in.bpc/8);
 }
 
 
@@ -848,7 +848,7 @@ void filter_flatten( RawTile& in, int bands ){
   }
 
   in.channels = bands;
-  in.dataLength = ni * in.bpc/8;
+  in.dataLength = ni * (in.bpc/8);
 }
 
 

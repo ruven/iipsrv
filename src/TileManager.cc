@@ -130,23 +130,23 @@ void TileManager::crop( RawTile *ttt ){
 
   // Create a new buffer, fill it with the old data, then copy
   // back the cropped part into the RawTile buffer
-  int len = tw * th * ttt->channels * ttt->bpc/8;
+  int len = tw * th * ttt->channels * (ttt->bpc/8);
   unsigned char* buffer = (unsigned char*) malloc( len );
   unsigned char* src_ptr = (unsigned char*) memcpy( buffer, ttt->data, len );
   unsigned char* dst_ptr = (unsigned char*) ttt->data;
 
   // Copy one scanline at a time
   for( unsigned int i=0; i<ttt->height; i++ ){
-    len =  ttt->width * ttt->channels * ttt->bpc/8;
+    len =  ttt->width * ttt->channels * (ttt->bpc/8);
     memcpy( dst_ptr, src_ptr, len );
     dst_ptr += len;
-    src_ptr += tw * ttt->channels * ttt->bpc/8;
+    src_ptr += tw * ttt->channels * (ttt->bpc/8);
   }
 
   free( buffer );
 
   // Reset the data length
-  len = ttt->width * ttt->height * ttt->channels * ttt->bpc/8;
+  len = ttt->width * ttt->height * ttt->channels * (ttt->bpc/8);
   ttt->dataLength = len;
   ttt->padded = false;
 
@@ -356,7 +356,7 @@ RawTile TileManager::getRegion( unsigned int res, int seq, int ang, int layers, 
 
   // Create an empty tile with the correct dimensions
   RawTile region( 0, res, seq, ang, width, height, channels, bpc );
-  region.dataLength = width * height * channels * bpc/8;
+  region.dataLength = width * height * channels * (bpc/8);
   region.sampleType = sampleType;
 
   // Allocate memory for the region
