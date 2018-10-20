@@ -136,8 +136,8 @@ void TileManager::crop( RawTile *ttt ){
   unsigned char* dst_ptr = (unsigned char*) ttt->data;
 
   // Copy one scanline at a time
+  len =  ttt->width * ttt->channels * (ttt->bpc/8);
   for( unsigned int i=0; i<ttt->height; i++ ){
-    len =  ttt->width * ttt->channels * (ttt->bpc/8);
     memcpy( dst_ptr, src_ptr, len );
     dst_ptr += len;
     src_ptr += tw * ttt->channels * (ttt->bpc/8);
