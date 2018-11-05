@@ -1,3 +1,9 @@
+05/11/2018:
+	- Added codecOptions list to Session class for setting options for the encoders
+	  or decoders. Added KDU_READMODE environment variable for setting the Kakadu
+	  read-mode in KakaduImage.cc. Options are 0 (fast), 1 (fussy) or 2 (resilient).
+
+
 23/07/2018:
 	- Fixed incorrect big endian TIFF file signature.
 

@@ -1,7 +1,7 @@
 /*
     IIP Environment Variable Class
 
-    Copyright (C) 2006-2017 Ruven Pillay.
+    Copyright (C) 2006-2018 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -44,6 +44,7 @@
 #define ALLOW_UPSCALING true
 #define URI_MAP ""
 #define EMBED_ICC true
+#define KAKADU_READMODE 0
 
 
 #include <string>
@@ -268,6 +269,19 @@ class Environment {
     if( envpara ) embed = atoi( envpara );
     else embed = EMBED_ICC;
     return embed;
+  }
+
+
+  static unsigned int getKduReadMode(){
+    unsigned int readmode;
+    char* envpara = getenv( "KAKADU_READMODE" );
+    if( envpara ){
+      readmode = atoi( envpara );
+      if( readmode > 2 ) readmode = 2;
+      if( readmode < 0 ) readmode = 0;
+    }
+    else readmode = KAKADU_READMODE;
+    return readmode;
   }
 
 };

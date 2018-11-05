@@ -164,9 +164,9 @@ class KakaduImage : public IIPImage {
   /// Destructor
   ~KakaduImage() { closeImage(); };
 
+
   /// Overloaded function for opening a TIFF image
   void openImage();
-
 
   /// Overloaded function for loading TIFF image information
   /** @param x horizontal sequence angle
@@ -202,6 +202,15 @@ class KakaduImage : public IIPImage {
       @param b buffer to fill
    */
   RawTile getRegion( int ha, int va, unsigned int r, int l, int x, int y, unsigned int w, unsigned int h );
+
+  /// Read-mode types
+  enum KDU_READMODE { KDU_FAST,     ///< Default fast mode
+		      KDU_FUSSY,    ///< Fussy mode
+		      KDU_RESILIENT ///< Reslient mode for damaged JP2 streams
+  };
+
+  /// Read-mode
+  KDU_READMODE kdu_readmode;
 
 
 };

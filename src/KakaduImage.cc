@@ -7,7 +7,7 @@
     Culture of the Czech Republic.
 
 
-    Copyright (C) 2009-2017 IIPImage.
+    Copyright (C) 2009-2018 IIPImage.
     Author: Ruven Pillay
 
     This program is free software; you can redistribute it and/or modify
@@ -52,7 +52,7 @@ unsigned int get_nprocs_conf(){
 
 
 #include "Timer.h"
-//#define DEBUG 1
+#define DEBUG 0
 
 
 using namespace std;
@@ -104,7 +104,20 @@ void KakaduImage::openImage()
 
   // Set up the cache size and allow restarting
   //codestream.augment_cache_threshold(1024);
-  codestream.set_fast();
+
+  // Set Kakadu read mode
+  switch( kdu_readmode ) {
+    case KDU_FUSSY:
+      codestream.set_fussy();
+      break;
+    case KDU_RESILIENT:
+      codestream.set_resilient();
+      break;
+    case KDU_FAST:
+    default:
+      codestream.set_fast();
+  }
+
   codestream.set_persistent();
   //  codestream.enable_restart();
 

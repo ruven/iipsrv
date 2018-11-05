@@ -1,7 +1,7 @@
 /*
     IIP Generic Task Class
 
-    Copyright (C) 2006-2017 Ruven Pillay
+    Copyright (C) 2006-2018 Ruven Pillay
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -74,6 +74,7 @@ struct Session {
   int loglevel;
   std::ofstream* logfile;
   std::map <const std::string, std::string> headers;
+  std::map <const std::string, unsigned int> codecOptions;
 
   imageCacheMapType *imageCache;
   Cache* tileCache;

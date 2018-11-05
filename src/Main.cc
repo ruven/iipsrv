@@ -1,7 +1,7 @@
 /*
     IIP FCGI server module - Main loop.
 
-    Copyright (C) 2000-2017 Ruven Pillay
+    Copyright (C) 2000-2018 Ruven Pillay
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -291,6 +291,11 @@ int main( int argc, char *argv[] )
   bool embed_icc = Environment::getEmbedICC();
 
 
+#ifdef HAVE_KAKADU
+  // Get the Kakadu readmode
+  unsigned int kdu_readmode = Environment::getKduReadMode();
+#endif
+
   // Print out some information
   if( loglevel >= 1 ){
     logfile << "Setting maximum image cache size to " << max_image_cache_size << "MB" << endl;
@@ -310,6 +315,7 @@ int main( int argc, char *argv[] )
     logfile << "Setting ICC profile embedding to " << (embed_icc? "true" : "false") << endl;
 #ifdef HAVE_KAKADU
     logfile << "Setting up JPEG2000 support via Kakadu SDK" << endl;
+    logfile << "Setting Kakadu read-mode to " << ((kdu_readmode==2) ? "resilient" : (kdu_readmode==1) ? "fussy" : "fast") << endl;
 #elif defined(HAVE_OPENJPEG)
     logfile << "Setting up JPEG2000 support via OpenJPEG" << endl;
 #endif
@@ -539,6 +545,9 @@ int main( int argc, char *argv[] )
       session.out = &writer;
       session.watermark = &watermark;
       session.headers.clear();
+#ifdef HAVE_KAKADU
+      session.codecOptions["KAKADU_READMODE"] = kdu_readmode;
+#endif
 
       char* header = NULL;
       string request_string;

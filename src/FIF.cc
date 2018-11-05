@@ -129,9 +129,12 @@ void FIF::run( Session* session, const string& src ){
       if( session->loglevel >= 2 )
         *(session->logfile) << "FIF :: JPEG2000 image detected" << endl;
 #if defined(HAVE_KAKADU)
-        *session->image = new KakaduImage( test );
+      *session->image = new KakaduImage( test );
+      if( session->codecOptions["KAKADU_READMODE"] ){
+	((KakaduImage*)*session->image)->kdu_readmode = (KakaduImage::KDU_READMODE) session->codecOptions["KAKADU_READMODE"];
+      }
 #elif defined(HAVE_OPENJPEG)
-        *session->image = new OpenJPEGImage( test );
+      *session->image = new OpenJPEGImage( test );
 #endif
     }
 #endif
