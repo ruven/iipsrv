@@ -224,6 +224,9 @@ OMP_NUM_THREADS: Set the number of OpenMP threads to be used by the iipsrv image
 processing routines (See OpenMP specification for details). All available processor
 threads are used by default.
 
+KAKADU_READMODE: Set the Kakadu JPEG2000 read-mode. 0 for 'fast' mode with minimal error checking (default), 1 for 'fussy' mode with no error 
+recovery, 2 for 'resilient' mode with maximum recovery from codestream errors. See the Kakadu documentation for further details.
+
 DECODER_MODULES: Comma separated list of external modules for decoding 
 other image formats. This is only necessary if you have activated 
 --enable-modules for ./configure and written your own image format 

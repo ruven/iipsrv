@@ -1,4 +1,4 @@
-.TH IIPSRV 8 "July 2017" "Ruven Pillay"
+.TH IIPSRV 8 "November 2018" "Ruven Pillay"
 .SH NAME
 
 IIPSRV \- IIPImage Image Server
@@ -129,6 +129,9 @@ Set whether the ICC profile is embedded within the output image.
 Set the number of OpenMP threads to be used by the iipsrv image
 processing routines (See OpenMP specification for details). All available processor
 threads are used by default.
+.IP KAKADU_READMODE
+Set the Kakadu JPEG2000 read-mode. 0 for 'fast' mode with minimal error checking (default), 1 for 'fussy' mode with no error recovery,
+2 for 'resilient' mode with maximum recovery from codestream errors. See the Kakadu documentation for further details.
 
 
 .SH EXAMPLES
