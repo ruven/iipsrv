@@ -1,7 +1,7 @@
 /*
     IIP CVT Command Handler Class Member Function
 
-    Copyright (C) 2006-2017 Ruven Pillay.
+    Copyright (C) 2006-2018 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -185,7 +185,7 @@ void CVT::send( Session* session ){
   // Convert CIELAB to sRGB
   if( (*session->image)->getColourSpace() == CIELAB ){
     if( session->loglevel >= 5 ) function_timer.start();
-    filter_LAB2sRGB( complete_image );
+    session->processor->LAB2sRGB( complete_image );
     if( session->loglevel >= 5 ){
       *(session->logfile) << "CVT :: Converting from CIELAB->sRGB in "
 			  << function_timer.getTime() << " microseconds" << endl;
@@ -200,7 +200,7 @@ void CVT::send( Session* session ){
     // Apply normalization and perform float conversion
     {
       if( session->loglevel >= 5 ) function_timer.start();
-      filter_normalize( complete_image, (*session->image)->max, (*session->image)->min );
+      session->processor->normalize( complete_image, (*session->image)->max, (*session->image)->min );
       if( session->loglevel >= 5 ){
 	*(session->logfile) << "CVT :: Converting to floating point and normalizing in "
 			    << function_timer.getTime() << " microseconds" << endl;
@@ -211,7 +211,7 @@ void CVT::send( Session* session ){
     // Apply hill shading if requested
     if( session->view->shaded ){
       if( session->loglevel >= 5 ) function_timer.start();
-      filter_shade( complete_image, session->view->shade[0], session->view->shade[1] );
+      session->processor->shade( complete_image, session->view->shade[0], session->view->shade[1] );
       if( session->loglevel >= 5 ){
 	*(session->logfile) << "CVT :: Applying hill-shading in " << function_timer.getTime() << " microseconds" << endl;
       }
@@ -221,7 +221,7 @@ void CVT::send( Session* session ){
     // Apply color twist if requested
     if( session->view->ctw.size() ){
       if( session->loglevel >= 5 ) function_timer.start();
-      filter_twist( complete_image, session->view->ctw );
+      session->processor->twist( complete_image, session->view->ctw );
       if( session->loglevel >= 5 ){
 	*(session->logfile) << "CVT :: Applying color twist in " << function_timer.getTime() << " microseconds" << endl;
       }
@@ -232,7 +232,7 @@ void CVT::send( Session* session ){
     if( session->view->getGamma() != 1.0 ){
       float gamma = session->view->getGamma();
       if( session->loglevel >= 5 ) function_timer.start();
-      filter_gamma( complete_image, gamma );
+      session->processor->gamma( complete_image, gamma );
       if( session->loglevel >= 5 ){
 	*(session->logfile) << "CVT :: Applying gamma of " << gamma << " in "
 			    << function_timer.getTime() << " microseconds" << endl;
@@ -243,7 +243,7 @@ void CVT::send( Session* session ){
     // Apply inversion if requested
     if( session->view->inverted ){
       if( session->loglevel >= 5 ) function_timer.start();
-      filter_inv( complete_image );
+      session->processor->inv( complete_image );
       if( session->loglevel >= 5 ){
 	*(session->logfile) << "CVT :: Applying inversion in " << function_timer.getTime() << " microseconds" << endl;
       }
@@ -253,7 +253,7 @@ void CVT::send( Session* session ){
     // Apply color mapping if requested
     if( session->view->cmapped ){
       if( session->loglevel >= 5 ) function_timer.start();
-      filter_cmap( complete_image, session->view->cmap );
+      session->processor->cmap( complete_image, session->view->cmap );
       if( session->loglevel >= 5 ){
 	*(session->logfile) << "CVT :: Applying color map in " << function_timer.getTime() << " microseconds" << endl;
       }
@@ -263,7 +263,7 @@ void CVT::send( Session* session ){
     // Apply any contrast adjustments and/or clip from 16bit or 32bit to 8bit
     {
       if( session->loglevel >= 5 ) function_timer.start();
-      filter_contrast( complete_image, session->view->getContrast() );
+      session->processor->contrast( complete_image, session->view->getContrast() );
       if( session->loglevel >= 5 ){
 	*(session->logfile) << "CVT :: Applying contrast of " << session->view->getContrast()
 			    << " and converting to 8bit in " << function_timer.getTime() << " microseconds" << endl;
@@ -284,11 +284,11 @@ void CVT::send( Session* session ){
     switch( interpolation ){
      case 0:
       interpolation_type = "nearest neighbour";
-      filter_interpolate_nearestneighbour( complete_image, resampled_width, resampled_height );
+      session->processor->interpolate_nearestneighbour( complete_image, resampled_width, resampled_height );
       break;
      default:
       interpolation_type = "bilinear";
-      filter_interpolate_bilinear( complete_image, resampled_width, resampled_height );
+      session->processor->interpolate_bilinear( complete_image, resampled_width, resampled_height );
       break;
     }
 
@@ -305,7 +305,7 @@ void CVT::send( Session* session ){
     int output_channels = (complete_image.channels==2)? 1 : 3;
     if( session->loglevel >= 5 ) function_timer.start();
 
-    filter_flatten( complete_image, output_channels );
+    session->processor->flatten( complete_image, output_channels );
 
     if( session->loglevel >= 5 ){
       *(session->logfile) << "CVT :: Flattening to " << output_channels << " channel"
@@ -321,7 +321,7 @@ void CVT::send( Session* session ){
 
     if( session->loglevel >= 5 ) function_timer.start();
 
-    filter_greyscale( complete_image );
+    session->processor->greyscale( complete_image );
 
     if( session->loglevel >= 5 ){
       *(session->logfile) << "CVT :: Converting to greyscale in "
@@ -336,7 +336,7 @@ void CVT::send( Session* session ){
 
     if( session->loglevel >= 5 ) function_timer.start();
 
-    filter_flip( complete_image, session->view->flip  );
+    session->processor->flip( complete_image, session->view->flip  );
 
     if( session->loglevel >= 5 ){
       string direction = session->view->flip==1 ? "horizontally" : "vertically";
@@ -353,7 +353,7 @@ void CVT::send( Session* session ){
     if( session->loglevel >= 5 ) function_timer.start();
 
     float rotation = session->view->getRotation();
-    filter_rotate( complete_image, rotation );
+    session->processor->rotate( complete_image, rotation );
 
     // For 90 and 270 rotation swap width and height
     resampled_width = complete_image.width;

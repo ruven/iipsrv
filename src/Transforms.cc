@@ -2,7 +2,7 @@
 
 /*  IIP fcgi server module - image processing routines
 
-    Copyright (C) 2004-2017 Ruven Pillay.
+    Copyright (C) 2004-2018 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -59,7 +59,7 @@ using namespace std;
 
 
 // Normalization function
-void filter_normalize( RawTile& in, vector<float>& max, vector<float>& min ) {
+void Transform::normalize( RawTile& in, vector<float>& max, vector<float>& min ) {
 
   float *normdata;
   unsigned int np = in.dataLength * 8 / in.bpc;
@@ -156,7 +156,7 @@ void filter_normalize( RawTile& in, vector<float>& max, vector<float>& min ) {
 
 
 // Hillshading function
-void filter_shade( RawTile& in, int h_angle, int v_angle ){
+void Transform::shade( RawTile& in, int h_angle, int v_angle ){
 
   float o_x, o_y, o_z;
 
@@ -227,7 +227,7 @@ void filter_shade( RawTile& in, int h_angle, int v_angle ){
 
 
 // Convert a single pixel from CIELAB to sRGB
-static void LAB2sRGB( unsigned char *in, unsigned char *out ){
+void Transform::LAB2sRGB( unsigned char *in, unsigned char *out ){
 
   /* First convert to XYZ
    */
@@ -318,7 +318,7 @@ static void LAB2sRGB( unsigned char *in, unsigned char *out ){
 
 
 // Convert whole tile from CIELAB to sRGB
-void filter_LAB2sRGB( RawTile& in ){
+void Transform::LAB2sRGB( RawTile& in ){
 
   unsigned long np = in.width * in.height * in.channels;
 
@@ -341,7 +341,7 @@ void filter_LAB2sRGB( RawTile& in ){
 
 
 // Colormap function
-void filter_cmap( RawTile& in, enum cmap_type cmap ){
+void Transform::cmap( RawTile& in, enum cmap_type cmap ){
 
   float value;
   unsigned in_chan = in.channels;
@@ -467,7 +467,7 @@ void filter_cmap( RawTile& in, enum cmap_type cmap ){
 
 
 // Inversion function
-void filter_inv( RawTile& in ){
+void Transform::inv( RawTile& in ){
 
   unsigned int np = in.dataLength * 8 / in.bpc;
   float *infptr = (float*) in.data;
@@ -487,7 +487,7 @@ void filter_inv( RawTile& in ){
 
 
 // Resize image using nearest neighbour interpolation
-void filter_interpolate_nearestneighbour( RawTile& in, unsigned int resampled_width, unsigned int resampled_height ){
+void Transform::interpolate_nearestneighbour( RawTile& in, unsigned int resampled_width, unsigned int resampled_height ){
 
   // Pointer to input buffer
   unsigned char *input = (unsigned char*) in.data;
@@ -541,7 +541,7 @@ void filter_interpolate_nearestneighbour( RawTile& in, unsigned int resampled_wi
 
 // Resize image using bilinear interpolation
 //  - Floating point implementation which benchmarks about 2.5x slower than nearest neighbour
-void filter_interpolate_bilinear( RawTile& in, unsigned int resampled_width, unsigned int resampled_height ){
+void Transform::interpolate_bilinear( RawTile& in, unsigned int resampled_width, unsigned int resampled_height ){
 
   // Pointer to input buffer
   unsigned char *input = (unsigned char*) in.data;
@@ -623,7 +623,7 @@ void filter_interpolate_bilinear( RawTile& in, unsigned int resampled_width, uns
 
 
 // Function to apply a contrast adjustment and clip to 8 bit
-void filter_contrast( RawTile& in, float c ){
+void Transform::contrast( RawTile& in, float c ){
 
   unsigned long np = in.width * in.height * in.channels;
   unsigned char* buffer = new unsigned char[np];
@@ -649,7 +649,7 @@ void filter_contrast( RawTile& in, float c ){
 
 
 // Gamma correction
-void filter_gamma( RawTile& in, float g ){
+void Transform::gamma( RawTile& in, float g ){
 
   if( g == 1.0 ) return;
 
@@ -671,7 +671,7 @@ void filter_gamma( RawTile& in, float g ){
 
 
 // Rotation function
-void filter_rotate( RawTile& in, float angle=0.0 ){
+void Transform::rotate( RawTile& in, float angle=0.0 ){
 
   // Currently implemented only for rectangular rotations
   if( (int)angle % 90 == 0 && (int)angle % 360 != 0 ){
@@ -748,7 +748,7 @@ void filter_rotate( RawTile& in, float angle=0.0 ){
 // Convert colour to grayscale using the conversion formula:
 //   Luminance = 0.2126*R + 0.7152*G + 0.0722*B
 // Note that we don't linearize before converting
-void filter_greyscale( RawTile& rawtile ){
+void Transform::greyscale( RawTile& rawtile ){
 
   if( rawtile.bpc != 8 || rawtile.channels != 3 ) return;
 
@@ -782,7 +782,7 @@ void filter_greyscale( RawTile& rawtile ){
 
 
 // Apply twist or channel recombination to colour or multi-channel image
-void filter_twist( RawTile& rawtile, const vector< vector<float> >& matrix ){
+void Transform::twist( RawTile& rawtile, const vector< vector<float> >& matrix ){
 
   unsigned long np = rawtile.width * rawtile.height;
 
@@ -829,7 +829,7 @@ void filter_twist( RawTile& rawtile, const vector< vector<float> >& matrix ){
 
 // Flatten a multi-channel image to a given number of bands by simply stripping
 // away extra bands
-void filter_flatten( RawTile& in, int bands ){
+void Transform::flatten( RawTile& in, int bands ){
 
   // We cannot increase the number of channels
   if( bands >= in.channels ) return;
@@ -855,7 +855,7 @@ void filter_flatten( RawTile& in, int bands ){
 
 
 // Flip image in horizontal or vertical direction (0=horizontal,1=vertical)
-void filter_flip( RawTile& rawtile, int orientation ){
+void Transform::flip( RawTile& rawtile, int orientation ){
 
   unsigned char* buffer = new unsigned char[rawtile.width * rawtile.height * rawtile.channels];
 

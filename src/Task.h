@@ -35,6 +35,7 @@
 #include "Writer.h"
 #include "Cache.h"
 #include "Watermark.h"
+#include "Transforms.h"
 #ifdef HAVE_PNG
 #include "PNGCompressor.h"
 #endif
@@ -71,6 +72,7 @@ struct Session {
   View* view;
   IIPResponse* response;
   Watermark* watermark;
+  Transform* processor;
   int loglevel;
   std::ofstream* logfile;
   std::map <const std::string, std::string> headers;

@@ -291,10 +291,15 @@ int main( int argc, char *argv[] )
   bool embed_icc = Environment::getEmbedICC();
 
 
+  // Create our image processing engine
+  Transform* processor = new Transform();
+
+
 #ifdef HAVE_KAKADU
   // Get the Kakadu readmode
   unsigned int kdu_readmode = Environment::getKduReadMode();
 #endif
+
 
   // Print out some information
   if( loglevel >= 1 ){
@@ -319,6 +324,7 @@ int main( int argc, char *argv[] )
 #elif defined(HAVE_OPENJPEG)
     logfile << "Setting up JPEG2000 support via OpenJPEG" << endl;
 #endif
+    logfile << "Setting image processing engine to " << processor->getDescription() << endl;
 #ifdef _OPENMP
     int num_threads = 0;
 #pragma omp parallel
@@ -545,6 +551,7 @@ int main( int argc, char *argv[] )
       session.out = &writer;
       session.watermark = &watermark;
       session.headers.clear();
+      session.processor = processor;
 #ifdef HAVE_KAKADU
       session.codecOptions["KAKADU_READMODE"] = kdu_readmode;
 #endif

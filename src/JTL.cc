@@ -1,7 +1,7 @@
 /*
     IIP JTL Command Handler Class Member Function
 
-    Copyright (C) 2006-2016 Ruven Pillay.
+    Copyright (C) 2006-2018 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -115,7 +115,7 @@ void JTL::send( Session* session, int resolution, int tile ){
       *(session->logfile) << "JTL :: Converting from CIELAB->sRGB";
       function_timer.start();
     }
-    filter_LAB2sRGB( rawtile );
+    session->processor->LAB2sRGB( rawtile );
     if( session->loglevel >= 4 ){
       *(session->logfile) << " in " << function_timer.getTime() << " microseconds" << endl;
     }
@@ -130,7 +130,7 @@ void JTL::send( Session* session, int resolution, int tile ){
       *(session->logfile) << "JTL :: Normalizing and converting to float";
       function_timer.start();
     }
-    filter_normalize( rawtile, (*session->image)->max, (*session->image)->min );
+    session->processor->normalize( rawtile, (*session->image)->max, (*session->image)->min );
     if( session->loglevel >= 4 ){
       *(session->logfile) << " in " << function_timer.getTime() << " microseconds" << endl;
     }
@@ -142,7 +142,7 @@ void JTL::send( Session* session, int resolution, int tile ){
 	*(session->logfile) << "JTL :: Applying hill-shading";
 	function_timer.start();
       }
-      filter_shade( rawtile, session->view->shade[0], session->view->shade[1] );
+      session->processor->shade( rawtile, session->view->shade[0], session->view->shade[1] );
       if( session->loglevel >= 4 ){
 	*(session->logfile) << " in " << function_timer.getTime() << " microseconds" << endl;
       }
@@ -155,7 +155,7 @@ void JTL::send( Session* session, int resolution, int tile ){
 	*(session->logfile) << "JTL :: Applying color twist";
 	function_timer.start();
       }
-      filter_twist( rawtile, session->view->ctw );
+      session->processor->twist( rawtile, session->view->ctw );
       if( session->loglevel >= 4 ){
 	*(session->logfile) << " in " << function_timer.getTime() << " microseconds" << endl;
       }
@@ -169,7 +169,7 @@ void JTL::send( Session* session, int resolution, int tile ){
 	*(session->logfile) << "JTL :: Applying gamma of " << gamma;
 	function_timer.start();
       }
-      filter_gamma( rawtile, gamma);
+      session->processor->gamma( rawtile, gamma);
       if( session->loglevel >= 4 ){
 	*(session->logfile) << " in " << function_timer.getTime() << " microseconds" << endl;
       }
@@ -182,7 +182,7 @@ void JTL::send( Session* session, int resolution, int tile ){
 	*(session->logfile) << "JTL :: Applying inversion";
 	function_timer.start();
       }
-      filter_inv( rawtile );
+      session->processor->inv( rawtile );
       if( session->loglevel >= 4 ){
 	*(session->logfile) << " in " << function_timer.getTime() << " microseconds" << endl;
       }
@@ -195,7 +195,7 @@ void JTL::send( Session* session, int resolution, int tile ){
 	*(session->logfile) << "JTL :: Applying color map";
 	function_timer.start();
       }
-      filter_cmap( rawtile, session->view->cmap );
+      session->processor->cmap( rawtile, session->view->cmap );
       if( session->loglevel >= 4 ){
 	*(session->logfile) << " in " << function_timer.getTime() << " microseconds" << endl;
       }
@@ -208,7 +208,7 @@ void JTL::send( Session* session, int resolution, int tile ){
       *(session->logfile) << "JTL :: Applying contrast of " << contrast << " and converting to 8 bit";
       function_timer.start();
     }
-    filter_contrast( rawtile, contrast );
+    session->processor->contrast( rawtile, contrast );
     if( session->loglevel >= 4 ){
       *(session->logfile) << " in " << function_timer.getTime() << " microseconds" << endl;
     }
@@ -223,7 +223,7 @@ void JTL::send( Session* session, int resolution, int tile ){
       *(session->logfile) << "JTL :: Flattening channels to " << bands;
       function_timer.start();
     }
-    filter_flatten( rawtile, bands );
+    session->processor->flatten( rawtile, bands );
     if( session->loglevel >= 4 ){
       *(session->logfile) << " in " << function_timer.getTime() << " microseconds" << endl;
     }
@@ -236,7 +236,7 @@ void JTL::send( Session* session, int resolution, int tile ){
       *(session->logfile) << "JTL :: Converting to greyscale";
       function_timer.start();
     }
-    filter_greyscale( rawtile );
+    session->processor->greyscale( rawtile );
     if( session->loglevel >= 4 ){
       *(session->logfile) << " in " << function_timer.getTime() << " microseconds" << endl;
     }
@@ -250,7 +250,7 @@ void JTL::send( Session* session, int resolution, int tile ){
       flip_timer.start();
     }
 
-    filter_flip( rawtile, session->view->flip  );
+    session->processor->flip( rawtile, session->view->flip  );
 
     if( session->loglevel >= 5 ){
       *(session->logfile) << "JTL :: Flipping image ";
@@ -268,7 +268,7 @@ void JTL::send( Session* session, int resolution, int tile ){
       *(session->logfile) << "JTL :: Rotating image by " << rotation << " degrees";
       function_timer.start();
     }
-    filter_rotate( rawtile, rotation );
+    session->processor->rotate( rawtile, rotation );
     if( session->loglevel >= 4 ){
       *(session->logfile) << " in " << function_timer.getTime() << " microseconds" << endl;
     }
