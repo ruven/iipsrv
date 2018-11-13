@@ -56,8 +56,6 @@ struct Transform {
 
 
   /// Function to apply colormap to gray images
-  ///   based on the routine colormap.cpp in Imagin Raytracer by Olivier Ferrand
-  ///   http://www.imagin-raytracer.org
   /** @param in tile data to be converted
       @param cmap color map to apply.
   */

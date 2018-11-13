@@ -1,6 +1,6 @@
 /*  JPEG class wrapper to ijg jpeg library
 
-    Copyright (C) 2000-2017 Ruven Pillay.
+    Copyright (C) 2000-2018 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -61,7 +61,7 @@ typedef iip_destination_mgr * iip_dest_ptr;
 /// Wrapper class to the IJG JPEG library
 
 class JPEGCompressor: public Compressor{
-	
+
  private:
 
   /// the width, height and number of channels per sample for the image
@@ -76,7 +76,7 @@ class JPEGCompressor: public Compressor{
   /// Buffer for the image data
   unsigned char *data;
 
-  /// Size of the JPEG header 
+  /// Size of the JPEG header
   unsigned int header_size;
 
   /// JPEG library objects
@@ -137,7 +137,7 @@ class JPEGCompressor: public Compressor{
 
   /// Compress an entire buffer of image data at once in one command
   /** @param t tile of image data */
-  int Compress( RawTile& t );
+  unsigned int Compress( RawTile& t );
 
   /// Return the JPEG header size
   inline unsigned int getHeaderSize() { return header_size; }

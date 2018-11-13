@@ -107,7 +107,7 @@ iip_init_destination (j_compress_ptr cinfo)
   */
   mx += MX;
 
-  /* Allocate the output buffer --- it will be released when done with image   
+  /* Allocate the output buffer --- it will be released when done with image
   dest->buffer = (JOCTET *)
     (*cinfo->mem->alloc_small) ( (j_common_ptr) cinfo, JPOOL_IMAGE,
 				 mx * sizeof(JOCTET) );
@@ -329,7 +329,7 @@ unsigned int JPEGCompressor::Finish( unsigned char* output )
 
 
 
-int JPEGCompressor::Compress( RawTile& rawtile )
+unsigned int JPEGCompressor::Compress( RawTile& rawtile )
 {
   // Do some initialisation
   data = (unsigned char*) rawtile.data;

@@ -31,7 +31,7 @@
 #include <limits>
 static bool isfinite( float arg )
 {
-  return arg == arg && 
+  return arg == arg &&
     arg != std::numeric_limits<float>::infinity() &&
     arg != -std::numeric_limits<float>::infinity();
 }
@@ -149,7 +149,7 @@ void Transform::normalize( RawTile& in, vector<float>& max, vector<float>& min )
   // Assign our new buffer and modify some info
   in.data = normdata;
   in.bpc = 32;
-  in.dataLength = np * in.bpc / 8;
+  in.dataLength = np * (in.bpc/8);
 
 }
 
@@ -221,7 +221,7 @@ void Transform::shade( RawTile& in, int h_angle, int v_angle ){
 
   in.data = buffer;
   in.channels = 1;
-  in.dataLength = in.width * in.height * in.bpc / 8;
+  in.dataLength = in.width * in.height * (in.bpc/8);
 }
 
 
@@ -269,7 +269,6 @@ void Transform::LAB2sRGB( unsigned char *in, unsigned char *out ){
   Y /= 100.0;
   Z /= 100.0;
 
-
   /* Then convert to sRGB
    */
   R = (X * _sRGB[0][0]) + (Y * _sRGB[0][1]) + (Z * _sRGB[0][2]);
@@ -278,10 +277,9 @@ void Transform::LAB2sRGB( unsigned char *in, unsigned char *out ){
 
   /* Clip any -ve values
    */
-  if( R < 0.0 ) R = 0.0;
-  if( G < 0.0 ) G = 0.0;
-  if( B < 0.0 ) B = 0.0;
-
+  R = (R<0.0 ? 0.0 : R);
+  G = (G<0.0 ? 0.0 : G);
+  B = (B<0.0 ? 0.0 : B);
 
   /* We now need to convert these to non-linear display values
    */
@@ -302,10 +300,9 @@ void Transform::LAB2sRGB( unsigned char *in, unsigned char *out ){
 
   /* Clip to our 8 bit limit
    */
-  if( R > 255.0 ) R = 255.0;
-  if( G > 255.0 ) G = 255.0;
-  if( B > 255.0 ) B = 255.0;
-
+  R = (R>255.0 ? 255.0 : R);
+  G = (G>255.0 ? 255.0 : G);
+  B = (B>255.0 ? 255.0 : B);
 
   /* Return our sRGB values
    */
@@ -341,6 +338,8 @@ void Transform::LAB2sRGB( RawTile& in ){
 
 
 // Colormap function
+// Based on the routine colormap.cpp in Imagin Raytracer by Olivier Ferrand
+// http://www.imagin-raytracer.org
 void Transform::cmap( RawTile& in, enum cmap_type cmap ){
 
   float value;
@@ -461,7 +460,7 @@ void Transform::cmap( RawTile& in, enum cmap_type cmap ){
   delete[] (float*) in.data;
   in.data = outptr;
   in.channels = out_chan;
-  in.dataLength = ndata * out_chan * in.bpc / 8;
+  in.dataLength = ndata * out_chan * (in.bpc/8);
 }
 
 
