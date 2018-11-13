@@ -1,7 +1,7 @@
 /*  Missing time implementations for Windows
     Code taken largely from rtmpserver (www.rtmpd.com)
 
-    Copyright (C) 2011-2012 Ruven Pillay
+    Copyright (C) 2011-2018 Ruven Pillay
                   2010 Gavriloaie Eugen-Andrei
                   1997, 1998 Kungliga Tekniska Hogskolan
 		             (Royal Institute of Technology, Stockholm, Sweden)
@@ -34,7 +34,7 @@
 int
 strncasecmp(const char *s1, const char *s2, size_t n)
 {
-  while(n > 0 
+  while(n > 0
 	&& toupper((unsigned char)*s1) == toupper((unsigned char)*s2))
     {
       if(*s1 == '\0')
@@ -495,11 +495,12 @@ strptime (const char *buf, const char *fmt, struct tm *timeptr)
 }
 
 
-/* Missing round() function in MS VC++
+/* Missing round() function in older MS VC++
  */
+#if _MSC_VER<1900
 double round(double r) {
   return (r > 0.0) ? floor(r + 0.5) : ceil(r - 0.5);
 }
-
+#endif
 
 #endif /* WIN32 */

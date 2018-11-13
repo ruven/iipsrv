@@ -1,6 +1,8 @@
 13/11/2018:
 	- Converted RawTile dataLength variable to unsigned to improve overflow
 	  avoidance as per https://github.com/ruven/iipsrv/pull/156
+	- Added Visual Studio version check to round() implementation in
+	  windows/Time.cc as now supported in recent versions.
 
 
 12/11/2018:
