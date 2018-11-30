@@ -61,7 +61,7 @@ Optional: libmemcached (for Memcached) and Kakadu or OpenJPEG (for JPEG2000).
 
 Plus, of course, an fcgi-enabled web server. The server has been successfully
 tested on the following servers:
-- [Apache](https://httpd.apache.org),
+- [Apache](https://httpd.apache.org)
 - [Lighttpd](https://www.lighttpd.net)
 - [IIS](https://www.iis.net)
 - [NginX](https://nginx.org)

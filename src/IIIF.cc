@@ -181,14 +181,19 @@ void IIIF::run( Session* session, const string& src )
                      << "     { \"width\" : " << (*session->image)->image_widths[numResolutions - 1]
                      << ", \"height\" : " << (*session->image)->image_heights[numResolutions - 1] << " }";
 
+
+    // Need to keep track of maximum allowable image export sizes
+    unsigned int max = session->view->getMaxSize();
+    unsigned int numUsableResolutions = 1;
+
     for ( int i = numResolutions - 2; i > 0; i-- ){
       unsigned int w = (*session->image)->image_widths[i];
       unsigned int h = (*session->image)->image_heights[i];
-      unsigned int max = session->view->getMaxSize();
       // Only advertise images below our max size value
       if( (max == 0) || (w < max && h < max) ){
 	infoStringStream << "," << endl
 			 << "     { \"width\" : " << w << ", \"height\" : " << h << " }";
+	numUsableResolutions++;
       }
     }
 
@@ -197,7 +202,7 @@ void IIIF::run( Session* session, const string& src )
                      << "     { \"width\" : " << tw << ", \"height\" : " << th
                      << ", \"scaleFactors\" : [ 1"; // Scale 1 is original image
 
-    for ( unsigned int i = 1; i < numResolutions; i++ ){
+    for ( unsigned int i = 1; i < numUsableResolutions; i++ ){
       infoStringStream << ", " << pow(2.0, (double)i);
     }
 
@@ -207,7 +212,9 @@ void IIIF::run( Session* session, const string& src )
                      << "     \"" << IIIF_PROFILE << "\"," << endl
                      << "     { \"formats\" : [ \"jpg\" ]," << endl
                      << "       \"qualities\" : [ \"native\",\"color\",\"gray\" ]," << endl
-                     << "       \"supports\" : [\"regionByPct\",\"regionSquare\",\"sizeByForcedWh\",\"sizeByWh\",\"sizeAboveFull\",\"rotationBy90s\",\"mirroring\"] }" << endl
+                     << "       \"supports\" : [\"regionByPct\",\"regionSquare\",\"sizeByForcedWh\",\"sizeByWh\",\"sizeAboveFull\",\"rotationBy90s\",\"mirroring\"]," << endl
+		     << "       \"maxWidth\" : " << max << "," << endl
+		     << "       \"maxHeight\" : " << max << "\n     }" << endl
                      << "  ]" << endl
                      << "}";
 
