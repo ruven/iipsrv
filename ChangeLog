@@ -1,3 +1,8 @@
+21/12/2018:
+	- Added fix for rounding error in CVT.cc to avoid garbled last lines in region
+	  requests for very large images.
+
+
 30/11/2018:
 	- Added maxWidth and maxHeight IIIF API 2.1 directives to info.json.
 

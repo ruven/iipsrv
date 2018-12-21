@@ -92,6 +92,11 @@ void CVT::send( Session* session ){
     view_top = session->view->getViewTop();
     view_width = session->view->getViewWidth();
     view_height = session->view->getViewHeight();
+
+    // Make sure our region fits within the image
+    if( view_width + view_left > im_width ) view_width = im_width - view_left;
+    if( view_height + view_top > im_height ) view_height = im_height - view_top;
+
     resampled_width = session->view->getRequestWidth();
     resampled_height = session->view->getRequestHeight();
 
@@ -119,13 +124,13 @@ void CVT::send( Session* session ){
   }
 
   // If we have requested that the aspect ratio be maintained, make sure the final image fits *within* the requested size.
-  // Don't adjust images if we have less than 0.5% difference as this is often due to rounding in resolution levels
+  // Don't adjust images if we have less than 0.1% difference as this is often due to rounding in resolution levels
   if( session->view->maintain_aspect ){
     float ratio = ((float)resampled_width/(float)view_width) / ((float)resampled_height/(float)view_height);
-    if( ratio < 0.995 ){
+    if( ratio < 1.001 ){
       resampled_height = (unsigned int) round((((float)resampled_width/(float)view_width) * (float)view_height));
     }
-    else if( ratio > 1.005 ){
+    else if( ratio > 1.001 ){
       resampled_width = (unsigned int) round((((float)resampled_height/(float)view_height) * (float)view_width));
     }
   }
