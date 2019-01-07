@@ -1,0 +1,30 @@
+version: '3'
+
+networks:
+  iipsrv-net:
+    driver: bridge
+
+
+services:
+  iipsrv:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      - MEMCACHED_SERVERS=memcached
+      - MEMCACHED_TIMEOUT=172800
+      - MAX_IMAGE_CACHE_SIZE=100M
+      - VERBOSITY=4
+      - JPEG_QUALITY=100
+      - FILESYSTEM_PREFIX=/data/files
+    ports:
+      - 8080:80
+    networks:
+      - iipsrv-net
+
+  memcached:
+    image: memcached:1.5-alpine
+    # pass the 512 MB limit to the entrypoint script
+    command: -m 512
+    networks:
+      - iipsrv-net

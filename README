@@ -254,7 +254,6 @@ EXAMPLE SERVER CONFIGURATIONS
 httpd.conf example extract:
 
 ```
---------------------------------------------------------------------
 # Create a directory for the iipsrv binary
 ScriptAlias /fcgi-bin/ "/usr/local/httpd/fcgi-bin/"
 
@@ -286,7 +285,6 @@ FastCgiServer /usr/local/httpd/fcgi-bin/iipsrv.fcgi \
 -initial-env MAX_CVT=3000 \
 -listen-queue-depth 2048 \
 -processes 1
---------------------------------------------------------------------
 ```
 
 
@@ -304,7 +302,6 @@ Here is an example configuration. Note that mod_fcgid does not have a
 FastCgiServer directive and there is no need to explicitly start the server:
 
 ```
--------------------------------------------------------------------
 # Create a directory for the iipsrv binary
 ScriptAlias /fcgi-bin/ "/var/www/localhost/fcgi-bin/"
 
@@ -337,7 +334,6 @@ FcgidInitialEnv MAX_CVT "3000"
 FcgidIdleTimeout 0
 FcgidMaxProcessesPerClass 1
 
--------------------------------------------------------------------
 ```
 
 Note that on CentOS, FcgidIPCDir is configured by default to 
@@ -349,7 +345,6 @@ specify another location for FcgidIPCDir, which is writable, such as /tmp/fcgids
 lighttpd.conf example extract:
 
 ```
---------------------------------------------------------------------
 fastcgi.server = ( "/fcgi-bin/iipsrv.fcgi" =>
   (( "host" => "127.0.0.1",
      "port" => 9000,
@@ -367,7 +362,6 @@ fastcgi.server = ( "/fcgi-bin/iipsrv.fcgi" =>
       )
   ))
 )
---------------------------------------------------------------------
 ```
 
 ### NginX
@@ -423,11 +417,9 @@ configurations. For example:
 Simply run the MyServer configuration and in the MIME section, choose the .fcgi extension
 and select:
 ```
---------------------------------------------------------------------
 MIME Type: application octet-stream
 Action: Execute self contained FastCGI
 Manager: NONE 
---------------------------------------------------------------------
 ```
 
 
@@ -486,8 +478,6 @@ For example with lighttpd:
             ("host"=>"192.168.0.1", "port"=>9000, "check-local"=>"disable")
       )
     )
-
-
 
 ------------------------------------------------------------------------------------
 Please refer to the project site http://iipimage.sourceforge.net for further details
