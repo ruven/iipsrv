@@ -2,7 +2,7 @@
 
 /*  IIP Image Server
 
-    Copyright (C) 2000-2016 Ruven Pillay.
+    Copyright (C) 2000-2019 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -31,7 +31,7 @@
 
 
 /// Colour spaces - GREYSCALE, sRGB and CIELAB
-enum ColourSpaces { NONE, GREYSCALE, sRGB, CIELAB };
+enum ColourSpaces { NONE, GREYSCALE, sRGB, CIELAB, BINARY };
 
 /// Compression Types
 enum CompressionType { UNCOMPRESSED, JPEG, DEFLATE, PNG };

@@ -1,7 +1,7 @@
 /*
     Image Transforms
 
-    Copyright (C) 2004-2018 Ruven Pillay.
+    Copyright (C) 2004-2019 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -52,7 +52,7 @@ struct Transform {
       @param min : vector of minima
       @param max : vector of maxima
   */
-  void normalize( RawTile& in, std::vector<float>& max, std::vector<float>& min );
+  void normalize( RawTile& in, const std::vector<float>& max, const std::vector<float>& min );
 
 
   /// Function to apply colormap to gray images
@@ -138,11 +138,41 @@ struct Transform {
   void flatten( RawTile& in, int bands );
 
 
-  ///Flip image
+  /// Flip image
   /** @param in input image
       @param o orientation (0=horizontal,1=vertical)
   */
   void flip( RawTile& in, int o );
+
+
+  /// Calculate histogram of an image
+  /** @param in input image
+      @return vector containing histogram (single histogram for all channels)
+  */
+  std::vector<unsigned int> histogram( RawTile& in, const std::vector<float>& max, const std::vector<float>& min );
+
+
+  /// Calculate threshold for binary (bi-level) segmentation
+  /** @param in input image
+      @param histogram image histogram
+      @return threshold
+  */
+  unsigned char threshold( std::vector<unsigned int>& histogram );
+
+
+  /// Create binary (bi-level) image
+  /** @param in input image
+      @param threshold threshold for binary image segmentation
+  */
+  void binary( RawTile& in, unsigned char threshold );
+
+
+  /// Apply histogram equalization to an image
+  /** @param in input image
+      @param histogram image histogram
+  */
+  void equalize( RawTile& in, std::vector<unsigned int>& histogram );
+
 
 };
 

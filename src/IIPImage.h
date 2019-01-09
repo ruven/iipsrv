@@ -2,7 +2,7 @@
 
 /*  IIP fcgi server module
 
-    Copyright (C) 2000-2018 Ruven Pillay.
+    Copyright (C) 2000-2019 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -63,7 +63,7 @@ class IIPImage {
  private:
 
   /// Image path supplied
-  std::string imagePath; 
+  std::string imagePath;
 
   /// Prefix to add to paths
   std::string fileSystemPrefix;
@@ -139,6 +139,9 @@ class IIPImage {
 
   /// If we have an image sequence, the current X and Y position
   int currentX, currentY;
+
+  // Image histogram
+  std::vector<unsigned int> histogram;
 
   /// STL map to hold string metadata
   std::map <const std::string, std::string> metadata;
@@ -217,6 +220,7 @@ class IIPImage {
     isSet( image.isSet ),
     currentX( image.currentX ),
     currentY( image.currentY ),
+    histogram( image.histogram ),
     metadata( image.metadata ),
     timestamp( image.timestamp ) {};
 

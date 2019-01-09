@@ -2,7 +2,7 @@
 
     IIIF Request Command Handler Class Member Function
 
-    Copyright (C) 2014-2016 Ruven Pillay
+    Copyright (C) 2014-2019 Ruven Pillay
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -489,6 +489,9 @@ void IIIF::run( Session* session, const string& src )
       }
       else if ( quality == "grey" || quality == "gray" ){
         session->view->colourspace = GREYSCALE;
+      }
+      else if ( quality == "bitonal" ){
+        session->view->colourspace = BINARY;
       }
       else{
         throw invalid_argument( "unsupported quality parameter - must be one of native, color or grey" );

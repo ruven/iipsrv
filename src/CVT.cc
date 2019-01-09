@@ -1,7 +1,7 @@
 /*
     IIP CVT Command Handler Class Member Function
 
-    Copyright (C) 2006-2018 Ruven Pillay.
+    Copyright (C) 2006-2019 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -178,8 +178,39 @@ void CVT::send( Session* session ){
 #endif
 
 
-  // Get our requested region from our TileManager
+
+  // Set up our TileManager object
   TileManager tilemanager( session->tileCache, *session->image, session->watermark, compressor, session->logfile, session->loglevel );
+
+
+  // First calculate histogram if we have asked for either binarization,
+  //  histogram equalization or contrast stretching
+  if( session->view->requireHistogram() && (*session->image)->histogram.size()==0 ){
+
+    if( session->loglevel >= 5 ) function_timer.start();
+
+    // Retrieve an uncompressed version of our smallest tile
+    // which should be sufficient for calculating the histogram
+    RawTile thumbnail = tilemanager.getTile( 0, 0, 0, session->view->yangle, session->view->getLayers(), UNCOMPRESSED );
+
+    // Calculate histogram
+    (*session->image)->histogram =
+      session->processor->histogram( thumbnail, (*session->image)->max, (*session->image)->min );
+
+    if( session->loglevel >= 5 ){
+      *(session->logfile) << "CVT :: Calculated histogram in "
+			  << function_timer.getTime() << " microseconds" << endl;
+    }
+
+    // Insert the histogram into our image cache
+    const string key = (*session->image)->getImagePath();
+    imageCacheMapType::iterator i = session->imageCache->find(key);
+    if( i != session->imageCache->end() ) (i->second).histogram = (*session->image)->histogram;
+  }
+
+
+
+  // Retrieve image region
   RawTile complete_image = tilemanager.getRegion( requested_res,
 						  session->view->xangle, session->view->yangle,
 						  session->view->getLayers(),
@@ -198,14 +229,48 @@ void CVT::send( Session* session ){
   }
 
 
-
   // Only use our floating point pipeline if necessary
   if( complete_image.bpc > 8 || session->view->floatProcessing() ){
+
+
+    // Make a copy of our max and min as we may change these
+    vector <float> min = (*session->image)->min;
+    vector <float> max = (*session->image)->max;
+
+    // Change our image max and min if we have asked for a contrast stretch
+    if( session->view->contrast == -1 ){
+
+      // Find first non-zero bin in histogram
+      unsigned int n0 = 0;
+      while( (*session->image)->histogram[n0] == 0 ) ++n0;
+
+      // Find highest bin
+      unsigned int n1 = (*session->image)->histogram.size() - 1;
+      while( (*session->image)->histogram[n1] == 0 ) --n1;
+
+      // Histogram has been calculated using 8 bits, so scale up to native bit depth
+      if( complete_image.bpc > 8 && complete_image.sampleType == FIXEDPOINT ){
+	n0 = n0 << (complete_image.bpc-8);
+	n1 = n1 << (complete_image.bpc-8);
+      }
+
+      min.assign( complete_image.bpc, (float)n0 );
+      max.assign( complete_image.bpc, (float)n1 );
+
+      // Reset our contrast
+      session->view->contrast = 1.0;
+
+      if( session->loglevel >= 5 ){
+	*(session->logfile) << "CVT :: Applying contrast stretch for image range of "
+			    << n0 << " - " << n1 << endl;
+      }
+    }
+
 
     // Apply normalization and perform float conversion
     {
       if( session->loglevel >= 5 ) function_timer.start();
-      session->processor->normalize( complete_image, (*session->image)->max, (*session->image)->min );
+      session->processor->normalize( complete_image, max, min );
       if( session->loglevel >= 5 ){
 	*(session->logfile) << "CVT :: Converting to floating point and normalizing in "
 			    << function_timer.getTime() << " microseconds" << endl;
@@ -234,8 +299,8 @@ void CVT::send( Session* session ){
 
 
     // Apply any gamma correction
-    if( session->view->getGamma() != 1.0 ){
-      float gamma = session->view->getGamma();
+    if( session->view->gamma != 1.0 ){
+      float gamma = session->view->gamma;
       if( session->loglevel >= 5 ) function_timer.start();
       session->processor->gamma( complete_image, gamma );
       if( session->loglevel >= 5 ){
@@ -265,17 +330,17 @@ void CVT::send( Session* session ){
     }
 
 
+
     // Apply any contrast adjustments and/or clip from 16bit or 32bit to 8bit
     {
       if( session->loglevel >= 5 ) function_timer.start();
-      session->processor->contrast( complete_image, session->view->getContrast() );
+      session->processor->contrast( complete_image, session->view->contrast );
       if( session->loglevel >= 5 ){
-	*(session->logfile) << "CVT :: Applying contrast of " << session->view->getContrast()
+	*(session->logfile) << "CVT :: Applying contrast of " << session->view->contrast
 			    << " and converting to 8bit in " << function_timer.getTime() << " microseconds" << endl;
       }
     }
   }
-
 
 
   // Resize our image as requested. Use the interpolation method requested in the server configuration.
@@ -320,7 +385,6 @@ void CVT::send( Session* session ){
   }
 
 
-
   // Convert to greyscale if requested
   if( (*session->image)->getColourSpace() == sRGB && session->view->colourspace == GREYSCALE ){
 
@@ -334,6 +398,38 @@ void CVT::send( Session* session ){
     }
   }
 
+
+  // Convert to binary (bi-level) if requested
+  if( session->view->colourspace == BINARY ){
+
+    if( session->loglevel >= 5 ) function_timer.start();
+
+    // Calculate threshold from histogram
+    unsigned char threshold = session->processor->threshold( (*session->image)->histogram );
+
+    // Apply threshold to create binary (bi-level) image
+    session->processor->binary( complete_image, threshold );
+
+    if( session->loglevel >= 5 ){
+      *(session->logfile) << "CVT :: Converting to binary with threshold " << (unsigned int) threshold
+                          << " in " << function_timer.getTime() << " microseconds" << endl;
+    }
+  }
+
+
+  // Apply histogram equalization
+  if( session->view->equalization ){
+
+    if( session->loglevel >= 5 ) function_timer.start();
+
+    // Perform histogram equalization
+    session->processor->equalize( complete_image, (*session->image)->histogram );
+
+    if( session->loglevel >= 5 ){
+      *(session->logfile) << "CVT :: Histogram equalization applied in "
+                          << function_timer.getTime() << " microseconds" << endl;
+    }
+  }
 
 
   // Apply flip
@@ -349,7 +445,6 @@ void CVT::send( Session* session ){
 			  << function_timer.getTime() << " microseconds" << endl;
     }
   }
-
 
 
   // Apply rotation - can apply this safely after gamma and contrast adjustment

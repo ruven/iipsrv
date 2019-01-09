@@ -1,7 +1,7 @@
 /*
     IIP Command Handler Member Functions
 
-    Copyright (C) 2006-2017 Ruven Pillay.
+    Copyright (C) 2006-2019 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -63,6 +63,7 @@ Task* Task::factory( const string& t ){
   else if( type == "lyr" ) return new LYR;
   else if( type == "deepzoom" ) return new DeepZoom;
   else if( type == "ctw" ) return new CTW;
+  else if( type == "col" ) return new COL;
   else if( type == "iiif" ) return new IIIF;
   else return NULL;
 
@@ -152,12 +153,27 @@ void MINMAX::run( Session* session, const string& argument ){
 
 void CNT::run( Session* session, const string& argument ){
 
-  float contrast = (float) atof( argument.c_str() );
-
   if( session->loglevel >= 2 ) *(session->logfile) << "CNT handler reached" << endl;
-  if( session->loglevel >= 3 ) *(session->logfile) << "CNT :: requested contrast adjustment is " << contrast << endl;
 
-  session->view->setContrast( contrast );
+  // Request for histogram equalization
+  string arg = argument;
+  transform( arg.begin(), arg.end(), arg.begin(), ::tolower );
+  if( arg == "eq" || arg == "equalization" ){
+    session->view->equalization = true;
+    if( session->loglevel >= 3 ) *(session->logfile) << "CNT :: histogram equalization requested" << endl;
+  }
+  // Linear stretch
+  else if( arg == "st" || arg == "stretch" ){
+    // Use reserved value of -1 for contrast stretch
+    session->view->contrast = -1;
+    if( session->loglevel >= 3 ) *(session->logfile) << "CNT :: contrast stretch requested" << endl;
+  }
+  // Contrast adjustment by pixel multiplication
+  else{
+    float contrast = (float) atof( argument.c_str() );
+    session->view->contrast = contrast;
+    if( session->loglevel >= 3 ) *(session->logfile) << "CNT :: requested contrast adjustment is " << contrast << endl;
+  }
 }
 
 
@@ -168,7 +184,7 @@ void GAM::run( Session* session, const string& argument ){
   if( session->loglevel >= 2 ) *(session->logfile) << "GAM handler reached" << endl;
   if( session->loglevel >= 3 ) *(session->logfile) << "GAM :: requested gamma adjustment is " << gamma << endl;
 
-  session->view->setGamma( gamma );
+  session->view->gamma = gamma;
 }
 
 
@@ -460,4 +476,22 @@ void CTW::run( Session* session, const string& argument ){
     }
   }
 
+}
+
+
+void COL::run( Session* session, const string& argument ){
+  /* The argument is the output color conversion. Supported values:
+     GREY/GRAY: grayscale, BINARY: binary (bilevel)
+  */
+
+  // Convert to lower case in order to do our string comparison
+  string ctype = argument;
+  transform( ctype.begin(), ctype.end(), ctype.begin(), ::tolower );
+
+  if( session->loglevel >= 2 ) *(session->logfile) << "COL handler reached" << endl;
+  if( session->loglevel >= 3 ) *(session->logfile) << "COL :: requested color transform to " << ctype << endl;
+
+  if( ctype == "grey" || ctype == "gray" ) session->view->colourspace = GREYSCALE;
+  else if( ctype == "binary" ) session->view->colourspace = BINARY;
+  
 }

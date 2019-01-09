@@ -1,3 +1,11 @@
+09/01/2019:
+	- Added ability to do contrast stretching and histogram equalization via extensions
+	  to the CNT command (CNT=EQ and CNT=ST respectively). Also added new IIP command to
+	  enable color space conversion to greyscale or binary (aka bi-level or bitonal) via
+	  the COL command (COL=grey or COL=binary). Image histogram is calculated once when
+	  needed and saved in the image cache.
+
+
 21/12/2018:
 	- Added fix for rounding error in CVT.cc to avoid garbled last lines in region
 	  requests for very large images.

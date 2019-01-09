@@ -1,9 +1,9 @@
-// IIPImage.cc 
+// IIPImage.cc
 
 
 /*  IIP fcgi server module
 
-    Copyright (C) 2000-2018 Ruven Pillay.
+    Copyright (C) 2000-2019 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -69,6 +69,7 @@ void IIPImage::swap( IIPImage& first, IIPImage& second ) // nothrow
   std::swap( first.isSet, second.isSet );
   std::swap( first.currentX, second.currentX );
   std::swap( first.currentY, second.currentY );
+  std::swap( first.histogram, second.histogram );
   std::swap( first.metadata, second.metadata );
   std::swap( first.timestamp, second.timestamp );
   std::swap( first.min, second.min );
@@ -215,7 +216,7 @@ void IIPImage::measureVerticalAngles()
   unsigned int i;
 
   string filename = fileSystemPrefix + imagePath + fileNamePattern + "000_*." + suffix;
-  
+
   if( glob( filename.c_str(), 0, NULL, &gdat ) != 0 ){
     globfree( &gdat );
   }
@@ -330,5 +331,3 @@ int operator != ( const IIPImage& A, const IIPImage& B )
   if( A.imagePath != B.imagePath ) return( 1 );
   else return( 0 );
 }
-
-

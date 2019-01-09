@@ -1,8 +1,8 @@
 // Image Transform Functions
 
-/*  IIP fcgi server module - image processing routines
+/*  IIPImage image processing routines
 
-    Copyright (C) 2004-2018 Ruven Pillay.
+    Copyright (C) 2004-2019 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -59,7 +59,7 @@ using namespace std;
 
 
 // Normalization function
-void Transform::normalize( RawTile& in, vector<float>& max, vector<float>& min ) {
+void Transform::normalize( RawTile& in, const vector<float>& max, const vector<float>& min ) {
 
   float *normdata;
   unsigned int np = in.dataLength * 8 / in.bpc;
@@ -852,7 +852,6 @@ void Transform::flatten( RawTile& in, int bands ){
 
 
 
-
 // Flip image in horizontal or vertical direction (0=horizontal,1=vertical)
 void Transform::flip( RawTile& rawtile, int orientation ){
 
@@ -896,4 +895,146 @@ void Transform::flip( RawTile& rawtile, int orientation ){
   // Delete our old data buffer and instead point to our grayscale data
   delete[] (unsigned char*) rawtile.data;
   rawtile.data = (void*) buffer;
+}
+
+
+
+// Calculate histogram of an image
+//  - Only calculate for 8 bits and a single histogram for all channels
+vector<unsigned int> Transform::histogram( RawTile& in, const vector<float>& max, const vector<float>& min ){
+
+  // An 8 bit (256 level) histogram should be sufficient
+  if( in.bpc > 8 ){
+    this->normalize( in, max, min );
+    this->contrast( in, 1.0 );
+  }
+
+  // Initialize our vector to zero - note that we use a single histogram for all channels
+  vector<unsigned int> histogram( (1<<in.bpc), 0 );
+
+  // Fill our histogram - for color or multiband images, use channel average
+  unsigned int np = in.width * in.height;
+  for( unsigned int n=0; n<np; n++ ){
+    float value = 0.0;
+
+    // For color or multiband images, use channel average
+    for( int k=0; k<in.channels; k++ ){
+      value += (float)(((unsigned char*)in.data)[n*in.channels + k]);
+    }
+    value = round( value/(float)in.channels );
+
+    // Update histogram
+    histogram[(unsigned int)value]++;
+  }
+
+  return histogram;
+}
+
+
+
+// Calculate the threshold for binary image segmentation using Otsu's method
+unsigned char Transform::threshold( vector<unsigned int>& histogram ){
+
+  const unsigned int bits = histogram.size();
+
+  // Calculate sum
+  float sum = 0.0, sumb = 0.0;
+  unsigned int np = 0;
+  for( unsigned int n=0; n<bits; n++ ){
+    np += histogram[n];
+    sum += (float)n * histogram[n];
+  }
+
+  // Calculate threshold
+  float wb = 0.0, wf = 0.0, mb = 0.0, mf = 0.0, max = 0.0;
+  unsigned char otsu = 0;
+  for( unsigned int n=0; n<bits; n++ ){
+    wb += histogram[n];
+    if( wb == 0.0 ) continue;
+
+    wf = np - wb;
+    if( wf == 0.0 ) break;
+
+    sumb += (float) n * histogram[n];
+    mb = sumb / wb;
+    mf = (sum-sumb) / wf;
+    float diff = wb * wf * (mb-mf) * (mb-mf);
+
+    if( diff > max ){
+      otsu = (unsigned char) n;
+      max = diff;
+    }
+  }
+  return otsu;
+}
+
+
+
+// Apply threshold to create binary image
+void Transform::binary( RawTile &in, unsigned char threshold ){
+
+  // Only apply to 8 bit images
+  if( in.bpc != 8 ) return;
+
+  // First make sure our image is greyscale
+  this->greyscale( in );
+
+  unsigned int np = in.width * in.height;
+
+#if defined(__ICC) || defined(__INTEL_COMPILER)
+#pragma ivdep
+#elif defined(_OPENMP)
+#pragma omp parallel for if( in.width*in.height > PARALLEL_THRESHOLD )
+#endif
+  for( unsigned int i=0; i<np; i++ ){
+    ((unsigned char*)in.data)[i] = ( ((unsigned char*)in.data)[i] < threshold ? (unsigned char)0 : (unsigned char)255 );
+  }
+}
+
+
+
+void Transform::equalize( RawTile& in, vector<unsigned int>& histogram ){
+
+  // Number of levels in our histogram
+  const unsigned int bits = histogram.size();
+
+  // Initialize our array to zero
+  float cdf[bits] = {0.0};
+
+  // Find first non-zero bin
+  unsigned int n0 = 0;
+  while( histogram[n0] == 0 ) ++n0;
+
+  // Calculate cumulative histogram
+  cdf[0] = histogram[0];
+  for( unsigned int i=1; i<bits; i++ ){
+    cdf[i] = cdf[i-1] + histogram[i];
+  }
+
+  // Scale our CDF
+  float scale = (float)(bits-1) / cdf[bits-1];
+  float cdfmin = cdf[n0] / (float)(in.width*in.height);
+#if defined(__ICC) || defined(__INTEL_COMPILER)
+#pragma ivdep
+#elif defined(_OPENMP)
+#pragma omp parallel for
+#endif
+  for( unsigned int i=0; i<bits; i++ ){
+    cdf[i] = round( scale * (cdf[i]-cdfmin) );
+  }
+
+  // Map image through cumulative histogram
+#if defined(__ICC) || defined(__INTEL_COMPILER)
+#pragma ivdep
+#elif defined(_OPENMP)
+#pragma omp parallel for if( in.width*in.height > PARALLEL_THRESHOLD )
+#endif
+  for( unsigned int i=0; i<in.width*in.height; i++ ){
+    for( int j=0; j<in.channels; j++ ){
+      unsigned int index = i*in.channels + j;
+      unsigned int value = (unsigned int) (((unsigned char*)in.data)[index]);
+      ((unsigned char*)in.data)[index] = (unsigned char) cdf[value];
+    }
+  }
+
 }
