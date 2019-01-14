@@ -191,9 +191,9 @@ void IIIF::run( Session* session, const string& src )
       unsigned int h = (*session->image)->image_heights[i];
       // Only advertise images below our max size value
       if( (max == 0) || (w < max && h < max) ){
-	infoStringStream << "," << endl
-			 << "     { \"width\" : " << w << ", \"height\" : " << h << " }";
-	numUsableResolutions++;
+        infoStringStream << "," << endl
+        << "     { \"width\" : " << w << ", \"height\" : " << h << " }";
+        numUsableResolutions++;
       }
     }
 
