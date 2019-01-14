@@ -202,7 +202,7 @@ void IIIF::run( Session* session, const string& src )
                      << "     { \"width\" : " << tw << ", \"height\" : " << th
                      << ", \"scaleFactors\" : [ 1"; // Scale 1 is original image
 
-    for ( unsigned int i = 1; i < numUsableResolutions; i++ ){
+    for ( unsigned int i = 1; i < numResolutions; i++ ){
       infoStringStream << ", " << pow(2.0, (double)i);
     }
 
