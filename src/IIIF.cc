@@ -203,7 +203,7 @@ void IIIF::run( Session* session, const string& src )
                      << ", \"scaleFactors\" : [ 1"; // Scale 1 is original image
 
     for ( unsigned int i = 1; i < numResolutions; i++ ){
-      infoStringStream << ", " << pow(2.0, (double)i);
+      infoStringStream << ", " << (1<<i);
     }
 
     infoStringStream << " ] }" << endl
@@ -211,7 +211,7 @@ void IIIF::run( Session* session, const string& src )
                      << "  \"profile\" : [" << endl
                      << "     \"" << IIIF_PROFILE << "\"," << endl
                      << "     { \"formats\" : [ \"jpg\" ]," << endl
-                     << "       \"qualities\" : [ \"native\",\"color\",\"gray\" ]," << endl
+                     << "       \"qualities\" : [ \"native\",\"color\",\"gray\",\"bitonal\" ]," << endl
                      << "       \"supports\" : [\"regionByPct\",\"regionSquare\",\"sizeByForcedWh\",\"sizeByWh\",\"sizeAboveFull\",\"rotationBy90s\",\"mirroring\"]," << endl
 		     << "       \"maxWidth\" : " << max << "," << endl
 		     << "       \"maxHeight\" : " << max << "\n     }" << endl
