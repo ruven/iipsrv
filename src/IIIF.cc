@@ -184,16 +184,14 @@ void IIIF::run( Session* session, const string& src )
 
     // Need to keep track of maximum allowable image export sizes
     unsigned int max = session->view->getMaxSize();
-    unsigned int numUsableResolutions = 1;
 
     for ( int i = numResolutions - 2; i > 0; i-- ){
       unsigned int w = (*session->image)->image_widths[i];
       unsigned int h = (*session->image)->image_heights[i];
       // Only advertise images below our max size value
       if( (max == 0) || (w < max && h < max) ){
-	infoStringStream << "," << endl
-			 << "     { \"width\" : " << w << ", \"height\" : " << h << " }";
-	numUsableResolutions++;
+        infoStringStream << "," << endl
+        << "     { \"width\" : " << w << ", \"height\" : " << h << " }";
       }
     }
 
@@ -213,8 +211,8 @@ void IIIF::run( Session* session, const string& src )
                      << "     { \"formats\" : [ \"jpg\" ]," << endl
                      << "       \"qualities\" : [ \"native\",\"color\",\"gray\" ]," << endl
                      << "       \"supports\" : [\"regionByPct\",\"regionSquare\",\"sizeByForcedWh\",\"sizeByWh\",\"sizeAboveFull\",\"rotationBy90s\",\"mirroring\"]," << endl
-		     << "       \"maxWidth\" : " << max << "," << endl
-		     << "       \"maxHeight\" : " << max << "\n     }" << endl
+                     << "       \"maxWidth\" : " << max << "," << endl
+                     << "       \"maxHeight\" : " << max << "\n     }" << endl
                      << "  ]" << endl
                      << "}";
 
