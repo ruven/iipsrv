@@ -184,7 +184,6 @@ void IIIF::run( Session* session, const string& src )
 
     // Need to keep track of maximum allowable image export sizes
     unsigned int max = session->view->getMaxSize();
-    unsigned int numUsableResolutions = 1;
 
     for ( int i = numResolutions - 2; i > 0; i-- ){
       unsigned int w = (*session->image)->image_widths[i];
@@ -193,7 +192,6 @@ void IIIF::run( Session* session, const string& src )
       if( (max == 0) || (w < max && h < max) ){
         infoStringStream << "," << endl
         << "     { \"width\" : " << w << ", \"height\" : " << h << " }";
-        numUsableResolutions++;
       }
     }
 
