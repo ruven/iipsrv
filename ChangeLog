@@ -1,3 +1,8 @@
+15/01/2019:
+	- Added "bitonal" to list of available qualities in the IIIF info.json file and
+	  replaced use of pow with a faster bitwise shift.
+
+
 09/01/2019:
 	- Added ability to do contrast stretching and histogram equalization via extensions
 	  to the CNT command (CNT=EQ and CNT=ST respectively). Also added new IIP command to
