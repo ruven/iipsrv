@@ -1,3 +1,8 @@
+15/02/2019:
+	- Changed exit code after signal handling for clean shutdown when iipsrv used
+	  with systemd.
+
+
 15/01/2019:
 	- Added "bitonal" to list of available qualities in the IIIF info.json file and
 	  replaced use of pow with a faster bitwise shift.

@@ -126,7 +126,7 @@ void IIPSignalHandler( int signal )
     logfile.close();
   }
 
-  exit( 1 );
+  exit( 0 );
 }
 
 
