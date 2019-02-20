@@ -140,7 +140,7 @@ void KakaduImage::loadImageInfo( int seq, int ang )
   kdu_coords layer_size;
   jpx_layer_source jpx_layer;
 
-  // Malformed images can throw exceptions here with older versions of Kakadu 
+  // Malformed images can throw exceptions here with older versions of Kakadu
   try{
     jpx_layer = jpx_input.access_layer(0);
   }
@@ -544,8 +544,8 @@ void KakaduImage::process( unsigned int res, int layers, int xoffset, int yoffse
     logfile << "Kakadu :: About to pull stripes" << endl;
 #endif
 
-    // Make sure we don't have zero-sized images
-    if( comp_dims.size.x == 0 || comp_dims.size.y == 0 ){
+    // Make sure we don't have zero or negative sized images
+    if( comp_dims.size.x <= 0 || comp_dims.size.y <= 0 ){
 #ifdef DEBUG
       logfile << "Kakadu :: Error: region of zero size requested" << endl;
 #endif
@@ -727,7 +727,10 @@ void KakaduImage::process( unsigned int res, int layers, int xoffset, int yoffse
 
   // Delete our stripe buffer
   delete_buffer( stripe_buffer );
-  if( stripe_heights ) delete[] stripe_heights;
+  if( stripe_heights ){
+    delete[] stripe_heights;
+    stripe_heights = NULL;
+  }
 
 }
 

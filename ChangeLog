@@ -2,6 +2,7 @@
 	- Fixed rounding error in getViewWidth() / getViewHeight() which was causing
 	  certain IIIF requests to be handled by CVT rather than JTL. See:
           https://github.com/ruven/iipsrv/issues/148#issuecomment-453125005
+	- Adding missing default initialization for kdu_readmode variable.
 
 
 15/02/2019:
