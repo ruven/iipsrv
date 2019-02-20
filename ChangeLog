@@ -1,3 +1,9 @@
+20/02/2019:
+	- Fixed rounding error in getViewWidth() / getViewHeight() which was causing
+	  certain IIIF requests to be handled by CVT rather than JTL. See:
+          https://github.com/ruven/iipsrv/issues/148#issuecomment-453125005
+
+
 15/02/2019:
 	- Changed exit code after signal handling for clean shutdown when iipsrv used
 	  with systemd.

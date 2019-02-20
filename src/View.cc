@@ -116,7 +116,9 @@ float View::getScale(){
 
   float scale = static_cast<float>(rw) / static_cast<float>(width);
 
-  if( static_cast<float>(rh) / static_cast<float>(res_height) < scale ) scale = static_cast<float>(rh) / static_cast<float>(res_height);
+  if( static_cast<float>(rh) / static_cast<float>(res_height) < scale ){
+    scale = static_cast<float>(rh) / static_cast<float>(res_height);
+  }
 
 
   // Sanity check
@@ -182,7 +184,7 @@ unsigned int View::getViewLeft(){
 unsigned int View::getViewTop(){
   // Scale up our view to a real pixel value
   // Note that we calculate from our full resolution image to avoid errors from the rounding at each resolution size
-  unsigned int t = round( height*view_top/(1 << (max_resolutions-resolution-1)) );
+  unsigned int t = round( height*view_top/(1<<(max_resolutions-resolution-1)) );
   return t;
 }
 
@@ -190,8 +192,8 @@ unsigned int View::getViewTop(){
 unsigned int View::getViewWidth(){
 
   // Scale up our viewport, then make sure our size is not too large or too small
-  unsigned int rw = width / (1 << (max_resolutions-resolution-1));
-  unsigned int w = round( view_width*rw );
+  unsigned int rw = (unsigned int) round( (float)width / (1<<(max_resolutions-resolution-1)) );
+  unsigned int w = (unsigned int) round( view_width*rw );
   unsigned int left = (unsigned int) round( view_left*rw );
 
   if( (w + left) > rw ) w = rw - left;
@@ -203,7 +205,7 @@ unsigned int View::getViewWidth(){
 unsigned int View::getViewHeight(){
 
   // Scale up our viewport, then make sure our size is not too large or too small
-  unsigned int rh = height / (1 <<  (max_resolutions-resolution-1));
+  unsigned int rh = (unsigned int) round( (float)height / (1<<(max_resolutions-resolution-1)) );
   unsigned int h = (unsigned int) round( view_height*rh );
   unsigned int top = (unsigned int) round( view_top*rh );
 
