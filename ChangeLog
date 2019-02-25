@@ -1,3 +1,7 @@
+25/02/2019:
+	- Added check for overly large XMP sizes in JPEGCompressor.cc
+
+
 20/02/2019:
 	- Fixed rounding error in getViewWidth() / getViewHeight() which was causing
 	  certain IIIF requests to be handled by CVT rather than JTL. See:

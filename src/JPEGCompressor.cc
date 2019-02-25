@@ -1,6 +1,6 @@
 /*  JPEG class wrapper to ijg jpeg library
 
-    Copyright (C) 2000-2017 Ruven Pillay.
+    Copyright (C) 2000-2019 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -545,7 +545,8 @@ void JPEGCompressor::writeICCProfile()
 
 void JPEGCompressor::writeXMPMetadata()
 {
-  if( xmp.size() == 0 ) return;
+  // Make sure our XMP data has a valid size (namespace prefix is 29 bytes)
+  if( xmp.size()==0 || xmp.size()>(65536-29) ) return;
 
   // The XMP data in a JPEG stream needs to be prefixed with a zero-terminated ID string
   // ref http://www.adobe.com/content/dam/Adobe/en/devnet/xmp/pdfs/cs6/XMPSpecificationPart3.pdf (pp13-14)
