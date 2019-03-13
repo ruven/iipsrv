@@ -866,7 +866,7 @@ void Transform::flip( RawTile& rawtile, int orientation ){
 #pragma omp parallel for if( rawtile.width*rawtile.height > PARALLEL_THRESHOLD )
 #endif
     for( int j=rawtile.height-1; j>=0; j-- ){
-      unsigned long n = j*rawtile.width*rawtile.channels;
+      unsigned long n = (rawtile.height-1-j)*rawtile.width*rawtile.channels;
       for( unsigned int i=0; i<rawtile.width; i++ ){
         unsigned long index = (rawtile.width*j + i)*rawtile.channels;
         for( int k=0; k<rawtile.channels; k++ ){

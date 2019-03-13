@@ -278,7 +278,9 @@ void ROT::run( Session* session, const string& argument ){
   if( session->loglevel >= 2 ) *(session->logfile) << "ROT handler reached" << endl;
   if( session->loglevel >= 3 ) *(session->logfile) << "ROT :: requested rotation is " << rotation << " degrees" << endl;
 
-  session->view->setRotation( rotation );
+  // Set rotation - watch for a '!180' request, which is simply a vertical flip
+  if( session->view->flip == 1 && rotation == 180 ) session->view->flip = 2;
+  else session->view->setRotation( rotation );
 }
 
 
