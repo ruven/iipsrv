@@ -245,7 +245,7 @@ void IIIF::run( Session* session, const string& src )
     // Keep track of the number of parameters than have been given
     int numOfTokens = 0;
 
-    // Region Parameter: { "full"; "x,y,w,h"; "pct:x,y,w,h" }
+    // Region Parameter: { "full"; "square"; "x,y,w,h"; "pct:x,y,w,h" }
     if ( izer.hasMoreTokens() ){
 
       // Our region parameters
@@ -262,17 +262,23 @@ void IIIF::run( Session* session, const string& src )
         region[2] = 1.0;
         region[3] = 1.0;
       }
-      // Square region export using centered crop
+      // Square region export using centered crop - avaialble in IIIF version 3
       else if (regionString == "square" ){
         if ( height > width ){
-	  float h = (float)width/(float)height;
-	  session->view->setViewTop( (1-h)/2.0 );
-	  session->view->setViewHeight( h );
+	  region[0] = 0.0;
+	  region[2] = 1.0;
+	  region[3] = (float)width/(float)height;
+	  region[1] = (1.0-region[3])/2.0;
+	  session->view->setViewTop( region[1] );
+	  session->view->setViewHeight( region[3] );
         }
 	else if ( width > height ){
-	  float w = (float)height/(float)width;
-	  session->view->setViewLeft( (1-w)/2.0 );
-	  session->view->setViewWidth( w );
+	  region[1] = 0.0;
+	  region[3] = 1.0;
+	  region[2] = (float)height/(float)width;
+	  region[0] = (1.0-region[2])/2.0;
+	  session->view->setViewLeft( region[0] );
+	  session->view->setViewWidth( region[2] );
         }
 	// No need for default else clause if image is already square
       }

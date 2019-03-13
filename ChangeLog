@@ -1,5 +1,6 @@
 13/03/2019:
 	- Fixed bug in vertical mirroring transformation
+	- Minor change to IIIF square parsing to allow correct logging
 
 
 25/02/2019:
