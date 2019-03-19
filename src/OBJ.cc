@@ -1,7 +1,7 @@
 /*
     IIP OJB Command Handler Class Member Functions
 
-    Copyright (C) 2006-2017 Ruven Pillay.
+    Copyright (C) 2006-2019 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -290,8 +290,8 @@ void OBJ::colorspace( std::string arg ){
   else colourspace = 3;
 
   int no_res = (*session->image)->getNumResolutions();
-  char tmp[32];
-  snprintf( tmp, 32, "Colorspace,0-%d,0:%d 0 %d %s", no_res-1,
+  char tmp[41];
+  snprintf( tmp, 41, "Colorspace,0-%d,0:%d 0 %d %s", no_res-1,
 	    calibrated, colourspace, planes );
 
   if( session->loglevel >= 2 ){
