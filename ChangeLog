@@ -1,4 +1,7 @@
 01/04/2019:
+	- Added Logger class, which replaces the previous raw ofstream. The class
+	  includes functionality to output log to syslog on UNIX-type systems.
+	  Pass "syslog" to the LOGFILE startup environment variable to use syslog.
 	- Minor code changes for Windows MSVC compilation
 
 

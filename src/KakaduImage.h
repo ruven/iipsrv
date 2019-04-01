@@ -33,6 +33,7 @@
 
 
 #include "IIPImage.h"
+#include "Logger.h"
 
 #include <jpx.h>
 #include <jp2.h>
@@ -46,7 +47,7 @@
 using namespace kdu_supp; // Also includes the `kdu_core' namespace
 #endif
 
-extern std::ofstream logfile;
+extern Logger logfile;
 
 
 /// Wrapper class to handle error messages from Kakadu

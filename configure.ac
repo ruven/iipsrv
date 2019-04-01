@@ -46,6 +46,9 @@ AX_CXX_HAVE_EXT_HASH_MAP
 # For our windows build
 AC_CHECK_HEADERS(windows.h)
 
+# Check for syslog
+AC_CHECK_HEADERS(syslog.h)
+
 # we want largefile support, if possible
 AC_SYS_LARGEFILE
 

@@ -23,9 +23,8 @@
 #define _TASK_H
 
 
-
 #include <string>
-#include <fstream>
+
 #include "IIPImage.h"
 #include "IIPResponse.h"
 #include "JPEGCompressor.h"
@@ -36,6 +35,7 @@
 #include "Cache.h"
 #include "Watermark.h"
 #include "Transforms.h"
+#include "Logger.h"
 #ifdef HAVE_PNG
 #include "PNGCompressor.h"
 #endif
@@ -74,7 +74,7 @@ struct Session {
   Watermark* watermark;
   Transform* processor;
   int loglevel;
-  std::ofstream* logfile;
+  Logger* logfile;
   std::map <const std::string, std::string> headers;
   std::map <const std::string, unsigned int> codecOptions;
 

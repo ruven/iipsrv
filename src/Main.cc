@@ -26,8 +26,6 @@
 
 #include <ctime>
 #include <csignal>
-#include <iostream>
-#include <fstream>
 #include <string>
 #include <utility>
 #include <map>
@@ -43,6 +41,8 @@
 #include "Task.h"
 #include "Environment.h"
 #include "Writer.h"
+#include "Logger.h"
+
 
 #ifdef HAVE_MEMCACHED
 #ifdef WIN32
@@ -92,7 +92,7 @@ using namespace std;
    can have access to them
 */
 int loglevel;
-ofstream logfile;
+Logger logfile;
 unsigned long IIPcount;
 char *tz = NULL;
 
@@ -112,6 +112,9 @@ void IIPSignalHandler( int signal )
     time_t current_time = time( NULL );
     char *date = ctime( &current_time );
 
+    // Remove trailing newline
+    date[strcspn(date, "\n")] = '\0';
+
     // No strsignal on Windows
 #ifdef WIN32
     int sigstr = signal;
@@ -121,7 +124,7 @@ void IIPSignalHandler( int signal )
 
     logfile << endl << "Caught " << sigstr << " signal. "
 	    << "Terminating after " << IIPcount << " accesses" << endl
-	    << date
+	    << date << endl
 	    << "<----------------------------------->" << endl << endl;
     logfile.close();
   }
@@ -159,8 +162,8 @@ int main( int argc, char *argv[] )
 
     // Check for the requested log file path
     string lf = Environment::getLogFile();
+    logfile.open( lf );
 
-    logfile.open( lf.c_str(), ios::app );
     // If we cannot open this, set the loglevel to 0
     if( !logfile ){
       loglevel = 0;
@@ -309,6 +312,7 @@ int main( int argc, char *argv[] )
     logfile << "Setting maximum CVT size to " << max_CVT << endl;
     logfile << "Setting HTTP Cache-Control header to '" << cache_control << "'" << endl;
     logfile << "Setting 3D file sequence name pattern to '" << filename_pattern << "'" << endl;
+    logfile << "Availble logging outputs: " << logfile.types() << endl;
     if( !cors.empty() ) logfile << "Setting Cross Origin Resource Sharing to '" << cors << "'" << endl;
     if( !base_url.empty() ) logfile << "Setting base URL to '" << base_url << "'" << endl;
     if( max_layers != 0 ){

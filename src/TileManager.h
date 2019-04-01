@@ -24,15 +24,13 @@
 #define _TILEMANAGER_H
 
 
-#include <fstream>
-
 #include "RawTile.h"
 #include "IIPImage.h"
 #include "JPEGCompressor.h"
 #include "Cache.h"
 #include "Timer.h"
 #include "Watermark.h"
-
+#include "Logger.h"
 
 
 /// Class to manage access to the tile cache and tile cropping
@@ -46,7 +44,7 @@ class TileManager{
   Compressor* jpeg;
   IIPImage* image;
   Watermark* watermark;
-  std::ofstream* logfile;
+  Logger* logfile;
   int loglevel;
   Timer compression_timer, tile_timer, insert_timer;
 
@@ -84,7 +82,7 @@ class TileManager{
    * @param s  pointer to output file stream
    * @param l  logging level
    */
-  TileManager( Cache* tc, IIPImage* im, Watermark* w, Compressor* j, std::ofstream* s, int l ){
+  TileManager( Cache* tc, IIPImage* im, Watermark* w, Compressor* j, Logger* s, int l ){
     tileCache = tc; 
     image = im;
     watermark = w;
