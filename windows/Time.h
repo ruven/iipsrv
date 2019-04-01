@@ -35,9 +35,6 @@ time_t timegm(struct tm*);
 char *strptime(const char*, const char*, struct tm*);
 int gettimeofday(struct timeval*, struct timezone*);
 
-#if _MSC_VER<1900
-double round(double);
-#endif
 
 #endif
 #endif

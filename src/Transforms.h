@@ -25,6 +25,13 @@
 #include <vector>
 #include "RawTile.h"
 
+
+// Define round() function for older MSVC compilers
+#if defined _MSC_VER && _MSC_VER<1900
+inline double round(double r) { return (r > 0.0) ? floor(r + 0.5) : ceil(r - 0.5); }
+#endif
+
+
 enum interpolation { NEAREST, BILINEAR, CUBIC, LANCZOS2, LANCZOS3 };
 enum cmap_type { HOT, COLD, JET, BLUE, GREEN, RED };
 

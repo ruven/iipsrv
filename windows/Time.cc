@@ -495,12 +495,4 @@ strptime (const char *buf, const char *fmt, struct tm *timeptr)
 }
 
 
-/* Missing round() function in older MS VC++
- */
-#if _MSC_VER<1900
-double round(double r) {
-  return (r > 0.0) ? floor(r + 0.5) : ceil(r - 0.5);
-}
-#endif
-
 #endif /* WIN32 */

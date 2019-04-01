@@ -28,9 +28,6 @@
 #include "Transforms.h"
 #include "URL.h"
 
-#if _MSC_VER
-#include "../windows/Time.h"
-#endif
 
 // Define several IIIF strings
 #define IIIF_SYNTAX "IIIF syntax is {identifier}/{region}/{size}/{rotation}/{quality}{.format}"

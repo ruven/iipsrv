@@ -999,8 +999,8 @@ void Transform::equalize( RawTile& in, vector<unsigned int>& histogram ){
   // Number of levels in our histogram
   const unsigned int bits = histogram.size();
 
-  // Initialize our array to zero using std::fill
-  float cdf[bits];
+  // Allocate and initialize our array to zero using std::fill
+  float *cdf = new float[bits];
   fill( cdf, cdf+bits, 0.0 );
 
   // Find first non-zero bin
@@ -1039,4 +1039,6 @@ void Transform::equalize( RawTile& in, vector<unsigned int>& histogram ){
     }
   }
 
+  // Free our dynamically allocated array
+  delete[] cdf;
 }

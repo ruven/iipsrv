@@ -28,11 +28,6 @@
 
 #include "Transforms.h"
 
-// Include round() function for older MSVC compilers
-#if _MSC_VER<1900
-#include "../windows/Time.h"
-#endif
-
 
 
 
