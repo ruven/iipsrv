@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 15
+VisualStudioVersion = 15.0.27428.2043
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "iipsrv", "iipsrv.vcxproj", "{18F529A3-258B-40C9-986C-57826894DD0B}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Release|x64 = Release|x64
+		Release|x86 = Release|x86
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{18F529A3-258B-40C9-986C-57826894DD0B}.Release|x64.ActiveCfg = Release|x64
+		{18F529A3-258B-40C9-986C-57826894DD0B}.Release|x64.Build.0 = Release|x64
+		{18F529A3-258B-40C9-986C-57826894DD0B}.Release|x86.ActiveCfg = Release|Win32
+		{18F529A3-258B-40C9-986C-57826894DD0B}.Release|x86.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {5FFD92DC-68D0-45FA-9CCD-C58F54BC7995}
+	EndGlobalSection
+EndGlobal
