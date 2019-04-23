@@ -1,3 +1,7 @@
+23/02/2019:
+	- Added test for resolutions that may be untiled within a tiled TIFF.
+
+
 01/04/2019:
 	- Added Logger class, which replaces the previous raw ofstream. The class
 	  includes functionality to output log to syslog on UNIX-type systems.
