@@ -193,7 +193,7 @@ AC_ARG_WITH( kakadu,
 
 if test -n "$kakadu_path"; then
 
-	AC_CHECK_FILE( $kakadu_path/managed/all_includes/jpx.h,
+        AS_IF([test -f "$kakadu_path/managed/all_includes/jpx.h"],
 		AC_MSG_RESULT([configure: Found Kakadu sources. Will compile JPEG2000 support]); KAKADU=true;,
 		AC_MSG_RESULT([configure: No Kakadu JPEG2000 Sources Found]); KAKADU=false
 	)
@@ -207,7 +207,7 @@ if test -n "$kakadu_path"; then
 		LIBS="$LIBS $kakadu_path/apps/make/jpx.o $kakadu_path/apps/make/jp2.o $kakadu_path/apps/make/kdu_stripe_decompressor.o -L$kakadu_path/apps/make -l$kakadu_lib_name -lpthread"
 
 		# Check for SSSE3 support in Kakadu
-		AC_CHECK_FILE( $kakadu_path/apps/make/ssse3_stripe_transfer.o,
+		AS_IF([test -f "$kakadu_path/apps/make/ssse3_stripe_transfer.o"],
 			KDU_SSSE3=true
 		)
 		if test "x${KDU_SSSE3}" = xtrue; then
@@ -215,7 +215,7 @@ if test -n "$kakadu_path"; then
 		fi
 
 		# Check for AVX2 support in Kakadu
-		AC_CHECK_FILE( $kakadu_path/apps/make/avx2_stripe_transfer.o,
+		AS_IF([test -f "$kakadu_path/apps/make/avx2_stripe_transfer.o"],
 			AC_MSG_RESULT([configure: Kakadu is >= v7.5]);
 			KDU_75=true,
 			AC_MSG_RESULT([configure: Kakadu is < v7.5])

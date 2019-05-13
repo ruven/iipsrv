@@ -1,3 +1,8 @@
+13/05/2019:
+	- Update to configure.ac to change AC_CHECK_FILE for Kakadu sources to
+	  AS_IF to properly enable cross builds. Patched thanks to Helmut Grohne.
+
+
 23/02/2019:
 	- Added test for resolutions that may be untiled within a tiled TIFF.
 

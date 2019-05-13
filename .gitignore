@@ -6,6 +6,7 @@ doc/html
 
 # Files made by autogen.sh.
 Makefile.in
+libtool
 /aclocal.m4
 /autom4te.cache/
 /compile
@@ -16,3 +17,5 @@ Makefile.in
 /ltmain.sh
 /m4/
 /missing
+/src/.deps/
+fcgi/libfcgi/.deps/
