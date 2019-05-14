@@ -135,7 +135,7 @@ void IIPSignalHandler( int signal )
 void LogTIFFError(const char* module, const char* fmt, va_list ap)
 {
   char buf[4096];
-  vsnprintf(buf, 4096, fmt, ap);
+  vsnprintf(buf, sizeof(buf), fmt, ap);
   logfile << "TIFF Error :: " << buf << endl;
   throw file_error(buf);
 }
@@ -143,7 +143,7 @@ void LogTIFFError(const char* module, const char* fmt, va_list ap)
 void LogTIFFWarning(const char* module, const char* fmt, va_list ap)
 {
   char buf[4096];
-  vsnprintf(buf, 4096, fmt, ap);
+  vsnprintf(buf, sizeof(buf), fmt, ap);
   logfile << "TIFF Warning :: " << buf << endl;
 }
 
