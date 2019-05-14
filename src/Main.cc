@@ -132,12 +132,25 @@ void IIPSignalHandler( int signal )
   exit( 0 );
 }
 
+void LogTIFFError(const char* module, const char* fmt, va_list ap)
+{
+  char buf[4096];
+  vsnprintf(buf, 4096, fmt, ap);
+  logfile << "TIFF Error :: " << buf << endl;
+  throw file_error(buf);
+}
 
-
-
+void LogTIFFWarning(const char* module, const char* fmt, va_list ap)
+{
+  char buf[4096];
+  vsnprintf(buf, 4096, fmt, ap);
+  logfile << "TIFF Warning :: " << buf << endl;
+}
 
 int main( int argc, char *argv[] )
 {
+  TIFFSetErrorHandler(LogTIFFError);
+  TIFFSetWarningHandler(LogTIFFWarning);
 
   IIPcount = 0;
   int i;
