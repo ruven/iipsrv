@@ -246,7 +246,7 @@ void IIIF::run( Session* session, const string& src )
     if ( izer.hasMoreTokens() ){
 
       // Our region parameters
-      float region[4];
+      float region[4] = { 0.0, 0.0, 1.0, 1.0 };
 
       // Get our region string and convert to lower case if necessary
       string regionString = izer.nextToken();
@@ -254,10 +254,7 @@ void IIIF::run( Session* session, const string& src )
 
       // Full export request
       if ( regionString == "full" ){
-        region[0] = 0.0;
-        region[1] = 0.0;
-        region[2] = 1.0;
-        region[3] = 1.0;
+	// Do nothing - region array already initialized
       }
       // Square region export using centered crop - avaialble in IIIF version 3
       else if (regionString == "square" ){

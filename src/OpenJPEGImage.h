@@ -34,9 +34,9 @@ class OpenJPEGImage : public IIPImage {
 
  private:
 
-  opj_stream_t* stream;  /// file stream
-  opj_codec_t* codec;    /// codec
-  opj_image_t* image;    /// image
+  opj_stream_t* _stream;  /// file stream
+  opj_codec_t*  _codec;   /// codec
+  opj_image_t*  _image;   /// image
 
 
   /// Main processing function
@@ -56,6 +56,7 @@ class OpenJPEGImage : public IIPImage {
 
   /// Constructor
   OpenJPEGImage() : IIPImage(){
+    _stream = NULL; _codec = NULL; _image = NULL;
     tile_width = TILESIZE; tile_height = TILESIZE; virtual_levels = 0;
   };
 
@@ -64,6 +65,7 @@ class OpenJPEGImage : public IIPImage {
   /** @param path image path
    */
   OpenJPEGImage( const std::string& path)  : IIPImage(path){
+    _stream = NULL; _codec = NULL; _image = NULL;
     tile_width = TILESIZE; tile_height = TILESIZE; virtual_levels = 0;
   };
 
@@ -78,6 +80,7 @@ class OpenJPEGImage : public IIPImage {
   /** @param image IIPImage object
    */
   OpenJPEGImage( const IIPImage& image ) : IIPImage(image){
+    _stream = NULL; _codec = NULL; _image = NULL;
     tile_width = TILESIZE; tile_height = TILESIZE; virtual_levels = 0;
   };
 

@@ -57,19 +57,19 @@ void OpenJPEGImage::openImage()
   updateTimestamp( filename );
 
   // Create decompression codec
-  codec = opj_create_decompress( OPJ_CODEC_JP2 );
+  _codec = opj_create_decompress( OPJ_CODEC_JP2 );
 
   // Set info, warning and error handlers for codec
 #ifdef DEBUG
-  opj_set_info_handler( codec, info_callback, NULL );
-  opj_set_warning_handler( codec, warning_callback, NULL );
+  opj_set_info_handler( _codec, info_callback, NULL );
+  opj_set_warning_handler( _codec, warning_callback, NULL );
 #endif
-  opj_set_error_handler( codec, error_callback, NULL );
+  opj_set_error_handler( _codec, error_callback, NULL );
 
   // Setup decoder
   opj_dparameters_t parameters; // Set default decoder parameters
   opj_set_default_decoder_parameters( &parameters );
-  if( !opj_setup_decoder( codec, &parameters ) ){
+  if( !opj_setup_decoder( _codec, &parameters ) ){
     throw file_error( "OpenJPEG :: openImage() :: error setting up decoder" );
   }
 
@@ -79,7 +79,7 @@ void OpenJPEGImage::openImage()
 #endif
 
   // Open the JPEG2000 file in read mode
-  if( !(stream = opj_stream_create_default_file_stream( filename.c_str(), true) ) ){
+  if( !(_stream = opj_stream_create_default_file_stream( filename.c_str(), true) ) ){
     throw file_error( "OpenJPEG :: Unable to open '" + filename + "'" );
   }
 
@@ -88,7 +88,7 @@ void OpenJPEGImage::openImage()
 #endif
 
   // Read header
-  if( !opj_read_header( stream, codec, &image ) ){
+  if( !opj_read_header( _stream, _codec, &_image ) ){
     throw file_error( "OpenJPEG :: process() :: opj_read_header() failed" );
   }
 
@@ -114,10 +114,10 @@ void OpenJPEGImage::closeImage()
   timer.start();
 #endif
 
-  opj_end_decompress( codec, stream );
-  opj_destroy_codec( codec );
-  opj_stream_destroy( stream );
-  opj_image_destroy( image );
+  opj_end_decompress( _codec, _stream );
+  opj_destroy_codec( _codec );
+  opj_stream_destroy( _stream );
+  opj_image_destroy( _image );
 
 #ifdef DEBUG
   logfile << "OpenJPEG :: closeImage() :: " << timer.getTime() << " microseconds" << endl;
@@ -135,7 +135,7 @@ void OpenJPEGImage::loadImageInfo( int seq, int ang )
 #endif
 
   // Get info structure
-  opj_codestream_info_v2_t* cst_info = opj_get_cstr_info( codec );
+  opj_codestream_info_v2_t* cst_info = opj_get_cstr_info( _codec );
   numResolutions = cst_info->m_default_tile_info.tccp_info[0].numresolutions;
   quality_layers = cst_info->m_default_tile_info.numlayers;
 
@@ -143,13 +143,13 @@ void OpenJPEGImage::loadImageInfo( int seq, int ang )
   opj_destroy_cstr_info( &cst_info );
 
 
-  channels = image->numcomps;
-  bpc = image->comps[0].prec;
+  channels = _image->numcomps;
+  bpc = _image->comps[0].prec;
 
 
   // Save first resolution level
-  unsigned int w = image->x1 - image->x0;
-  unsigned int h = image->y1 - image->y0;
+  unsigned int w = _image->x1 - _image->x0;
+  unsigned int h = _image->y1 - _image->y0;
   image_widths.push_back(w);
   image_heights.push_back(h);
 
@@ -201,7 +201,7 @@ void OpenJPEGImage::loadImageInfo( int seq, int ang )
 
   // Color space info
   string cs;
-  switch( image->color_space ){
+  switch( _image->color_space ){
     case OPJ_CLRSPC_SRGB:
       cs = "sRGB";
       break;
@@ -408,14 +408,14 @@ void OpenJPEGImage::process( unsigned int res, int layers, int xoffset, int yoff
   params.cp_reduce = vipsres;
 
 
-  if( !opj_setup_decoder( codec, &params ) ){
+  if( !opj_setup_decoder( _codec, &params ) ){
     throw file_error( "OpenJPEG :: process() :: opj_setup_decoder() failed" );
   }
 
 
   // Set resolution - hack for openjpeg up to 2.2.0
-  for( OPJ_UINT32 i = 0; i < image->numcomps; i++ ){
-    image->comps[i].factor = vipsres;
+  for( OPJ_UINT32 i = 0; i < _image->numcomps; i++ ){
+    _image->comps[i].factor = vipsres;
   }
 
   // Image location and size at requested resolution
@@ -433,19 +433,19 @@ void OpenJPEGImage::process( unsigned int res, int layers, int xoffset, int yoff
 
 
   // Define our decoding region
-  if( !opj_set_decode_area( codec, image, x0, y0, w0, h0 ) ){
+  if( !opj_set_decode_area( _codec, _image, x0, y0, w0, h0 ) ){
     throw file_error( "OpenJPEG :: process() :: opj_set_decode_area() failed" );
   }
 
   // Perform decoding
-  if( !opj_decode( codec, stream, image ) ){
+  if( !opj_decode( _codec, _stream, _image ) ){
     throw file_error( "OpenJPEG :: process() :: opj_decode() failed" );
   }
 
 
   // Extract any ICC profile - unfortunately, can only get ICC profile after decoding
-  int icc_length = image->icc_profile_len;
-  const char* icc = (const char*) image->icc_profile_buf;
+  int icc_length = _image->icc_profile_len;
+  const char* icc = (const char*) _image->icc_profile_buf;
   if( icc_length > 0 ) metadata["icc"] = string( icc, icc_length );
 #ifdef DEBUG
   if( icc_length > 0 ){
@@ -465,14 +465,14 @@ void OpenJPEGImage::process( unsigned int res, int layers, int xoffset, int yoff
 	// OpenJPEG's output data is 32 bit unsigned int, so just mask of the bottom 2 bytes
 	// for 16 bit output or bottom 1 byte for 8 bit
 	if( obpc == 16 ){
-	  ((unsigned short*)d)[nk++] =(  (image->comps[k].data[n]) & 0x0000ffff );
+	  ((unsigned short*)d)[nk++] =(  (_image->comps[k].data[n]) & 0x0000ffff );
 	}
 	// Binary (bi-level) images need to be scaled up to 8 bits
 	else if( bpc == 1 ){
-	  ((unsigned char*)d)[nk++] = ((image->comps[k].data[n]) & 0x000000f) * 255;
+	  ((unsigned char*)d)[nk++] = ((_image->comps[k].data[n]) & 0x000000f) * 255;
 	}
 	else{
-	  ((unsigned char*)d)[nk++] = (image->comps[k].data[n]) & 0x000000ff;
+	  ((unsigned char*)d)[nk++] = (_image->comps[k].data[n]) & 0x000000ff;
 	}
       }
       n++;

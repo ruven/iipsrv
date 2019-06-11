@@ -1,4 +1,5 @@
 11/06/2019:
+	- Fixes to eliminate Coverity static scan analysis warnings.
 	- New rewritten OpenJPEG module: now faster, cleaner and correctly
 	  handles ICC profiles, bilevel and 16 bit images. Now activated by
 	  default if OpenJPEG library found and Kakadu not requested.
