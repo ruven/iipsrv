@@ -46,9 +46,6 @@ AX_CXX_HAVE_EXT_HASH_MAP
 # For our windows build
 AC_CHECK_HEADERS(windows.h)
 
-# Check for syslog
-AC_CHECK_HEADERS(syslog.h)
-
 # we want largefile support, if possible
 AC_SYS_LARGEFILE
 
@@ -193,7 +190,7 @@ AC_ARG_WITH( kakadu,
 
 if test -n "$kakadu_path"; then
 
-        AS_IF([test -f "$kakadu_path/managed/all_includes/jpx.h"],
+	AC_CHECK_FILE( $kakadu_path/managed/all_includes/jpx.h,
 		AC_MSG_RESULT([configure: Found Kakadu sources. Will compile JPEG2000 support]); KAKADU=true;,
 		AC_MSG_RESULT([configure: No Kakadu JPEG2000 Sources Found]); KAKADU=false
 	)
@@ -207,7 +204,7 @@ if test -n "$kakadu_path"; then
 		LIBS="$LIBS $kakadu_path/apps/make/jpx.o $kakadu_path/apps/make/jp2.o $kakadu_path/apps/make/kdu_stripe_decompressor.o -L$kakadu_path/apps/make -l$kakadu_lib_name -lpthread"
 
 		# Check for SSSE3 support in Kakadu
-		AS_IF([test -f "$kakadu_path/apps/make/ssse3_stripe_transfer.o"],
+		AC_CHECK_FILE( $kakadu_path/apps/make/ssse3_stripe_transfer.o,
 			KDU_SSSE3=true
 		)
 		if test "x${KDU_SSSE3}" = xtrue; then
@@ -215,7 +212,7 @@ if test -n "$kakadu_path"; then
 		fi
 
 		# Check for AVX2 support in Kakadu
-		AS_IF([test -f "$kakadu_path/apps/make/avx2_stripe_transfer.o"],
+		AC_CHECK_FILE( $kakadu_path/apps/make/avx2_stripe_transfer.o,
 			AC_MSG_RESULT([configure: Kakadu is >= v7.5]);
 			KDU_75=true,
 			AC_MSG_RESULT([configure: Kakadu is < v7.5])
@@ -254,7 +251,7 @@ fi
 OPENJPEG=false
 
 AC_ARG_ENABLE(openjpeg,
-    [  --enable-openjpeg       enable OpenJPEG (disabled by default)] )
+    [  --disable-openjpeg      disable OpenJPEG] )
 
 AC_ARG_WITH( openjpeg,
    [  --with-openjpeg=DIR           location of OpenJPEG source files],
@@ -275,21 +272,19 @@ fi
 
 
 # Only check for OpenJPEG if Kakadu has not been enabled
-if test "x${KAKADU}" = xtrue; then
+if [test "x${KAKADU}" = xtrue]; then
 	AM_CONDITIONAL([ENABLE_OPENJPEG], [false])
 else
 
-	if test -n "$openjpeg_path"; then
-		enable_openjpeg="yes";
-	fi
-
-	if test "$enable_openjpeg" = "yes"; then
-		AC_MSG_RESULT([configure: Enabling OpenJPEG])
+	if test "x$enable_openjpeg" == "xno"; then
+		AC_MSG_RESULT([disabling OpenJPEG support])
+		AM_CONDITIONAL([ENABLE_OPENJPEG], [false])
+	else
 
 		if test -n "$openjpeg_path"; then
 		    AC_CHECK_FILE($openjpeg_path/src/lib/openjp2/openjpeg.h,
-		        AC_MSG_RESULT([configure: Using specified OpenJPEG sources. Will compile JPEG2000 support]); OPENJPEG=true,
-		        AC_MSG_RESULT([configure: No OpenJPEG JPEG2000 Sources Found])
+		        AC_MSG_RESULT([configure: Using specified OpenJPEG sources]); OPENJPEG=true,
+		        AC_MSG_RESULT([configure: No OpenJPEG sources found])
 		    )
 		    if test "x$OPENJPEG" = xtrue; then
 		        INCLUDES="$INCLUDES -I$openjpeg_path/src/lib/openjp2/"
@@ -298,7 +293,6 @@ else
 		else
 		    PKG_CHECK_MODULES([OPENJPEG], [libopenjp2], [OPENJPEG=true], [OPENJPEG=false])
 		    if test "x$OPENJPEG" = xtrue; then
-			AC_MSG_RESULT([configure: OpenJPEG installed in system. Will compile JPEG2000 support])
 		        INCLUDES="$INCLUDES $OPENJPEG_CFLAGS"
 		        LIBS="$LIBS $OPENJPEG_LIBS"
 		    else
@@ -318,8 +312,6 @@ else
 		    AM_CONDITIONAL([ENABLE_OPENJPEG], [false])
 		fi
 
-	else
-		AM_CONDITIONAL([ENABLE_OPENJPEG], [false])
 	fi
 fi
 
