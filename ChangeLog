@@ -1,4 +1,5 @@
 12/06/2019:
+	- Fix to avoid unnecessary conversion to binary when image already binary.
 	- Update to OpenJPEG code to fix problem when re-using codec structures
 	  more than once in the same request (for example when calculating histogram).
 

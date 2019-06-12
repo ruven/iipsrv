@@ -29,20 +29,17 @@ using namespace std;
 
 
 // Handle info, warning and error messages from OpenJPEG
-static void error_callback( const char* msg, void* )
-{
+static void error_callback( const char* msg, void* ){
   stringstream ss;
   ss << "OpenJPEG error :: " << msg;
   throw file_error( ss.str() );
 }
 
 #ifdef DEBUG
-static void warning_callback( const char* msg, void* )
-{
+static void warning_callback( const char* msg, void* ){
   logfile << "OpenJPEG warning :: " << msg << endl;
 }
-static void info_callback( const char* msg, void* )
-{
+static void info_callback( const char* msg, void* ){
   logfile << "OpenJPEG info :: " << msg;
 }
 #endif
@@ -208,7 +205,13 @@ void OpenJPEGImage::loadImageInfo( int seq, int ang )
   numResolutions = n;
 
 
-  // Color space info
+  // Need to assign basic colorspace information
+  if( channels == 1 ){
+    colourspace = (bpc==1)? BINARY : GREYSCALE;
+  }
+  else if( channels == 3 ) colourspace = sRGB;
+
+  // Color space details
   string cs;
   switch( _image->color_space ){
     case OPJ_CLRSPC_SRGB:
@@ -230,6 +233,7 @@ void OpenJPEGImage::loadImageInfo( int seq, int ang )
       cs = "Unknown";
       break;
   }
+
 
 #ifdef DEBUG
   logfile << "OpenJPEG :: " << bpc << " bit data" << endl
@@ -330,7 +334,7 @@ RawTile OpenJPEGImage::getTile( int seq, int ang, unsigned int res, int layers, 
   rawtile.timestamp = timestamp;
 
   // Process the tile
-  process( res, layers,xoffset, yoffset, tw, th, rawtile.data );
+  process( res, layers, xoffset, yoffset, tw, th, rawtile.data );
 
 #ifdef DEBUG
   logfile << "OpenJPEG :: getTile() :: " << timer.getTime() << " microseconds" << endl;

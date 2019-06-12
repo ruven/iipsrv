@@ -306,7 +306,7 @@ void JTL::send( Session* session, int resolution, int tile ){
 
 
   // Convert to binary (bi-level) if requested
-  if( session->view->colourspace == BINARY ){
+  if( (*session->image)->getColourSpace() != BINARY && session->view->colourspace == BINARY ){
     if( session->loglevel >= 4 ){
       *(session->logfile) << "JTL :: Converting to binary with threshold ";
       function_timer.start();

@@ -181,11 +181,13 @@ void CVT::send( Session* session ){
 
   // Set up our TileManager object
   TileManager tilemanager( session->tileCache, *session->image, session->watermark, compressor, session->logfile, session->loglevel );
+  *(session->logfile) << "CVT :: " << (*session->image)->getColourSpace() << endl;
 
 
   // First calculate histogram if we have asked for either binarization,
   //  histogram equalization or contrast stretching
-  if( session->view->requireHistogram() && (*session->image)->histogram.size()==0 ){
+  if( session->view->requireHistogram() && (*session->image)->histogram.size()==0 &&
+      (*session->image)->getColourSpace() != BINARY ){
 
     if( session->loglevel >= 5 ) function_timer.start();
 
@@ -400,7 +402,7 @@ void CVT::send( Session* session ){
 
 
   // Convert to binary (bi-level) if requested
-  if( session->view->colourspace == BINARY ){
+  if( (*session->image)->getColourSpace() != BINARY && session->view->colourspace == BINARY ){
 
     if( session->loglevel >= 5 ) function_timer.start();
 
