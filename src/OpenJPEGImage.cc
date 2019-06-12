@@ -16,7 +16,7 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#define DEBUG 1
+//#define DEBUG 1
 
 #include "OpenJPEGImage.h"
 #include <sstream>
@@ -114,10 +114,19 @@ void OpenJPEGImage::closeImage()
   timer.start();
 #endif
 
-  opj_end_decompress( _codec, _stream );
-  opj_destroy_codec( _codec );
-  opj_stream_destroy( _stream );
-  opj_image_destroy( _image );
+  if( _codec && _stream ) opj_end_decompress( _codec, _stream );
+  if( _codec ){
+    opj_destroy_codec( _codec );
+    _codec = NULL;
+  }
+  if( _stream ){
+    opj_stream_destroy( _stream );
+    _stream = NULL;
+  }
+  if( _image ){
+    opj_image_destroy( _image );
+    _image = NULL;
+  }
 
 #ifdef DEBUG
   logfile << "OpenJPEG :: closeImage() :: " << timer.getTime() << " microseconds" << endl;
@@ -260,7 +269,6 @@ RawTile OpenJPEGImage::getTile( int seq, int ang, unsigned int res, int layers, 
   if( bpc <= 16 && bpc > 8 ) obpc = 16;
   else if( bpc <= 8 ) obpc = 8;
 
-
 #ifdef DEBUG
   Timer timer;
   timer.start();
@@ -370,6 +378,9 @@ RawTile OpenJPEGImage::getRegion( int ha, int va, unsigned int res, int layers, 
 // Main processing function
 void OpenJPEGImage::process( unsigned int res, int layers, int xoffset, int yoffset, unsigned int tw, unsigned int th, void *d )
 {
+  // Unfortunately, it's not currently possible to re-use OpenJPEG's stream or image structures,
+  // so re-open if necessary
+  if( !_image ) openImage();
 
   // Scale up our output bit depth to the nearest factor of 8
   unsigned int obpc = bpc;
@@ -478,5 +489,9 @@ void OpenJPEGImage::process( unsigned int res, int layers, int xoffset, int yoff
       n++;
     }
   }
+
+  // We need to close the image here in case we try to use the OpenJPEG
+  // stream or image structures multiple times in the same request pipeline
+  closeImage();
 
 }
