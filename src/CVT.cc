@@ -181,7 +181,6 @@ void CVT::send( Session* session ){
 
   // Set up our TileManager object
   TileManager tilemanager( session->tileCache, *session->image, session->watermark, compressor, session->logfile, session->loglevel );
-  *(session->logfile) << "CVT :: " << (*session->image)->getColourSpace() << endl;
 
 
   // First calculate histogram if we have asked for either binarization,
