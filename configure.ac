@@ -29,6 +29,7 @@ LT_INIT
 AC_CHECK_HEADERS(glob.h)
 AC_CHECK_HEADERS(time.h)
 AC_CHECK_HEADERS(sys/time.h)
+AC_CHECK_HEADERS(syslog.h, [LOGGING="file, syslog"], [LOGGING="file"])
 AC_FUNC_MALLOC
 AC_CHECK_LIB(m, log2, AC_DEFINE(HAVE_LOG2))
 AC_CHECK_FUNCS([setenv])
@@ -406,9 +407,10 @@ AC_OUTPUT
 AC_MSG_RESULT([
 Options Enabled:
 ---------------
- Memcached :  ${MEMCACHED}
- JPEG2000  :  ${JPEG2000_CODEC}
- OpenMP    :  ${OPENMP}
+ Memcached  :  ${MEMCACHED}
+ JPEG2000   :  ${JPEG2000_CODEC}
+ OpenMP     :  ${OPENMP}
+ Loggers    :  ${LOGGING}
 ])
 
 # PNG Output:			${PNG}

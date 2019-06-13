@@ -1,3 +1,7 @@
+13/06/2019:
+	- Re-factored to display Logger output type availability at configure stage
+
+
 12/06/2019:
 	- Fix to avoid unnecessary conversion to binary when image already binary.
 	- Update to OpenJPEG code to fix problem when re-using codec structures
