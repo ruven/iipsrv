@@ -64,7 +64,7 @@
       <Optimization>Full</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;HAVE_MEMCACHED;VERSION="1.1";_USE_MATH_DEFINES;HAVE_TIME_H;_BASETSD_H;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;HAVE_MEMCACHED;HAVE_OPENJPEG;VERSION="1.1";_USE_MATH_DEFINES;HAVE_TIME_H;_BASETSD_H;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>$(ProjectDir)\..\dependencies\includes;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
       <OmitFramePointers>true</OmitFramePointers>
@@ -80,7 +80,7 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <AdditionalLibraryDirectories>$(ProjectDir)\libs\x86;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>MemCacheClient.lib;jpeg.lib;libfcgi.lib;libtiff.lib;zlibstat.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>MemCacheClient.lib;jpeg.lib;libfcgi.lib;libtiff.lib;zlibstat.lib;openjp2.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalOptions>/LTCG %(AdditionalOptions)</AdditionalOptions>
       <IgnoreSpecificDefaultLibraries>
       </IgnoreSpecificDefaultLibraries>
@@ -100,7 +100,7 @@
       <Optimization>Full</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;HAVE_MEMCACHED;VERSION="1.1";HAVE_TIME_H;_BASETSD_H;_USE_MATH_DEFINES;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;HAVE_MEMCACHED;HAVE_OPENJPEG;VERSION="1.1";HAVE_TIME_H;_BASETSD_H;_USE_MATH_DEFINES;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>$(ProjectDir)\..\dependencies\includes;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
       <OmitFramePointers>true</OmitFramePointers>
@@ -116,7 +116,7 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <AdditionalLibraryDirectories>$(ProjectDir)\libs\x64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>MemCacheClient.lib;jpeg.lib;libfcgi.lib;tiff.lib;zlibstatic.lib;legacy_stdio_definitions.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>MemCacheClient.lib;jpeg.lib;libfcgi.lib;tiff.lib;zlibstatic.lib;openjp2.lib;legacy_stdio_definitions.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalOptions>/LTCG %(AdditionalOptions)</AdditionalOptions>
     </Link>
   </ItemDefinitionGroup>
@@ -133,6 +133,7 @@
     <ClCompile Include="..\..\src\JTL.cc" />
     <ClCompile Include="..\..\src\Main.cc" />
     <ClCompile Include="..\..\src\OBJ.cc" />
+    <ClCompile Include="..\..\src\OpenJPEGImage.cc" />
     <ClCompile Include="..\..\src\PFL.cc" />
     <ClCompile Include="..\..\src\SPECTRA.cc" />
     <ClCompile Include="..\..\src\Task.cc" />
@@ -154,6 +155,7 @@
     <ClInclude Include="..\..\src\JPEGCompressor.h" />
     <ClInclude Include="..\..\src\KakaduImage.h" />
     <ClInclude Include="..\..\src\Memcached.h" />
+    <ClInclude Include="..\..\src\OpenJPEGImage.h" />
     <ClInclude Include="..\..\src\RawTile.h" />
     <ClInclude Include="..\..\src\Task.h" />
     <ClInclude Include="..\..\src\TileManager.h" />
