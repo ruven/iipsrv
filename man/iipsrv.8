@@ -1,11 +1,11 @@
-.TH IIPSRV 8 "November 2018" "Ruven Pillay"
+.TH IIPSRV 8 "June 2019" "Ruven Pillay"
 .SH NAME
 
 IIPSRV \- IIPImage Image Server
 
 .SH DESCRIPTION
-IIPImage is an advanced high-performance feature-rich multi-protocol image server for web-based streamed viewing and zooming of ultra high-resolution 
-images. It is designed to be fast and bandwidth-efficient with low processor and memory requirements. The system can comfortably handle gigapixel size images as 
+IIPImage is an advanced high-performance feature-rich multi-protocol image server for web-based streamed viewing and zooming of ultra high-resolution
+images. It is designed to be fast and bandwidth-efficient with low processor and memory requirements. The system can comfortably handle gigapixel size images as
 well as advanced image features such as 8, 16 and 32 bit depths, CIELAB colorimetric images and scientific imagery such as multispectral images.
 Source images can be either TIFF (tiled multi-resolution) or JPEG2000 (if enabled).
 
@@ -47,12 +47,13 @@ Alternatively these parameters can be set via environment settings if running di
 The log file the module will (attempt) to write to. If no
 value is given, no log will be written. Make sure the server
 process has write access to this directory. Paths with spaces
-in them may not work correctly.
+in them may not work correctly. Version 1.1 and later of iipsrv
+also supports logging to syslog if "syslog" is given as the value.
 .IP VERBOSITY
 The level of logging. 0 means no logging, 1 is minimal logging,
 2 lots of debugging stuff and 3 even more debugging stuff and 4
-a very large amount indeed. Logging is only enabled if 
-.BR LOGFILE 
+a very large amount indeed. Logging is only enabled if
+.BR LOGFILE
 has also been defined.
 .IP JPEG_QUALITY
 The default JPEG quality factor for compression when the client
@@ -63,11 +64,11 @@ Max image cache size to be held in RAM in MB. This is a cache of
 the compressed JPEG image tiles requested by the client. The default
 is 5MB.
 .IP FILESYSTEM_PREFIX
-This is a prefix automatically added by the server to the 
-beginning of each file system path. This can be useful for security reasons to 
-limit access to certain sub-directories. For example, with a prefix of 
-"/home/images/" set on the server, a request by a client for "image.tif" will 
-point to the path "/home/images/image.tif".  Any reverse directory path 
+This is a prefix automatically added by the server to the
+beginning of each file system path. This can be useful for security reasons to
+limit access to certain sub-directories. For example, with a prefix of
+"/home/images/" set on the server, a request by a client for "image.tif" will
+point to the path "/home/images/image.tif".  Any reverse directory path
 component such as ../ is also filtered out. No default value.
 .IP MAX_CVT
 The maximum permitted image pixel size returned by the CVT command
@@ -78,14 +79,14 @@ Determines whether an image may be rendered at a size greater
 than that of the source image. A value of 0 will prevent upscaling.
 The default is 1 (upscaling is allowed).
 .IP MAX_LAYERS
-The maximum number of quality layers to decode for image that support 
-progressive quality encoding, such as JPEG2000. Ignored for other file 
+The maximum number of quality layers to decode for image that support
+progressive quality encoding, such as JPEG2000. Ignored for other file
 formats. By default half of the available layers are decoded. If set to -1, all the available layers will be decoded.
 .IP WATERMARK
-TIFF image to use as watermark file. This image should be not be 
-bigger the tile size used for TIFF tiling. If bigger, it will simply be 
-cropped to the tile size. If smaller, the watermark will be positioned 
-randomly within the available space. The image can be either colour or 
+TIFF image to use as watermark file. This image should be not be
+bigger the tile size used for TIFF tiling. If bigger, it will simply be
+cropped to the tile size. If smaller, the watermark will be positioned
+randomly within the available space. The image can be either colour or
 grayscale.
 .IP WATERMARK_PROBABILITY
 The probability that a particular tile will have a watermark applied to it. 0 means never, 1 means always.
@@ -98,8 +99,8 @@ port numbers. For example: localhost,192.168.0.1:8888,192.168.0.2.
 Time in seconds that cache remains fresh. Default is 86400 seconds (24 hours).
 .IP FILENAME_PATTERN
 Pattern that follows the name stem for a panoramic image sequence.
-eg: "_pyr_" for 
-.IR FZ1_pyr_000_090.tif . 
+eg: "_pyr_" for
+.IR FZ1_pyr_000_090.tif .
 In this example, just supply FZ1 to the FIF command. The "000"
 indicates the vertical angle and "090" the horizontal. This is only
 relevant to 3D image sequences. The default is "_pyr_".
@@ -143,7 +144,7 @@ Note that Apache has two FCGI modules: mod_fastcgi and mod_fcgid which are confi
 
 You may also wish to run
 .B iipsrv
-as a standalone program. To do this, use the following syntax to bind to a particular port and listen for FCGI (not HTTP) requests. 
+as a standalone program. To do this, use the following syntax to bind to a particular port and listen for FCGI (not HTTP) requests.
 In the following example,
 .B iipsrv
 will bind to port 9000 on the machine's IP address 192.168.0.1:
@@ -152,7 +153,7 @@ will bind to port 9000 on the machine's IP address 192.168.0.1:
 
 There is additionally a
 .B --backlog
-parameter that is optional and sets the socket backlog value. The backlog value specifies the number of requests can be queued and, therefore, increases the number of concurrent connections that 
+parameter that is optional and sets the socket backlog value. The backlog value specifies the number of requests can be queued and, therefore, increases the number of concurrent connections that
 .B iipsrv
 can handle and is set to 2048 by default. For example:
 
@@ -173,7 +174,7 @@ program. Set up any parameters via environment variables and run the command as 
 
 For use in stand alone or spawn-fcgi mode, you will then need to configure your webserver on the same machine or another to direct FCGI protocol requests to this IP address and port.
 
-For web servers such as Nginx or Java Application Servers such as Tomcat, JBoss or Jetty, which cannot automatically start FCGI processes, 
+For web servers such as Nginx or Java Application Servers such as Tomcat, JBoss or Jetty, which cannot automatically start FCGI processes,
 .B iipsrv
 will need to be started in stand alone mode or via spawn-fcgi.
 
@@ -186,7 +187,7 @@ The IIPImage server supports the
 .B Zoomify
 protocol, the
 .B DeepZoom
-and the 
+and the
 .B International Image Interoperability Framework (IIIF)
 protocols. Client applications supporting these protocols should be able to use
 .B iipsrv
@@ -198,19 +199,19 @@ is the most feature rich of the 4 protocols and allows access to the more advanc
 
 .SH IMAGE PATHS
 
-The image paths given to the server must be absolute paths on the server machine (eg. via the FIF variable for the IIP protocol: FIF=/images/test.tif) and 
-.I not 
-paths 
-relative to the web server document root location. If the FILESYSTEM_PREFIX server directive has been set (see OPTIONS above), then this prefix is automatically pre-pended to all requests 
+The image paths given to the server must be absolute paths on the server machine (eg. via the FIF variable for the IIP protocol: FIF=/images/test.tif) and
+.I not
+paths relative to the web server document root location. If the FILESYSTEM_PREFIX server directive has been set (see OPTIONS above), then this prefix is automatically pre-pended to all requests
 to generate the absolute image path. Make sure that the server process owner is able to access and read the images.
 
-Note that images do 
+Note that images do
 .I not
 need to be directly accessible externally by the client via the web server.
 
 
 .SH SEE ALSO
-IIPImage website: http://iipimage.sourceforge.net
+IIPImage website: https://iipimage.sourceforge.io
 
 .SH AUTHORS
 Ruven Pillay <ruven@users.sourceforge.net>
+

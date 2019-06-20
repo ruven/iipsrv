@@ -143,6 +143,8 @@ There are several startup variables that can be passed to the server.
 They are all optional.
 
 LOGFILE: the server will log its output to the file specified, if it can.
+Version 1.1 and later of iipsrv also supports logging to syslog if “syslog”
+is given as the value.
 
 VERBOSITY: 0 means no logging, 1 is minimal logging, 2 lots of debugging stuff,
 3 even more debugging stuff and 10 a very large amount indeed ;-)
