@@ -154,14 +154,15 @@ struct Transform {
 
   /// Calculate histogram of an image
   /** @param in input image
+      @param max max image values for each channel
+      @param min min image values for each channel
       @return vector containing histogram (single histogram for all channels)
   */
   std::vector<unsigned int> histogram( RawTile& in, const std::vector<float>& max, const std::vector<float>& min );
 
 
   /// Calculate threshold for binary (bi-level) segmentation
-  /** @param in input image
-      @param histogram image histogram
+  /** @param histogram image histogram
       @return threshold
   */
   unsigned char threshold( std::vector<unsigned int>& histogram );

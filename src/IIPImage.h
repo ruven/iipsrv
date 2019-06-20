@@ -42,6 +42,7 @@
 /// Define our own derived exception class for file errors
 class file_error : public std::runtime_error {
  public:
+  /** @param s error message */
   file_error(std::string s) : std::runtime_error(s) { }
 };
 
@@ -140,7 +141,7 @@ class IIPImage {
   /// If we have an image sequence, the current X and Y position
   int currentX, currentY;
 
-  // Image histogram
+  /// Image histogram
   std::vector<unsigned int> histogram;
 
   /// STL map to hold string metadata
@@ -192,7 +193,7 @@ class IIPImage {
     timestamp( 0 ) {};
 
   /// Copy Constructor taking reference to another IIPImage object
-  /** @param im IIPImage object
+  /** @param image IIPImage object
    */
   IIPImage( const IIPImage& image )
    : imagePath( image.imagePath ),
@@ -365,12 +366,12 @@ class IIPImage {
       @param y offset in y direction
       @param w width of region
       @param h height of region
-      @param b image buffer
+      @return RawTile image
   */
   virtual RawTile getRegion( int ha, int va, unsigned int r, int layers, int x, int y, unsigned int w, unsigned int h ){ return RawTile(); };
 
   /// Assignment operator
-  /** @param im IIPImage object */
+  /** @param image IIPImage object */
   IIPImage& operator = ( IIPImage image ){
     swap( *this, image );
     return *this;

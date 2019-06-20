@@ -28,8 +28,8 @@
 
 extern std::ofstream logfile;
 
-// Image class for JPEG 2000 Images:
-// Inherits from IIPImage. Uses the OpenJPEG library.
+/// Image class for JPEG 2000 Images:
+/// Inherits from IIPImage. Uses the OpenJPEG library.
 class OpenJPEGImage : public IIPImage {
 
  private:

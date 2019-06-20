@@ -1,3 +1,7 @@
+20/06/2019:
+	- Documentation updates for doxygen
+
+
 13/06/2019:
 	- Re-factored to display Logger output type availability at configure stage.
 	- SIGHUP signal now empties internal caches rather than terminates iipsrv.

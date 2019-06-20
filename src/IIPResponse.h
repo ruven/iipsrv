@@ -111,7 +111,7 @@ class IIPResponse{
 
 
   /// Set CORS setting
-  /** @param cors setting */
+  /** @param c setting */
   void setCORS( const std::string& c ){
     if(!c.empty()){
       cors = "Access-Control-Allow-Origin: " + c + eof +
@@ -125,7 +125,7 @@ class IIPResponse{
 
 
   /// Set Cache-Control value
-  /** @param Cache-Control setting */
+  /** @param c Cache-Control setting */
   void setCacheControl( const std::string& c ){ cacheControl = "Cache-Control: " + c; };
 
 

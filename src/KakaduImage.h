@@ -151,7 +151,7 @@ class KakaduImage : public IIPImage {
   };
 
   /// Assignment Operator
-  /** @param TPTImage object
+  /** @param image object
    */
   KakaduImage& operator = ( KakaduImage image ) {
     if( this != &image ){
@@ -200,7 +200,7 @@ class KakaduImage : public IIPImage {
       @param y y coordinate
       @param w width of region
       @param h height of region
-      @param b buffer to fill
+      @return RawTile image
    */
   RawTile getRegion( int ha, int va, unsigned int r, int l, int x, int y, unsigned int w, unsigned int h );
 
