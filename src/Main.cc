@@ -842,8 +842,9 @@ int main( int argc, char *argv[] )
     // Image file errors
     catch( const file_error& error ){
       string status = "Status: 404 Not Found\r\nServer: iipsrv/" + version +
+	"\r\nContent-Type: text/plain; charset=utf-8" +
 	(response.getCORS().length() ? "\r\n" + response.getCORS() : "") +
-	 "\r\n\r\n" + error.what();
+	"\r\n\r\n" + error.what();
       writer.printf( status.c_str() );
       writer.flush();
       if( loglevel >= 2 ){
@@ -855,6 +856,7 @@ int main( int argc, char *argv[] )
     // Parameter errors
     catch( const invalid_argument& error ){
       string status = "Status: 400 Bad Request\r\nServer: iipsrv/" + version +
+	"\r\nContent-Type: text/plain; charset=utf-8" +
 	(response.getCORS().length() ? "\r\n" + response.getCORS() : "") +
 	"\r\n\r\n" + error.what();
       writer.printf( status.c_str() );

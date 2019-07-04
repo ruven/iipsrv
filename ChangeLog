@@ -1,5 +1,7 @@
 04/07/2019:
-	- Updated homepage URLs
+	- Updated homepage URLs.
+	- Forced Content-type for error messages to client text/plain to avoid
+	  potential XSS issues.
 
 
 24/03/2016: Version 1.1 Released
