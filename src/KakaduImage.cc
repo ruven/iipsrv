@@ -7,7 +7,7 @@
     Culture of the Czech Republic.
 
 
-    Copyright (C) 2009-2018 IIPImage.
+    Copyright (C) 2009-2019 IIPImage.
     Author: Ruven Pillay
 
     This program is free software; you can redistribute it and/or modify
@@ -52,7 +52,7 @@ unsigned int get_nprocs_conf(){
 
 
 #include "Timer.h"
-#define DEBUG 0
+//#define DEBUG 1
 
 
 using namespace std;
@@ -247,7 +247,9 @@ void KakaduImage::loadImageInfo( int seq, int ang )
 
 
   // Set our colour space - we let Kakadu automatically handle CIELAB->sRGB conversion for the time being
-  if( channels == 1 ) colourspace = GREYSCALE;
+  if( channels == 1 ){
+    colourspace = (bpc==1)? BINARY : GREYSCALE;
+  }
   else{
     jp2_colour_space cs = j2k_colour.get_space();
     if( cs == JP2_sRGB_SPACE || cs == JP2_iccRGB_SPACE || cs == JP2_esRGB_SPACE || cs == JP2_CIELab_SPACE ) colourspace = sRGB;

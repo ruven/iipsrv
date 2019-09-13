@@ -119,13 +119,12 @@ OPTIONAL LIBRARIES: OPENJPEG
 ----------------------------
 
 IIPImage is able to decode JPEG2000 images via the open source OpenJPEG 
-library (http://www.openjpeg.org/). This is currently experimental and is 
-much slower than Kakadu. It is disabled by default: use --enable-openjpeg 
-or provide the path to the source code 
-(--with-openjpeg=/path/to/openjpeg/distribution) to enable. If no path is
-given, the default system verson of OpenJPEG will be used if available. 
-If Kakadu support has been requested, however, OpenJPEG will be automatically 
-disabled.
+library (http://www.openjpeg.org/). Activated if OpenJPEG development
+files found in system path or path provided via
+
+    --with-openjpeg=/path/to/openjpeg/distribution
+
+OpenJPEG will be disabled if Kakadu support has been requested or --disable-openjpeg used.
 
 
 
@@ -144,6 +143,8 @@ There are several startup variables that can be passed to the server.
 They are all optional.
 
 LOGFILE: the server will log its output to the file specified, if it can.
+Version 1.1 and later of iipsrv also supports logging to syslog if “syslog”
+is given as the value.
 
 VERBOSITY: 0 means no logging, 1 is minimal logging, 2 lots of debugging stuff,
 3 even more debugging stuff and 10 a very large amount indeed ;-)
@@ -490,7 +491,7 @@ For example with lighttpd:
 
 
 ------------------------------------------------------------------------------------
-Please refer to the project site http://iipimage.sourceforge.net for further details
+Please refer to the project site https://iipimage.sourceforge.io for further details
 
 ------------------------------------------------------------------------------------
-(c) 2000-2018 Ruven Pillay <ruven@users.sourceforge.net>
+(c) 2000-2019 Ruven Pillay <ruven@users.sourceforge.net>

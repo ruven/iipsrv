@@ -1,7 +1,7 @@
 /*
     IIP FCGI server module - Main loop.
 
-    Copyright (C) 2000-2018 Ruven Pillay
+    Copyright (C) 2000-2019 Ruven Pillay
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -98,7 +98,30 @@ char *tz = NULL;
 
 
 
-/* Handle a signal - print out some stats and exit
+// Create pointers to our cache structures for use in our signal handler function
+imageCacheMapType* ic = NULL;
+Cache* tc = NULL;
+
+
+void IIPReloadCache( int signal )
+{
+  if( ic ) ic->clear();
+  if( tc ) tc->clear();
+
+  if( loglevel >= 1 ){
+    // No strsignal on Windows
+#ifdef WIN32
+    int sigstr = signal;
+#else
+    char *sigstr = strsignal( signal );
+#endif
+    logfile << "Caught " << sigstr << " signal. Emptying internal caches" << endl << endl;
+  }
+}
+
+
+
+/* Handle a termination signal - print out some stats and exit
  */
 void IIPSignalHandler( int signal )
 {
@@ -254,6 +277,7 @@ int main( int argc, char *argv[] )
   // Set our maximum image cache size
   float max_image_cache_size = Environment::getMaxImageCacheSize();
   imageCacheMapType imageCache;
+  ic = &imageCache;
 
 
   // Get our image pattern variable
@@ -325,7 +349,6 @@ int main( int argc, char *argv[] )
     logfile << "Setting maximum CVT size to " << max_CVT << endl;
     logfile << "Setting HTTP Cache-Control header to '" << cache_control << "'" << endl;
     logfile << "Setting 3D file sequence name pattern to '" << filename_pattern << "'" << endl;
-    logfile << "Availble logging outputs: " << logfile.types() << endl;
     if( !cors.empty() ) logfile << "Setting Cross Origin Resource Sharing to '" << cors << "'" << endl;
     if( !base_url.empty() ) logfile << "Setting base URL to '" << base_url << "'" << endl;
     if( max_layers != 0 ){
@@ -482,7 +505,7 @@ int main( int argc, char *argv[] )
 
 #ifndef WIN32
   signal( SIGUSR1, IIPSignalHandler );
-  signal( SIGHUP, IIPSignalHandler );
+  signal( SIGHUP, IIPReloadCache );
 #endif
 
   signal( SIGTERM, IIPSignalHandler );
@@ -503,6 +526,7 @@ int main( int argc, char *argv[] )
 
   // Create our tile cache
   Cache tileCache( max_image_cache_size );
+  tc = &tileCache;
   Task* task = NULL;
 
 
@@ -831,8 +855,9 @@ int main( int argc, char *argv[] )
     // Image file errors
     catch( const file_error& error ){
       string status = "Status: 404 Not Found\r\nServer: iipsrv/" + version +
+	"\r\nContent-Type: text/plain; charset=utf-8" +
 	(response.getCORS().length() ? "\r\n" + response.getCORS() : "") +
-	 "\r\n\r\n" + error.what();
+	"\r\n\r\n" + error.what();
       writer.printf( status.c_str() );
       writer.flush();
       if( loglevel >= 2 ){
@@ -844,6 +869,7 @@ int main( int argc, char *argv[] )
     // Parameter errors
     catch( const invalid_argument& error ){
       string status = "Status: 400 Bad Request\r\nServer: iipsrv/" + version +
+	"\r\nContent-Type: text/plain; charset=utf-8" +
 	(response.getCORS().length() ? "\r\n" + response.getCORS() : "") +
 	"\r\n\r\n" + error.what();
       writer.printf( status.c_str() );

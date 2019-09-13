@@ -1,6 +1,6 @@
-/*  IIP Server: OpenJPEG JPEG2000 handler
+/*  IIPImage Server: OpenJPEG JPEG2000 handler
 
-    Copyright (C) 2015 Moravian Library in Brno (http://www.mzk.cz/)
+    Copyright (C) 2019 Ruven Pillay.
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -19,558 +19,483 @@
 //#define DEBUG 1
 
 #include "OpenJPEGImage.h"
-
 #include <sstream>
-#include <math.h>
 #include <fstream>
-#include <Timer.h>
+#include <cmath>
+#include "Timer.h"
 
-#include <openjpeg.h>
 
 using namespace std;
 
-/************************************************************************/
-/*                            callbacks                                 */
-/************************************************************************/
-// These are called by OpenJPEG library.
-// This driver then decides to ignore the messages or to process them.
-// While not in debug mode errors are processed but warnings and info messages are omitted
 
-static void error_callback(const char* msg, void* /*client_data*/)
-{
+// Handle info, warning and error messages from OpenJPEG
+static void error_callback( const char* msg, void* ){
   stringstream ss;
-  ss << "ERROR :: OpenJPEG core :: " << msg;
-  throw file_error(ss.str());
+  ss << "OpenJPEG error :: " << msg;
+  throw file_error( ss.str() );
 }
 
-static void warning_callback(const char* msg, void* /*client_data*/)
-{
 #ifdef DEBUG
-  logfile << "WARNING :: OpenJPEG core :: " << msg << flush;
-#endif
+static void warning_callback( const char* msg, void* ){
+  logfile << "OpenJPEG warning :: " << msg << endl;
 }
-
-static void info_callback(const char* msg, void* /*client_data*/)
-{
-#ifdef DEBUG
-  logfile << "INFO :: OpenJPEG core :: " << msg << flush;
-#endif
+static void info_callback( const char* msg, void* ){
+  logfile << "OpenJPEG info :: " << msg;
 }
+#endif
 
-/************************************************************************/
-/*                            openImage()                               */
-/************************************************************************/
-// Opens file with image and calls loadImageInfo()
+
 
 void OpenJPEGImage::openImage()
 {
+  string filename = getFileName( currentX, currentY );
+
+  // Update our timestamp
+  updateTimestamp( filename );
+
+  // Create decompression codec
+  _codec = opj_create_decompress( OPJ_CODEC_JP2 );
+
+  // Set info, warning and error handlers for codec
+#ifdef DEBUG
+  opj_set_info_handler( _codec, info_callback, NULL );
+  opj_set_warning_handler( _codec, warning_callback, NULL );
+#endif
+  opj_set_error_handler( _codec, error_callback, NULL );
+
+  // Setup decoder
+  opj_dparameters_t parameters; // Set default decoder parameters
+  opj_set_default_decoder_parameters( &parameters );
+  if( !opj_setup_decoder( _codec, &parameters ) ){
+    throw file_error( "OpenJPEG :: openImage() :: error setting up decoder" );
+  }
+
 #ifdef DEBUG
   Timer timer;
   timer.start();
-  logfile << "INFO :: OpenJPEG :: openImage() :: started" << endl
-          << flush;
 #endif
 
-  std::string filename = getFileName(currentX, currentY);
-  // Check if our image has been modified.
-  updateTimestamp(filename);
-
-  loadImageInfo(currentX, currentY);
-  isSet = true; // Image is opened and info is set
+  // Open the JPEG2000 file in read mode
+  if( !(_stream = opj_stream_create_default_file_stream( filename.c_str(), true) ) ){
+    throw file_error( "OpenJPEG :: Unable to open '" + filename + "'" );
+  }
 
 #ifdef DEBUG
-  logfile << "INFO :: OpenJPEG :: openImage() :: " << timer.getTime() << " microseconds" << endl
-          << flush;
+  logfile << "OpenJPEG :: openImage() :: " << "Stream created" << endl;
 #endif
+
+  // Read header
+  if( !opj_read_header( _stream, _codec, &_image ) ){
+    throw file_error( "OpenJPEG :: process() :: opj_read_header() failed" );
+  }
+
+#ifdef DEBUG
+  logfile << "OpenJPEG :: openImage() :: " << "Header read" << endl;
+#endif
+
+  // Load our metadata if not already loaded
+  if( bpc == 0 ) loadImageInfo( currentX, currentY );
+
+#ifdef DEBUG
+  logfile << "OpenJPEG :: openImage() :: " << timer.getTime() << " microseconds" << endl;
+#endif
+
 }
 
-/************************************************************************/
-/*                            closeImage()                              */
-/************************************************************************/
-// Closes file with image
+
 
 void OpenJPEGImage::closeImage()
 {
 #ifdef DEBUG
-  logfile << "INFO :: OpenJPEG :: closeImage() :: started" << endl
-          << flush;
+  Timer timer;
+  timer.start();
 #endif
 
+  if( _codec && _stream ) opj_end_decompress( _codec, _stream );
+  if( _codec ){
+    opj_destroy_codec( _codec );
+    _codec = NULL;
+  }
+  if( _stream ){
+    opj_stream_destroy( _stream );
+    _stream = NULL;
+  }
+  if( _image ){
+    opj_image_destroy( _image );
+    _image = NULL;
+  }
+
 #ifdef DEBUG
-  logfile << "INFO :: OpenJPEG :: closeImage() :: ended" << endl
-          << flush;
+  logfile << "OpenJPEG :: closeImage() :: " << timer.getTime() << " microseconds" << endl;
 #endif
 }
 
-/************************************************************************/
-/*                            loadImageInfo()                           */
-/************************************************************************/
-// Saves important image information to IIPImage and OpenJPEGImage variables
 
-void OpenJPEGImage::loadImageInfo(int /*seq*/, int /*ang*/)
+
+void OpenJPEGImage::loadImageInfo( int seq, int ang )
 {
+
 #ifdef DEBUG
   Timer timer;
   timer.start();
-  logfile << "INFO :: OpenJPEG :: loadImageInfo() :: started" << endl
-          << flush;
 #endif
 
-  static opj_image_t* l_image; // Image structure
-  static opj_stream_t* l_stream; // File stream
-  static opj_codec_t* l_codec; // Handle to a decompressor
+  // Get info structure
+  opj_codestream_info_v2_t* cst_info = opj_get_cstr_info( _codec );
+  numResolutions = cst_info->m_default_tile_info.tccp_info[0].numresolutions;
+  quality_layers = cst_info->m_default_tile_info.numlayers;
 
-  class Finally {
-    // This class makes sure that the resources are deallocated properly
-  public:
-    ~Finally()
-    {
-      opj_end_decompress(l_codec, l_stream);
-      opj_stream_destroy(l_stream);
-      opj_destroy_codec(l_codec);
-      opj_image_destroy(l_image);
-      l_codec = NULL;
-      l_stream = NULL;
-      l_image = NULL;
-    }
-  };
-  Finally finally; // Allocated on stack, destructor is called on both successful and exceptional scope exit
+  // Close our info structure
+  opj_destroy_cstr_info( &cst_info );
 
-  l_codec = opj_create_decompress(OPJ_CODEC_JP2); // Create decompress codec
 
-  // Set callback handlers. OPJ library then passes information, warnings and errors to specified methods.
-  opj_set_info_handler(l_codec, info_callback, 00);
-  opj_set_warning_handler(l_codec, warning_callback, 00);
-  opj_set_error_handler(l_codec, error_callback, 00);
+  channels = _image->numcomps;
+  bpc = _image->comps[0].prec;
 
-  opj_dparameters_t parameters; // Set default decoder parameters
-  opj_set_default_decoder_parameters(&parameters);
-  if (!opj_setup_decoder(l_codec, &parameters)) {
-    throw file_error("ERROR :: OpenJPEG :: openImage() :: opj_setup_decoder() failed"); // Setup decoder
-  }
-
-  std::string filename = getFileName(currentX, currentY);
-  if (!(l_stream = opj_stream_create_default_file_stream(filename.c_str(), 1))) {
-    throw file_error("ERROR :: OpenJPEG :: openImage() :: opj_stream_create_default_file_stream() failed"); // Create stream
-  }
-
-  if (!opj_read_header(l_stream, l_codec, &l_image)) {
-    throw file_error("ERROR :: OpenJPEG :: openImage() :: opj_read_header() failed"); // Read main header
-  }
-
-  opj_codestream_info_v2_t* cst_info = opj_get_cstr_info(l_codec); // Get info structure
-  image_tile_width = cst_info->tdx; // Save image tile width - tile width that this image operates with
-  image_tile_height = cst_info->tdy; // Save image tile height
-  numResolutions = cst_info->m_default_tile_info.tccp_info[0].numresolutions; // Save number of resolution levels in image
-  max_layers = cst_info->m_default_tile_info.numlayers; // Save number of layers
-#ifdef DEBUG
-  logfile << "OpenJPEG :: " << max_layers << " quality layers detected" << endl
-          << flush;
-#endif
-  opj_destroy_cstr_info(&cst_info); // We already read everything we needed from info structure
-
-  // Check whether image parameters make sense
-  if (l_image->x1 <= l_image->x0 || l_image->y1 <= l_image->y0 ||
-      l_image->numcomps == 0 ||
-      l_image->comps[0].w != l_image->x1 - l_image->x0 ||
-      l_image->comps[0].h != l_image->y1 - l_image->y0) {
-    throw file_error("ERROR :: OpenJPEG :: loadImageInfo() :: Could not handle that image");
-  }
-
-  // Check for 420 format
-  if (l_image->color_space != OPJ_CLRSPC_SRGB && l_image->numcomps == 3 &&
-      l_image->comps[1].w == l_image->comps[0].w / 2 &&
-      l_image->comps[1].h == l_image->comps[0].h / 2 &&
-      l_image->comps[2].w == l_image->comps[0].w / 2 &&
-      l_image->comps[2].h == l_image->comps[0].h / 2) {
-    throw file_error("ERROR :: OpenJPEG :: loadImageInfo() :: 420 format detected.");
-  }
-
-  // Check whether component parameters make sense
-  for (int i = 2; i <= (int)l_image->numcomps; ++i) {
-    if (l_image->comps[i - 1].w != l_image->comps[0].w || l_image->comps[i - 1].h != l_image->comps[0].h) {
-      throw file_error("ERROR :: OpenJPEG :: loadImageInfo() :: Could not handle that image");
-    }
-  }
-
-  // Save color space
-  switch ((channels = l_image->numcomps)) {
-  case 3:
-    colourspace = sRGB;
-    break;
-  case 1:
-    colourspace = GREYSCALE;
-    break;
-  default:
-    throw file_error("ERROR :: OpenJPEG :: Unsupported color space");
-  }
-
-  bpc = l_image->comps[0].prec; // Save bit depth
-  // Save whether the data are signed.
-  sgnd = (l_image->comps[0].sgnd != 0);
 
   // Save first resolution level
-  image_widths.push_back((raster_width = l_image->x1 - l_image->x0));
-  image_heights.push_back((raster_height = l_image->y1 - l_image->y0));
+  unsigned int w = _image->x1 - _image->x0;
+  unsigned int h = _image->y1 - _image->y0;
+  image_widths.push_back(w);
+  image_heights.push_back(h);
 
-  unsigned int tmp_w = raster_width;
-  unsigned int tmp_h = raster_height;
 #ifdef DEBUG
-  logfile << "INFO :: OpenJPEG :: Resolution : " << tmp_w << "x" << tmp_h << endl
-          << flush;
+  logfile << "OpenJPEG :: DWT Levels: " << numResolutions << endl;
+  logfile << "OpenJPEG :: Resolution : " << w << "x" << h << endl;
 #endif
-  unsigned short i = 1;
-  // Save other resolution levels
-  for (; tmp_w > tile_width || tmp_h > tile_height; ++i) {
-    image_widths.push_back((tmp_w /= 2));
-    image_heights.push_back((tmp_h /= 2));
-#ifdef DEBUG
-    logfile << "INFO :: OpenJPEG :: Resolution : " << tmp_w << "x" << tmp_h << endl
-            << flush;
-#endif
-  }
 
-  // Generate virtual resolutions if necessary
-  if (i > numResolutions) {
-    virtual_levels = i - numResolutions;
+  // Loop through each resolution and calculate the image dimensions - 
+  // We force a similar behaviour to TIFF with resolutions at floor(x/2)
+  // rather than OpenJPEG's default ceil(x/2) 
+  for( unsigned int c=1; c<numResolutions; c++ ){
+    w = floor( w/2.0 );
+    h = floor( h/2.0 );
+    image_widths.push_back(w);
+    image_heights.push_back(h);
 #ifdef DEBUG
-    logfile << "WARNING :: OpenJPEG :: Insufficient resolution levels in JPEG2000 stream. Will generate " << virtual_levels << " extra levels dynamically." << endl;
+    logfile << "OpenJPEG :: Resolution : " << w << "x" << h << endl;
 #endif
   }
 
-  numResolutions = i; // Set number of resolutions to (number of picture resolutions + number of virtual resolutions)
+
+  // If we don't have enough resolutions to fit a whole image into a single tile
+  // we need to generate them ourselves virtually.
+  unsigned int n = 1;
+  w = image_widths[0];
+  h = image_heights[0];
+  while( (w>tile_width) || (h>tile_height) ){
+    n++;
+    w = floor( w/2.0 );
+    h = floor( h/2.0 );
+    if( n > numResolutions ){
+      image_widths.push_back(w);
+      image_heights.push_back(h);
+    }
+  }
+
+  if( n > numResolutions ){
+#ifdef DEBUG
+    logfile << "OpenJPEG :: Warning! Insufficient resolution levels in JPEG2000 stream. Will generate "
+	    << n-numResolutions << " extra levels dynamically -" << endl
+	    << "OpenJPEG :: However, you are advised to regenerate the file with at least " << n << " levels" << endl;
+#endif
+  }
+
+  if( n > numResolutions ) virtual_levels = n-numResolutions-1;
+  numResolutions = n;
+
+
+  // Need to assign basic colorspace information
+  if( channels == 1 ){
+    colourspace = (bpc==1)? BINARY : GREYSCALE;
+  }
+  else if( channels == 3 ) colourspace = sRGB;
+
+  // Color space details
+  string cs;
+  switch( _image->color_space ){
+    case OPJ_CLRSPC_SRGB:
+      cs = "sRGB";
+      break;
+    case  OPJ_CLRSPC_SYCC:
+      cs = "YUV";
+      break;
+    case OPJ_CLRSPC_CMYK:
+      cs = "CMYK";
+      break;
+    case OPJ_CLRSPC_EYCC:
+      cs = "e-YCC";
+      break;
+    case OPJ_CLRSPC_UNSPECIFIED:
+      cs = "Unspecified";
+      break;
+    default:
+      cs = "Unknown";
+      break;
+  }
+
 
 #ifdef DEBUG
-  logfile << "INFO :: OpenJPEG :: loadImageInfo() :: " << timer.getTime() << " microseconds" << endl
-          << flush;
+  logfile << "OpenJPEG :: " << bpc << " bit data" << endl
+	  << "OpenJPEG :: " << channels << " channels" << endl
+ 	  << "OpenJPEG :: colour space: " << cs << endl
+	  << "OpenJPEG :: " << quality_layers << " quality layers detected" << endl;
+#endif
+
+  // For bilevel images, force channels to 1 as we sometimes come across such images which claim 3 channels
+  if( bpc == 1 ) channels = 1;
+
+  // Get the max and min values for our data type
+  for( unsigned int i=0; i<channels; i++ ){
+    min.push_back( 0.0 );
+    if( bpc > 8 && bpc < 16 ) max.push_back( 1<<bpc );
+    if( bpc == 16 ) max.push_back( 65535.0 );
+    else max.push_back( 255.0 );
+  }
+  
+  // Indicate that our metadata has been read
+  isSet = true;
+
+
+#ifdef DEBUG
+  logfile << "OpenJPEG :: loadImageInfo() :: " << timer.getTime() << " microseconds" << endl;
 #endif
 }
 
-/************************************************************************/
-/*                  getTile() - Get an individual tile                  */
-/************************************************************************/
-// Get one individual tile from the opened picture
 
-RawTile OpenJPEGImage::getTile(int seq, int ang, unsigned int res, int layers,
-                               unsigned int tile)
+
+// Get an individual tile
+RawTile OpenJPEGImage::getTile( int seq, int ang, unsigned int res, int layers, unsigned int tile )
 {
+
+  // Scale up our output bit depth to the nearest factor of 8
+  unsigned obpc = bpc;
+  if( bpc <= 16 && bpc > 8 ) obpc = 16;
+  else if( bpc <= 8 ) obpc = 8;
+
 #ifdef DEBUG
   Timer timer;
   timer.start();
-  logfile << "INFO :: OpenJPEG :: getTile() :: started" << endl
-          << flush;
 #endif
 
-  // Check whether requested resolution exists in the picture.
-  if (res > numResolutions) {
-    throw file_error("ERROR :: OpenJPEG :: getTile() :: Asked for non-existent resolution");
+  if( res > numResolutions ){
+    ostringstream tile_no;
+    tile_no << "OpenJPEG :: Asked for non-existent resolution: " << res;
+    throw file_error( tile_no.str() );
   }
 
-  // Reverse the resolution number - resolutions in IIPImage are stored in reversed order
   int vipsres = (numResolutions - 1) - res;
 
-  unsigned int rem_x = image_widths[vipsres] % tile_width; // Get the width and height for last row and column tiles
-  unsigned int rem_y = image_heights[vipsres] % tile_height; // that means remaining pixels, which do not form a whole tile
+  unsigned int tw = tile_width;
+  unsigned int th = tile_height;
+  
+  // Get the width and height for last row and column tiles
+  unsigned int rem_x = image_widths[vipsres] % tile_width;
+  unsigned int rem_y = image_heights[vipsres] % tile_height;
 
-  unsigned int ntlx = (image_widths[vipsres] / tile_width) + (rem_x == 0 ? 0 : 1); // Calculate the number of tiles in each direction
+  // Calculate the number of tiles in each direction
+  unsigned int ntlx = (image_widths[vipsres] / tile_width) + (rem_x == 0 ? 0 : 1);
   unsigned int ntly = (image_heights[vipsres] / tile_height) + (rem_y == 0 ? 0 : 1);
 
-#ifdef DEBUG
-  logfile << "INFO :: OpenJPEG :: getTile() :: asked for: " << endl
-          << "\tTile width: " << tile_width << endl
-          << "\tTile height: " << tile_height << endl
-          << "\tResolution: " << res << ", meaning " << vipsres << " for OpenJPEG driver" << endl
-          << "\tResolution: " << image_widths[vipsres] << "x" << image_heights[vipsres] << endl
-          << "\tTile index: " << tile << endl
-          << "\tTiles available: " << ntlx << "x" << ntly << endl
-          << "\tRemaining tile width in last column: " << rem_x << endl
-          << "\tRemaining tile height in bottom row: " << rem_y << endl
-          << flush;
-#endif
-
-  // Check whether requested tile exists.
-  if (tile >= ntlx * ntly) {
-    throw file_error("ERROR :: OpenJPEG :: getTile() :: Asked for non-existent tile");
+  // Check whether requested tile exists
+  if( tile >= ntlx*ntly ){
+    ostringstream tile_no;
+    tile_no << "OpenJPEG :: Asked for non-existent tile: " << tile;
+    throw file_error( tile_no.str() );
   }
 
-  unsigned int tw = tile_width, th = tile_height;
-
   // Alter the tile size if it's in the last column
-  if ((tile % ntlx == ntlx - 1) && rem_x != 0) {
+  if( ( tile % ntlx == ntlx - 1 ) && ( rem_x != 0 ) ) {
     tw = rem_x;
   }
 
   // Alter the tile size if it's in the bottom row
-  if ((tile / ntlx == ntly - 1) && rem_y != 0) {
+  if( ( tile / ntlx == ntly - 1 ) && rem_y != 0 ) {
     th = rem_y;
   }
 
   // Calculate the pixel offsets for this tile
   int xoffset = (tile % ntlx) * tile_width;
-  int yoffset = (tile / ntlx) * tile_height;
-
+  int yoffset = (unsigned int) floor((double)(tile/ntlx)) * tile_height;
+  
 #ifdef DEBUG
-  logfile << "\tFinal tile size requested: " << tw << "x" << th << " @" << channels << endl
-          << flush;
+  logfile << "OpenJPEG :: Tile size: " << tw << "x" << th << " @" << channels << endl;
 #endif
 
-  // Create Rawtile object and initialize it
-  RawTile rawtile(tile, res, seq, ang, tw, th, channels, 8);
-  rawtile.data = new unsigned char[tw * th * channels];
-  rawtile.dataLength = tw * th * channels;
+  // Create our Rawtile object and initialize with data
+  RawTile rawtile( tile, res, seq, ang, tw, th, channels, obpc );
+
+  if( obpc == 16 ) rawtile.data = new unsigned short[tw*th*channels];
+  else if( obpc == 8 ) rawtile.data = new unsigned char[tw*th*channels];
+  else throw file_error( "OpenJPEG :: Unsupported number of bits" );
+
+  rawtile.dataLength = tw*th*channels*(obpc/8);
   rawtile.filename = getImagePath();
   rawtile.timestamp = timestamp;
 
-  // Set the number of layers to half of the number of detected layers if we have not set the layers parameter manually
-  if (layers <= 0) {
-    layers = ceil(max_layers / 2.0);
-  }
-
-  // Process the tile - save data to rawfile.data
-  // We can decode a single tile only if requested size equals tile size defined in opened image
-  // If tile sizes defined in IIPImage and opened image do not match, indexes of tiles we ask OPJ library for do not match either
-  // In case of this tile size inconsistency, seventh parameter becomes -1. This means that OpenJPEG library will process the request as
-  // a request for region, not a tile. OPJ library will then select tiles that need to be decoded in order to decode requested region.
-  process(res, layers,xoffset, yoffset, tw, th,
-          (image_tile_width == tw && image_tile_height == th) ? tile : -1, rawtile.data);
+  // Process the tile
+  process( res, layers, xoffset, yoffset, tw, th, rawtile.data );
 
 #ifdef DEBUG
-  logfile << "INFO :: OpenJPEG :: getTile() :: " << timer.getTime() << " microseconds" << endl
-          << flush;
+  logfile << "OpenJPEG :: getTile() :: " << timer.getTime() << " microseconds" << endl;
 #endif
 
   return rawtile;
 }
 
-/************************************************************************/
-/*         getRegion() - Get an entire region and not just a tile         */
-/************************************************************************/
-// Gets selected region from opened picture
 
-RawTile OpenJPEGImage::getRegion(int ha, int va, unsigned int res, int layers,
-                                 int x, int y,
-                                 unsigned int w, unsigned int h)
-{
-#ifdef DEBUG
-  Timer timer;
-  timer.start();
-  logfile << "INFO :: OpenJPEG :: getRegion() :: started" << endl
-          << flush;
-#endif
 
-  // Check if desired resolution exists
-  if (res > numResolutions) {
-    throw file_error("ERROR :: OpenJPEG :: getRegion() :: Asked for non-existent resolution");
-  }
+// Get an entire region and not just a tile
+RawTile OpenJPEGImage::getRegion( int ha, int va, unsigned int res, int layers, int x, int y, unsigned int w, unsigned int h ){
 
   // Scale up our output bit depth to the nearest factor of 8
   unsigned int obpc = bpc;
-  if (bpc <= 16 && bpc > 8) {
-    obpc = 16;
-  } else if (bpc <= 8) {
-    obpc = 8;
-  }
+  if( bpc <= 16 && bpc > 8 ) obpc = 16;
+  else if( bpc <= 8 ) obpc = 8;
+  
+#ifdef DEBUG
+  Timer timer;
+  timer.start();
+#endif
 
-  // Check layer request
-  if (layers <= 0) {
-    layers = ceil(max_layers / 2.0);
-  }
+  RawTile rawtile( 0, res, ha, va, w, h, channels, obpc );
 
-  // Reverse resolution level number
-  int vipsres = (numResolutions - 1) - res;
+  if( obpc == 16 ) rawtile.data = new unsigned short[w * h * channels];
+  else if( obpc == 8 ) rawtile.data = new unsigned char[w * h * channels];
+  else throw file_error( "OpenJPEG :: Unsupported number of bits" );
 
-  // Check if specified region is valid for this picture
-  if ((x + w) > image_widths[vipsres] || (y + h) > image_heights[vipsres]) {
-    throw file_error("ERROR :: OpenJPEG :: getRegion() :: Asked for region out of raster size");
-  }
-
-  RawTile rawtile(0, res, ha, va, w, h, channels, obpc);
-
-  if (obpc == 16) {
-    rawtile.data = new unsigned short[w * h * channels];
-  } else if (obpc == 8) {
-    rawtile.data = new unsigned char[w * h * channels];
-  } else {
-    throw file_error("ERROR :: OpenJPEG :: Unsupported number of bits");
-  }
-
-  rawtile.dataLength = w * h * channels * obpc / 8;
+  rawtile.dataLength = w*h*channels*(obpc/8);
   rawtile.filename = getImagePath();
   rawtile.timestamp = timestamp;
 
-  // Get the region
-  process(res, layers, x, y, w, h, -1, rawtile.data);
+  process( res, layers, x, y, w, h, rawtile.data );
 
 #ifdef DEBUG
-  logfile << "INFO :: OpenJPEG :: getRegion() :: "
-          << timer.getTime() << " microseconds" << endl
-          << flush;
+  logfile << "OpenJPEG :: getRegion() :: " << timer.getTime() << " microseconds" << endl;
 #endif
 
   return rawtile;
 }
 
-/************************************************************************/
-/*                       process() - Main processing function           */
-/************************************************************************/
-// Core method for recovering tiles and regions from opened picture via OPJ library
 
-void OpenJPEGImage::process(unsigned int res, int layers,
-                            unsigned int xoffset, unsigned int yoffset,
-                            unsigned int tw, unsigned int th, int tile,
-                            void* d)
+
+// Main processing function
+void OpenJPEGImage::process( unsigned int res, int layers, int xoffset, int yoffset, unsigned int tw, unsigned int th, void *d )
 {
-  static opj_image_t* out_image; // Decoded image
-  static opj_stream_t* l_stream; // File stream
-  static opj_codec_t* l_codec; // Handle to a decompressor
+  // Unfortunately, it's not currently possible to re-use OpenJPEG's stream or image structures,
+  // so re-open if necessary
+  if( !_image ) openImage();
 
-  unsigned int factor = 1; // Downsampling factor - set it to default value
+  // Scale up our output bit depth to the nearest factor of 8
+  unsigned int obpc = bpc;
+  if( bpc <= 16 && bpc > 8 ) obpc = 16;
+  else if( bpc <= 8 ) obpc = 8;
+
+  unsigned int factor = 1;                  // Downsampling factor - set it to default value
   int vipsres = (numResolutions - 1) - res; // Reverse resolution number
 
-  if (res < virtual_levels) {
-    // Handle virtual resolutions
-    // Once we enter this scope it means we need to provide a virtual resolution
-    // Factor 2 means half of the smallest original resolution, factor 4 means quarter of it and so on...
-    // Can not be negative or zero - see above condition. Is always >= 2
+  // Calculate number of extra resolutions needed that have not been encoded in the image
+  if( res < virtual_levels ){
     factor = 2 * (virtual_levels - res);
-    // Take care of offsets as well
     xoffset *= factor;
     yoffset *= factor;
-    // We need to decode bigger region than requested. We are going to downsample it later, thus gain the desired size again
     tw *= factor;
     th *= factor;
     // Set our resolution level back to the smallest original resolution
     vipsres = numResolutions - 1 - virtual_levels;
+#ifdef DEBUG
+  logfile << "OpenJPEG :: using smallest existing resolution " << virtual_levels << endl;
+#endif
   }
 
-  class Finally {
-    // This class makes sure that the resources are deallocated properly
-  public:
-    ~Finally()
-    {
-      opj_end_decompress(l_codec, l_stream);
-      opj_stream_destroy(l_stream);
-      opj_destroy_codec(l_codec);
-      opj_image_destroy(out_image);
-      l_codec = NULL;
-      l_stream = NULL;
-      out_image = NULL;
-    }
-  };
-  // Allocated on stack, destructor is called on both successful and exceptional scope exit
-  Finally finally;
+  // Set the number of layers to half of the number of detected layers if we have not set the
+  // layers parameter manually. If layers is set to less than 0, use all layers.
+  if( layers < 0 ) layers = quality_layers;
+  else if( layers == 0 ) layers = ceil( quality_layers/2.0 );
 
-  l_codec = opj_create_decompress(OPJ_CODEC_JP2); // Create decompress codec
-  opj_set_info_handler(l_codec, info_callback, 00); // Set callback handlers
-  opj_set_warning_handler(l_codec, warning_callback, 00);
-  opj_set_error_handler(l_codec, error_callback, 00);
+  // Also make sure we have at least 1 layer
+  if( layers < 1 ) layers = 1;
 
-  std::string filename = getFileName(currentX, currentY);
-  if (!(l_stream = opj_stream_create_default_file_stream(filename.c_str(), 1))) {
-    // Create stream
-    throw file_error("ERROR :: OpenJPEG :: process() :: opj_stream_create_default_file_stream() failed");
-  }
 
+  // Set number of quality layer and resolution
   opj_dparameters_t params;
-  params.cp_layer = layers; // Set quality layers
-  params.cp_reduce = 0;
-  if (!opj_setup_decoder(l_codec, &params)) {
-    // Setup layers
-    throw file_error("ERROR :: OpenJPEG :: process() :: opj_setup_decoder() failed");
+  params.cp_layer = layers;
+  params.cp_reduce = vipsres;
+
+
+  if( !opj_setup_decoder( _codec, &params ) ){
+    throw file_error( "OpenJPEG :: process() :: opj_setup_decoder() failed" );
   }
 
-  if (!opj_read_header(l_stream, l_codec, &out_image)) {
-    // Read main header
-    throw file_error("ERROR :: OpenJPEG :: process() :: opj_read_header() failed");
-  }
-  if (!opj_set_decoded_resolution_factor(l_codec, vipsres)) {
-    // Setup resolution
-    throw file_error("ERROR :: OpenJPEG :: process() :: opj_set_decoded_resolution_factor() failed");
-  }
-#ifdef DEBUG
-  Timer timer;
-  timer.start();
-  logfile << "INFO :: OpenJPEG :: process() :: Decoding started" << endl
-          << flush;
-#endif
-  if (tile < 0) {
-    // In this scope we decode a region - OpenJPEG library selects tiles that need to be decoded itself
-#ifdef DEBUG
-    logfile << "INFO :: OpenJPEG :: process() :: Decoding a region (not a single tile)" << endl
-            << flush;
-#endif
 
-    // Hack for openjpeg up to 2.2.0
-    for (OPJ_UINT32 i_comp = 0; i_comp < out_image->numcomps; i_comp++){
-      out_image->comps[i_comp].factor = vipsres;
-    }
+  // Set resolution - hack for openjpeg up to 2.2.0
+  for( OPJ_UINT32 i = 0; i < _image->numcomps; i++ ){
+    _image->comps[i].factor = vipsres;
+  }
 
-    // Tell OpenJPEG what region we want to decode
-    if (!opj_set_decode_area(l_codec, out_image,
-                             xoffset << vipsres,
-                             yoffset << vipsres,
-                             (xoffset + tw) << vipsres,
-                             (yoffset + th) << vipsres)) {
-      throw file_error("ERROR :: OpenJPEG :: process() :: opj_set_decode_area() failed");
-    }
-    // Decode region from image
-    if (!opj_decode(l_codec, l_stream, out_image)) {
-      throw file_error("ERROR :: OpenJPEG :: process() :: opj_decode() failed");
-    }
-  }
-  // Get a single tile if possible
-  else if (!opj_get_decoded_tile(l_codec, l_stream, out_image, tile)) {
-    throw file_error("ERROR :: OpenJPEG :: process() :: opj_get_decoded_tile() failed");
-  }
+  // Image location and size at requested resolution
+  unsigned int x0 = xoffset << vipsres;
+  unsigned int y0 = yoffset << vipsres;
+  unsigned int w0 = (xoffset + tw) << vipsres;
+  unsigned int h0 = (yoffset + th) << vipsres;
 
 #ifdef DEBUG
-  logfile << "INFO :: OpenJPEG :: process() :: Decoding took " << timer.getTime() << " microseconds" << endl
-          << "INFO :: OpenJPEG :: process() :: Decoded image info: " << endl
-          << "\tPrecision: " << out_image->comps[0].prec << endl
-          << "\tBPP: " << out_image->comps[0].bpp << endl
-          << "\tSigned: " << out_image->comps[0].sgnd << endl
-          << "\tXOFF: " << out_image->comps[0].x0 << endl
-          << "\tYOFF: " << out_image->comps[0].y0 << endl
-          << "\tXSIZE: " << out_image->comps[0].w << endl
-          << "\tYSIZE: " << out_image->comps[0].h << endl
-          << "\tRESNO: " << out_image->comps[0].resno_decoded << endl
-          << "INFO :: OpenJPEG :: process() :: Copying image data started" << endl
-          << flush;
-  timer.start();
+  logfile << "OpenJPEG :: decoding " << layers << " quality layers" << endl;
+  logfile << "OpenJPEG :: requested region on high resolution canvas: position: "
+	  << xoffset << "x" << yoffset << ". size: " << tw << "x" << th << endl;
+  logfile << "OpenJPEG :: mapped resolution region size: " << (tw<<vipsres) << "x" << (th<<vipsres) << endl;
 #endif
 
-  // Now we need to pass decoded data to the buffer we received as a parameter (actually we received just a reference to it)
-  // Create new pointer to the buffer as unsigned char pointer
-  unsigned char* p_buffer = (unsigned char*)d;
-  // We are unable to perform pointer arithmetics on void pointers
-  unsigned int buffer_write_pos = 0; // Write position indicator
-  unsigned int h_pos = 0;
-  unsigned int w_pos;
-  unsigned int xy_position = 0; // Another position indicators
-  unsigned int color_comp; // Current color component indicator
-  for (; h_pos < th; h_pos += factor) {
-    // Vertical cycle - takes care of pixel columns
-    for (w_pos = 0; w_pos < tw; w_pos += factor) {
-      // Horizontal cycle - takes care of pixel rows
-      xy_position = (tw * h_pos) + w_pos; // Calculate exact position (pixel index)
-      for (color_comp = 0; color_comp < channels; ++color_comp) {
-        // For each color component in that pixel
-        // Get component data from opj_image structure which contains decoded tile/region
-        OPJ_INT32 int_data = out_image->comps[color_comp].data[xy_position];
-        // Copy first byte from the integer we saved to buffer
-        p_buffer[buffer_write_pos + color_comp] = int_data & 0x000000ff;
-        //(int_data & 0x0000ff00) >> 8; --second byte
-        //(int_data & 0x00ff0000) >> 16; --third byte
-        //(int_data & 0xff000000) >> 24; --fourth byte
-        // Just a first byte from OPJ integer is needed for 8-bit depth images
+
+  // Define our decoding region
+  if( !opj_set_decode_area( _codec, _image, x0, y0, w0, h0 ) ){
+    throw file_error( "OpenJPEG :: process() :: opj_set_decode_area() failed" );
+  }
+
+  // Perform decoding
+  if( !opj_decode( _codec, _stream, _image ) ){
+    throw file_error( "OpenJPEG :: process() :: opj_decode() failed" );
+  }
+
+
+  // Extract any ICC profile - unfortunately, can only get ICC profile after decoding
+  int icc_length = _image->icc_profile_len;
+  const char* icc = (const char*) _image->icc_profile_buf;
+  if( icc_length > 0 ) metadata["icc"] = string( icc, icc_length );
+#ifdef DEBUG
+  if( icc_length > 0 ){
+    logfile << "OpenJPEG :: ICC profile detected with size " << icc_length << endl;
+  }
+#endif
+
+
+  // Copy our decoded data by looping over all pixels
+  unsigned int n = 0;
+  unsigned int nk = 0;
+
+  for( unsigned int j=0; j < th; j += factor ){
+    for( unsigned int i = 0; i < tw; i += factor ){
+      for( unsigned int k = 0; k < channels; k++ ){
+        // Handle 16 and 8 bit data:
+	// OpenJPEG's output data is 32 bit unsigned int, so just mask of the bottom 2 bytes
+	// for 16 bit output or bottom 1 byte for 8 bit
+	if( obpc == 16 ){
+	  ((unsigned short*)d)[nk++] =(  (_image->comps[k].data[n]) & 0x0000ffff );
+	}
+	// Binary (bi-level) images need to be scaled up to 8 bits
+	else if( bpc == 1 ){
+	  ((unsigned char*)d)[nk++] = ((_image->comps[k].data[n]) & 0x000000f) * 255;
+	}
+	else{
+	  ((unsigned char*)d)[nk++] = (_image->comps[k].data[n]) & 0x000000ff;
+	}
       }
-      // Increment write position indicator for each pixel's component we have written to the buffer
-      buffer_write_pos += channels;
+      n++;
     }
   }
 
-#ifdef DEBUG
-  logfile << "INFO :: OpenJPEG :: process() :: Copying image data took " << timer.getTime() << " microseconds" << endl
-          << flush;
-#endif
+  // We need to close the image here in case we try to use the OpenJPEG
+  // stream or image structures multiple times in the same request pipeline
+  closeImage();
+
 }

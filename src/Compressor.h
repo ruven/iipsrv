@@ -91,7 +91,6 @@ class Compressor {
   /// Compress a strip of image data
   /** @param s source image data
       @param o output buffer
-      @param olen output buffer length
       @param tile_height pixel height of the tile we are compressing
       @return number of bytes used for strip
   */

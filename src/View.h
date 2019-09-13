@@ -133,7 +133,7 @@ class View{
 
 
   /// Get the embed_icc flag - disable in case of certain types of processing
-  /** @param embed embed icc profile flag
+  /** @return whether ICC profile should be embedded
    */
   bool embedICC(){
     // Disable if colour-mapping, twist, hill-shading or greyscale conversion applied
