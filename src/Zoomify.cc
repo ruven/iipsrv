@@ -75,9 +75,15 @@ void Zoomify::run( Session* session, const std::string& argument ){
 
   unsigned int discard = 0;
 
+  unsigned int ntiles = 1;
+
   for( n=0; n<numResolutions; n++ ){
-    if( (*session->image)->image_widths[n] < tw && (*session->image)->image_heights[n] < tw ){
+    int width = (*session->image)->image_widths[n];
+    int height = (*session->image)->image_heights[n];
+    if( width < tw && height < tw ){
       discard++;
+    } else {
+      ntiles += (int) ceil( (double)width/tw ) * (int) ceil( (double)height/tw );
     }
   }
 
@@ -100,8 +106,6 @@ void Zoomify::run( Session* session, const std::string& argument ){
       *(session->logfile) << "Zoomify :: Total resolutions: " << numResolutions << ", image width: " << width
 			  << ", image height: " << height << endl;
     }
-
-    int ntiles = (int) ceil( (double)width/tw ) * (int) ceil( (double)height/tw );
 
     char str[1024];
     snprintf( str, 1024,
