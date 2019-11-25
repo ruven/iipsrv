@@ -48,7 +48,7 @@ class SyslogStream : public std::streambuf {
 
   /// Open a syslog connection
   void open(){
-    openlog( "iipsrv", LOG_NDELAY, LOG_USER );
+    openlog( "iipsrv", LOG_NDELAY | LOG_PID, LOG_USER );
   }
 
   /// Close syslog connection
