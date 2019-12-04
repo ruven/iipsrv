@@ -32,6 +32,7 @@
 #define MAX_CVT 5000
 #define MAX_LAYERS 0
 #define FILESYSTEM_PREFIX ""
+#define FILESYSTEM_SUFFIX ""
 #define WATERMARK ""
 #define WATERMARK_PROBABILITY 1.0
 #define WATERMARK_OPACITY 1.0
@@ -143,6 +144,18 @@ class Environment {
     else filesystem_prefix = FILESYSTEM_PREFIX;
 
     return filesystem_prefix;
+  }
+
+
+  static std::string getFileSystemSuffix(){
+    char* envpara = getenv( "FILESYSTEM_SUFFIX" );
+    std::string filesystem_suffix;
+    if( envpara ){
+      filesystem_suffix = std::string( envpara );
+    }
+    else filesystem_suffix = FILESYSTEM_SUFFIX;
+
+    return filesystem_suffix;
   }
 
 

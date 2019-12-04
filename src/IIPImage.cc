@@ -52,6 +52,7 @@ void IIPImage::swap( IIPImage& first, IIPImage& second ) // nothrow
   std::swap( first.virtual_levels, second.virtual_levels );
   std::swap( first.format, second.format );
   std::swap( first.fileSystemPrefix, second.fileSystemPrefix );
+  std::swap( first.fileSystemSuffix, second.fileSystemSuffix );
   std::swap( first.fileNamePattern, second.fileNamePattern );
   std::swap( first.horizontalAnglesList, second.horizontalAnglesList );
   std::swap( first.verticalAnglesList, second.verticalAnglesList );
@@ -83,7 +84,7 @@ void IIPImage::testImageType()
   // Check whether it is a regular file
   struct stat sb;
 
-  string path = fileSystemPrefix + imagePath;
+  string path = fileSystemPrefix + imagePath + fileSystemSuffix;
   const char *pstr = path.c_str();
 
 
@@ -305,7 +306,7 @@ const string IIPImage::getFileName( int seq, int ang )
   char name[1024];
 
   if( isFile ){
-    return fileSystemPrefix+imagePath;
+    return fileSystemPrefix+imagePath+fileSystemSuffix;
   }
   else{
     // The angle or spectral band indices should be a minimum of 3 digits when padded
