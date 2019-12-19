@@ -160,6 +160,12 @@ limit access to certain sub-directories. For example, with a prefix of
 point to the path "/home/images/image.tif".  Any reverse directory path 
 component such as ../ is also filtered out. No default value.
 
+FILESYSTEM_SUFFIX: This  is a suffix added to the end of each file system path.
+It can be combined with FILESYSTEM_PREFIX. It is not used in combination with
+FILENAME_PATTERN. If e.g. this is set to ".tif", an image URL such as  "/UUID"
+will look for "${FILESYSTEM_PREFIX}/UUID.tif". In the IIIF info.json document,
+the image @id will be set without the ".tif" suuffix.
+
 JPEG_QUALITY: The default JPEG quality factor for compression when the
 client does not specify one . The value should be between 1 (highest level of
 compression) and 100 (highest image quality). The default is 75.

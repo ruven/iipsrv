@@ -287,6 +287,10 @@ int main( int argc, char *argv[] )
   string filesystem_prefix = Environment::getFileSystemPrefix();
 
 
+  // Get the filesystem suffix if any
+  string filesystem_suffix = Environment::getFileSystemSuffix();
+
+
   // Set up our watermark object
   Watermark watermark( Environment::getWatermark(),
 		       Environment::getWatermarkOpacity(),
@@ -332,6 +336,7 @@ int main( int argc, char *argv[] )
   if( loglevel >= 1 ){
     logfile << "Setting maximum image cache size to " << max_image_cache_size << "MB" << endl;
     logfile << "Setting filesystem prefix to '" << filesystem_prefix << "'" << endl;
+    logfile << "Setting filesystem suffix to '" << filesystem_suffix << "'" << endl;
     logfile << "Setting default JPEG quality to " << jpeg_quality << endl;
     logfile << "Setting maximum CVT size to " << max_CVT << endl;
     logfile << "Setting HTTP Cache-Control header to '" << cache_control << "'" << endl;

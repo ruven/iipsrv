@@ -71,6 +71,7 @@ void FIF::run( Session* session, const string& src ){
 
   // Get our image pattern variable
   string filesystem_prefix = Environment::getFileSystemPrefix();
+  string filesystem_suffix = Environment::getFileSystemSuffix();
 
   // Get our image pattern variable
   string filename_pattern = Environment::getFileNamePattern();
@@ -88,6 +89,7 @@ void FIF::run( Session* session, const string& src ){
       test = IIPImage( argument );
       test.setFileNamePattern( filename_pattern );
       test.setFileSystemPrefix( filesystem_prefix );
+      test.setFileSystemSuffix( filesystem_suffix );
       test.Initialise();
     }
     // If not, look up our object
@@ -106,6 +108,7 @@ void FIF::run( Session* session, const string& src ){
 	test = IIPImage( argument );
 	test.setFileNamePattern( filename_pattern );
 	test.setFileSystemPrefix( filesystem_prefix );
+	test.setFileSystemSuffix( filesystem_suffix );
 	test.Initialise();
 	// Delete items if our list of images is too long.
 	if( session->imageCache->size() >= MAXIMAGECACHE ) session->imageCache->erase( session->imageCache->begin() );
