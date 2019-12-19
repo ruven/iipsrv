@@ -19,7 +19,6 @@
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-
 #include <cmath>
 #include <algorithm>
 #include "Transforms.h"
@@ -503,7 +502,7 @@ void Transform::interpolate_nearestneighbour( RawTile& in, unsigned int resample
   bool new_buffer = false;
   if( resampled_width*resampled_height > in.width*in.height ){
     new_buffer = true;
-    output = new unsigned char[resampled_width*resampled_height*in.channels];
+    output = new unsigned char[(unsigned long long)resampled_width*resampled_height*in.channels];
   }
   else output = (unsigned char*) in.data;
 
@@ -516,11 +515,11 @@ void Transform::interpolate_nearestneighbour( RawTile& in, unsigned int resample
 
       // Indexes in the current pyramid resolution and resampled spaces
       // Make sure to limit our input index to the image surface
-      unsigned int ii = (unsigned int) floorf(i*xscale);
-      unsigned int jj = (unsigned int) floorf(j*yscale);
-      unsigned int pyramid_index = (unsigned int) channels * ( ii + jj*width );
+      unsigned long ii = (unsigned int) floorf(i*xscale);
+      unsigned long jj = (unsigned int) floorf(j*yscale);
+      unsigned long pyramid_index = (unsigned int) channels * ( ii + jj*width );
 
-      unsigned int resampled_index = (i + j*resampled_width)*channels;
+      unsigned long long resampled_index = (unsigned long long)(i + j*resampled_width)*channels;
       for( int k=0; k<in.channels; k++ ){
 	output[resampled_index+k] = input[pyramid_index+k];
       }
@@ -551,8 +550,8 @@ void Transform::interpolate_bilinear( RawTile& in, unsigned int resampled_width,
   unsigned int height = in.height;
   unsigned long np = in.channels * in.width * in.height;
 
-  // Create new buffer and pointer for our output
-  unsigned char *output = new unsigned char[resampled_width*resampled_height*in.channels];
+  // Create new buffer and pointer for our output - make sure we have enough digits via unsigned long long
+  unsigned char *output = new unsigned char[(unsigned long long)resampled_width*resampled_height*in.channels];
 
   // Calculate our scale
   float xscale = (float)(width) / (float)resampled_width;
@@ -581,12 +580,12 @@ void Transform::interpolate_bilinear( RawTile& in, unsigned int resampled_width,
       int ii = (int) floor( i*xscale );
 
       // Calculate the indices of the 4 surrounding pixels
-      unsigned int p11, p12, p21, p22;
+      unsigned long p11, p12, p21, p22;
       unsigned long jj_w = jj*width;
-      p11 = (unsigned int) ( channels * ( ii + jj_w ) );
-      p12 = (unsigned int) ( channels * ( ii + (jj_w+width) ) );
-      p21 = (unsigned int) ( channels * ( (ii+1) + jj_w ) );
-      p22 = (unsigned int) ( channels * ( (ii+1) + (jj_w+width) ) );
+      p11 = (unsigned long) ( channels * ( ii + jj_w ) );
+      p12 = (unsigned long) ( channels * ( ii + (jj_w+width) ) );
+      p21 = (unsigned long) ( channels * ( (ii+1) + jj_w ) );
+      p22 = (unsigned long) ( channels * ( (ii+1) + (jj_w+width) ) );
 
       // Make sure we don't stray outside our input buffer boundary
       // - use replication at the edge
@@ -599,7 +598,7 @@ void Transform::interpolate_bilinear( RawTile& in, unsigned int resampled_width,
       float b = iscale - (float)ii;
 
       // Output buffer index
-      unsigned int resampled_index = j*resampled_width*in.channels + i*in.channels;
+      unsigned long long resampled_index = (unsigned long long)( (j*resampled_width + i) * in.channels );
 
       for( int k=0; k<in.channels; k++ ){
 	float tx = input[p11+k]*a + input[p21+k]*b;

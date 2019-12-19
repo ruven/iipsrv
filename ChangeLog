@@ -1,3 +1,9 @@
+19/12/2019:
+	- Switched indices to unsigned long long in interpolation routines in
+	  Transform.cc to better handle very large image requests. Also added
+	  memory allocation exception handling in Main.cc
+
+
 04/12/2019:
 	- Added FILESYSTEM_SUFFIX configuration variable.
 

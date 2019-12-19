@@ -872,6 +872,21 @@ int main( int argc, char *argv[] )
       }
     }
 
+    // Memory allocation errors through std::bad_alloc
+    catch( const bad_alloc& error ){
+      string message = "Unable to allocate memory";
+      string status = "Status: 500 Internal Server Error\r\nServer: iipsrv/" + version +
+	"\r\nContent-Type: text/plain; charset=utf-8" +
+	(response.getCORS().length() ? "\r\n" + response.getCORS() : "") +
+	"\r\n\r\n" + message;
+      writer.printf( status.c_str() );
+      writer.flush();
+      if( loglevel >= 1 ){
+	logfile << "Error: " << message << endl;
+	logfile << "Sending HTTP 500 Internal Server Error" << endl;
+      }
+    }
+
     /* Default catch
      */
     catch( ... ){
