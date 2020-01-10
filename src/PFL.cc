@@ -22,6 +22,7 @@
 #include <cmath>
 #include <sstream>
 #include <iomanip>
+#include "Environment.h"
 
 using namespace std;
 
@@ -194,14 +195,25 @@ void PFL::run( Session* session, const std::string& argument ){
 
   // Send out our JSON header
 #ifndef DEBUG
+  // Get the CORS setting
+  string c = Environment::getCORS();
+  std::string cors;
+  if (!c.empty()) {
+    cors = "Access-Control-Allow-Origin: " + c + "\r\n" +
+           "Access-Control-Allow-Headers: X-Requested-With\r\n";
+  } else {
+    cors = "";
+  }
+
   char str[1024];
   snprintf( str, 1024,
 	    "Server: iipsrv/%s\r\n"
 	    "Content-Type: application/json\r\n"
 	    "Last-Modified: %s\r\n"
+	    "%s"
 	    "%s\r\n"
 	    "\r\n",
-	    VERSION, (*session->image)->getTimestamp().c_str(), session->response->getCacheControl().c_str() );
+	    VERSION, (*session->image)->getTimestamp().c_str(), cors.c_str(), session->response->getCacheControl().c_str() );
 
   session->out->printf( (const char*) str );
   session->out->flush();
