@@ -104,7 +104,7 @@ void JTL::send( Session* session, int resolution, int tile ){
   // Request uncompressed tile if raw pixel data is required for processing
   if( (*session->image)->getNumBitsPerPixel() > 8 || (*session->image)->getColourSpace() == CIELAB
       || (*session->image)->getNumChannels() == 2 || (*session->image)->getNumChannels() > 3
-      || ( session->view->colourspace==GREYSCALE && (*session->image)->getNumChannels()==3 &&
+      || ( (session->view->colourspace==GREYSCALE || session->view->colourspace==BINARY) && (*session->image)->getNumChannels()==3 &&
 	   (*session->image)->getNumBitsPerPixel()==8 )
       || session->view->floatProcessing() || session->view->equalization
       || session->view->getRotation() != 0.0 || session->view->flip != 0
