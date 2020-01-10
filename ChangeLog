@@ -1,3 +1,7 @@
+10/10/2019:
+	- Added CORS header to PFL profile output
+
+
 19/12/2019:
 	- Switched indices to unsigned long long in interpolation routines in
 	  Transform.cc to better handle very large image requests. Also added
