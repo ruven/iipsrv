@@ -43,6 +43,7 @@ void JTL::send( Session* session, int resolution, int tile ){
   if( session->loglevel >= 2 ) command_timer.start();
 
 
+  /*
   // If we have requested a rotation, remap the tile index to rotated coordinates
   if( (int)((session->view)->getRotation()) % 360 == 90 ){
 
@@ -59,7 +60,7 @@ void JTL::send( Session* session, int resolution, int tile ){
     int ntiles = (int) ceil( (double)im_width/tw ) * (int) ceil( (double)im_height/tw );
     tile = ntiles - tile - 1;
   }
-
+  */
 
   // Sanity check
   if( (resolution<0) || (tile<0) ){
