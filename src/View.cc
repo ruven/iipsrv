@@ -1,7 +1,7 @@
 /*
     View Member Functions
 
-    Copyright (C) 2004-2016 Ruven Pillay.
+    Copyright (C) 2004-2020 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -76,7 +76,9 @@ unsigned int View::getResolution(){
   // Check if we need to use a smaller resolution due to our max size limit
   float scale = getScale();
 
-  if( (res_width*view_width*scale > max_size) || (res_height*view_height*scale > max_size) ){
+  if( (max_size > 0) &&
+      ( (res_width*view_width*scale > (unsigned int) max_size) ||
+	(res_height*view_height*scale > (unsigned int) max_size) ) ){
     int dimension;
     if( (res_width*view_width/max_size) > (res_height*view_width/max_size) ){
       dimension = (int) (res_width*view_width*scale);
@@ -86,7 +88,7 @@ unsigned int View::getResolution(){
     }
 
     i = 1;
-    while( (dimension / i) > max_size ){
+    while( resolution > 0 && ( (dimension / i) > (unsigned int) max_size ) ){
       dimension /= 2;
       res_width = (int) floor(width / 2.0);
       res_height = (int) floor(height / 2.0 );
@@ -229,8 +231,8 @@ unsigned int View::getRequestWidth(){
     else if( requested_height==0 ) w = width;
   }
 
-  // Limit our requested width to the maximum export size
-  if( w > max_size ) w = max_size;
+  // Limit our requested width to the maximum export size if we have set a limit
+  if( max_size > 0 && w > (unsigned int) max_size ) w = max_size;
 
   return w;
 }
@@ -251,7 +253,7 @@ unsigned int View::getRequestHeight(){
   }
 
   // Limit our requested height to the maximum export size
-  if( h > max_size ) h = max_size;
+  if( max_size > 0 && h > (unsigned int) max_size ) h = max_size;
 
   return h;
 }

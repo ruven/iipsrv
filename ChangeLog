@@ -1,3 +1,8 @@
+17/01/2020:
+	- Modified MAX_CVT startup variable. Values can now be set all the way
+	  down to 1px. Also possible to set to -1 to disable all limits
+
+
 10/10/2019:
 	- Added CORS header to PFL profile output
 

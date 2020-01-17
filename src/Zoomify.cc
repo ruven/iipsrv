@@ -5,7 +5,7 @@
     * (www.oldmapsonline.org) from Ministry of Culture of the Czech Republic      *
 
 
-    Copyright (C) 2008-2015 Ruven Pillay.
+    Copyright (C) 2008-2020 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -64,7 +64,7 @@ void Zoomify::run( Session* session, const std::string& argument ){
   unsigned int height = (*session->image)->getImageHeight();
 
 
-  unsigned int tw = (*session->image)->getTileWidth();
+  int tw = (*session->image)->getTileWidth();
   unsigned int numResolutions = (*session->image)->getNumResolutions();
 
 

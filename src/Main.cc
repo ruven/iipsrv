@@ -1,7 +1,7 @@
 /*
     IIP FCGI server module - Main loop.
 
-    Copyright (C) 2000-2019 Ruven Pillay
+    Copyright (C) 2000-2020 Ruven Pillay
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -556,7 +556,7 @@ int main( int argc, char *argv[] )
 
     // View object for use with the CVT command etc
     View view;
-    if( max_CVT != -1 ) view.setMaxSize( max_CVT );
+    if( max_CVT != 0 ) view.setMaxSize( max_CVT );
     if( max_layers != 0 ) view.setMaxLayers( max_layers );
     view.setAllowUpscaling( allow_upscaling );
     view.setEmbedICC( embed_icc );

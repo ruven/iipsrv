@@ -170,9 +170,9 @@ JPEG_QUALITY: The default JPEG quality factor for compression when the
 client does not specify one . The value should be between 1 (highest level of
 compression) and 100 (highest image quality). The default is 75.
 
-MAX_CVT: Limits the maximum image dimensions in pixels (the WID or HEI 
-commands) allowable for dynamic JPEG export via the CVT command. This 
-prevents huge requests from overloading the server. The default is 5000.
+MAX_CVT: Limits the maximum output image dimensions (in pixels) allowable for dynamic
+image export via the CVT command or for IIIF requests. This prevents huge requests
+from overloading the server. The default is 5000. If set to -1, no limit is set.
 
 ALLOW_UPSCALING: Determines whether an image may be rendered at a size greater
 than that of the source image. A value of 0 will prevent upscaling.
@@ -413,7 +413,7 @@ upstream iip {
 
 and change the fastcgi_pass parameter in the above location configuration to point to this instead of a fixed address:
 
-    fastcgi_pass 	iip;
+    fastcgi_pass       iip;
 
 
 ### spawn-fcgi
@@ -500,4 +500,4 @@ For example with lighttpd:
 Please refer to the project site https://iipimage.sourceforge.io for further details
 
 ------------------------------------------------------------------------------------
-(c) 2000-2019 Ruven Pillay <ruven@users.sourceforge.net>
+(c) 2000-2020 Ruven Pillay <ruven@users.sourceforge.net>
