@@ -234,6 +234,9 @@ threads are used by default.
 KAKADU_READMODE: Set the Kakadu JPEG2000 read-mode. 0 for 'fast' mode with minimal error checking (default), 1 for 'fussy' mode with no error 
 recovery, 2 for 'resilient' mode with maximum recovery from codestream errors. See the Kakadu documentation for further details.
 
+IIIF_VERSION: Set the major IIIF Image API version. Values should be a single digit. For example: 2 for versions 2 or 2.1 etc.
+3 for IIIF version 3.x. If not set, defaults to version IIIF 2.x
+
 DECODER_MODULES: Comma separated list of external modules for decoding 
 other image formats. This is only necessary if you have activated 
 --enable-modules for ./configure and written your own image format 

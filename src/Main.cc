@@ -322,6 +322,10 @@ int main( int argc, char *argv[] )
   bool embed_icc = Environment::getEmbedICC();
 
 
+  // Set our IIIF version
+  unsigned int iiif_version = Environment::getIIIFVersion();
+
+
   // Create our image processing engine
   Transform* processor = new Transform();
 
@@ -341,6 +345,7 @@ int main( int argc, char *argv[] )
     logfile << "Setting maximum CVT size to " << max_CVT << endl;
     logfile << "Setting HTTP Cache-Control header to '" << cache_control << "'" << endl;
     logfile << "Setting 3D file sequence name pattern to '" << filename_pattern << "'" << endl;
+    logfile << "Setting IIIF version to " << iiif_version << endl;
     if( !cors.empty() ) logfile << "Setting Cross Origin Resource Sharing to '" << cors << "'" << endl;
     if( !base_url.empty() ) logfile << "Setting base URL to '" << base_url << "'" << endl;
     if( max_layers != 0 ){
@@ -585,6 +590,7 @@ int main( int argc, char *argv[] )
       session.watermark = &watermark;
       session.headers.clear();
       session.processor = processor;
+      session.codecOptions["IIIF_VERSION"] = iiif_version;
 #ifdef HAVE_KAKADU
       session.codecOptions["KAKADU_READMODE"] = kdu_readmode;
 #endif

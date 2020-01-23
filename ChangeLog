@@ -1,5 +1,6 @@
 23/01/2020:
 	- Refactored and corrected resolution calculation code in View class
+	- Added IIIF_VERSION server directive and support for v3 info.json
 
 
 21/01/2020:

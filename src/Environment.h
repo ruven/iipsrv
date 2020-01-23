@@ -46,6 +46,7 @@
 #define URI_MAP ""
 #define EMBED_ICC true
 #define KAKADU_READMODE 0
+#define IIIF_VERSION 2
 
 
 #include <string>
@@ -298,6 +299,19 @@ class Environment {
     else readmode = KAKADU_READMODE;
     return readmode;
   }
+
+
+  static unsigned int getIIIFVersion(){
+    unsigned int version;
+    char* envpara = getenv( "IIIF_VERSION" );
+    if( envpara ){
+      version = atoi( envpara );
+      if( version < 1 ) version = IIIF_VERSION;
+    }
+    else version = IIIF_VERSION;
+    return version;
+  }
+
 
 };
 
