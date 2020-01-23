@@ -41,7 +41,7 @@ class View{
   // Resolution independent x,y,w,h region viewport
   float view_left, view_top, view_width, view_height; /// viewport
 
-  int resolution;                             /// Requested resolution
+  int resolution;                             /// Requested resolution where 0 is smallest available
   unsigned int max_resolutions;               /// Total available resolutions
   unsigned int width, height;                 /// Image width and height at full resolution
   unsigned int res_width, res_height;         /// Width and height at requested resolution
@@ -52,7 +52,7 @@ class View{
   float rotation;                             /// Rotation requested by ROT command
 
 
-  /// Internal function to calculate the resolution associated with a width
+  /// Internal function to calculate the optimal resolution associated with a width
   ///  or height request. This also takes into account maximum & minimum size limits.
   /** @param m maximum size
       @param r requested size
@@ -171,7 +171,7 @@ class View{
   };
 
 
-  /// Return the requested resolution
+  /// Return the resolution level needed for the requested view
   /* @return requested resolution level */
   unsigned int getResolution();
 

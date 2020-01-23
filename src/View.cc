@@ -28,37 +28,39 @@ using namespace std;
 void View::calculateResolution( unsigned int dimension,
 				unsigned int requested_size ){
 
-  unsigned int j = 1;
+  // Start from the highest resolution
+  int j = max_resolutions - 1;
   unsigned int d = dimension;
 
+  // Make sure we have a minimum size
   if( requested_size < min_size ) requested_size = min_size;
   unsigned int rs = (requested_size<min_size) ? min_size : requested_size;
 
-  // Calculate the resolution number for this request
-  while( d >= rs ){
-    d = d/2;
-    j++;
+  // Find the resolution level closest but higher than the requested size
+  while( true ){
+    d = (unsigned int) floor( d/2 );
+    if( d < rs ) break;
+    j--;
   }
 
   // Limit j to the maximum resolution
-  if( j > max_resolutions+1 ) j = max_resolutions + 1;
+  if( j < 0 ) j = 0;
+  if( j > (int)(max_resolutions-1) ) j = max_resolutions - 1;
 
-  // Only set this if our requested resolution is greater than that
-  // that has already been set.
-  if( resolution > (int)max_resolutions - (int)j + 1 ) resolution = (int)max_resolutions - (int)j + 1;
-
-  // Make sure our value is possible
-  if( resolution > (signed int)(max_resolutions-1) ) resolution = max_resolutions - 1;
-  if( resolution < 0 ) resolution = 0;
+  // Only update value of resolution if our calculated resolution is greater than that has already been set
+  if( j > resolution ) resolution = j;
 
 }
 
 
+/// Calculate the optimal resolution and the size of this resolution for the requested view,
+/// taking into account any maximum size settings
 unsigned int View::getResolution(){
 
   unsigned int i;
 
-  resolution = max_resolutions - 1;
+  // Reset our resolution level to the smallest available
+  resolution = 0;
 
   // Note that we use floor() as that is how our resolutions are calculated
   if( requested_width ) View::calculateResolution( width, floor((float)requested_width/(float)view_width) );
@@ -67,13 +69,13 @@ unsigned int View::getResolution(){
   res_width = width;
   res_height = height;
 
-  // Calculate our new width and height based on the calculated resolution
+  // Calculate the width and height of this resolution
   for( i=1; i < (max_resolutions - resolution); i++ ){
     res_width = (int) floor(res_width / 2.0);
     res_height = (int) floor(res_height / 2.0);
   }
 
-  // Check if we need to use a smaller resolution due to our max size limit
+  // Check if we need to limit to a smaller resolution due to our max size limit
   float scale = getScale();
 
   if( (max_size > 0) &&

@@ -1,3 +1,7 @@
+23/01/2020:
+	- Refactored and corrected resolution calculation code in View class
+
+
 21/01/2020:
 	- Changes to standardize error messages in TPTImage class
 
