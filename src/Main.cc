@@ -666,6 +666,9 @@ int main( int argc, char *argv[] )
       if( (header = FCGX_GetParam("HTTPS", request.envp)) ) {
         session.headers["HTTPS"] = string(header);
       }
+      if( (header = FCGX_GetParam("HTTP_ACCEPT", request.envp)) ){
+	session.headers["HTTP_ACCEPT"] = string(header);
+      }
       if( (header = FCGX_GetParam("HTTP_X_IIIF_ID", request.envp)) ){
         session.headers["HTTP_X_IIIF_ID"] = string(header);
       }
@@ -776,7 +779,7 @@ int main( int argc, char *argv[] )
       ////////////////////////////////////////////////////////
 
 #ifdef HAVE_MEMCACHED
-      if( memcached.connected() ){
+      if( response.cachable() && memcached.connected() ){
 	Timer memcached_timer;
 	memcached_timer.start();
 	memcached.store( session.headers["QUERY_STRING"], writer.buffer, writer.sz );

@@ -1,3 +1,12 @@
+27/01/2020:
+	- Added content-negotiation to IIIF info.json retrieval. If an IIIF
+	  context profile has been added to the HTTP Accept headers, the
+	  specified version will be used.
+	- Also added ability to disable caching. When content-negotation is
+	  used, the response is not cached by Memcached and Content-Control
+	  header is set to private.
+
+
 23/01/2020:
 	- Refactored and corrected resolution calculation code in View class
 	- Added IIIF_VERSION server directive and support for v3 info.json

@@ -1,7 +1,7 @@
 /*
     IIP Response Handler Class
 
-    Copyright (C) 2003-2015 Ruven Pillay.
+    Copyright (C) 2003-2020 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -37,7 +37,8 @@ IIPResponse::IIPResponse(){
   mimeType = "Content-Type: application/vnd.netfpx";
   cors = "";
   eof = "\r\n";
-  sent = false;
+  _sent = false;
+  _cachable = true;
 }
 
 

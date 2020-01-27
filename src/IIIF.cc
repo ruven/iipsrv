@@ -31,10 +31,16 @@
 
 // Define several IIIF strings
 #define IIIF_SYNTAX "IIIF syntax is {identifier}/{region}/{size}/{rotation}/{quality}{.format}"
-#define IIIF_CONTEXT "http://iiif.io/api/image/%d/context.json"
+
+// The canonical IIIF protocol URI
 #define IIIF_PROTOCOL "http://iiif.io/api/image"
-#define IIIF_PROFILE_2 "http://iiif.io/api/image/2/level1.json"
-#define IIIF_PROFILE_3 "level1"
+
+// The context is the protocol plus API version
+#define IIIF_CONTEXT IIIF_PROTOCOL "/%d/context.json"
+
+// IIIF compliance level
+#define IIIF_PROFILE "level1"
+
 
 
 using namespace std;
@@ -172,8 +178,27 @@ void IIIF::run( Session* session, const string& src )
     }
 
 
-    // Set some parameters depending on the IIIF version
-    unsigned int iiif_version = session->codecOptions["IIIF_VERSION"];
+    // Set a default IIIF version
+    int iiif_version = session->codecOptions["IIIF_VERSION"];
+
+
+    // Check whether the client has requested a specific IIIF version within the HTTP Accept header
+    //  - first look for the protocol prefix
+    size_t pos = session->headers["HTTP_ACCEPT"].find( IIIF_PROTOCOL );
+    if( pos != string::npos ){
+      // The Accept header should contain a versioned context string of the form http://iiif.io/api/image/3/context.json
+      string profile = session->headers["HTTP_ACCEPT"].substr( pos, string(IIIF_PROTOCOL).size()+15 );
+      // Make sure the string is correctly terminated
+      if( profile.substr( string(IIIF_PROTOCOL).size()+2 ) == "/context.json" ){
+	int v;
+	if( sscanf( profile.c_str(), IIIF_CONTEXT, &v ) == 1 ){
+	  // Set cache control to private if user request is not for the default version
+	  if( v != (int)iiif_version ) session->response->setPrivateCacheControl();
+	  iiif_version = v;
+	  if ( session->loglevel >= 2 ) *(session->logfile) << "IIIF :: User request for IIIF version " << iiif_version << endl;
+	}
+      }
+    }
 
     // Set the context URL string
     char iiif_context[48];
@@ -215,11 +240,12 @@ void IIIF::run( Session* session, const string& src )
     infoStringStream << " ] }" << endl
                      << "  ]," << endl;
 
-    // Profile for IIIF version 3
-    if( iiif_version == 3 ){
+
+    // Profile for IIIF version 3 and above
+    if( iiif_version >= 3 ){
       infoStringStream << "  \"id\" : \"" << iiif_id << "\"," << endl
 		       << "  \"type\": \"ImageService3\"," << endl
-		       << "  \"profile\" : \"" << IIIF_PROFILE_3 << "\"," << endl
+		       << "  \"profile\" : \"" << IIIF_PROFILE << "\"," << endl
 		       << "  \"maxWidth\" : " << max << "," << endl
 		       << "  \"maxHeight\" : " << max << "," << endl
 		       << "  \"extraQualities\": [\"color\",\"gray\",\"bitonal\"]," << endl
@@ -227,10 +253,10 @@ void IIIF::run( Session* session, const string& src )
 		       << endl << "}" << endl;
     }
     // Profile for IIIF versions 1 and 2
-    else{
+    else {
       infoStringStream << "  \"@id\" : \"" << iiif_id << "\"," << endl
 		       << "  \"profile\" : [" << endl
-		       << "     \"" << IIIF_PROFILE_2 << "\"," << endl
+		       << "     \"" << IIIF_PROTOCOL << "/" << iiif_version << "/" << IIIF_PROFILE << "\"," << endl
 		       << "     { \"formats\" : [ \"jpg\" ]," << endl
 		       << "       \"qualities\" : [\"native\",\"color\",\"gray\",\"bitonal\"]," << endl
 		       << "       \"supports\" : [\"regionByPct\",\"regionSquare\",\"sizeByForcedWh\",\"sizeByWh\",\"sizeAboveFull\",\"sizeUpscaling\",\"rotationBy90s\",\"mirroring\"]," << endl
@@ -260,7 +286,7 @@ void IIIF::run( Session* session, const string& src )
     return;
 
   }
-  // Parse image request - any other than info requests are considered image requests
+  // Parse image request - anything other than info requests are considered image requests
   else{
 
     // IIIF requests are / separated with no CGI style '&' separators

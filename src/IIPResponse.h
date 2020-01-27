@@ -1,7 +1,7 @@
 /*
     IIP Response Handler Class
 
-    Copyright (C) 2003-2018 Ruven Pillay.
+    Copyright (C) 2003-2020 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -52,7 +52,8 @@ class IIPResponse{
   std::string responseBody;        // The main response
   std::string error;               // Error message
   std::string cors;                // CORS (Cross-Origin Resource Sharing) setting
-  bool sent;                       // Indicate whether a response has been sent
+  bool _cachable;                  // Indicate whether response should be cached
+  bool _sent;                      // Indicate whether a response has been sent
 
 
  public:
@@ -129,6 +130,14 @@ class IIPResponse{
   void setCacheControl( const std::string& c ){ cacheControl = "Cache-Control: " + c; };
 
 
+  /// Disable public caching
+  void setPrivateCacheControl(){ _cachable = false; cacheControl = "Cache-Control: private"; };
+
+
+  /// Is response cachable?
+  bool cachable(){ return _cachable; };
+
+
   /// Get Cache-Control value
   std::string getCacheControl(){ return cacheControl; };
 
@@ -152,11 +161,11 @@ class IIPResponse{
 
 
   /// Set the sent flag indicating that some sort of response has been sent
-  void setImageSent() { sent = true; };
+  void setImageSent() { _sent = true; };
 
 
   /// Indicate whether a response has been sent
-  bool imageSent() { return sent; };
+  bool imageSent() { return _sent; };
 
 
   /// Display our advertising banner ;-)
