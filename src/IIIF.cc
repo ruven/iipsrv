@@ -193,7 +193,7 @@ void IIIF::run( Session* session, const string& src )
 	int v;
 	if( sscanf( profile.c_str(), IIIF_CONTEXT, &v ) == 1 ){
 	  // Set cache control to private if user request is not for the default version
-	  if( v != (int)iiif_version ) session->response->setPrivateCacheControl();
+	  if( v != (int)iiif_version ) session->response->setCacheControl( "private" );
 	  iiif_version = v;
 	  if ( session->loglevel >= 2 ) *(session->logfile) << "IIIF :: User request for IIIF version " << iiif_version << endl;
 	}
@@ -249,8 +249,8 @@ void IIIF::run( Session* session, const string& src )
 		       << "  \"maxWidth\" : " << max << "," << endl
 		       << "  \"maxHeight\" : " << max << "," << endl
 		       << "  \"extraQualities\": [\"color\",\"gray\",\"bitonal\"]," << endl
-		       << "  \"extraFeatures\": [\"regionByPct\",\"sizeByForcedWh\",\"sizeByWh\",\"sizeAboveFull\",\"sizeUpscaling\",\"rotationBy90s\",\"mirroring\"]"
-		       << endl << "}" << endl;
+		       << "  \"extraFeatures\": [\"regionByPct\",\"sizeByForcedWh\",\"sizeByWh\",\"sizeAboveFull\",\"sizeUpscaling\",\"rotationBy90s\",\"mirroring\"]" << endl
+		       << "}";
     }
     // Profile for IIIF versions 1 and 2
     else {
@@ -282,6 +282,10 @@ void IIIF::run( Session* session, const string& src )
 
     session->out->printf( (const char*) header.str().c_str() );
     session->response->setImageSent();
+
+    // Because of our ability to serve different versions and because of possible content-negotiation
+    // do not cache any info.json files via Memcached
+    session->response->setCachability( false );
 
     return;
 

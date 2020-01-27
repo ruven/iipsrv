@@ -130,11 +130,13 @@ class IIPResponse{
   void setCacheControl( const std::string& c ){ cacheControl = "Cache-Control: " + c; };
 
 
-  /// Disable public caching
-  void setPrivateCacheControl(){ _cachable = false; cacheControl = "Cache-Control: private"; };
+  /// Set whether the response should be cached
+  /** @param cachable Whether this reponse should be cached or not */
+  void setCachability( bool cachable ){ _cachable = cachable; };
 
 
   /// Is response cachable?
+  /** @return Whether response should be cached */
   bool cachable(){ return _cachable; };
 
 
