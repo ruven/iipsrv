@@ -138,6 +138,27 @@ void IIIF::run( Session* session, const string& src )
   session->view->setImageSize( width, height );
   session->view->setMaxResolutions( numResolutions );
 
+  // Set a default IIIF version
+  int iiif_version = session->codecOptions["IIIF_VERSION"];
+
+  // Check whether the client has requested a specific IIIF version within the HTTP Accept header
+  //  - first look for the protocol prefix
+  size_t pos = session->headers["HTTP_ACCEPT"].find( IIIF_PROTOCOL );
+  if( pos != string::npos ){
+    // The Accept header should contain a versioned context string of the form http://iiif.io/api/image/3/context.json
+    string profile = session->headers["HTTP_ACCEPT"].substr( pos, string(IIIF_PROTOCOL).size()+15 );
+    // Make sure the string is correctly terminated
+    if( profile.substr( string(IIIF_PROTOCOL).size()+2 ) == "/context.json" ){
+      int v;
+      if( sscanf( profile.c_str(), IIIF_CONTEXT, &v ) == 1 ){
+        // Set cache control to private if user request is not for the default version
+        if( v != (int)iiif_version ) session->response->setCacheControl( "private" );
+        iiif_version = v;
+        if ( session->loglevel >= 2 ) *(session->logfile) << "IIIF :: User request for IIIF version " << iiif_version << endl;
+      }
+    }
+  }
+
   // PARSE INPUT PARAMETERS
 
   // info.json
@@ -175,29 +196,6 @@ void IIIF::run( Session* session, const string& src )
 
     if ( session->loglevel >= 5 ){
       *(session->logfile) << "IIIF :: ID is set to " << iiif_id << endl;
-    }
-
-
-    // Set a default IIIF version
-    int iiif_version = session->codecOptions["IIIF_VERSION"];
-
-
-    // Check whether the client has requested a specific IIIF version within the HTTP Accept header
-    //  - first look for the protocol prefix
-    size_t pos = session->headers["HTTP_ACCEPT"].find( IIIF_PROTOCOL );
-    if( pos != string::npos ){
-      // The Accept header should contain a versioned context string of the form http://iiif.io/api/image/3/context.json
-      string profile = session->headers["HTTP_ACCEPT"].substr( pos, string(IIIF_PROTOCOL).size()+15 );
-      // Make sure the string is correctly terminated
-      if( profile.substr( string(IIIF_PROTOCOL).size()+2 ) == "/context.json" ){
-	int v;
-	if( sscanf( profile.c_str(), IIIF_CONTEXT, &v ) == 1 ){
-	  // Set cache control to private if user request is not for the default version
-	  if( v != (int)iiif_version ) session->response->setCacheControl( "private" );
-	  iiif_version = v;
-	  if ( session->loglevel >= 2 ) *(session->logfile) << "IIIF :: User request for IIIF version " << iiif_version << endl;
-	}
-      }
     }
 
     // Set the context URL string
@@ -398,7 +396,7 @@ void IIIF::run( Session* session, const string& src )
       unsigned int max_size = session->view->getMaxSize();
 
       // ^ request prefix (upscaling) - remove ^ symbol and continue usual parsing
-      if( session->codecOptions["IIIF_VERSION"] >= 3 ){
+      if( iiif_version >= 3 ){
 	if ( sizeString.substr(0, 1) == "^" ) sizeString.erase(0, 1);
 	else session->view->allow_upscaling = false;
       }
@@ -470,7 +468,7 @@ void IIIF::run( Session* session, const string& src )
       }
 
       // Check for malformed upscaling request
-      if( session->codecOptions["IIIF_VERSION"] >= 3 ){
+      if( iiif_version >= 3 ){
 	if( session->view->allow_upscaling == false &&
 	    ( requested_width > width || requested_height > height ) ){
 	  throw invalid_argument( "IIIF: upscaling should be prefixed with ^" );
