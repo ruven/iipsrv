@@ -38,7 +38,7 @@ void View::calculateResolution( unsigned int dimension,
 
   // Find the resolution level closest but higher than the requested size
   while( true ){
-    d = (unsigned int) floor( d/2 );
+    d = (unsigned int) floor( d/2.0 );
     if( d < rs ) break;
     j--;
   }
