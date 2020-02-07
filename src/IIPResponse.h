@@ -52,6 +52,7 @@ class IIPResponse{
   std::string responseBody;        // The main response
   std::string error;               // Error message
   std::string cors;                // CORS (Cross-Origin Resource Sharing) setting
+  std::string status;              // HTTP status code
   bool _cachable;                  // Indicate whether response should be cached
   bool _sent;                      // Indicate whether a response has been sent
 
@@ -142,6 +143,11 @@ class IIPResponse{
 
   /// Get Cache-Control value
   std::string getCacheControl(){ return cacheControl; };
+
+
+  /// Set HTTP status code
+  /** @param s HTTP status code string */
+  void setStatus( const std::string& s ){ status = "Status: " + s; }
 
 
   /// Get a formatted string to send back

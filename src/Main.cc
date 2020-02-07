@@ -638,8 +638,9 @@ int main( int argc, char *argv[] )
 
 
 
-      // Check that we actually have a request string
+      // Check that we actually have a request string. If not, just show server home page
       if( request_string.empty() ){
+        response.setStatus( "200 OK" );
 	throw string( "QUERY_STRING not set" );
       }
 

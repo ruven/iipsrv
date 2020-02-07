@@ -1,3 +1,8 @@
+07/02/2020:
+	- Added ability to change HTTP status code in IIPResponse class and
+	  changed empty request reponse to 200 (https://github.com/ruven/iipsrv/issues/190)
+
+
 27/01/2020:
 	- Added content-negotiation to IIIF info.json retrieval. If an IIIF
 	  context profile has been added to the HTTP Accept headers, the
