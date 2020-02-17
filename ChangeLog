@@ -1,3 +1,9 @@
+17/02/2020:
+	- Physical image resolution in DPI or pixels/cm is now extracted from source image
+	  (TIFF only for now) and used to calculate appropriate DPI for current zooming level
+	  and injected into output JPEG metadata (https://github.com/ruven/iipsrv/issues/191)
+
+
 07/02/2020:
 	- Added ability to change HTTP status code in IIPResponse class and
 	  changed empty request reponse to 200 (https://github.com/ruven/iipsrv/issues/190)

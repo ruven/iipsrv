@@ -467,6 +467,15 @@ void CVT::send( Session* session ){
   }
 
 
+  // Set the physical output resolution for this particular view and zoom level
+  float dpi_x = (*session->image)->dpi_x * (float) im_width / (float) (*session->image)->getImageWidth();
+  float dpi_y = (*session->image)->dpi_y * (float) im_height / (float) (*session->image)->getImageHeight();
+  compressor->setResolution( dpi_x, dpi_y, (*session->image)->dpi_units );
+  if( session->loglevel >= 5 ){
+    *(session->logfile) << "CVT :: Setting physical resolution of this view to " <<  dpi_x << " x " << dpi_y
+			<< ( ((*session->image)->dpi_units==1) ? " pixels/inch" : " pixels/cm" ) << endl;
+  }
+
   // Set ICC profile if of a reasonable size
   if( session->view->embedICC() && ((*session->image)->getMetadata("icc").size()>0) ){
     if( (*session->image)->getMetadata("icc").size() < 65536 ){

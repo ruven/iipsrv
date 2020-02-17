@@ -1,6 +1,6 @@
 /*  Generic compressor class - extended by JPEG and PNG Compressor classes
 
-    Copyright (C) 2017-2018 Ruven Pillay
+    Copyright (C) 2017-2020 Ruven Pillay
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -36,6 +36,13 @@ class Compressor {
   /// Quality level
   int Q;
 
+  /// Physical resolution for X and Y directions
+  float dpi_x, dpi_y;
+
+  /// Resolution units
+  /** Units can be 0 for unknown, 1 for dots/inch or 2 for dots/cm */
+  int dpi_units;
+
   /// ICC Profile
   std::string icc;
 
@@ -56,6 +63,10 @@ class Compressor {
 
   /// Get the current quality level
   inline int getQuality() { return Q; }
+
+
+  /// Set the physical output resolution
+  inline void setResolution( float x, float y, int units ){ dpi_x = x; dpi_y = y; dpi_units = units; };
 
 
   /// Set the ICC profile

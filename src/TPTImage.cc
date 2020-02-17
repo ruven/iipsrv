@@ -82,6 +82,12 @@ void TPTImage::loadImageInfo( int seq, int ang )
   TIFFGetField( tiff, TIFFTAG_BITSPERSAMPLE, &bitspersample );
   TIFFGetField( tiff, TIFFTAG_PHOTOMETRIC, &colour );
   TIFFGetField( tiff, TIFFTAG_SAMPLEFORMAT, &sampleformat );
+  TIFFGetField( tiff, TIFFTAG_XRESOLUTION, &dpi_x );
+  TIFFGetField( tiff, TIFFTAG_YRESOLUTION, &dpi_y );
+  TIFFGetField( tiff, TIFFTAG_RESOLUTIONUNIT, &dpi_units );
+
+  // Units for libtiff are 1=unknown, 2=DPI and 3=pixels/cm, whereas we want 0=unknown, 1=DPI and 2=pixels/cm
+  dpi_units--;
 
   // We have to do this conversion explicitly to avoid problems on Mac OS X
   channels = (unsigned int) samplesperpixel;

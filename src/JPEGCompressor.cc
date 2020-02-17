@@ -1,6 +1,6 @@
 /*  JPEG class wrapper to ijg jpeg library
 
-    Copyright (C) 2000-2019 Ruven Pillay.
+    Copyright (C) 2000-2020 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -237,6 +237,11 @@ void JPEGCompressor::InitCompression( const RawTile& rawtile, unsigned int strip
   cinfo.input_components = channels;
   cinfo.in_color_space = ( channels == 3 ? JCS_RGB : JCS_GRAYSCALE );
   jpeg_set_defaults( &cinfo );
+
+  // Set our physical output resolution
+  cinfo.X_density = dpi_x;
+  cinfo.Y_density = dpi_y;
+  cinfo.density_unit = dpi_units;
 
   // Set compression point quality (highest, but possibly slower depending
   //  on hardware) - must do this after we've set the defaults!

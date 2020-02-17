@@ -1,7 +1,7 @@
 /*
     IIP JTL Command Handler Class Member Function
 
-    Copyright (C) 2006-2019 Ruven Pillay.
+    Copyright (C) 2006-2020 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -111,6 +111,19 @@ void JTL::send( Session* session, int resolution, int tile ){
       ) ct = UNCOMPRESSED;
   else ct = JPEG;
 
+
+  // Set the physical output resolution for this particular view and zoom level
+  int num_res = (*session->image)->getNumResolutions();
+  unsigned int im_width = (*session->image)->image_widths[num_res-resolution-1];
+  unsigned int im_height = (*session->image)->image_heights[num_res-resolution-1];
+  float dpi_x = (*session->image)->dpi_x * (float) im_width / (float) (*session->image)->getImageWidth();
+  float dpi_y = (*session->image)->dpi_y * (float) im_height / (float) (*session->image)->getImageHeight();
+  session->jpeg->setResolution( dpi_x, dpi_y, (*session->image)->dpi_units );
+
+  if( session->loglevel >= 5 ){
+    *(session->logfile) << "JTL :: Setting physical resolution of tile to " <<  dpi_x << " x " << dpi_y
+                        << ( ((*session->image)->dpi_units==1) ? " pixels/inch" : " pixels/cm" ) << endl;
+  }
 
   // Embed ICC profile
   if( session->view->embedICC() && ((*session->image)->getMetadata("icc").size()>0) ){
