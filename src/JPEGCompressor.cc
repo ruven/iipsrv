@@ -18,6 +18,7 @@
 */
 
 
+#include <cmath>
 
 #include "JPEGCompressor.h"
 
@@ -238,9 +239,9 @@ void JPEGCompressor::InitCompression( const RawTile& rawtile, unsigned int strip
   cinfo.in_color_space = ( channels == 3 ? JCS_RGB : JCS_GRAYSCALE );
   jpeg_set_defaults( &cinfo );
 
-  // Set our physical output resolution
-  cinfo.X_density = dpi_x;
-  cinfo.Y_density = dpi_y;
+  // Set our physical output resolution (JPEG only support integers)
+  cinfo.X_density = round( dpi_x );
+  cinfo.Y_density = round( dpi_y );
   cinfo.density_unit = dpi_units;
 
   // Set compression point quality (highest, but possibly slower depending

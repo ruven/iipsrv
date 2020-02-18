@@ -7,7 +7,7 @@
     Culture of the Czech Republic.
 
 
-    Copyright (C) 2009-2019 IIPImage.
+    Copyright (C) 2009-2020 IIPImage.
     Author: Ruven Pillay
 
     This program is free software; you can redistribute it and/or modify
@@ -159,12 +159,23 @@ void KakaduImage::loadImageInfo( int seq, int ang )
   numResolutions = codestream.get_min_dwt_levels();
   bpc = codestream.get_bit_depth(0,true);
 
+  // Get capture resolution
+  dpi_y = j2k_resolution.get_resolution( false );
+  if( dpi_y > 0.0 ){
+    dpi_y /= 100.0;          // JP2 are in pixels/m, so convert to cm
+    float aspect = j2k_resolution.get_aspect_ratio( false );
+    dpi_x = dpi_y * aspect;
+    dpi_units = 2;           // cm units
+  }
+  else dpi_y = 0.0;
+
   unsigned int w = layer_size.x;
   unsigned int h = layer_size.y;
 
 #ifdef DEBUG
   logfile << "Kakadu :: DWT Levels: " << numResolutions << endl;
-  logfile << "Kakadu :: Resolution : " << w << "x" << h << endl;
+  logfile << "Kakadu :: Pixel Resolution : " << w << "x" << h << endl;
+  logfile << "Kakadu :: Capture Resolution : " << dpi_x << "x" << dpi_y << " pixels/cm" << endl;
 #endif
 
   // Loop through each resolution and calculate the image dimensions - 

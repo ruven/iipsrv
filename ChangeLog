@@ -1,3 +1,7 @@
+18/02/2020:
+	- Added capture resolution info from JPEG2000 images when using Kakadu
+
+
 17/02/2020:
 	- Physical image resolution in DPI or pixels/cm is now extracted from source image
 	  (TIFF only for now) and used to calculate appropriate DPI for current zooming level
