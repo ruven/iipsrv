@@ -23,6 +23,7 @@
 */
 
 #include <cmath>
+#include <sstream>
 
 #include "Task.h"
 #include "Transforms.h"
@@ -107,17 +108,25 @@ void Zoomify::run( Session* session, const std::string& argument ){
 			  << ", image height: " << height << endl;
     }
 
-    char str[1024];
-    snprintf( str, 1024,
-	      "Server: iipsrv/%s\r\n"
-	      "Content-Type: application/xml\r\n"
-	      "Last-Modified: %s\r\n"
-	      "%s\r\n"
-	      "\r\n"
-	      "<IMAGE_PROPERTIES WIDTH=\"%d\" HEIGHT=\"%d\" NUMTILES=\"%d\" NUMIMAGES=\"1\" VERSION=\"1.8\" TILESIZE=\"%d\" />",
-	      VERSION, (*session->image)->getTimestamp().c_str(), session->response->getCacheControl().c_str(), width, height, ntiles, tw );
+    // Format our output
+    stringstream header;
+    string eof = "\r\n";
 
-    session->out->printf( (const char*) str );
+    header << "Server: iipsrv/" << VERSION << eof
+           << "Content-Type: application/xml" << eof
+           << "Last-Modified: " << (*session->image)->getTimestamp() << eof
+           << session->response->getCacheControl() << eof
+	   << "X-Powered-By: IIPImage" << eof;
+
+    // Get our Access-Control-Allow-Origin value, if any
+    string cors = session->response->getCORS();
+    if( !cors.empty() ) header << cors << eof;
+
+    header << eof
+	   << "<IMAGE_PROPERTIES WIDTH=\"" << width << "\" HEIGHT=\"" << height << "\" "
+	   << "NUMTILES=\"" << ntiles << "\" NUMIMAGES=\"1\" VERSION=\"1.8\" TILESIZE=\"" << tw << "\" />";
+
+    session->out->printf( (const char*) header.str().c_str() );
     session->response->setImageSent();
 
     return;

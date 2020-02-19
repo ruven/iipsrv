@@ -7,7 +7,7 @@
     Culture of the Czech Republic.
 
 
-    Copyright (C) 2009-2018 Ruven Pillay.
+    Copyright (C) 2009-2020 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -25,6 +25,7 @@
 */
 
 #include <cmath>
+#include <sstream>
 
 #include "Task.h"
 #include "Transforms.h"
@@ -105,21 +106,28 @@ void DeepZoom::run( Session* session, const std::string& argument ){
 			  << ", image height: " << height << endl;
     }
 
-    char str[1024];
-    snprintf( str, 1024,
-	      "Server: iipsrv/%s\r\n"
-	      "Content-Type: application/xml\r\n"
-	      "Last-Modified: %s\r\n"
-	      "%s\r\n"
-	      "\r\n"
-	      "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n"
-	      "<Image xmlns=\"http://schemas.microsoft.com/deepzoom/2008\"\r\n"
-	      "TileSize=\"%d\" Overlap=\"0\" Format=\"jpg\">"
-	      "<Size Width=\"%d\" Height=\"%d\"/>"
-	      "</Image>",
-	      VERSION, (*session->image)->getTimestamp().c_str(), session->response->getCacheControl().c_str(), tw, width, height );
 
-    session->out->printf( (const char*) str );
+    // Format our output
+    stringstream header;
+    string eof = "\r\n";
+
+    header << "Server: iipsrv/" << VERSION << eof
+           << "Content-Type: application/xml" << eof
+           << "Last-Modified: " << (*session->image)->getTimestamp() << eof
+           << session->response->getCacheControl() << eof
+	   << "X-Powered-By: IIPImage" << eof;
+
+    // Get our Access-Control-Allow-Origin value, if any
+    string cors = session->response->getCORS();
+    if( !cors.empty() ) header << cors << eof;
+
+    header << eof
+	   << "<Image xmlns=\"http://schemas.microsoft.com/deepzoom/2008\"" << eof
+	   << "TileSize=\"" << tw << "\" Overlap=\"0\" Format=\"jpg\">"
+	   << "<Size Width=\"" << width << "\" Height=\"" << height << "\"/>"
+	   << "</Image>";
+
+    session->out->printf( (const char*) header.str().c_str() );
     session->response->setImageSent();
 
     return;
