@@ -78,7 +78,7 @@ void IIPResponse::addResponse( string arg, const string& s ){
 
 void IIPResponse::addResponse( const char* c, int a, int b ){
 
-  char tmp[64]; 
+  char tmp[64];
   snprintf( tmp, 64, "%s:%d %d", c, a, b );
   responseBody.append( tmp );
   responseBody.append( eof );
@@ -93,7 +93,7 @@ void IIPResponse::setError( const string& code, const string& arg ){
 }
 
 
-string IIPResponse::formatResponse() {
+string IIPResponse::formatResponse(){
 
   /* We always need 2 sets of eof after the headers before body/response
    */
@@ -127,4 +127,23 @@ string IIPResponse::getAdvert(){
 
   return advert;
 
+}
+
+
+stringstream IIPResponse::createHTTPHeader( string mimeType, string timeStamp ){
+
+  stringstream header;
+  header << "Server: iipsrv/" << VERSION << eof
+         << "X-Powered-By: IIPImage" << eof
+         << "Content-Type: application/" << mimeType << eof
+         << "Last-Modified: " << timeStamp << eof
+	 << cacheControl << eof;
+
+  // Add CORS header if we have one
+  if ( !cors.empty() ) header << cors << eof;
+
+  // Need extra EOF separator
+  header << eof;
+
+  return header;
 }

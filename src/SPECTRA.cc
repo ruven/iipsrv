@@ -1,7 +1,7 @@
 /*
     IIP SPECTRA Command Handler Class Member Function
 
-    Copyright (C) 2009-2017 Ruven Pillay.
+    Copyright (C) 2009-2020 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -85,16 +85,9 @@ void SPECTRA::run( Session* session, const std::string& argument ){
 
 
 #ifndef DEBUG
-  char str[1024];
-  snprintf( str, 1024,
-	    "Server: iipsrv/%s\r\n"
-	    "Content-Type: application/xml\r\n"
-	    "Last-Modified: %s\r\n"
-	    "%s\r\n"
-	    "\r\n",
-	    VERSION, (*session->image)->getTimestamp().c_str(), session->response->getCacheControl().c_str() );
-
-  session->out->printf( (const char*) str );
+  // Output our HTTP header
+  stringstream header = session->response->createHTTPHeader( "xml", (*session->image)->getTimestamp() );
+  session->out->printf( (const char*) header.str().c_str() );
   session->out->flush();
 #endif
 

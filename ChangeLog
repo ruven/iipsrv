@@ -1,3 +1,8 @@
+21/02/2020:
+	- New utility function in IIPResponse class to generate HTTP headers,
+	  avoiding repetition within Zoomify, Deepzoom, IIIF code etc.
+
+
 19/02/2020:
 	- Added CORS headers to both Zoomify and Deepzoom XML info files
 

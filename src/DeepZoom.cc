@@ -25,7 +25,6 @@
 */
 
 #include <cmath>
-#include <sstream>
 
 #include "Task.h"
 #include "Transforms.h"
@@ -108,21 +107,8 @@ void DeepZoom::run( Session* session, const std::string& argument ){
 
 
     // Format our output
-    stringstream header;
-    string eof = "\r\n";
-
-    header << "Server: iipsrv/" << VERSION << eof
-           << "Content-Type: application/xml" << eof
-           << "Last-Modified: " << (*session->image)->getTimestamp() << eof
-           << session->response->getCacheControl() << eof
-	   << "X-Powered-By: IIPImage" << eof;
-
-    // Get our Access-Control-Allow-Origin value, if any
-    string cors = session->response->getCORS();
-    if( !cors.empty() ) header << cors << eof;
-
-    header << eof
-	   << "<Image xmlns=\"http://schemas.microsoft.com/deepzoom/2008\"" << eof
+    stringstream header = session->response->createHTTPHeader( "xml", (*session->image)->getTimestamp() );
+    header << "<Image xmlns=\"http://schemas.microsoft.com/deepzoom/2008\" "
 	   << "TileSize=\"" << tw << "\" Overlap=\"0\" Format=\"jpg\">"
 	   << "<Size Width=\"" << width << "\" Height=\"" << height << "\"/>"
 	   << "</Image>";
@@ -136,7 +122,7 @@ void DeepZoom::run( Session* session, const std::string& argument ){
 
   // Get the tile coordinates. DeepZoom requests are of the form $image_files/r/x_y.jpg
   // where r is the resolution number and x and y are the tile coordinates
-  
+
   int resolution, x, y;
   unsigned int n, n1, n2;
 

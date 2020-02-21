@@ -20,7 +20,6 @@
 
 #include "Task.h"
 #include <cmath>
-#include <sstream>
 #include <iomanip>
 
 using namespace std;
@@ -192,25 +191,10 @@ void PFL::run( Session* session, const std::string& argument ){
   profile << "}";
 
 
-  // Send out our JSON header
 #ifndef DEBUG
 
-  // Get our Access-Control-Allow-Origin value, if any
-  string cors = session->response->getCORS();
-  string eof = "\r\n";
-
-  // Now output the info text
-  stringstream header;
-  header << "Server: iipsrv/" << VERSION << eof
-	 << "X-Powered-By: IIPImage" << eof
-	 << "Content-Type: application/json" << eof
-	 << "Last-Modified: " << (*session->image)->getTimestamp() << eof
-	 << session->response->getCacheControl() << eof;
-
-  // Add CORS header
-  if ( !cors.empty() ) header << cors << eof;
-  header << eof;
-
+  // Send out our JSON header
+  stringstream header = session->response->createHTTPHeader( "json", (*session->image)->getTimestamp() );
   session->out->printf( (const char*) header.str().c_str() );
   session->out->flush();
 

@@ -22,7 +22,6 @@
 #include <algorithm>
 #include <cmath>
 #include <cstdlib>
-#include <sstream>
 #include "Task.h"
 #include "Tokenizer.h"
 #include "Transforms.h"
@@ -264,19 +263,10 @@ void IIIF::run( Session* session, const string& src )
 		       << "}";
     }
 
-    // Get our Access-Control-Allow-Origin value, if any
-    string cors = session->response->getCORS();
-    string eof = "\r\n";
 
-    // Now output the info text
-    stringstream header;
-    header << "Server: iipsrv/" << VERSION << eof
-           << "Content-Type: application/ld+json" << eof
-           << "Last-Modified: " << (*session->image)->getTimestamp() << eof
-           << session->response->getCacheControl() << eof;
-
-    if ( !cors.empty() ) header << cors << eof;
-    header << eof << infoStringStream.str();
+    // Now output the HTTP header and info text
+    stringstream header = session->response->createHTTPHeader( "json+ld", (*session->image)->getTimestamp() );
+    header << infoStringStream.str();
 
     session->out->printf( (const char*) header.str().c_str() );
     session->response->setImageSent();

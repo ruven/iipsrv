@@ -33,6 +33,7 @@
 
 
 #include <string>
+#include <sstream>
 
 
 /// Class to handle non-image IIP responses including errors
@@ -75,7 +76,7 @@ class IIPResponse{
 
   /// Add a response string
   /** @param r response string */
-  void addResponse( const std::string& r ); 
+  void addResponse( const std::string& r );
 
 
   /// Add a response string
@@ -180,6 +181,12 @@ class IIPResponse{
   /** @return HTML string */
   std::string getAdvert();
 
+
+  /// Convenience function to generate HTTP header fields
+  /** @param mimeType MIME type of output
+      @param timeStamp formatted timestamp
+    */
+  std::stringstream createHTTPHeader( std::string mimeType, std::string timeStamp );
 
 };
 
