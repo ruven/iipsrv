@@ -194,7 +194,8 @@ void PFL::run( Session* session, const std::string& argument ){
 #ifndef DEBUG
 
   // Send out our JSON header
-  stringstream header = session->response->createHTTPHeader( "json", (*session->image)->getTimestamp() );
+  stringstream header;
+  header << session->response->createHTTPHeader( "json", (*session->image)->getTimestamp() );
   session->out->printf( (const char*) header.str().c_str() );
   session->out->flush();
 

@@ -186,7 +186,7 @@ class IIPResponse{
   /** @param mimeType MIME type of output
       @param timeStamp formatted timestamp
     */
-  std::stringstream createHTTPHeader( std::string mimeType, std::string timeStamp );
+  std::string createHTTPHeader( std::string mimeType, std::string timeStamp );
 
 };
 

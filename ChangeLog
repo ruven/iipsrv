@@ -1,3 +1,8 @@
+25/02/2020:
+	- Change return of createHTTPHeader function due to lack on stringstream
+	  copying in older versions of GCC.
+
+
 21/02/2020:
 	- New utility function in IIPResponse class to generate HTTP headers,
 	  avoiding repetition within Zoomify, Deepzoom, IIIF code etc.

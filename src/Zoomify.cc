@@ -108,8 +108,9 @@ void Zoomify::run( Session* session, const std::string& argument ){
     }
 
     // Format our output
-    stringstream header = session->response->createHTTPHeader( "xml", (*session->image)->getTimestamp() );
-    header << "<IMAGE_PROPERTIES WIDTH=\"" << width << "\" HEIGHT=\"" << height << "\" "
+    stringstream header;
+    header << session->response->createHTTPHeader( "xml", (*session->image)->getTimestamp() )
+	   << "<IMAGE_PROPERTIES WIDTH=\"" << width << "\" HEIGHT=\"" << height << "\" "
 	   << "NUMTILES=\"" << ntiles << "\" NUMIMAGES=\"1\" VERSION=\"1.8\" TILESIZE=\"" << tw << "\"/>";
 
     session->out->printf( (const char*) header.str().c_str() );

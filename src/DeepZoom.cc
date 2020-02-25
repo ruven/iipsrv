@@ -107,8 +107,9 @@ void DeepZoom::run( Session* session, const std::string& argument ){
 
 
     // Format our output
-    stringstream header = session->response->createHTTPHeader( "xml", (*session->image)->getTimestamp() );
-    header << "<Image xmlns=\"http://schemas.microsoft.com/deepzoom/2008\" "
+    stringstream header;
+    header << session->response->createHTTPHeader( "xml", (*session->image)->getTimestamp() )
+	   << "<Image xmlns=\"http://schemas.microsoft.com/deepzoom/2008\" "
 	   << "TileSize=\"" << tw << "\" Overlap=\"0\" Format=\"jpg\">"
 	   << "<Size Width=\"" << width << "\" Height=\"" << height << "\"/>"
 	   << "</Image>";

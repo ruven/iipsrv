@@ -130,7 +130,7 @@ string IIPResponse::getAdvert(){
 }
 
 
-stringstream IIPResponse::createHTTPHeader( string mimeType, string timeStamp ){
+string IIPResponse::createHTTPHeader( string mimeType, string timeStamp ){
 
   stringstream header;
   header << "Server: iipsrv/" << VERSION << eof
@@ -145,5 +145,5 @@ stringstream IIPResponse::createHTTPHeader( string mimeType, string timeStamp ){
   // Need extra EOF separator
   header << eof;
 
-  return header;
+  return header.str();
 }
