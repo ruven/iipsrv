@@ -82,7 +82,7 @@ unsigned int View::getResolution(){
       ( (res_width*view_width*scale > (unsigned int) max_size) ||
 	(res_height*view_height*scale > (unsigned int) max_size) ) ){
     int dimension;
-    if( (res_width*view_width/max_size) > (res_height*view_width/max_size) ){
+    if( (res_width*view_width/max_size) > (res_height*view_height/max_size) ){
       dimension = (int) (res_width*view_width*scale);
     }
     else{
