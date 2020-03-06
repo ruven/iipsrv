@@ -130,6 +130,9 @@ inline std::string URL::escape()
       case '"':
 	json += "\\\"";
 	break;
+      case '%':        // printf() requires % escaping
+	json += "%%";
+        break;
       default:
 	json += c;
     }

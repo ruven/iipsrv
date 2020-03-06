@@ -1,3 +1,7 @@
+06/03/2020:
+	- Added % escaping to URL::escape() function to avoid problems with FCGI's printf()
+	  Fixes https://github.com/ruven/iipsrv/issues/195
+
 25/02/2020:
 	- Change return of createHTTPHeader function due to lack on stringstream
 	  copying in older versions of GCC.
