@@ -266,7 +266,7 @@ void IIIF::run( Session* session, const string& src )
 
     // Now output the HTTP header and info text
     stringstream header;
-    header << session->response->createHTTPHeader( "json+ld", (*session->image)->getTimestamp() )
+    header << session->response->createHTTPHeader( "ld+json", (*session->image)->getTimestamp() )
 	   << infoStringStream.str();
 
     session->out->printf( (const char*) header.str().c_str() );
