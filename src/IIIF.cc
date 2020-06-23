@@ -126,8 +126,8 @@ void IIIF::run( Session* session, const string& src )
   filename = (*session->image)->getImagePath();
 
   // Get the information about image, that can be shown in info.json
-  unsigned int requested_width;
-  unsigned int requested_height;
+  int requested_width;
+  int requested_height;
   unsigned int width = (*session->image)->getImageWidth();
   unsigned int height = (*session->image)->getImageHeight();
   unsigned tw = (*session->image)->getTileWidth();
@@ -454,7 +454,7 @@ void IIIF::run( Session* session, const string& src )
       }
 
 
-      if ( requested_width == 0 || requested_height == 0 ){
+      if ( requested_width <= 0 || requested_height <= 0 ){
         throw invalid_argument( "IIIF: invalid size" );
       }
 
