@@ -1,6 +1,6 @@
-/*  JPEG class wrapper to ijg jpeg library
+/*  JPEG class wrapper to ijg libjpeg library
 
-    Copyright (C) 2000-2018 Ruven Pillay.
+    Copyright (C) 2000-2020 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -42,24 +42,21 @@ extern "C"{
 
 
 /// Expanded data destination object for buffered output used by IJG JPEG library
-
-
 typedef struct {
-  struct jpeg_destination_mgr pub;   /**< public fields */
 
-  size_t size;                       /**< size of source data */
-  JOCTET *buffer;		     /**< working buffer */
-  unsigned char* source;             /**< source data */
-  unsigned int strip_height;         /**< used for stream-based encoding */
+  struct jpeg_destination_mgr pub;   ///< public fields
+
+  unsigned char* source;             ///< output data buffer pointer
+  size_t source_size;                ///< size of output buffer
+  size_t written;                    ///< number of bytes written to buffer
+  unsigned int strip_height;         ///< used for stream-based encoding
 
 } iip_destination_mgr;
-
 typedef iip_destination_mgr * iip_dest_ptr;
 
 
 
 /// Wrapper class to the IJG JPEG library
-
 class JPEGCompressor: public Compressor{
 
  private:
@@ -71,13 +68,13 @@ class JPEGCompressor: public Compressor{
   int Q;
 
   /// Buffer for the JPEG header
-  unsigned char header[1024];
-
-  /// Buffer for the image data
-  unsigned char *data;
+  unsigned char *header;
 
   /// Size of the JPEG header
   unsigned int header_size;
+
+  /// Buffer for the image data
+  unsigned char *data;
 
   /// JPEG library objects
   struct jpeg_compress_struct cinfo;
@@ -96,7 +93,7 @@ class JPEGCompressor: public Compressor{
 
   /// Constructor
   /** @param quality JPEG Quality factor (0-100) */
-  JPEGCompressor( int quality ) { Q = quality; dest = NULL; };
+  JPEGCompressor( int quality ) { Q = quality; dest = NULL; header_size = 0; };
 
 
   /// Set the compression quality

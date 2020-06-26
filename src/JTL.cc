@@ -402,7 +402,7 @@ void JTL::send( Session* session, int resolution, int tile ){
 	    "Last-Modified: %s\r\n"
 	    "%s\r\n"
 	    "\r\n",
-	    VERSION, len,(*session->image)->getTimestamp().c_str(), session->response->getCacheControl().c_str() );
+	    VERSION, len, (*session->image)->getTimestamp().c_str(), session->response->getCacheControl().c_str() );
 
   session->out->printf( str );
 #endif

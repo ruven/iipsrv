@@ -1,14 +1,23 @@
+26/06/2020:
+	- JPEG encoding re-written. Now more efficient with compressed data put directly into
+	  output memory with no intermediate buffering and superfluous memory-memory copying.
+	  Change also fixes problem with large ICC profiles: https://github.com/ruven/iipsrv/issues/198
+
+
 23/06/2020:
 	- Fixed incorrect resizing in IIIF when provided with -ve parameters.
 	  Fixes: https://github.com/ruven/iipsrv/issues/201.
+
 
 01/05/2020:
 	- Corrected media type for ld+json response in IIIF.cc.
 	  Fixes: https://github.com/ruven/iipsrv/issues/199
 
+
 06/03/2020:
 	- Added % escaping to URL::escape() function to avoid problems with FCGI's printf()
 	  Fixes https://github.com/ruven/iipsrv/issues/195
+
 
 25/02/2020:
 	- Change return of createHTTPHeader function due to lack on stringstream
@@ -81,7 +90,7 @@
 	  potential XSS issues.
 
 
-24/03/2016: Version 1.1 Released
+24/03/2019: Version 1.1 Released
 
 
 20/06/2019:
