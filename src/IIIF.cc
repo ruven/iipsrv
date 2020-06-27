@@ -531,7 +531,13 @@ void IIIF::run( Session* session, const string& src )
       string quality = izer.nextToken();
       transform( quality.begin(), quality.end(), quality.begin(), ::tolower );
 
-      size_t pos = quality.find_last_of(".");
+      // Strip off any query suffixes that use the ? character
+      // For example versioning such as ../default.jpg?t=23421232
+      size_t pos = quality.find_first_of("?");
+      if ( pos != string::npos ) quality = quality.substr( 0, pos );
+
+      // Check for a format specifier
+      pos = quality.find_last_of(".");
 
       // Format - if dot is not present, we use default and currently only supported format - JPEG
       if ( pos != string::npos ){

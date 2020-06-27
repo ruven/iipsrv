@@ -1,3 +1,8 @@
+27/06/2020:
+	- Trailing query suffixes using the ? character are now stripped off the IIIF quality/format string.
+	  Fixes: https://github.com/ruven/iipsrv/issues/145
+
+
 26/06/2020:
 	- JPEG encoding re-written. Now more efficient with compressed data put directly into
 	  output memory with no intermediate buffering and superfluous memory-memory copying.
