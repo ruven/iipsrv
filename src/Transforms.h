@@ -1,7 +1,7 @@
 /*
     Image Transforms
 
-    Copyright (C) 2004-2019 Ruven Pillay.
+    Copyright (C) 2004-2021 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -95,11 +95,17 @@ struct Transform {
   void contrast( RawTile& in, float c );
 
 
-  /// Apply a gamma correction
+  /// Apply a gamma correction (exponential transform)
   /** @param in tile input data
       @param g gamma
   */
   void gamma( RawTile& in, float g );
+
+
+  /// Apply log transform: out = c log( 1 + in )
+  /** @param in input image
+   */
+  void log( RawTile& in );
 
 
   /// Resize image using nearest neighbour interpolation

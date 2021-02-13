@@ -1,7 +1,7 @@
 /*
     IIP CVT Command Handler Class Member Function
 
-    Copyright (C) 2006-2019 Ruven Pillay.
+    Copyright (C) 2006-2021 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -299,14 +299,19 @@ void CVT::send( Session* session ){
     }
 
 
-    // Apply any gamma correction
+    // Apply any gamma or log transform
     if( session->view->gamma != 1.0 ){
       float gamma = session->view->gamma;
       if( session->loglevel >= 5 ) function_timer.start();
-      session->processor->gamma( complete_image, gamma );
+
+      // Check whether we have asked for logarithm
+      if( gamma == -1 ) session->processor->log( complete_image );
+      else session->processor->gamma( complete_image, gamma );
+
       if( session->loglevel >= 5 ){
-	*(session->logfile) << "CVT :: Applying gamma of " << gamma << " in "
-			    << function_timer.getTime() << " microseconds" << endl;
+	if( gamma == -1 ) *(session->logfile) << "CVT :: Applying logarithm transform in ";
+	else *(session->logfile) << "CVT :: Applying gamma of " << gamma << " in ";
+	*(session->logfile) << function_timer.getTime() << " microseconds" << endl;
       }
     }
 

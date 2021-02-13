@@ -1,7 +1,7 @@
 /*
     IIP Command Handler Member Functions
 
-    Copyright (C) 2006-2019 Ruven Pillay.
+    Copyright (C) 2006-2021 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -179,12 +179,23 @@ void CNT::run( Session* session, const string& argument ){
 
 void GAM::run( Session* session, const string& argument ){
 
-  float gamma = (float) atof( argument.c_str() );
+  string arg = argument;
+  transform( arg.begin(), arg.end(), arg.begin(), ::tolower );
 
   if( session->loglevel >= 2 ) *(session->logfile) << "GAM handler reached" << endl;
-  if( session->loglevel >= 3 ) *(session->logfile) << "GAM :: requested gamma adjustment is " << gamma << endl;
 
-  session->view->gamma = gamma;
+  // Log transform
+  if( arg == "log" || arg == "logarithm" ){
+    // Use reserved value of -1 for logarithm
+    session->view->gamma = -1;
+    if( session->loglevel >= 3 ) *(session->logfile) << "GAM :: log transform requested" << endl;
+  }
+  // Exponential transform
+  else{
+    float gamma = (float) atof( argument.c_str() );
+    session->view->gamma = gamma;
+    if( session->loglevel >= 3 ) *(session->logfile) << "GAM :: requested gamma adjustment is " << gamma << endl;
+  }
 }
 
 

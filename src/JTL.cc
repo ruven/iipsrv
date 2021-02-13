@@ -1,7 +1,7 @@
 /*
     IIP JTL Command Handler Class Member Function
 
-    Copyright (C) 2006-2020 Ruven Pillay.
+    Copyright (C) 2006-2021 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -237,16 +237,20 @@ void JTL::send( Session* session, int resolution, int tile ){
     }
 
 
-    // Apply any gamma correction
+    // Apply any gamma or log transform
     if( session->view->gamma != 1.0 ){
+
       float gamma = session->view->gamma;
+      if( session->loglevel >= 4 ) function_timer.start();
+
+      // Check whether we have asked for logarithm
+      if( gamma == -1 ) session->processor->log( rawtile );
+      else session->processor->gamma( rawtile, gamma );
+
       if( session->loglevel >= 4 ){
-	*(session->logfile) << "JTL :: Applying gamma of " << gamma;
-	function_timer.start();
-      }
-      session->processor->gamma( rawtile, gamma);
-      if( session->loglevel >= 4 ){
-	*(session->logfile) << " in " << function_timer.getTime() << " microseconds" << endl;
+	if( gamma == -1 ) *(session->logfile) << "JTL :: Applying logarithm transform in ";
+	else *(session->logfile) << "JTL :: Applying gamma of " << gamma << " in ";
+	*(session->logfile) << function_timer.getTime() << " microseconds" << endl;
       }
     }
 

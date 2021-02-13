@@ -2,7 +2,7 @@
 
 /*  IIPImage image processing routines
 
-    Copyright (C) 2004-2019 Ruven Pillay.
+    Copyright (C) 2004-2021 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -647,12 +647,12 @@ void Transform::contrast( RawTile& in, float c ){
 
 
 
-// Gamma correction
+// Gamma correction (exponential transform): out = in * exp(g)
 void Transform::gamma( RawTile& in, float g ){
 
   if( g == 1.0 ) return;
 
-  unsigned int np = in.dataLength * 8 / in.bpc;
+  unsigned int np = in.width * in.height * in.channels;
   float* infptr = (float*)in.data;
 
   // Loop through our pixels for floating values
@@ -664,6 +664,27 @@ void Transform::gamma( RawTile& in, float g ){
   for( unsigned int n=0; n<np; n++ ){
     float v = infptr[n];
     infptr[n] = powf( v<0.0 ? 0.0 : v, g );
+  }
+}
+
+
+
+// Apply log transform: out = c log( 1 + in )
+void Transform::log( RawTile& in ){
+
+  // Scale factor
+  float scale = 1.0 / logf( 2.0 );
+
+  unsigned int np = in.width * in.height * in.channels;
+
+#if defined(__ICC) || defined(__INTEL_COMPILER)
+#pragma ivdep
+#elif defined(_OPENMP)
+#pragma omp parallel for if( in.width*in.height > PARALLEL_THRESHOLD )
+#endif
+  for( unsigned int i=0; i<np; i++ ){
+    float v = ((float*)in.data)[i];
+    ((float*)in.data)[i] = scale * logf( 1.0 + v );
   }
 }
 
