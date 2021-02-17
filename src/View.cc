@@ -28,6 +28,9 @@ using namespace std;
 void View::calculateResolution( unsigned int dimension,
 				unsigned int requested_size ){
 
+  // Reset our resolution level to the smallest available
+  resolution = 0;
+
   // Start from the highest resolution
   int j = max_resolutions - 1;
   unsigned int d = dimension;
@@ -58,9 +61,6 @@ void View::calculateResolution( unsigned int dimension,
 unsigned int View::getResolution(){
 
   unsigned int i;
-
-  // Reset our resolution level to the smallest available
-  resolution = 0;
 
   // Note that we use floor() as that is how our resolutions are calculated
   if( requested_width ) View::calculateResolution( width, floor((float)requested_width/(float)view_width) );
