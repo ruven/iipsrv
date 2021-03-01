@@ -307,12 +307,15 @@ unsigned int JPEGCompressor::Finish( unsigned char* output )
   // Need to set the scanline to the end for jpeg_finish_compress() to work
   cinfo.next_scanline = dest->strip_height;
 
+  // Calculate size of final data to be written before destroying our compression structures
+  unsigned long dataLength = dest->source_size - dest->pub.free_in_buffer;
+
   // Close and destroy our structure
   jpeg_finish_compress( &cinfo );
   jpeg_destroy_compress( &cinfo );
 
   // Return number of bytes written
-  return ( dest->source_size - dest->pub.free_in_buffer );
+  return ( dataLength );
 }
 
 

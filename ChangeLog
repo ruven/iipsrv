@@ -1,5 +1,10 @@
+01/03/2012:
+	- Modified JPEGCompressor::Finish() class to calculate data size before destroying compression structure.
+	  Avoids complaints when using address-sanitizer compliation flag.
+
+
 13/02/2021:
-	- Added logarithm transform processing to Processor.cc using the formula: out = c*log(1+in).
+	- Added logarithm transform processing to Transform.cc using the formula: out = c*log(1+in).
 	  Log transform can be requested by setting the gamma request to GAM=log or GAM=logarithm.
 
 
