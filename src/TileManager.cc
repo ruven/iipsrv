@@ -4,7 +4,7 @@
 
 /*  IIP Server: Tile Cache Handler
 
-    Copyright (C) 2005-2016 Ruven Pillay.
+    Copyright (C) 2005-2021 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -33,7 +33,7 @@ using namespace std;
 
 RawTile TileManager::getNewTile( int resolution, int tile, int xangle, int yangle, int layers, CompressionType c ){
 
-  if( loglevel >= 2 ) *logfile << "TileManager :: Cache Miss for resolution: " << resolution << ", tile: " << tile << endl
+  if( loglevel >= 4 ) *logfile << "TileManager :: Cache Miss for resolution: " << resolution << ", tile: " << tile << endl
 			       << "TileManager :: Cache Size: " << tileCache->getNumElements()
 			       << " tiles, " << tileCache->getMemorySize() << " MB" << endl;
 
@@ -48,12 +48,12 @@ RawTile TileManager::getNewTile( int resolution, int tile, int xangle, int yangl
   // Do this before inserting into cache so that we cache watermarked tiles
   if( watermark && watermark->isSet() ){
 
-    if( loglevel >= 2 ) insert_timer.start();
+    if( loglevel >= 4 ) insert_timer.start();
     unsigned int tw = ttt.padded? image->getTileWidth() : ttt.width;
     unsigned int th = ttt.padded? image->getTileHeight() : ttt.height;
 
     watermark->apply( ttt.data, tw, th, ttt.channels, ttt.bpc );
-    if( loglevel >= 2 ) *logfile << "TileManager :: Watermark applied: " << insert_timer.getTime()
+    if( loglevel >= 4 ) *logfile << "TileManager :: Watermark applied: " << insert_timer.getTime()
 				 << " microseconds" << endl;
   }
 
@@ -68,9 +68,9 @@ RawTile TileManager::getNewTile( int resolution, int tile, int xangle, int yangl
   // Add our uncompressed tile directly into our cache
   if( c == UNCOMPRESSED ){
     // Add to our tile cache
-    if( loglevel >= 2 ) insert_timer.start();
+    if( loglevel >= 4 ) insert_timer.start();
     tileCache->insert( ttt );
-    if( loglevel >= 2 ) *logfile << "TileManager :: Tile cache insertion time: " << insert_timer.getTime()
+    if( loglevel >= 4 ) *logfile << "TileManager :: Tile cache insertion time: " << insert_timer.getTime()
 				 << " microseconds" << endl;
     return ttt;
   }
@@ -82,9 +82,9 @@ RawTile TileManager::getNewTile( int resolution, int tile, int xangle, int yangl
 
     // Do our JPEG compression iff we have an 8 bit per channel image
     if( ttt.bpc == 8 && (ttt.channels==1 || ttt.channels==3) ){
-      if( loglevel >=2 ) compression_timer.start();
+      if( loglevel >= 4 ) compression_timer.start();
       jpeg->Compress( ttt );
-      if( loglevel >= 2 ) *logfile << "TileManager :: JPEG Compression Time: "
+      if( loglevel >= 4 ) *logfile << "TileManager :: JPEG Compression Time: "
 				   << compression_timer.getTime() << " microseconds" << endl;
     }
     break;
@@ -93,7 +93,7 @@ RawTile TileManager::getNewTile( int resolution, int tile, int xangle, int yangl
   case DEFLATE:
 
     // No deflate for the time being ;-)
-    if( loglevel >= 2 ) *logfile << "TileManager :: DEFLATE Compression requested: Not currently available" << endl;
+    if( loglevel >= 4 ) *logfile << "TileManager :: DEFLATE Compression requested: Not currently available" << endl;
     break;
 
 
@@ -105,9 +105,9 @@ RawTile TileManager::getNewTile( int resolution, int tile, int xangle, int yangl
 
 
   // Add to our tile cache
-  if( loglevel >= 2 ) insert_timer.start();
+  if( loglevel >= 4 ) insert_timer.start();
   tileCache->insert( ttt );
-  if( loglevel >= 2 ) *logfile << "TileManager :: Tile cache insertion time: " << insert_timer.getTime()
+  if( loglevel >= 4 ) *logfile << "TileManager :: Tile cache insertion time: " << insert_timer.getTime()
 			       << " microseconds" << endl;
 
 
@@ -122,7 +122,7 @@ void TileManager::crop( RawTile *ttt ){
   int tw = image->getTileWidth();
   int th = image->getTileHeight();
 
-  if( loglevel >= 3 ){
+  if( loglevel >= 5 ){
     *logfile << "TileManager :: Edge tile: Base size: " << tw << "x" << th
 	     << ": This tile: " << ttt->width << "x" << ttt->height
 	     << endl;
@@ -163,7 +163,7 @@ RawTile TileManager::getTile( int resolution, int tile, int xangle, int yangle, 
 
 
   // Time the tile retrieval
-  if( loglevel >= 2 ) tile_timer.start();
+  if( loglevel >= 3 ) tile_timer.start();
 
 
   /* Try to get this tile from our cache first as a JPEG, then uncompressed
@@ -215,7 +215,7 @@ RawTile TileManager::getTile( int resolution, int tile, int xangle, int yangle, 
 
     RawTile newtile = this->getNewTile( resolution, tile, xangle, yangle, layers, c );
 
-    if( loglevel >= 2 ) *logfile << "TileManager :: Total Tile Access Time: "
+    if( loglevel >= 3 ) *logfile << "TileManager :: Total Tile Access Time: "
 				 << tile_timer.getTime() << " microseconds" << endl;
     return newtile;
   }
@@ -229,7 +229,7 @@ RawTile TileManager::getTile( int resolution, int tile, int xangle, int yangle, 
     default: break;
   }
 
-  if( loglevel >= 2 ) *logfile << "TileManager :: Cache Hit for resolution: " << resolution
+  if( loglevel >= 3 ) *logfile << "TileManager :: Cache Hit for resolution: " << resolution
 			       << ", tile: " << tile
 			       << ", compression: " << compName << endl
 			       << "TileManager :: Cache Size: "
@@ -257,25 +257,25 @@ RawTile TileManager::getTile( int resolution, int tile, int xangle, int yangle, 
       if( loglevel >=2 ) compression_timer.start();
       unsigned int oldlen = rawtile->dataLength;
       unsigned int newlen = jpeg->Compress( ttt );
-      if( loglevel >= 2 ) *logfile << "TileManager :: JPEG requested, but UNCOMPRESSED compression found in cache." << endl
+      if( loglevel >= 3 ) *logfile << "TileManager :: JPEG requested, but UNCOMPRESSED compression found in cache." << endl
 				   << "TileManager :: JPEG Compression Time: "
 				   << compression_timer.getTime() << " microseconds" << endl
 				   << "TileManager :: Compression Ratio: " << newlen << "/" << oldlen << " = "
 				   << ( (float)newlen/(float)oldlen ) << endl;
 
       // Add our compressed tile to the cache
-      if( loglevel >= 2 ) insert_timer.start();
+      if( loglevel >= 3 ) insert_timer.start();
       tileCache->insert( ttt );
-      if( loglevel >= 2 ) *logfile << "TileManager :: Tile cache insertion time: " << insert_timer.getTime()
+      if( loglevel >= 3 ) *logfile << "TileManager :: Tile cache insertion time: " << insert_timer.getTime()
 				   << " microseconds" << endl;
 
-      if( loglevel >= 2 ) *logfile << "TileManager :: Total Tile Access Time: "
+      if( loglevel >= 3 ) *logfile << "TileManager :: Total Tile Access Time: "
 				   << tile_timer.getTime() << " microseconds" << endl;
       return RawTile( ttt );
     }
   }
 
-  if( loglevel >= 2 ) *logfile << "TileManager :: Total Tile Access Time: "
+  if( loglevel >= 3 ) *logfile << "TileManager :: Total Tile Access Time: "
 			       << tile_timer.getTime() << " microseconds" << endl;
 
   return RawTile( *rawtile );
@@ -379,19 +379,19 @@ RawTile TileManager::getRegion( unsigned int res, int seq, int ang, int layers, 
     for( unsigned int j=startx; j<endx; j++ ){
 
       // Time the tile retrieval
-      if( loglevel >= 2 ) tile_timer.start();
+      if( loglevel >= 3 ) tile_timer.start();
 
       // Get an uncompressed tile
       RawTile rawtile = this->getTile( res, (i*ntlx) + j, seq, ang, layers, UNCOMPRESSED );
 
-      if( loglevel >= 2 ){
+      if( loglevel >= 5 ){
 	*logfile << "TileManager getRegion :: Tile access time " << tile_timer.getTime() << " microseconds for tile "
 		 << (i*ntlx) + j << " at resolution " << res << endl;
       }
 
 
       // Only print this out once per image
-      if( (loglevel >= 4) && (i==starty) && (j==starty) ){
+      if( (loglevel >= 5) && (i==starty) && (j==starty) ){
 	*logfile << "TileManager getRegion :: Tile data is " << rawtile.channels << " channels, "
 		 << rawtile.bpc << " bits per channel" << endl;
       }
@@ -440,7 +440,7 @@ RawTile TileManager::getRegion( unsigned int res, int seq, int ang, int layers, 
 	  if( remainder != 0 ) dst_tile_height = remainder;
 	}
 
-	if( loglevel >= 4 ){
+	if( loglevel >= 5 ){
 	  *logfile << "TileManager getRegion :: destination tile width: " << dst_tile_width
 		   << ", tile height: " << dst_tile_height << endl;
 	}
