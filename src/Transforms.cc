@@ -548,10 +548,12 @@ void Transform::interpolate_bilinear( RawTile& in, unsigned int resampled_width,
   int channels = in.channels;
   unsigned int width = in.width;
   unsigned int height = in.height;
-  unsigned long np = in.channels * in.width * in.height;
+
+  // Define a max index position on the input buffer
+  unsigned long max = ( (width*height) - 1 ) * channels;
 
   // Create new buffer and pointer for our output - make sure we have enough digits via unsigned long long
-  unsigned char *output = new unsigned char[(unsigned long long)resampled_width*resampled_height*in.channels];
+  unsigned char *output = new unsigned char[(unsigned long long)resampled_width*resampled_height*channels];
 
   // Calculate our scale
   float xscale = (float)(width) / (float)resampled_width;
@@ -588,9 +590,10 @@ void Transform::interpolate_bilinear( RawTile& in, unsigned int resampled_width,
       p22 = (unsigned long) ( channels * ( (ii+1) + (jj_w+width) ) );
 
       // Make sure we don't stray outside our input buffer boundary
-      // - use replication at the edge
-      p12 = (p12<=np)? p12 : np-channels;
-      p22 = (p22<=np)? p22 : np-channels;
+      // - replicate at the edge
+      p12 = (p12<=max)? p12 : max;
+      p21 = (p21<=max)? p21 : max;
+      p22 = (p22<=max)? p22 : max;
 
       // Calculate the rest of our weights
       float iscale = i*xscale;
@@ -598,9 +601,9 @@ void Transform::interpolate_bilinear( RawTile& in, unsigned int resampled_width,
       float b = iscale - (float)ii;
 
       // Output buffer index
-      unsigned long long resampled_index = (unsigned long long)( (j*resampled_width + i) * in.channels );
+      unsigned long long resampled_index = (unsigned long long)( (j*resampled_width + i) * channels );
 
-      for( int k=0; k<in.channels; k++ ){
+      for( int k=0; k<channels; k++ ){
 	float tx = input[p11+k]*a + input[p21+k]*b;
 	float ty = input[p12+k]*a + input[p22+k]*b;
 	unsigned char r = (unsigned char)( c*tx + d*ty );

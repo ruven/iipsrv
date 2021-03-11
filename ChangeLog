@@ -1,3 +1,7 @@
+11/03/2021:
+	- Extra checks within bilinear interpolation code to avoid problems when used with address-sanitizer
+
+
 04/03/2021:
 	- Minor logging changes to TileManager class to allow improve logging with very detailed logging now moved into
 	  higher loglevel.
@@ -5,7 +9,7 @@
 
 01/03/2012:
 	- Modified JPEGCompressor::Finish() class to calculate data size before destroying compression structure.
-	  Avoids complaints when using address-sanitizer compliation flag.
+	  Avoids complaints when using address-sanitizer complilation flag.
 
 
 13/02/2021:
