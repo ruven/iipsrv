@@ -1,5 +1,6 @@
 11/03/2021:
-	- Extra checks within bilinear interpolation code to avoid problems when used with address-sanitizer
+	- Extra checks within bilinear interpolation code to avoid problems when used with address-sanitizer.
+	- Re-ordering to fix incorrent rendering of content-disposition in IIPResponse.cc.
 
 
 04/03/2021:
