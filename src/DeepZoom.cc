@@ -7,7 +7,7 @@
     Culture of the Czech Republic.
 
 
-    Copyright (C) 2009-2020 Ruven Pillay.
+    Copyright (C) 2009-2021 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -114,7 +114,7 @@ void DeepZoom::run( Session* session, const std::string& argument ){
 	   << "<Size Width=\"" << width << "\" Height=\"" << height << "\"/>"
 	   << "</Image>";
 
-    session->out->printf( (const char*) header.str().c_str() );
+    session->out->putStr( (const char*) header.str().c_str(), header.tellp() );
     session->response->setImageSent();
 
     return;

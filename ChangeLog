@@ -1,6 +1,11 @@
+13/04/2021:
+	- Switched all FCGI printf statements to putStr or putS as all string data is always pre-formatted before
+	  being sent. This is not only more efficient, but also elinates the risk of uncontrolled format string injection.
+
+
 11/03/2021:
 	- Extra checks within bilinear interpolation code to avoid problems when used with address-sanitizer.
-	- Re-ordering to fix incorrent rendering of content-disposition in IIPResponse.cc.
+	- Re-ordering to fix incoherent rendering of content-disposition in IIPResponse.cc.
 
 
 04/03/2021:

@@ -174,7 +174,11 @@ void CVT::send( Session* session ){
 	    (*session->image)->getTimestamp().c_str(),
 	    compressor->getMimeType(), basename.c_str(), compressor->getSuffix() );
 
-  session->out->printf( (const char*) str );
+  if( session->out->putS( (const char*) str ) == -1 ){
+    if( session->loglevel >= 1 ){
+      *(session->logfile) << "CVT :: Error writing HTTP header" << endl;
+    }
+  }
 #endif
 
 
@@ -517,7 +521,7 @@ void CVT::send( Session* session ){
 #ifdef CHUNKED
   snprintf( str, 1024, "%X\r\n", len );
   if( session->loglevel >= 4 ) *(session->logfile) << "CVT :: Output Header Chunk : " << str;
-  session->out->printf( str );
+  session->out->putS( str );
 #endif
 
   if( session->out->putStr( (const char*) compressor->getHeader(), len ) != len ){
@@ -527,7 +531,7 @@ void CVT::send( Session* session ){
   }
 
 #ifdef CHUNKED
-  session->out->printf( "\r\n" );
+  session->out->putStr( "\r\n", 2 );
 #endif
 
   // Flush our block of data
@@ -569,7 +573,7 @@ void CVT::send( Session* session ){
     // Send chunk length in hex
     snprintf( str, 1024, "%X\r\n", len );
     if( session->loglevel >= 4 ) *(session->logfile) << "CVT :: Chunk : " << str;
-    session->out->printf( str );
+    session->out->putS( str );
 #endif
 
     // Send this strip out to the client
@@ -581,7 +585,7 @@ void CVT::send( Session* session ){
 
 #ifdef CHUNKED
     // Send closing chunk CRLF
-    session->out->printf( "\r\n" );
+    session->out->putStr( "\r\n", 2 );
 #endif
 
     // Flush our block of data
@@ -599,7 +603,7 @@ void CVT::send( Session* session ){
 #ifdef CHUNKED
   snprintf( str, 1024, "%X\r\n", len );
   if( session->loglevel >= 4 ) *(session->logfile) << "CVT :: Final Data Chunk : " << str << endl;
-  session->out->printf( str );
+  session->out->putS( str );
 #endif
 
   if( session->out->putStr( (const char*) output, len ) != len ){
@@ -613,9 +617,9 @@ void CVT::send( Session* session ){
 
 #ifdef CHUNKED
   // Send closing chunk CRLF
-  session->out->printf( "\r\n" );
+  session->out->putStr( "\r\n", 2 );
   // Send closing blank chunk
-  session->out->printf( "0\r\n\r\n" );
+  session->out->putS( "0\r\n\r\n" );
 #endif
 
   if( session->out->flush()  == -1 ) {

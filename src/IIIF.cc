@@ -110,7 +110,7 @@ void IIIF::run( Session* session, const string& src )
                     + "Server: iipsrv/" + VERSION + "\r\n"
                     + "X-Powered-By: IIPImage\r\n"
                     + "\r\n";
-    session->out->printf( (const char*) header.c_str() );
+    session->out->putStr( (const char*) header.c_str(), header.size() );
     session->response->setImageSent();
     if ( session->loglevel >= 2 ){
       *(session->logfile) << "IIIF :: Sending HTTP 303 See Other : " << id + "/info.json" << endl;
@@ -269,7 +269,7 @@ void IIIF::run( Session* session, const string& src )
     header << session->response->createHTTPHeader( "ld+json", (*session->image)->getTimestamp() )
 	   << infoStringStream.str();
 
-    session->out->printf( (const char*) header.str().c_str() );
+    session->out->putStr( (const char*) header.str().c_str(), header.tellp() );
     session->response->setImageSent();
 
     // Because of our ability to serve different versions and because of possible content-negotiation

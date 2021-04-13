@@ -1,7 +1,7 @@
 /*
     IIP SPECTRA Command Handler Class Member Function
 
-    Copyright (C) 2009-2020 Ruven Pillay.
+    Copyright (C) 2009-2021 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -88,12 +88,12 @@ void SPECTRA::run( Session* session, const std::string& argument ){
   // Output our HTTP header
   stringstream header;
   header << session->response->createHTTPHeader( "xml", (*session->image)->getTimestamp() );
-  session->out->printf( (const char*) header.str().c_str() );
+  session->out->putStr( (const char*) header.str().c_str(), header.tellp() );
   session->out->flush();
 #endif
 
-  session->out->printf( "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" );
-  session->out->printf( "<spectra>\n" );
+  session->out->putS( "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" );
+  session->out->putS( "<spectra>\n" );
   session->out->flush();
 
   for( i = views.begin(); i != views.end(); i++ ){
@@ -145,14 +145,14 @@ void SPECTRA::run( Session* session, const std::string& argument ){
 
     char tmp[1024];
     snprintf( tmp, 1024, "\t<point>\n\t\t<wavelength>%d</wavelength>\n\t\t<reflectance>%f</reflectance>\n\t</point>\n", n, reflectance );
-    session->out->printf( tmp );
+    session->out->putS( tmp );
     session->out->flush();
 
     if( session->loglevel >= 3 ) (*session->logfile) << "SPECTRA :: Band: " << n << ", reflectance: " << reflectance << endl;
   }
 
 
-  session->out->printf( "</spectra>" );
+  session->out->putS( "</spectra>" );
 
   if( session->out->flush() == -1 ) {
     if( session->loglevel >= 1 ){

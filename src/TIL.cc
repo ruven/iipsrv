@@ -1,7 +1,7 @@
 /*
     IIP TIL Command Handler Class Member Function
 
-    Copyright (C) 2006-2015 Ruven Pillay.
+    Copyright (C) 2006-2021 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -118,7 +118,7 @@ void TIL::run( Session* session, const std::string& a ){
 	      "\r\n",
 	      VERSION, (*session->image)->getTimestamp().c_str(), session->response->getCacheControl().c_str() );
 
-    session->out->printf( (const char*)str );
+    session->out->putS( (const char*)str );
   }
 
 
@@ -168,7 +168,7 @@ void TIL::run( Session* session, const std::string& a ){
        */
       char buf[1024];
       snprintf( buf, 1024, "Tile,%d,%d,0/%d:", resolution, n, len + 8 );
-      session->out->printf( (const char*) buf );
+      session->out->putS( (const char*) buf );
 
       /* Send out the IIP compression type
        */
@@ -209,7 +209,7 @@ void TIL::run( Session* session, const std::string& a ){
 
       /* And finally send the CRLF terminator for each tile
        */
-      session->out->printf( "\r\n" );
+      session->out->putS( "\r\n" );
 
       if( session->out->flush()  == -1 ) {
 	if( session->loglevel >= 1 ){

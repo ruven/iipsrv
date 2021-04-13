@@ -396,32 +396,29 @@ void JTL::send( Session* session, int resolution, int tile ){
 
 
 #ifndef DEBUG
-  char str[1024];
 
-  snprintf( str, 1024,
-	    "Server: iipsrv/%s\r\n"
-	    "X-Powered-By: IIPImage\r\n"
-	    "Content-Type: image/jpeg\r\n"
-            "Content-Length: %d\r\n"
-	    "Last-Modified: %s\r\n"
-	    "%s\r\n"
-	    "\r\n",
-	    VERSION, len, (*session->image)->getTimestamp().c_str(), session->response->getCacheControl().c_str() );
+  // Send HTTP header
+  stringstream header;
+  header << session->response->createHTTPHeader( session->jpeg->getMimeType(), (*session->image)->getTimestamp(), len );
+  if( session->out->putStr( (const char*) header.str().c_str(), header.tellp() ) == -1 ){
+    if( session->loglevel >= 1 ){
+      *(session->logfile) << "JTL :: Error writing HTTP header" << endl;
+    }
+  }
 
-  session->out->printf( str );
 #endif
 
 
   if( session->out->putStr( static_cast<const char*>(rawtile.data), len ) != len ){
-    if( session->loglevel >= 1 ){
-      *(session->logfile) << "JTL :: Error writing jpeg tile" << endl;
-    }
+   if( session->loglevel >= 1 ){
+     *(session->logfile) << "JTL :: Error writing JPEG tile" << endl;
+   }
   }
 
 
   if( session->out->flush() == -1 ) {
     if( session->loglevel >= 1 ){
-      *(session->logfile) << "JTL :: Error flushing jpeg tile" << endl;
+      *(session->logfile) << "JTL :: Error flushing JPEG tile" << endl;
     }
   }
 

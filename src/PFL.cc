@@ -1,7 +1,7 @@
 /*
     IIP Profile Command Handler Class Member Function
 
-    Copyright (C) 2013-2019 Ruven Pillay.
+    Copyright (C) 2013-2021 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -196,13 +196,13 @@ void PFL::run( Session* session, const std::string& argument ){
   // Send out our JSON header
   stringstream header;
   header << session->response->createHTTPHeader( "json", (*session->image)->getTimestamp() );
-  session->out->printf( (const char*) header.str().c_str() );
+  session->out->putStr( (const char*) header.str().c_str(), header.tellp() );
   session->out->flush();
 
 #endif
 
   // Send the data itself
-  session->out->printf( profile.str().c_str() );
+  session->out->putStr( profile.str().c_str(), profile.tellp() );
   session->out->flush();
 
   if( session->out->flush() == -1 ) {

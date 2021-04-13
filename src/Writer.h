@@ -1,7 +1,7 @@
 /*
     IIP Generic Output Writer Classes
 
-    Copyright (C) 2006-2013 Ruven Pillay.
+    Copyright (C) 2006-2021 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -25,6 +25,7 @@
 
 #include <fcgiapp.h>
 #include <cstdio>
+#include <cstring>
 
 
 /// Virtual base class for various writers
@@ -94,8 +95,10 @@ class FCGIWriter {
     return FCGX_PutStr( msg, len, out );
   };
   int putS( const char* msg ){
-    cpy2buf( msg, strlen(msg) );
-    return FCGX_PutS( msg, out );
+    int len = (int) strlen( msg );
+    cpy2buf( msg, len );
+    if( FCGX_PutStr( msg, len, out ) != len ) return -1;
+    return len;
   }
   int printf( const char* msg ){
     cpy2buf( msg, strlen(msg) );

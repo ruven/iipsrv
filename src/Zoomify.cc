@@ -113,7 +113,7 @@ void Zoomify::run( Session* session, const std::string& argument ){
 	   << "<IMAGE_PROPERTIES WIDTH=\"" << width << "\" HEIGHT=\"" << height << "\" "
 	   << "NUMTILES=\"" << ntiles << "\" NUMIMAGES=\"1\" VERSION=\"1.8\" TILESIZE=\"" << tw << "\"/>";
 
-    session->out->printf( (const char*) header.str().c_str() );
+    session->out->putStr( (const char*) header.str().c_str(), header.tellp() );
     session->response->setImageSent();
 
     return;

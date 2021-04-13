@@ -1,7 +1,7 @@
 /*
     IIP Response Handler Class
 
-    Copyright (C) 2003-2020 Ruven Pillay.
+    Copyright (C) 2003-2021 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -185,8 +185,9 @@ class IIPResponse{
   /// Convenience function to generate HTTP header fields
   /** @param mimeType MIME type of output
       @param timeStamp formatted timestamp
+      @param contentLength optional Content-Length value
     */
-  std::string createHTTPHeader( std::string mimeType, std::string timeStamp );
+  std::string createHTTPHeader( const std::string& mimeType, const std::string& timeStamp, unsigned int contentLength=0 );
 
 };
 

@@ -767,7 +767,7 @@ int main( int argc, char *argv[] )
 	    response.formatResponse() <<
 	    endl << "---" << endl;
 	}
-	if( writer.printf( response.formatResponse().c_str() ) == -1 ){
+	if( writer.putS( response.formatResponse().c_str() ) == -1 ){
 	  if( loglevel >= 1 ) logfile << "Error sending IIPResponse" << endl;
 	}
       }
@@ -808,7 +808,7 @@ int main( int argc, char *argv[] )
 
         case 304:
 	  status = "Status: 304 Not Modified\r\nServer: iipsrv/" + version + "\r\n\r\n";
-	  writer.printf( status.c_str() );
+	  writer.putS( status.c_str() );
 	  writer.flush();
           if( loglevel >= 2 ){
 	    logfile << "Sending HTTP 304 Not Modified" << endl;
@@ -842,14 +842,15 @@ int main( int argc, char *argv[] )
 	    response.formatResponse() <<
 	    endl << "---" << endl;
 	}
-	if( writer.printf( response.formatResponse().c_str() ) == -1 ){
+	if( writer.putS( response.formatResponse().c_str() ) == -1 ){
 	  if( loglevel >= 1 ) logfile << "Error sending IIPResponse" << endl;
 	}
       }
       else{
-	/* Display our advertising banner ;-)
-	 */
-	writer.printf( response.getAdvert().c_str() );
+	// Display our advertising banner ;-)
+	if( writer.putS( response.getAdvert().c_str() ) == -1 ){
+	  if( loglevel >= 1 ) logfile << "Error sending IIPImage banner" << endl;
+	}
       }
 
     }
@@ -860,7 +861,7 @@ int main( int argc, char *argv[] )
 	"\r\nContent-Type: text/plain; charset=utf-8" +
 	(response.getCORS().length() ? "\r\n" + response.getCORS() : "") +
 	"\r\n\r\n" + error.what();
-      writer.printf( status.c_str() );
+      writer.putS( status.c_str() );
       writer.flush();
       if( loglevel >= 2 ){
 	logfile << error.what() << endl;
@@ -874,7 +875,7 @@ int main( int argc, char *argv[] )
 	"\r\nContent-Type: text/plain; charset=utf-8" +
 	(response.getCORS().length() ? "\r\n" + response.getCORS() : "") +
 	"\r\n\r\n" + error.what();
-      writer.printf( status.c_str() );
+      writer.putS( status.c_str() );
       writer.flush();
       if( loglevel >= 2 ){
 	logfile << error.what() << endl;
@@ -889,7 +890,7 @@ int main( int argc, char *argv[] )
 	"\r\nContent-Type: text/plain; charset=utf-8" +
 	(response.getCORS().length() ? "\r\n" + response.getCORS() : "") +
 	"\r\n\r\n" + message;
-      writer.printf( status.c_str() );
+      writer.putS( status.c_str() );
       writer.flush();
       if( loglevel >= 1 ){
 	logfile << "Error: " << message << endl;
@@ -907,7 +908,7 @@ int main( int argc, char *argv[] )
 
       /* Display our advertising banner ;-)
        */
-      writer.printf( response.getAdvert().c_str() );
+      writer.putS( response.getAdvert().c_str() );
 
     }
 

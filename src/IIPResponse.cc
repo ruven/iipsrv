@@ -130,14 +130,19 @@ string IIPResponse::getAdvert(){
 }
 
 
-string IIPResponse::createHTTPHeader( string mimeType, string timeStamp ){
+string IIPResponse::createHTTPHeader( const string& mimeType, const string& timeStamp, unsigned int contentLength ){
+
+  string _mimeType = mimeType;
+  if( mimeType.find("/") == string::npos ) _mimeType = "application/" + mimeType;
 
   stringstream header;
   header << "Server: iipsrv/" << VERSION << eof
          << "X-Powered-By: IIPImage" << eof
-         << "Content-Type: application/" << mimeType << eof
+         << "Content-Type: " << _mimeType << eof
          << "Last-Modified: " << timeStamp << eof
 	 << cacheControl << eof;
+
+  if( contentLength > 0 ) header << "Content-Length: " << contentLength << eof;
 
   // Add CORS header if we have one
   if ( !cors.empty() ) header << cors << eof;
