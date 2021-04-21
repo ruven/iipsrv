@@ -341,7 +341,7 @@ void CVT::send( Session* session ){
 
 
 
-    // Apply any contrast adjustments and/or clip from 16bit or 32bit to 8bit
+    // Apply any contrast adjustments and scale to 8 bit quantization
     {
       if( session->loglevel >= 5 ) function_timer.start();
       session->processor->contrast( complete_image, session->view->contrast );

@@ -1,3 +1,7 @@
+21/04/2021:
+	- Modified log transform function in Transform.cc to set appropriate input scaling for 8 bit output
+
+
 13/04/2021:
 	- Switched all FCGI printf statements to putStr or putS as all string data is always pre-formatted before
 	  being sent. This is not only more efficient, but also elinates the risk of uncontrolled format string injection.

@@ -630,6 +630,7 @@ void Transform::contrast( RawTile& in, float c ){
   unsigned long np = in.width * in.height * in.channels;
   unsigned char* buffer = new unsigned char[np];
   float* infptr = (float*)in.data;
+  const float max = 255.0;    // Max pixel value for 8 bit data
 
 #if defined(__ICC) || defined(__INTEL_COMPILER)
 #pragma ivdep
@@ -637,8 +638,8 @@ void Transform::contrast( RawTile& in, float c ){
 #pragma omp parallel for
 #endif
   for( unsigned long n=0; n<np; n++ ){
-    float v = infptr[n] * 255.0 * c;
-    buffer[n] = (unsigned char)( (v<255.0) ? (v<0.0? 0.0 : v) : 255.0 );
+    float v = infptr[n] * max * c;
+    buffer[n] = (unsigned char)( (v<max) ? (v<0.0? 0.0 : v) : max );
   }
 
   // Replace original buffer with new
@@ -675,8 +676,12 @@ void Transform::gamma( RawTile& in, float g ){
 // Apply log transform: out = c log( 1 + in )
 void Transform::log( RawTile& in ){
 
+  // Need to handle input scale appropriately - log between 0-1 more linear than 0-255
+  // - assume only 8 bit output for now
+  float max = 255.0;
+
   // Scale factor
-  float scale = 1.0 / logf( 2.0 );
+  float scale = 1.0 / logf( max + 1.0 );
 
   unsigned int np = in.width * in.height * in.channels;
 
@@ -686,7 +691,7 @@ void Transform::log( RawTile& in ){
 #pragma omp parallel for if( in.width*in.height > PARALLEL_THRESHOLD )
 #endif
   for( unsigned int i=0; i<np; i++ ){
-    float v = ((float*)in.data)[i];
+    float v = ((float*)in.data)[i] * max;
     ((float*)in.data)[i] = scale * logf( 1.0 + v );
   }
 }
