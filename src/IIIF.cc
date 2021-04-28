@@ -461,13 +461,13 @@ void IIIF::run( Session* session, const string& src )
       // Check for malformed upscaling request
       if( iiif_version >= 3 ){
 	if( session->view->allow_upscaling == false &&
-	    ( requested_width > width || requested_height > height ) ){
+	    ( requested_width > (int) width || requested_height > (int) height ) ){
 	  throw invalid_argument( "IIIF: upscaling should be prefixed with ^" );
 	}
       }
 
       // Limit our requested size to the maximum allowable size if necessary
-      if( requested_width > max_size || requested_height > max_size ){
+      if( requested_width > (int) max_size || requested_height > (int) max_size ){
 	if( ratio > 1.0 ){
 	  requested_width = max_size;
 	  requested_height = session->view->maintain_aspect ? round(max_size*ratio) : max_size;
@@ -618,13 +618,13 @@ void IIIF::run( Session* session, const string& src )
 
   // Determine whether this is a tile request which coincides with our tile boundaries
   if ( ( session->view->maintain_aspect && (requested_res > 0) &&
-         (requested_width == tw) && (requested_height == th) &&
+         (requested_width == (int) tw) && (requested_height == (int) th) &&
          (view_left % tw == 0) && (view_top % th == 0) &&
          (session->view->getViewWidth() % tw == 0) && (session->view->getViewHeight() % th == 0) &&
          (session->view->getViewWidth() < im_width) && (session->view->getViewHeight() < im_height) )
        ||
        ( session->view->maintain_aspect && (requested_res == 0) &&
-         (requested_width == im_width) && (requested_height == im_height) )
+         ((unsigned int) requested_width == im_width) && ((unsigned int) requested_height == im_height) )
      ){
 
     // Get the width and height for last row and column tiles
