@@ -1,6 +1,6 @@
 /*  JPEG class wrapper to ijg libjpeg library
 
-    Copyright (C) 2000-2020 Ruven Pillay.
+    Copyright (C) 2000-2021 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -63,15 +63,6 @@ class JPEGCompressor: public Compressor{
 
   /// the width, height and number of channels per sample for the image
   unsigned int width, height, channels;
-
-  /// The JPEG quality factor
-  int Q;
-
-  /// Buffer for the JPEG header
-  unsigned char *header;
-
-  /// Size of the JPEG header
-  unsigned int header_size;
 
   /// Buffer for the image data
   unsigned char *data;
@@ -147,6 +138,9 @@ class JPEGCompressor: public Compressor{
 
   /// Return the image filename suffix
   inline const char* getSuffix(){ return "jpg"; }
+
+  /// Get compression type
+  inline CompressionType getCompressionType(){ return JPEG; };
 
 };
 

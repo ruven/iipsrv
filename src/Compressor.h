@@ -33,8 +33,14 @@ class Compressor {
 
  protected:
 
-  /// Quality level
+  /// Quality or compression level for all image types
   int Q;
+
+  /// Pointer to the header data for the output image
+  unsigned char *header;
+
+  /// Size of the header data
+  unsigned int header_size;
 
   /// Physical resolution for X and Y directions
   float dpi_x, dpi_y;
@@ -135,6 +141,11 @@ class Compressor {
   /// Get file suffix
   /** @return suffix as const char* */
   virtual const char* getSuffix() { return "img"; };
+
+
+  /// Get compression type
+  /** @return compressionType */
+  virtual CompressionType getCompressionType(){ return UNCOMPRESSED; };
 
 };
 

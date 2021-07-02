@@ -1,3 +1,7 @@
+02/07/2021:
+	- Small modification to Compressor class and removal of duplicate quality parameter from JPEGCompressor class
+
+
 28/04/2021:
 	- Additional type casting added to IIIF.cc to avoid compiler warnings
 
