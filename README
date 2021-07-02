@@ -2,7 +2,7 @@ IIPImage - High Resolution Streaming Image Server
 =================================================
 
 [![GPLv3 Licensed](https://img.shields.io/badge/license-GPLv3-blue.svg)](https://www.gnu.org/copyleft/gpl.html)
-[![Build Status](https://travis-ci.org/ruven/iipsrv.svg)](https://travis-ci.org/ruven/iipsrv)
+[![Build Status](https://api.travis-ci.com/ruven/iipsrv.svg)](https://travis-ci.com/github/ruven/iipsrv)
 [![Coverity Scan](https://img.shields.io/coverity/scan/3997.svg)](https://scan.coverity.com/projects/ruven-iipsrv)
 
 ABOUT
@@ -503,4 +503,4 @@ For example with lighttpd:
 Please refer to the project site https://iipimage.sourceforge.io for further details
 
 ------------------------------------------------------------------------------------
-(c) 2000-2020 Ruven Pillay <ruven@users.sourceforge.net>
+(c) 2000-2021 Ruven Pillay <ruven@users.sourceforge.net>
