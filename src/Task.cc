@@ -49,7 +49,9 @@ Task* Task::factory( const string& t ){
   else if( type == "rgn" ) return new RGN;
   else if( type == "rot" ) return new ROT;
   else if( type == "til" ) return new TIL;
-//  else if( type == "ptl" ) return new PTL;
+#ifdef HAVE_PNG
+  else if( type == "ptl" ) return new PTL;
+#endif
   else if( type == "jtl" ) return new JTL;
   else if( type == "jtls" ) return new JTLS;
   else if( type == "icc" ) return new ICC;
@@ -88,14 +90,18 @@ void QLT::run( Session* session, const string& argument ){
     // Check the value is realistic
     if( factor < 0 || factor > 100 ){
       if( session->loglevel >= 2 ){
-	*(session->logfile) << "QLT :: JPEG Quality factor of " << argument
-			    << " out of bounds. Must be 0-100" << endl;
+	*(session->logfile) << "QLT :: Quality factor of " << argument
+			    << " out of bounds. Must be 0-100 for JPEG and 0-9 for PNG" << endl;
       }
     }
 
     session->jpeg->setQuality( factor );
-  }
+#ifdef HAVE_PNG
+    session->png->setQuality( factor );
+#endif
 
+    if( session->loglevel >= 2 ) *(session->logfile) << "QLT :: Requested quality is " << factor << endl;
+  }
 }
 
 
@@ -205,14 +211,19 @@ void CVT::run( Session* session, const string& src ){
   string argument = src;
   transform( argument.begin(), argument.end(), argument.begin(), ::tolower );
 
-  // For the moment, only deal with JPEG. If we have specified something else, give a warning
-  // and send JPEG anyway
-  if( argument != "jpeg" ){
-    if( session->loglevel >= 1 ) *(session->logfile) << "CVT :: Unsupported request: '" << argument << "'. Sending JPEG." << endl;
-  }
-  else{
+  if( argument == "jpeg" || argument == "jpg" ){
     session->view->output_format = JPEG;
     if( session->loglevel >= 3 ) *(session->logfile) << "CVT :: JPEG output" << endl;
+  }
+#ifdef HAVE_PNG
+  else if( argument == "png" ){
+    session->view->output_format = PNG;
+    if( session->loglevel >= 3 ) *(session->logfile) << "CVT :: PNG output" << endl;
+  }
+#endif
+  else{
+    session->view->output_format = JPEG;
+    if( session->loglevel >= 1 ) *(session->logfile) << "CVT :: Unsupported request: '" << argument << "'. Sending JPEG" << endl;
   }
 
   this->send( session );

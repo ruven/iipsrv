@@ -31,16 +31,11 @@ using namespace std;
 
 
 
-RawTile TileManager::getNewTile( int resolution, int tile, int xangle, int yangle, int layers, CompressionType c ){
-
-  if( loglevel >= 4 ) *logfile << "TileManager :: Cache Miss for resolution: " << resolution << ", tile: " << tile << endl
-			       << "TileManager :: Cache Size: " << tileCache->getNumElements()
-			       << " tiles, " << tileCache->getMemorySize() << " MB" << endl;
-
+RawTile TileManager::getNewTile( int resolution, int tile, int xangle, int yangle, int layers, CompressionType ctype ){
 
   RawTile ttt;
 
-  // Get our raw tile from the IIPImage image object
+  // Get a raw tile from the IIPImage image object
   ttt = image->getTile( xangle, yangle, resolution, layers, tile );
 
 
@@ -66,7 +61,7 @@ RawTile TileManager::getNewTile( int resolution, int tile, int xangle, int yangl
 
 
   // Add our uncompressed tile directly into our cache
-  if( c == UNCOMPRESSED ){
+  if( ctype == UNCOMPRESSED ){
     // Add to our tile cache
     if( loglevel >= 4 ) insert_timer.start();
     tileCache->insert( ttt );
@@ -76,30 +71,35 @@ RawTile TileManager::getNewTile( int resolution, int tile, int xangle, int yangl
   }
 
 
-  switch( c ){
+  switch( ctype ){
 
-  case JPEG:
-
+   case JPEG:
     // Do our JPEG compression iff we have an 8 bit per channel image
     if( ttt.bpc == 8 && (ttt.channels==1 || ttt.channels==3) ){
       if( loglevel >= 4 ) compression_timer.start();
-      jpeg->Compress( ttt );
+      compressor->Compress( ttt );
       if( loglevel >= 4 ) *logfile << "TileManager :: JPEG Compression Time: "
 				   << compression_timer.getTime() << " microseconds" << endl;
     }
     break;
 
 
-  case DEFLATE:
+   case PNG:
+    if( loglevel >=2 ) compression_timer.start();
+    compressor->Compress( ttt );
+    if( loglevel >= 2 ) *logfile << "TileManager :: PNG Compression Time: "
+				 << compression_timer.getTime() << " microseconds" << endl;
+    break;
 
+
+   case DEFLATE:
     // No deflate for the time being ;-)
     if( loglevel >= 4 ) *logfile << "TileManager :: DEFLATE Compression requested: Not currently available" << endl;
     break;
 
 
-  default:
-
-    break;
+   default:
+     break;
 
   }
 
@@ -155,7 +155,7 @@ void TileManager::crop( RawTile *ttt ){
 
 
 
-RawTile TileManager::getTile( int resolution, int tile, int xangle, int yangle, int layers, CompressionType c ){
+RawTile TileManager::getTile( int resolution, int tile, int xangle, int yangle, int layers, CompressionType ctype ){
 
   RawTile* rawtile = NULL;
   string tileCompression;
@@ -166,33 +166,29 @@ RawTile TileManager::getTile( int resolution, int tile, int xangle, int yangle, 
   if( loglevel >= 3 ) tile_timer.start();
 
 
-  /* Try to get this tile from our cache first as a JPEG, then uncompressed
+  /* Try to get the encoded tile directly from our cache first.
      Otherwise decode one from the source image and add it to the cache
    */
-  switch( c )
+  switch( ctype )
     {
 
     case JPEG:
       if( (rawtile = tileCache->getTile( image->getImagePath(), resolution, tile,
-					  xangle, yangle, JPEG, jpeg->getQuality() )) ) break;
-      if( (rawtile = tileCache->getTile( image->getImagePath(), resolution, tile,
-					 xangle, yangle, DEFLATE, 0 )) ) break;
+					  xangle, yangle, JPEG, compressor->getQuality() )) ) break;
       if( (rawtile = tileCache->getTile( image->getImagePath(), resolution, tile,
 					 xangle, yangle, UNCOMPRESSED, 0 )) ) break;
       break;
 
 
-    case DEFLATE:
-
+    case PNG:
       if( (rawtile = tileCache->getTile( image->getImagePath(), resolution, tile,
-					 xangle, yangle, DEFLATE, 0 )) ) break;
+					 xangle, yangle, PNG, compressor->getQuality() )) ) break;
       if( (rawtile = tileCache->getTile( image->getImagePath(), resolution, tile,
 					 xangle, yangle, UNCOMPRESSED, 0 )) ) break;
       break;
 
 
     case UNCOMPRESSED:
-
       if( (rawtile = tileCache->getTile( image->getImagePath(), resolution, tile,
 					 xangle, yangle, UNCOMPRESSED, 0 )) ) break;
       break;
@@ -204,6 +200,19 @@ RawTile TileManager::getTile( int resolution, int tile, int xangle, int yangle, 
     }
 
 
+
+  if( loglevel >= 3 ){
+    // Define our compression names for logging purposes
+    switch( ctype ){
+      case JPEG: compName = "JPEG"; break;
+      case PNG: compName = "PNG"; break;
+      case DEFLATE: compName = "DEFLATE"; break;
+      case UNCOMPRESSED: compName = "UNCOMPRESSED"; break;
+      default: break;
+    }
+  }
+
+
   // If we haven't been able to get a tile, get a raw one
   if( !rawtile || (rawtile && (rawtile->timestamp < image->timestamp)) ){
 
@@ -213,7 +222,15 @@ RawTile TileManager::getTile( int resolution, int tile, int xangle, int yangle, 
                                    << " ... updating" << endl;
     }
 
-    RawTile newtile = this->getNewTile( resolution, tile, xangle, yangle, layers, c );
+    if( loglevel >= 4 ) *logfile << "TileManager :: Cache Miss for resolution: " << resolution
+				 << ", tile: " << tile
+				 << ", compression: " << compName
+				 << ", quality: " << compressor->getQuality() << endl
+				 << "TileManager :: Cache Size: " << tileCache->getNumElements()
+				 << " tiles, " << tileCache->getMemorySize() << " MB" << endl;
+
+    
+    RawTile newtile = this->getNewTile( resolution, tile, xangle, yangle, layers, ctype );
 
     if( loglevel >= 3 ) *logfile << "TileManager :: Total Tile Access Time: "
 				 << tile_timer.getTime() << " microseconds" << endl;
@@ -221,58 +238,50 @@ RawTile TileManager::getTile( int resolution, int tile, int xangle, int yangle, 
   }
 
 
-  // Define our compression names
-  switch( rawtile->compressionType ){
-    case JPEG: compName = "JPEG"; break;
-    case DEFLATE: compName = "DEFLATE"; break;
-    case UNCOMPRESSED: compName = "UNCOMPRESSED"; break;
-    default: break;
-  }
+
 
   if( loglevel >= 3 ) *logfile << "TileManager :: Cache Hit for resolution: " << resolution
 			       << ", tile: " << tile
-			       << ", compression: " << compName << endl
+			       << ", compression: " << compName
+			       << ", quality: " << compressor->getQuality() << endl
 			       << "TileManager :: Cache Size: "
 			       << tileCache->getNumElements() << " tiles, "
 			       << tileCache->getMemorySize() << " MB" << endl;
 
 
-  // Check whether the compression used for out tile matches our requested compression type.
-  // If not, we must convert
-
-  if( c == JPEG && rawtile->compressionType == UNCOMPRESSED ){
+  // Check whether the compression used for out tile matches our requested compression type. If not, we must convert
+  // Perform JPEG compression iff we have an 8 bit per channel image and either 1 or 3 bands
+  // PNG compression can have 8 or 16 bits and alpha channels
+  if( (rawtile->compressionType == UNCOMPRESSED) &&
+      ( ( ctype==JPEG && rawtile->bpc==8 && (rawtile->channels==1 || rawtile->channels==3) ) || ctype==PNG ) ){
 
     // Rawtile is a pointer to the cache data, so we need to create a copy of it in case we compress it
     RawTile ttt( *rawtile );
 
-    // Do our JPEG compression iff we have an 8 bit per channel image and either 1 or 3 bands
-    if( rawtile->bpc==8 && (rawtile->channels==1 || rawtile->channels==3) ){
-
-      // Crop if this is an edge tile
-      if( ( (ttt.width != image->getTileWidth()) || (ttt.height != image->getTileHeight()) ) && ttt.padded ){
-	if( loglevel >= 5 ) * logfile << "TileManager :: Cropping tile" << endl;
-	this->crop( &ttt );
-      }
-
-      if( loglevel >=2 ) compression_timer.start();
-      unsigned int oldlen = rawtile->dataLength;
-      unsigned int newlen = jpeg->Compress( ttt );
-      if( loglevel >= 3 ) *logfile << "TileManager :: JPEG requested, but UNCOMPRESSED compression found in cache." << endl
-				   << "TileManager :: JPEG Compression Time: "
-				   << compression_timer.getTime() << " microseconds" << endl
-				   << "TileManager :: Compression Ratio: " << newlen << "/" << oldlen << " = "
-				   << ( (float)newlen/(float)oldlen ) << endl;
-
-      // Add our compressed tile to the cache
-      if( loglevel >= 3 ) insert_timer.start();
-      tileCache->insert( ttt );
-      if( loglevel >= 3 ) *logfile << "TileManager :: Tile cache insertion time: " << insert_timer.getTime()
-				   << " microseconds" << endl;
-
-      if( loglevel >= 3 ) *logfile << "TileManager :: Total Tile Access Time: "
-				   << tile_timer.getTime() << " microseconds" << endl;
-      return RawTile( ttt );
+    // Crop if this is an edge tile
+    if( ( (ttt.width != image->getTileWidth()) || (ttt.height != image->getTileHeight()) ) && ttt.padded ){
+      if( loglevel >= 5 ) * logfile << "TileManager :: Cropping tile" << endl;
+      this->crop( &ttt );
     }
+
+    if( loglevel >=2 ) compression_timer.start();
+    unsigned int oldlen = rawtile->dataLength;
+    unsigned int newlen = compressor->Compress( ttt );
+    if( loglevel >= 3 ) *logfile << "TileManager :: " << compName << " requested, but UNCOMPRESSED compression found in cache." << endl
+				 << "TileManager :: " << compName << " Compression Time: "
+				 << compression_timer.getTime() << " microseconds" << endl
+				 << "TileManager :: Compression Ratio: " << newlen << "/" << oldlen << " = "
+				 << ( (float)newlen/(float)oldlen ) << endl;
+
+    // Add our compressed tile to the cache
+    if( loglevel >= 3 ) insert_timer.start();
+    tileCache->insert( ttt );
+    if( loglevel >= 3 ) *logfile << "TileManager :: Tile cache insertion time: " << insert_timer.getTime()
+				 << " microseconds" << endl;
+
+    if( loglevel >= 3 ) *logfile << "TileManager :: Total Tile Access Time: "
+				 << tile_timer.getTime() << " microseconds" << endl;
+    return RawTile( ttt );
   }
 
   if( loglevel >= 3 ) *logfile << "TileManager :: Total Tile Access Time: "

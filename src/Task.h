@@ -1,7 +1,7 @@
 /*
     IIP Generic Task Class
 
-    Copyright (C) 2006-2019 Ruven Pillay
+    Copyright (C) 2006-2021 Ruven Pillay
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -220,13 +220,6 @@ class FIF : public Task {
 };
 
 
-/// PNG Tile Command
-/*class PTL : public Task {
- public:
-  void run( Session* session, const std::string& argument );
-};*/
-
-
 /// JPEG Tile Export Command
 class JTL : public Task {
  public:
@@ -238,6 +231,17 @@ class JTL : public Task {
       @param tile requested tile index
    */
   void send( Session* session, int resolution, int tile );
+};
+
+
+/// PNG Tile Command
+class PTL : public JTL {
+ public:
+  void run( Session* session, const std::string& argument ){
+    // Set our encoding format and call JTL::run
+    session->view->output_format = PNG;
+    JTL::run( session, argument );
+  };
 };
 
 

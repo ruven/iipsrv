@@ -38,8 +38,11 @@
 #define IIIF_CONTEXT IIIF_PROTOCOL "/%d/context.json"
 
 // IIIF compliance level
+#ifdef HAVE_PNG
+#define IIIF_PROFILE "level2"
+#else
 #define IIIF_PROFILE "level1"
-
+#endif
 
 
 using namespace std;
@@ -254,7 +257,7 @@ void IIIF::run( Session* session, const string& src )
       infoStringStream << "  \"@id\" : \"" << iiif_id << "\"," << endl
 		       << "  \"profile\" : [" << endl
 		       << "     \"" << IIIF_PROTOCOL << "/" << iiif_version << "/" << IIIF_PROFILE << "\"," << endl
-		       << "     { \"formats\" : [ \"jpg\" ]," << endl
+		       << "     { \"formats\" : [ \"jpg\", \"png\" ]," << endl
 		       << "       \"qualities\" : [\"native\",\"color\",\"gray\",\"bitonal\"]," << endl
 		       << "       \"supports\" : [\"regionByPct\",\"regionSquare\",\"sizeByForcedWh\",\"sizeByWh\",\"sizeAboveFull\",\"sizeUpscaling\",\"rotationBy90s\",\"mirroring\"]," << endl
 		       << "       \"maxWidth\" : " << max << "," << endl
@@ -539,14 +542,18 @@ void IIIF::run( Session* session, const string& src )
       // Check for a format specifier
       pos = quality.find_last_of(".");
 
-      // Format - if dot is not present, we use default and currently only supported format - JPEG
+      // Get requested output format: JPEG and PNG are currently supported
       if ( pos != string::npos ){
         format = quality.substr( pos + 1, string::npos );
         quality.erase( pos, string::npos );
-        if ( format != "jpg" ){
-          throw invalid_argument( "IIIF :: Only JPEG output supported" );
-        }
+
+	if( format == "jpg" ) session->view->output_format = JPEG;
+#ifdef HAVE_PNG
+	else if( format == "png" ) session->view->output_format = PNG;
+#endif
+	else throw invalid_argument( "IIIF :: unsupported output format" );
       }
+
 
       // Quality
       if ( quality == "native" || quality == "color" || quality == "default" ){

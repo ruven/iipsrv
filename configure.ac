@@ -1,6 +1,6 @@
 # Process this file with autoconf to produce a configure script.
 
-AC_INIT(iipsrv,1.1,ruven@users.sourceforge.net)
+AC_INIT(iipsrv,1.2,ruven@users.sourceforge.net)
 AC_CONFIG_MACRO_DIR([m4])
 AM_INIT_AUTOMAKE
 
@@ -152,8 +152,40 @@ AC_SUBST(LIBFCGI_LIBS)
 
 
 
+
+#************************************************************
+#     Check for PNG support
+#************************************************************
+
+PNG=false
+AC_ARG_ENABLE( png,
+    [  --disable-png           disable PNG])
+
+
+if test "x$enable_png" == "xno"; then
+   AC_MSG_RESULT([disabling PNG support])
+   AM_CONDITIONAL([ENABLE_PNG], [false])
+else
+   AC_CHECK_HEADERS( png.h,
+     AC_SEARCH_LIBS(
+       png_create_write_struct,
+       png,
+       PNG=true,
+       PNG=false )
+     )
+     if test "x${PNG}" = xtrue; then
+	AM_CONDITIONAL([ENABLE_PNG], [true])
+	AC_DEFINE(HAVE_PNG)
+     else
+	AM_CONDITIONAL([ENABLE_PNG], [false])
+     fi
+fi
+
+
+
 #************************************************************
 # Check for libdl for dynamic library loading
+#************************************************************
 
 AC_ARG_ENABLE(modules,
     [  --enable-modules        enable dynamic module loading] )
@@ -179,6 +211,7 @@ AC_SUBST(DL_LIBS)
 
 #************************************************************
 # Check for JPEG2000 support from either Kakadu or OpenJPEG
+#************************************************************
 
 JPEG2000_CODEC=false
 
@@ -317,28 +350,6 @@ else
 fi
 
 
-#************************************************************
-#     Check for PNG support
-#************************************************************
-
-#AC_CHECK_HEADERS( png.h,
-#	AC_SEARCH_LIBS(
-#		png_create_read_struct,
-#		png,
-#		PNG=true,
-#		PNG=false )
-#)
-
-# Disable PNG for now
-#PNG=false
-
-#if test "x${PNG}" = xtrue; then
-#	AM_CONDITIONAL([ENABLE_PNG], [true])
-#	AC_DEFINE(HAVE_PNG)
-#else
-#	AM_CONDITIONAL([ENABLE_PNG], [false])
-#fi
-
 
 
 #************************************************************
@@ -411,8 +422,5 @@ Options Enabled:
  JPEG2000   :  ${JPEG2000_CODEC}
  OpenMP     :  ${OPENMP}
  Loggers    :  ${LOGGING}
+ PNG Output :  ${PNG}
 ])
-
-# PNG Output:			${PNG}
-# LitleCMS:			${LCMS}
-#])

@@ -1,7 +1,7 @@
 /*
     IIP Environment Variable Class
 
-    Copyright (C) 2006-2020 Ruven Pillay.
+    Copyright (C) 2006-2021 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -29,6 +29,7 @@
 #define MAX_IMAGE_CACHE_SIZE 10.0
 #define FILENAME_PATTERN "_pyr_"
 #define JPEG_QUALITY 75
+#define PNG_QUALITY 1
 #define MAX_CVT 5000
 #define MAX_LAYERS 0
 #define FILESYSTEM_PREFIX ""
@@ -110,6 +111,20 @@ class Environment {
     else jpeg_quality = JPEG_QUALITY;
 
     return jpeg_quality;
+  }
+
+
+  static int getPNGQuality(){
+    char* envpara = getenv( "PNG_QUALITY" );
+    int quality;
+    if( envpara ){
+      quality = atoi( envpara );
+      if( quality > 9 ) quality = 9;
+      if( quality < 0 ) quality = 0;
+    }
+    else quality = PNG_QUALITY;
+
+    return quality;
   }
 
 

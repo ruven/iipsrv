@@ -50,6 +50,9 @@ void CVT::send( Session* session ){
   // Set up our output format handler
   Compressor *compressor = NULL;
   if( session->view->output_format == JPEG ) compressor = session->jpeg;
+#ifdef HAVE_PNG
+  else if( session->view->output_format == PNG ) compressor = session->png;
+#endif
   else return;
 
 
@@ -379,8 +382,10 @@ void CVT::send( Session* session ){
   }
 
 
-  // Reduce to 1 or 3 bands if we have an alpha channel or a multi-band image
-  if( (complete_image.channels==2) || (complete_image.channels>3 ) ){
+  // Reduce to 1 or 3 bands if we have an alpha channel or a multi-band image and have requested a JPEG tile
+  // For PNG, strip extra bands if we have more than 4 present
+  if( ( (session->view->output_format == JPEG) && (complete_image.channels == 2 || complete_image.channels > 3) ) ||
+      ( (session->view->output_format == PNG) && (complete_image.channels > 4) ) ){
 
     int output_channels = (complete_image.channels==2)? 1 : 3;
     if( session->loglevel >= 5 ) function_timer.start();
@@ -477,12 +482,14 @@ void CVT::send( Session* session ){
 
 
   // Set the physical output resolution for this particular view and zoom level
-  float dpi_x = (*session->image)->dpi_x * (float) im_width / (float) (*session->image)->getImageWidth();
-  float dpi_y = (*session->image)->dpi_y * (float) im_height / (float) (*session->image)->getImageHeight();
-  compressor->setResolution( dpi_x, dpi_y, (*session->image)->dpi_units );
-  if( session->loglevel >= 5 ){
-    *(session->logfile) << "CVT :: Setting physical resolution of this view to " <<  dpi_x << " x " << dpi_y
-			<< ( ((*session->image)->dpi_units==1) ? " pixels/inch" : " pixels/cm" ) << endl;
+  if( (*session->image)->dpi_x > 0 && (*session->image)->dpi_y > 0 ){
+    float dpi_x = (*session->image)->dpi_x * (float) im_width / (float) (*session->image)->getImageWidth();
+    float dpi_y = (*session->image)->dpi_y * (float) im_height / (float) (*session->image)->getImageHeight();
+    compressor->setResolution( dpi_x, dpi_y, (*session->image)->dpi_units );
+    if( session->loglevel >= 5 ){
+      *(session->logfile) << "CVT :: Setting physical resolution of this view to " <<  dpi_x << " x " << dpi_y
+			  << ( ((*session->image)->dpi_units==1) ? " pixels/inch" : " pixels/cm" ) << endl;
+    }
   }
 
   // Set ICC profile if of a reasonable size

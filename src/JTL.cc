@@ -1,5 +1,5 @@
 /*
-    IIP JTL Command Handler Class Member Function
+    IIP JTL Command Handler Class Member Function: Export a single tile
 
     Copyright (C) 2006-2021 Ruven Pillay.
 
@@ -69,7 +69,17 @@ void JTL::send( Session* session, int resolution, int tile ){
   }
 
 
-  TileManager tilemanager( session->tileCache, *session->image, session->watermark, session->jpeg, session->logfile, session->loglevel );
+  // Determine which output encoding to use
+  CompressionType ct = session->view->output_format;
+  Compressor *compressor;
+  if( session->view->output_format == JPEG ) compressor = session->jpeg;
+#ifdef HAVE_PNG
+  else if( session->view->output_format == PNG ) compressor = session->png;
+#endif
+  else compressor = session->jpeg;
+
+
+  TileManager tilemanager( session->tileCache, *session->image, session->watermark, compressor, session->logfile, session->loglevel );
 
 
   // First calculate histogram if we have asked for either binarization,
@@ -99,8 +109,6 @@ void JTL::send( Session* session, int resolution, int tile ){
 
 
 
-  CompressionType ct;
-
   // Request uncompressed tile if raw pixel data is required for processing
   if( (*session->image)->getNumBitsPerPixel() > 8 || (*session->image)->getColourSpace() == CIELAB
       || (*session->image)->getNumChannels() == 2 || (*session->image)->getNumChannels() > 3
@@ -109,7 +117,6 @@ void JTL::send( Session* session, int resolution, int tile ){
       || session->view->floatProcessing() || session->view->equalization
       || session->view->getRotation() != 0.0 || session->view->flip != 0
       ) ct = UNCOMPRESSED;
-  else ct = JPEG;
 
 
   // Set the physical output resolution for this particular view and zoom level
@@ -118,7 +125,7 @@ void JTL::send( Session* session, int resolution, int tile ){
   unsigned int im_height = (*session->image)->image_heights[num_res-resolution-1];
   float dpi_x = (*session->image)->dpi_x * (float) im_width / (float) (*session->image)->getImageWidth();
   float dpi_y = (*session->image)->dpi_y * (float) im_height / (float) (*session->image)->getImageHeight();
-  session->jpeg->setResolution( dpi_x, dpi_y, (*session->image)->dpi_units );
+  compressor->setResolution( dpi_x, dpi_y, (*session->image)->dpi_units );
 
   if( session->loglevel >= 5 ){
     *(session->logfile) << "JTL :: Setting physical resolution of tile to " <<  dpi_x << " x " << dpi_y
@@ -131,7 +138,7 @@ void JTL::send( Session* session, int resolution, int tile ){
       *(session->logfile) << "JTL :: Embedding ICC profile with size "
 			  << (*session->image)->getMetadata("icc").size() << " bytes" << endl;
     }
-    session->jpeg->setICCProfile( (*session->image)->getMetadata("icc") );
+    compressor->setICCProfile( (*session->image)->getMetadata("icc") );
   }
 
 
@@ -295,8 +302,11 @@ void JTL::send( Session* session, int resolution, int tile ){
   }
 
 
-  // Reduce to 1 or 3 bands if we have an alpha channel or a multi-band image
-  if( rawtile.channels == 2 || rawtile.channels > 3 ){
+  // Reduce to 1 or 3 bands if we have an alpha channel or a multi-band image and have requested a JPEG tile
+  // For PNG, strip extra bands if we have more than 4 present
+  if( ( (session->view->output_format == JPEG) && (rawtile.channels == 2 || rawtile.channels > 3) ) ||
+      ( (session->view->output_format == PNG) && (rawtile.channels > 4) ) ){
+
     unsigned int bands = (rawtile.channels==2) ? 1 : 3;
     if( session->loglevel >= 4 ){
       *(session->logfile) << "JTL :: Flattening channels to " << bands;
@@ -380,13 +390,13 @@ void JTL::send( Session* session, int resolution, int tile ){
   }
 
 
-  // Compress to JPEG
+  // Compress to requested output format
   if( rawtile.compressionType == UNCOMPRESSED ){
     if( session->loglevel >= 4 ){
-      *(session->logfile) << "JTL :: Compressing UNCOMPRESSED to JPEG";
+      *(session->logfile) << "JTL :: Encoding UNCOMPRESSED tile";
       function_timer.start();
     }
-    len = session->jpeg->Compress( rawtile );
+    len = compressor->Compress( rawtile );
     if( session->loglevel >= 4 ){
       *(session->logfile) << " in " << function_timer.getTime() << " microseconds to "
                           << rawtile.dataLength << " bytes" << endl;
@@ -399,7 +409,7 @@ void JTL::send( Session* session, int resolution, int tile ){
 
   // Send HTTP header
   stringstream header;
-  header << session->response->createHTTPHeader( session->jpeg->getMimeType(), (*session->image)->getTimestamp(), len );
+  header << session->response->createHTTPHeader( compressor->getMimeType(), (*session->image)->getTimestamp(), len );
   if( session->out->putStr( (const char*) header.str().c_str(), header.tellp() ) == -1 ){
     if( session->loglevel >= 1 ){
       *(session->logfile) << "JTL :: Error writing HTTP header" << endl;

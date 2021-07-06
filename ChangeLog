@@ -1,3 +1,8 @@
+06/07/2021:
+	- Added support for PNG output. Functionality available through the CVT command (CVT=png) as well as through IIIF API.
+	  PNG encoder supports alpha channels, 8 or 16 bit output, ICC profiles and XMP metadata.
+
+
 02/07/2021:
 	- Small modification to Compressor class and removal of duplicate quality parameter from JPEGCompressor class
 

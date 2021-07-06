@@ -1,7 +1,7 @@
 /*
     IIP FCGI server module - Main loop.
 
-    Copyright (C) 2000-2020 Ruven Pillay
+    Copyright (C) 2000-2021 Ruven Pillay
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -32,7 +32,6 @@
 #include <algorithm>
 
 #include "TPTImage.h"
-#include "JPEGCompressor.h"
 #include "Tokenizer.h"
 #include "IIPResponse.h"
 #include "View.h"
@@ -275,6 +274,10 @@ int main( int argc, char *argv[] )
   int jpeg_quality = Environment::getJPEGQuality();
 
 
+  // Get our default PNG compression level
+  int png_quality = Environment::getPNGQuality();
+
+
   // Get our max CVT size
   int max_CVT = Environment::getMaxCVT();
 
@@ -342,10 +345,13 @@ int main( int argc, char *argv[] )
     logfile << "Setting filesystem prefix to '" << filesystem_prefix << "'" << endl;
     logfile << "Setting filesystem suffix to '" << filesystem_suffix << "'" << endl;
     logfile << "Setting default JPEG quality to " << jpeg_quality << endl;
+#ifdef HAVE_PNG
+    logfile << "Setting default PNG compression level to " << png_quality << endl;
+#endif
     logfile << "Setting maximum CVT size to " << max_CVT << endl;
     logfile << "Setting HTTP Cache-Control header to '" << cache_control << "'" << endl;
     logfile << "Setting 3D file sequence name pattern to '" << filename_pattern << "'" << endl;
-    logfile << "Setting IIIF version to " << iiif_version << endl;
+    logfile << "Setting default IIIF Image API version to " << iiif_version << endl;
     if( !cors.empty() ) logfile << "Setting Cross Origin Resource Sharing to '" << cors << "'" << endl;
     if( !base_url.empty() ) logfile << "Setting base URL to '" << base_url << "'" << endl;
     if( max_layers != 0 ){
@@ -557,6 +563,9 @@ int main( int argc, char *argv[] )
     //  so that we can close the image on exceptions
     IIPImage *image = NULL;
     JPEGCompressor jpeg( jpeg_quality );
+#ifdef HAVE_PNG
+    PNGCompressor png( png_quality );
+#endif
 
 
     // View object for use with the CVT command etc
@@ -582,6 +591,9 @@ int main( int argc, char *argv[] )
       session.response = &response;
       session.view = &view;
       session.jpeg = &jpeg;
+#ifdef HAVE_PNG
+      session.png = &png;
+#endif
       session.loglevel = loglevel;
       session.logfile = &logfile;
       session.imageCache = &imageCache;
