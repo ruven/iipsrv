@@ -1,3 +1,8 @@
+03/09/2021:
+	- Handle the more stringent ICC profile checking introduced in libpng 1.6. Fix to prevent incorrect sRGB
+	  profiles failing with an error.
+
+
 06/07/2021:
 	- Added support for PNG output. Functionality available through the CVT command (CVT=png) as well as through IIIF API.
 	  PNG encoder supports alpha channels, 8 or 16 bit output, ICC profiles and XMP metadata.

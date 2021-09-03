@@ -300,7 +300,6 @@ unsigned int PNGCompressor::Compress( RawTile& rawtile )
   png_set_compression_level( dest.png_ptr, Q );
   png_set_filter( dest.png_ptr, 0, filterType );
 
-
   // Set physical resolution - convert from inches or cm to meters
   png_uint_32 res_x = (dpi_units==2) ? dpi_x*10 : ( (dpi_units==1) ? dpi_x*25.4 : dpi_x );
   png_uint_32 res_y = (dpi_units==2) ? dpi_y*10 : ( (dpi_units==1) ? dpi_y*25.4 : dpi_y );
@@ -403,6 +402,11 @@ void PNGCompressor::writeICCProfile(){
   png_charp icc_profile_buf_png = (png_charp) icc_data_ptr;
 #else
   png_const_bytep icc_profile_buf_png = (png_const_bytep) icc_data_ptr;
+#endif
+
+  // Avoid "iCCP: known incorrect sRGB profile" errors
+#if defined(PNG_SKIP_sRGB_CHECK_PROFILE) && defined(PNG_SET_OPTION_SUPPORTED)
+  png_set_option( dest.png_ptr, PNG_SKIP_sRGB_CHECK_PROFILE, PNG_OPTION_ON );
 #endif
 
   // Write out ICC profile
