@@ -2,7 +2,7 @@
 
 /*  IIP Server: Tiled Pyramidal TIFF handler
 
-    Copyright (C) 2000-2020 Ruven Pillay.
+    Copyright (C) 2000-2021 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -96,7 +96,10 @@ void TPTImage::loadImageInfo( int seq, int ang )
 
   // Check for the no. of resolutions in the pyramidal image
   current_dir = TIFFCurrentDirectory( tiff );
-  TIFFSetDirectory( tiff, 0 );
+
+  if( !TIFFSetDirectory( tiff, 0 ) ){
+    throw file_error( "TPTImage :: TIFFSetDirectory() failed" );
+  }
 
   // Store the list of image dimensions available
   image_widths.push_back( w );
@@ -108,9 +111,11 @@ void TPTImage::loadImageInfo( int seq, int ang )
     image_widths.push_back( w );
     image_heights.push_back( h );
   }
-  // Reset the TIFF directory
-  TIFFSetDirectory( tiff, current_dir );
 
+  // Reset the TIFF directory
+  if( !TIFFSetDirectory( tiff, current_dir ) ){
+    throw file_error( "TPTImage :: TIFFSetDirectory() failed" );
+  }
   numResolutions = count+1;
 
   // Handle various colour spaces

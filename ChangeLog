@@ -1,3 +1,7 @@
+13/09/2021:
+	- Added extra error-checking to TIFFSetDirectory()
+
+
 03/09/2021:
 	- Handle the more stringent ICC profile checking introduced in libpng 1.6. Fix to prevent incorrect sRGB
 	  profiles failing with an error.
