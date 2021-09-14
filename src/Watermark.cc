@@ -7,7 +7,7 @@
     Culture of the Czech Republic.
 
 
-    Copyright (C) 2010-2013 Ruven Pillay.
+    Copyright (C) 2010-2021 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -45,7 +45,7 @@ void Watermark::init()
       TIFFGetField( tiff_watermark, TIFFTAG_IMAGELENGTH, &_height );
       TIFFGetField( tiff_watermark, TIFFTAG_BITSPERSAMPLE, &_bpc );
 
-      uint32 *buffer = new uint32[_width*_height];
+      uint32_t *buffer = new uint32_t[_width*_height];
 
       if( TIFFReadRGBAImageOriented( tiff_watermark, _width, _height, buffer, ORIENTATION_TOPLEFT ) == 0 ){
 	delete[] buffer;
@@ -61,8 +61,8 @@ void Watermark::init()
       memset( _watermark, 0, _width*_height*_channels );
 
       // Load the data into our buffers
-      for( uint32 i=0; i<_width*_height; i++ ){
-	uint32 rgba = buffer[i];
+      for( uint32_t i=0; i<_width*_height; i++ ){
+	uint32_t rgba = buffer[i];
 	unsigned char r,g,b;
 	float a;
 	// Extract the RGBA values

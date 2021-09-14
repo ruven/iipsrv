@@ -63,7 +63,7 @@ void TPTImage::loadImageInfo( int seq, int ang )
 {
   tdir_t current_dir;
   int count;
-  uint16 colour, samplesperpixel, bitspersample, sampleformat;
+  uint16_t colour, samplesperpixel, bitspersample, sampleformat;
   double sminvaluearr[4] = {0.0}, smaxvaluearr[4] = {0.0};
   double *sminvalue = NULL, *smaxvalue = NULL;
   unsigned int w, h;
@@ -202,9 +202,9 @@ void TPTImage::closeImage()
 
 RawTile TPTImage::getTile( int seq, int ang, unsigned int res, int layers, unsigned int tile )
 {
-  uint32 im_width, im_height, tw, th, ntlx, ntly;
-  uint32 rem_x, rem_y;
-  uint16 colour;
+  uint32_t im_width, im_height, tw, th, ntlx, ntly;
+  uint32_t rem_x, rem_y;
+  uint16_t colour;
   string filename;
 
 
