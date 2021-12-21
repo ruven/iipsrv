@@ -481,6 +481,22 @@ void CVT::send( Session* session ){
   }
 
 
+  // Apply repeating watermark if that's been specified
+  Watermark* watermark = session->watermark;
+  if( watermark && watermark->isSet() && (watermark->getRepeat() > 0) && (watermark->getMinCVT() > 0)){
+  
+    if( (complete_image.width >= watermark->getMinCVT()) && (complete_image.height >= watermark->getMinCVT())){
+  
+      if( session->loglevel >= 2 ) function_timer.start();
+
+      watermark->apply( complete_image.data, watermark->getRepeat(), complete_image.width, complete_image.height, complete_image.channels, complete_image.bpc );
+
+      if( session->loglevel >= 2 ) *(session->logfile) << "CVT :: Repeating watermark applied: " << function_timer.getTime()
+         << " microseconds" << endl;
+    }
+  }
+
+
   // Set the physical output resolution for this particular view and zoom level
   if( (*session->image)->dpi_x > 0 && (*session->image)->dpi_y > 0 ){
     float dpi_x = (*session->image)->dpi_x * (float) im_width / (float) (*session->image)->getImageWidth();

@@ -47,7 +47,7 @@ RawTile TileManager::getNewTile( int resolution, int tile, int xangle, int yangl
     unsigned int tw = ttt.padded? image->getTileWidth() : ttt.width;
     unsigned int th = ttt.padded? image->getTileHeight() : ttt.height;
 
-    watermark->apply( ttt.data, tw, th, ttt.channels, ttt.bpc );
+    watermark->apply( ttt.data, 0, tw, th, ttt.channels, ttt.bpc );
     if( loglevel >= 4 ) *logfile << "TileManager :: Watermark applied: " << insert_timer.getTime()
 				 << " microseconds" << endl;
   }

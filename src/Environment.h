@@ -37,6 +37,8 @@
 #define WATERMARK ""
 #define WATERMARK_PROBABILITY 1.0
 #define WATERMARK_OPACITY 1.0
+#define WATERMARK_MIN_CVT 0
+#define WATERMARK_REPEAT 0
 #define LIBMEMCACHED_SERVERS "localhost"
 #define LIBMEMCACHED_TIMEOUT 86400  // 24 hours
 #define INTERPOLATION 1  // 1: Bilinear
@@ -215,6 +217,30 @@ class Environment {
     }
 
     return watermark_opacity;
+  }
+
+
+  static int getWatermarkRepeat(){
+    unsigned int watermark_repeat = WATERMARK_REPEAT;
+    char* envpara = getenv( "WATERMARK_REPEAT" );
+
+    if( envpara ){
+      watermark_repeat = atoi( envpara );
+    }
+
+    return watermark_repeat;
+  }
+
+
+  static int getWatermarkMinCVT(){
+    unsigned int watermark_min_cvt = WATERMARK_MIN_CVT;
+    char* envpara = getenv( "WATERMARK_MIN_CVT" );
+
+    if( envpara ){
+      watermark_min_cvt = atoi( envpara );
+    }
+
+    return watermark_min_cvt;
   }
 
 

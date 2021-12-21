@@ -87,60 +87,79 @@ void Watermark::init()
 
 
 // Apply the watermark to a buffer of data
-void Watermark::apply( void* data, unsigned int width, unsigned int height, unsigned int channels, unsigned int bpc )
+void Watermark::apply( void* data, unsigned int repeatStep, unsigned int width, unsigned int height, unsigned int channels, unsigned int bpc )
 {
 
   // Sanity check
   if( !_isSet || (_probability==0) || (_opacity==0) ) return;
 
-  // Get random number as a float between 0 and 1
-  float random = (float) rand() / RAND_MAX;
- 
-  // Only apply if our random number is less than our given probability
-  if( random < _probability ){
+  float random;
+  
+  unsigned int bigxoffset = 0;
+  unsigned int bigyoffset = 0;
+  unsigned int availablespace;
 
-    // Vary watermark position randomly within the tile depending on available space
-    unsigned int xoffset = 0;
-    if( width > _width ){
+  // crude way to ensure only one loop if repeatStep is 0
+  unsigned int repeatIncrement = (repeatStep == 0) ? std::max(width, height) : repeatStep;
+
+  for (bigxoffset = 0; bigxoffset < (width - _width); bigxoffset += repeatIncrement) {
+    for (bigyoffset = 0; bigyoffset < (height - _height); bigyoffset += repeatIncrement) {
+
+      // Get random number as a float between 0 and 1
       random = (float) rand() / RAND_MAX;
-      xoffset = random * (width - _width);
-    }
 
-    unsigned int yoffset = 0;
-    if( height > _height ){
-      random = (float) rand() / RAND_MAX;
-      yoffset = random * (height - _height);
-    }
-
-    // Limit the area of the watermark to the size of the tile
-    unsigned int xlimit = _width;
-    unsigned int ylimit = _height;
-    if( _width > width ) xlimit = width;
-    if( _height > height ) ylimit = height;
-
-    for( unsigned int j=0; j<ylimit; j++ ){
-      for( unsigned int i=0; i<xlimit; i++ ){
-	for( unsigned int k=0; k<channels; k++ ){
-
-	  unsigned int id = (j+yoffset)*width*channels + (i+xoffset)*channels + k;
-
-	  // For 16bit images we need to multiply up as our watermark data is always 8bit
-	  // We do our maths in unsigned int to allow us to clip correctly
-	  if( bpc == 16 ){
-	    unsigned short* d = (unsigned short*) data;
-	    unsigned int t = (unsigned int)( d[id] + _watermark[j*_width*_channels + i*_channels + k]*256 );
-	    if( t > 65535 ) t = 65535;
-	    d[id] = (unsigned short) t;
-	  }
-	  // TIFFReadRGBAImage always scales to 8bit, so never any need for downscaling, but clip to 255
-	  // We do our maths in unsigned short to allow us to clip correctly after
-	  else{
-	    unsigned char* d = (unsigned char*) data;
- 	    unsigned short t = (unsigned short)( d[id] + _watermark[j*_width*_channels + i*_channels + k] );
-	    if( t > 255 ) t = 255;
- 	    d[id] = (unsigned char) t;
-	  }
-	}
+      // Only apply if our random number is less than our given probability
+      if( random < _probability ){
+    
+        // Vary watermark position randomly within the tile depending on available space
+        unsigned int xoffset = bigxoffset;
+        availablespace = width - xoffset;
+        if (repeatStep > 0) availablespace = std::min(availablespace, repeatStep);
+        if( availablespace > _width ){
+          random = (float) rand() / RAND_MAX;
+          xoffset += random * (availablespace - _width);
+        }
+    
+        unsigned int yoffset = bigyoffset;
+        availablespace = height - yoffset;
+        if (repeatStep > 0) availablespace = std::min(availablespace, repeatStep);
+        if( availablespace > _height ){
+          random = (float) rand() / RAND_MAX;
+          yoffset += random * (availablespace - _height);
+        }
+    
+         // Limit the area of the watermark to the size of the tile
+        unsigned int xlimit = _width;
+        unsigned int ylimit = _height;
+        if( _width > width ) xlimit = width;
+        if( _height > height ) ylimit = height;
+    
+        for( unsigned int j=0; j<ylimit; j++ ){
+          for( unsigned int i=0; i<xlimit; i++ ){
+            for( unsigned int k=0; k<channels; k++ ){
+    
+              unsigned int id = (j+yoffset)*width*channels + (i+xoffset)*channels + k;
+    
+              // For 16bit images we need to multiply up as our watermark data is always 8bit
+              // We do our maths in unsigned int to allow us to clip correctly
+              if( bpc == 16 ){
+                unsigned short* d = (unsigned short*) data;
+                unsigned int t = (unsigned int)( d[id] + _watermark[j*_width*_channels + i*_channels + k]*256 );
+                if( t > 65535 ) t = 65535;
+                d[id] = (unsigned short) t;
+              }
+    
+              // TIFFReadRGBAImage always scales to 8bit, so never any need for downscaling, but clip to 255
+              // We do our maths in unsigned short to allow us to clip correctly after
+              else{
+                unsigned char* d = (unsigned char*) data;
+                unsigned short t = (unsigned short)( d[id] + _watermark[j*_width*_channels + i*_channels + k] );
+                if( t > 255 ) t = 255;
+                d[id] = (unsigned char) t;
+              }
+            }
+          }
+        }
       }
     }
   }

@@ -198,6 +198,15 @@ applied to it. 0 means never, 1 means always.
 
 WATERMARK_OPACITY: The opacity (between 0 and 1) applied to the watermark image.
 
+WATERMARK_MIN_CVT: Minimum dimensions at which to apply watermarking to CVT/IIIF 
+images. 0 means don't apply to these images (default). So e.g. 300 means only apply 
+to images which are at least 300 pixels wide and at least 300 pixels high.
+
+WATERMARK_REPEAT: If watermarking is applied to CVT/IIIF images, they are considered 
+as a series of tiles, and WATERMARK_PROBABILITY is used to decide whether to apply a 
+watermark to each tile. WATERMARK_REPEAT defines the width and height of these tiles; 
+if it is 0 (default) then no watermark will be applied (default).
+
 MEMCACHED_SERVERS: A comma-delimitted list of memcached servers with optional
 port numbers. For example: localhost,192.168.0.1:8888,192.168.0.2.
 

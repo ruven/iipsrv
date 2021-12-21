@@ -297,7 +297,9 @@ int main( int argc, char *argv[] )
   // Set up our watermark object
   Watermark watermark( Environment::getWatermark(),
 		       Environment::getWatermarkOpacity(),
-		       Environment::getWatermarkProbability() );
+		       Environment::getWatermarkProbability(),
+		       Environment::getWatermarkMinCVT(),
+		       Environment::getWatermarkRepeat() );
 
 
   // Get the CORS setting
@@ -421,7 +423,10 @@ int main( int argc, char *argv[] )
       if( watermark.isSet() ){
 	logfile << "Loaded watermark image '" << watermark.getImage()
 		<< "': setting probability to " << watermark.getProbability()
-		<< " and opacity to " << watermark.getOpacity() << endl;
+		<< " and opacity to " << watermark.getOpacity()
+		<< "; CVT threshold to " << watermark.getMinCVT()
+		<< " and repeat to " << watermark.getRepeat()
+		<< endl;
       }
       else{
 	logfile << "Unable to load watermark image '" << watermark.getImage() << "'" << endl;
