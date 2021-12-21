@@ -130,7 +130,7 @@ void Watermark::apply( void* data, unsigned int repeatStep, unsigned int width, 
       yoffset += random * (availablespace - _height);
     }
 
-     // Limit the area of the watermark to the size of the tile
+    // Limit the area of the watermark to the size of the tile
     unsigned int xlimit = _width;
     unsigned int ylimit = _height;
     if( _width > width ) xlimit = width;
@@ -138,31 +138,31 @@ void Watermark::apply( void* data, unsigned int repeatStep, unsigned int width, 
 
     for( unsigned int j=0; j<ylimit; j++ ){
       for( unsigned int i=0; i<xlimit; i++ ){
-        for( unsigned int k=0; k<channels; k++ ){
+	for( unsigned int k=0; k<channels; k++ ){
 
-          unsigned int id = (j+yoffset)*width*channels + (i+xoffset)*channels + k;
+	  unsigned int id = (j+yoffset)*width*channels + (i+xoffset)*channels + k;
 
-          // For 16bit images we need to multiply up as our watermark data is always 8bit
-          // We do our maths in unsigned int to allow us to clip correctly
-          if( bpc == 16 ){
-            unsigned short* d = (unsigned short*) data;
-            unsigned int t = (unsigned int)( d[id] + _watermark[j*_width*_channels + i*_channels + k]*256 );
-            if( t > 65535 ) t = 65535;
-            d[id] = (unsigned short) t;
-          }
-
-          // TIFFReadRGBAImage always scales to 8bit, so never any need for downscaling, but clip to 255
-          // We do our maths in unsigned short to allow us to clip correctly after
-          else{
-            unsigned char* d = (unsigned char*) data;
-            unsigned short t = (unsigned short)( d[id] + _watermark[j*_width*_channels + i*_channels + k] );
-            if( t > 255 ) t = 255;
-            d[id] = (unsigned char) t;
-          }
-        }
+	  // For 16bit images we need to multiply up as our watermark data is always 8bit
+	  // We do our maths in unsigned int to allow us to clip correctly
+	  if( bpc == 16 ){
+	    unsigned short* d = (unsigned short*) data;
+	    unsigned int t = (unsigned int)( d[id] + _watermark[j*_width*_channels + i*_channels + k]*256 );
+	    if( t > 65535 ) t = 65535;
+	    d[id] = (unsigned short) t;
+	  }
+	  // TIFFReadRGBAImage always scales to 8bit, so never any need for downscaling, but clip to 255
+	  // We do our maths in unsigned short to allow us to clip correctly after
+	  else{
+	    unsigned char* d = (unsigned char*) data;
+ 	    unsigned short t = (unsigned short)( d[id] + _watermark[j*_width*_channels + i*_channels + k] );
+	    if( t > 255 ) t = 255;
+ 	    d[id] = (unsigned char) t;
+	  }
+	}
       }
     }
   }
+
     }
   }
 
