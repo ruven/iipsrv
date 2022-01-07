@@ -1,6 +1,6 @@
 /*  IIPImage Server: OpenJPEG JPEG2000 handler
 
-    Copyright (C) 2019 Ruven Pillay.
+    Copyright (C) 2019-2022 Ruven Pillay.
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -22,7 +22,13 @@
 #include <sstream>
 #include <fstream>
 #include <cmath>
+#ifdef DEBUG
 #include "Timer.h"
+#endif
+
+// Detect High Throughput JPEG2000
+#define J2K_CCP_CBLKSTY_HT 0x40
+#define J2K_CCP_CBLKSTY_HTMIXED 0x80
 
 
 using namespace std;
@@ -144,6 +150,16 @@ void OpenJPEGImage::loadImageInfo( int seq, int ang )
   opj_codestream_info_v2_t* cst_info = opj_get_cstr_info( _codec );
   numResolutions = cst_info->m_default_tile_info.tccp_info[0].numresolutions;
   quality_layers = cst_info->m_default_tile_info.numlayers;
+
+
+  // High Throughput JPEG2000
+#if defined(DEBUG) && defined(J2K_CCP_CBLKSTY_HT)
+  if( (cst_info->m_default_tile_info.tccp_info[0].cblksty & J2K_CCP_CBLKSTY_HT) != 0 ||
+      (cst_info->m_default_tile_info.tccp_info[0].cblksty & J2K_CCP_CBLKSTY_HTMIXED) != 0 ){
+    logfile << "OpenJPEG :: HTJ2K codestream" << endl;
+  }
+#endif
+
 
   // Close our info structure
   opj_destroy_cstr_info( &cst_info );
