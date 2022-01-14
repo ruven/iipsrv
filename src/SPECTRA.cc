@@ -1,7 +1,7 @@
 /*
     IIP SPECTRA Command Handler Class Member Function
 
-    Copyright (C) 2009-2021 Ruven Pillay.
+    Copyright (C) 2009-2022 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -36,7 +36,10 @@ void SPECTRA::run( Session* session, const std::string& argument ){
 
   if( session->loglevel >= 3 ) (*session->logfile) << "SPECTRA handler reached" << endl;
 
-  int resolution, tile, x, y;
+
+  // Make sure we have set our image
+  this->session = session;
+  checkImage();
 
 
   // Time this command
@@ -46,19 +49,19 @@ void SPECTRA::run( Session* session, const std::string& argument ){
   // Parse the argument list
   string arg = argument;
   int delimitter = arg.find( "," );
-  resolution = atoi( arg.substr(0,delimitter).c_str() );
+  int resolution = atoi( arg.substr(0,delimitter).c_str() );
 
   arg = arg.substr( delimitter + 1, arg.length() );
   delimitter = arg.find( "," );
-  tile = atoi( arg.substr(0,delimitter).c_str() );
+  int tile = atoi( arg.substr(0,delimitter).c_str() );
 
   arg = arg.substr( delimitter + 1, arg.length() );
   delimitter = arg.find( "," );
-  x = atoi( arg.substr(0,delimitter).c_str() );
+  int x = atoi( arg.substr(0,delimitter).c_str() );
 
   arg = arg.substr( delimitter + 1, arg.length() );
   delimitter = arg.find( "," );
-  y = atoi( arg.substr(0,arg.length()).c_str() );
+  int y = atoi( arg.substr(0,arg.length()).c_str() );
 
   if( session->loglevel >= 5 ){ 
     (*session->logfile) << "SPECTRA :: resolution: " << resolution

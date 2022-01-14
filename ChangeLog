@@ -1,3 +1,8 @@
+15/01/2022:
+	- Added verification that image has been set in SPECTRA.cc and check on the validity of the requested tile
+	  resolution in JTL.cc. Fixes a couple of the crash conditions reported in https://github.com/ruven/iipsrv/issues/223
+
+
 14/01/2022:
 	- Detection of HTJ2K also added for KakaduImage.cc for logging purposes (DEBUG needs to be enabled at compile time)
 

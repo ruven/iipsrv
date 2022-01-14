@@ -1,7 +1,7 @@
 /*
     IIP JTL Command Handler Class Member Function: Export a single tile
 
-    Copyright (C) 2006-2021 Ruven Pillay.
+    Copyright (C) 2006-2022 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -43,6 +43,10 @@ void JTL::send( Session* session, int resolution, int tile ){
   if( session->loglevel >= 2 ) command_timer.start();
 
 
+  // Need to know the number of resolutions
+  int num_res = (*session->image)->getNumResolutions();
+
+
   // If we have requested a rotation, remap the tile index to rotated coordinates
   if( (int)((session->view)->getRotation()) % 360 == 90 ){
 
@@ -51,7 +55,6 @@ void JTL::send( Session* session, int resolution, int tile ){
 
   }
   else if( (int)((session->view)->getRotation()) % 360 == 180 ){
-    int num_res = (*session->image)->getNumResolutions();
     unsigned int im_width = (*session->image)->image_widths[num_res-resolution-1];
     unsigned int im_height = (*session->image)->image_heights[num_res-resolution-1];
     unsigned int tw = (*session->image)->getTileWidth();
@@ -62,7 +65,7 @@ void JTL::send( Session* session, int resolution, int tile ){
 
 
   // Sanity check
-  if( (resolution<0) || (tile<0) ){
+  if( (resolution<0) || (tile<0) || (resolution>=num_res) ){
     ostringstream error;
     error << "JTL :: Invalid resolution/tile number: " << resolution << "," << tile;
     throw error.str();
@@ -120,17 +123,19 @@ void JTL::send( Session* session, int resolution, int tile ){
 
 
   // Set the physical output resolution for this particular view and zoom level
-  int num_res = (*session->image)->getNumResolutions();
-  unsigned int im_width = (*session->image)->image_widths[num_res-resolution-1];
-  unsigned int im_height = (*session->image)->image_heights[num_res-resolution-1];
-  float dpi_x = (*session->image)->dpi_x * (float) im_width / (float) (*session->image)->getImageWidth();
-  float dpi_y = (*session->image)->dpi_y * (float) im_height / (float) (*session->image)->getImageHeight();
-  compressor->setResolution( dpi_x, dpi_y, (*session->image)->dpi_units );
+  if( (*session->image)->dpi_x > 0 && (*session->image)->dpi_y > 0 ){
+    unsigned int im_width = (*session->image)->image_widths[num_res-resolution-1];
+    unsigned int im_height = (*session->image)->image_heights[num_res-resolution-1];
+    float dpi_x = (*session->image)->dpi_x * ( (float)im_width / (float)(*session->image)->getImageWidth() );
+    float dpi_y = (*session->image)->dpi_y * ( (float)im_height / (float)(*session->image)->getImageHeight() );
+    compressor->setResolution( dpi_x, dpi_y, (*session->image)->dpi_units );
 
-  if( session->loglevel >= 5 ){
-    *(session->logfile) << "JTL :: Setting physical resolution of tile to " <<  dpi_x << " x " << dpi_y
-                        << ( ((*session->image)->dpi_units==1) ? " pixels/inch" : " pixels/cm" ) << endl;
+    if( session->loglevel >= 5 ){
+      *(session->logfile) << "JTL :: Setting physical resolution of tile to " <<  dpi_x << " x " << dpi_y
+			  << ( ((*session->image)->dpi_units==1) ? " pixels/inch" : " pixels/cm" ) << endl;
+    }
   }
+
 
   // Embed ICC profile
   if( session->view->embedICC() && ((*session->image)->getMetadata("icc").size()>0) ){
