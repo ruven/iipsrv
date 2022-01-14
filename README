@@ -216,7 +216,7 @@ BASE_URL: Set a base URL for use in certain protocol requests if web server rewr
 has taken place and the public URL is not the same as that supplied to iipsrv.
 
 URI_MAP: Set a mapping from a URL prefix to a supported protocol. This enables iipsrv to
-be able to work without requring full CGI query strings. Map must be of the form
+be able to work without requiring full CGI query strings. Map must be of the form
 "prefix=>protocol" where prefix can be either empty or any string prefix and protocol must
 be one of IIP,IIIF,DeepZoom, Zoomify. Used, for example, to map requests of the form
 http://server/iiif/ to the IIIF protocol handler without requiring web server rewriting.
@@ -503,4 +503,4 @@ For example with lighttpd:
 Please refer to the project site https://iipimage.sourceforge.io for further details
 
 ------------------------------------------------------------------------------------
-(c) 2000-2021 Ruven Pillay <ruven@users.sourceforge.net>
+(c) 2000-2022 Ruven Pillay <ruven@users.sourceforge.net>

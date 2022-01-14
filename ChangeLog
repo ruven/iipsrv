@@ -1,3 +1,11 @@
+14/01/2022:
+	- Detection of HTJ2K also added for KakaduImage.cc for logging purposes (DEBUG needs to be enabled at compile time)
+
+
+07/01/2022:
+	- Added detection of HTJ2K streams to OpenJPEG.cc for logging purposes (DEBUG needs to be enabled at compile time)
+
+
 14/09/2021:
 	- Fix to use C99 stdint types instead of deprecated libtiff types
 

@@ -7,7 +7,7 @@
     Culture of the Czech Republic.
 
 
-    Copyright (C) 2009-2020 IIPImage.
+    Copyright (C) 2009-2022 IIPImage.
     Author: Ruven Pillay
 
     This program is free software; you can redistribute it and/or modify
@@ -139,6 +139,14 @@ void KakaduImage::loadImageInfo( int seq, int ang )
   jp2_colour j2k_colour;
   kdu_coords layer_size;
   jpx_layer_source jpx_layer;
+
+  // Check for High Throughput JPEG2000 codestream
+#ifdef DEBUG
+  siz_params *siz = codestream.access_siz();
+  int pcap_value = 0;
+  siz->get( Scap, 0, 0, pcap_value );
+  if( pcap_value & 0x00020000 ) logfile << "Kakadu :: HTJ2K codestream" << endl;
+#endif
 
   // Malformed images can throw exceptions here with older versions of Kakadu
   try{
