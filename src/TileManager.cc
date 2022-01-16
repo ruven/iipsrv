@@ -4,7 +4,7 @@
 
 /*  IIP Server: Tile Cache Handler
 
-    Copyright (C) 2005-2021 Ruven Pillay.
+    Copyright (C) 2005-2022 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -130,8 +130,14 @@ void TileManager::crop( RawTile *ttt ){
 
   // Create a new buffer, fill it with the old data, then copy
   // back the cropped part into the RawTile buffer
-  int len = tw * th * ttt->channels * (ttt->bpc/8);
+  unsigned int len = tw * th * ttt->channels * (ttt->bpc/8);
   unsigned char* buffer = (unsigned char*) malloc( len );
+
+  // Check whether we have successfully allocated memory via malloc
+  if( buffer == NULL ){
+    std::bad_alloc e;
+    throw e;
+  }
   unsigned char* src_ptr = (unsigned char*) memcpy( buffer, ttt->data, len );
   unsigned char* dst_ptr = (unsigned char*) ttt->data;
 
@@ -365,21 +371,22 @@ RawTile TileManager::getRegion( unsigned int res, int seq, int ang, int layers, 
 
   // Create an empty tile with the correct dimensions
   RawTile region( 0, res, seq, ang, width, height, channels, bpc );
-  region.dataLength = width * height * channels * (bpc/8);
+  size_t np = (size_t) width * (size_t) height * (size_t) channels;
+  region.dataLength = np * (bpc/8);
   region.sampleType = sampleType;
 
   // Allocate memory for the region
-  if( bpc == 8 ) region.data = new unsigned char[width*height*channels];
-  else if( bpc == 16 ) region.data = new unsigned short[width*height*channels];
-  else if( bpc == 32 && sampleType == FIXEDPOINT ) region.data = new int[width*height*channels];
-  else if( bpc == 32 && sampleType == FLOATINGPOINT ) region.data = new float[width*height*channels];
+  if( bpc == 8 ) region.data = new unsigned char[np];
+  else if( bpc == 16 ) region.data = new unsigned short[np];
+  else if( bpc == 32 && sampleType == FIXEDPOINT ) region.data = new int[np];
+  else if( bpc == 32 && sampleType == FLOATINGPOINT ) region.data = new float[np];
 
   unsigned int current_height = 0;
 
   // Decode the image strip by strip
   for( unsigned int i=starty; i<endy; i++ ){
 
-    unsigned int buffer_index = 0;
+    unsigned long buffer_index = 0;
 
     // Keep track of the current pixel boundary horizontally. ie. only up
     //  to the beginning of the current tile boundary.

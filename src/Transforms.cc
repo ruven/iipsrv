@@ -532,7 +532,7 @@ void Transform::interpolate_nearestneighbour( RawTile& in, unsigned int resample
   // Correctly set our Rawtile info
   in.width = resampled_width;
   in.height = resampled_height;
-  in.dataLength = resampled_width * resampled_height * channels * (in.bpc/8);
+  in.dataLength = (size_t)resampled_width * (size_t)resampled_height * (size_t)channels * (size_t)(in.bpc/8);
   in.data = output;
 }
 
@@ -618,7 +618,7 @@ void Transform::interpolate_bilinear( RawTile& in, unsigned int resampled_width,
   // Correctly set our Rawtile info
   in.width = resampled_width;
   in.height = resampled_height;
-  in.dataLength = resampled_width * resampled_height * channels * (in.bpc/8);
+  in.dataLength = (size_t)resampled_width * (size_t)resampled_height * (size_t)channels * (size_t)(in.bpc/8);
   in.data = output;
 }
 

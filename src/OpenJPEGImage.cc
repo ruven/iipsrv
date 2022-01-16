@@ -376,11 +376,12 @@ RawTile OpenJPEGImage::getRegion( int ha, int va, unsigned int res, int layers, 
 
   RawTile rawtile( 0, res, ha, va, w, h, channels, obpc );
 
-  if( obpc == 16 ) rawtile.data = new unsigned short[w * h * channels];
-  else if( obpc == 8 ) rawtile.data = new unsigned char[w * h * channels];
+  size_t np = (size_t) w * (size_t) h * (size_t) channels;
+  if( obpc == 16 ) rawtile.data = new unsigned short[np];
+  else if( obpc == 8 ) rawtile.data = new unsigned char[np];
   else throw file_error( "OpenJPEG :: Unsupported number of bits" );
 
-  rawtile.dataLength = w*h*channels*(obpc/8);
+  rawtile.dataLength = np*(obpc/8);
   rawtile.filename = getImagePath();
   rawtile.timestamp = timestamp;
 
