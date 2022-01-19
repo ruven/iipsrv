@@ -1,7 +1,7 @@
 /*
     Image View and Transform Parameters
 
-    Copyright (C) 2003-2020 Ruven Pillay.
+    Copyright (C) 2003-2022 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -81,6 +81,7 @@ class View{
   float contrast;                             /// Contrast adjustment requested by CNT command
   float gamma;                                /// Gamma adjustment requested by GAM command
   bool equalization;                          /// Whether to perform histogram equalization
+  bool minmax;                                /// Whether to perform contrast stretching using user-defined min/max
 
 
   /// Constructor
@@ -103,6 +104,7 @@ class View{
     embed_icc = true;
     output_format = JPEG;
     equalization = false;
+    minmax = false;
   };
 
 
@@ -257,7 +259,7 @@ class View{
 
   /// Whether view requires floating point processing
   bool floatProcessing(){
-    if( contrast != 1.0 || gamma != 1.0 || cmapped || shaded || inverted || ctw.size() ){
+    if( contrast != 1.0 || gamma != 1.0 || cmapped || shaded || inverted || minmax || ctw.size() ){
       return true;
     }
     else return false;

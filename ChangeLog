@@ -1,3 +1,8 @@
+19/01/2022:
+	- Added missing minmax variable to View class to indicate a user-defined min/max. Forces use of the floating point
+	  image processing pipeline in CVT.cc and JTL.cc
+
+
 16/01/2022:
 	- Modified TileManager.cc to verify that malloc() has correctly allocated memory.
 	- Updated numerical types to std::size_t in RawTile.h, TileManager.cc, KakaduImage.cc, OpenJPEG.cc and Transforms.cc
