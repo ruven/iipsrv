@@ -175,8 +175,8 @@ void JTL::send( Session* session, int resolution, int tile ){
   }
 
 
-  // Only use our float pipeline if necessary
-  if( rawtile.bpc > 8 || session->view->floatProcessing() ){
+  // Only use our floating point image processing pipeline if necessary
+  if( rawtile.sampleType == FLOATINGPOINT || session->view->floatProcessing() ){
 
     // Make a copy of our max and min as we may change these
     vector <float> min = (*session->image)->min;
@@ -305,6 +305,16 @@ void JTL::send( Session* session, int resolution, int tile ){
     }
 
   }
+
+  // If no image processing is being done, but we have a 32 or 16 bit fixed point image, do a fast rescale to 8 bit
+  else if( rawtile.bpc > 8 ){
+    if( session->loglevel >= 4 ){
+      *(session->logfile) << "JTL :: Scaling from " << rawtile.bpc << " to 8 bits per channel in ";
+      function_timer.start();
+    }
+    session->processor->scale_to_8bit( rawtile );
+    if( session->loglevel >= 4 ) *(session->logfile) << function_timer.getTime() << " microseconds" << endl;
+  } 
 
 
   // Reduce to 1 or 3 bands if we have an alpha channel or a multi-band image and have requested a JPEG tile

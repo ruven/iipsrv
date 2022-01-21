@@ -2,7 +2,7 @@
 
 /*  IIPImage image processing routines
 
-    Copyright (C) 2004-2021 Ruven Pillay.
+    Copyright (C) 2004-2022 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -149,6 +149,7 @@ void Transform::normalize( RawTile& in, const vector<float>& max, const vector<f
   // Assign our new buffer and modify some info
   in.data = normdata;
   in.bpc = 32;
+  in.sampleType = FLOATINGPOINT;
   in.dataLength = np * (in.bpc/8);
 
 }
@@ -624,10 +625,54 @@ void Transform::interpolate_bilinear( RawTile& in, unsigned int resampled_width,
 
 
 
-// Function to apply a contrast adjustment and clip to 8 bit
+// Fast efficient scaling of higher fixed point bit depths to 8 bit
+void Transform::scale_to_8bit( RawTile& in ){
+
+  // Skip floating point data and data already in 8 bit form
+  if( in.bpc == 8 || in.sampleType == FLOATINGPOINT ) return;
+
+  size_t np = in.width * in.height * in.channels;
+  unsigned char* buffer = new unsigned char[np];
+
+  // 32 bit fixed point integer
+  if( in.bpc == 32 && in.sampleType == FIXEDPOINT ){
+#if defined(__ICC) || defined(__INTEL_COMPILER)
+#pragma ivdep
+#elif defined(_OPENMP)
+#pragma omp parallel for if( in.width*in.height > PARALLEL_THRESHOLD )
+#endif
+    for( size_t n=0; n<np; n++ ){
+      buffer[n] = (unsigned char)(((unsigned int*)in.data)[n] >> 16);
+    }
+    delete[] (unsigned int*) in.data;
+  }
+
+  // 16 bit unsigned short
+  else if( in.bpc == 16 ){
+#if defined(__ICC) || defined(__INTEL_COMPILER)
+#pragma ivdep
+#elif defined(_OPENMP)
+#pragma omp parallel for if( in.width*in.height > PARALLEL_THRESHOLD )
+#endif
+    for( size_t n=0; n<np; n++ ){
+      buffer[n] = (unsigned char)(((unsigned short*)in.data)[n] >> 8);
+    }
+    delete[] (unsigned short*) in.data;
+  }
+
+  // Replace original buffer with new 8 bit data
+  in.data = buffer;
+  in.bpc = 8;
+  in.sampleType = FIXEDPOINT;
+  in.dataLength = np;
+}
+
+
+
+// Function to apply a contrast adjustment and convert to 8 bit
 void Transform::contrast( RawTile& in, float c ){
 
-  unsigned long np = in.width * in.height * in.channels;
+  size_t np = in.width * in.height * in.channels;
   unsigned char* buffer = new unsigned char[np];
   float* infptr = (float*)in.data;
   const float max = 255.0;    // Max pixel value for 8 bit data
@@ -635,9 +680,9 @@ void Transform::contrast( RawTile& in, float c ){
 #if defined(__ICC) || defined(__INTEL_COMPILER)
 #pragma ivdep
 #elif defined(_OPENMP)
-#pragma omp parallel for
+#pragma omp parallel for if( in.width*in.height > PARALLEL_THRESHOLD )
 #endif
-  for( unsigned long n=0; n<np; n++ ){
+  for( size_t n=0; n<np; n++ ){
     float v = infptr[n] * max * c;
     buffer[n] = (unsigned char)( (v<max) ? (v<0.0? 0.0 : v) : max );
   }
@@ -646,7 +691,8 @@ void Transform::contrast( RawTile& in, float c ){
   delete[] (float*) in.data;
   in.data = buffer;
   in.bpc = 8;
-  in.dataLength = np * (in.bpc/8);
+  in.sampleType = FIXEDPOINT;
+  in.dataLength = np;
 }
 
 

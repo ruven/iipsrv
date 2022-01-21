@@ -237,9 +237,8 @@ void CVT::send( Session* session ){
   }
 
 
-  // Only use our floating point pipeline if necessary
-  if( complete_image.bpc > 8 || session->view->floatProcessing() ){
-
+  // Only use our floating point image processing pipeline if necessary
+  if( complete_image.sampleType == FLOATINGPOINT || session->view->floatProcessing() ){
 
     // Make a copy of our max and min as we may change these
     vector <float> min = (*session->image)->min;
@@ -343,7 +342,6 @@ void CVT::send( Session* session ){
     }
 
 
-
     // Apply any contrast adjustments and scale to 8 bit quantization
     {
       if( session->loglevel >= 5 ) function_timer.start();
@@ -353,6 +351,16 @@ void CVT::send( Session* session ){
 			    << " and converting to 8bit in " << function_timer.getTime() << " microseconds" << endl;
       }
     }
+  }
+
+  // If no image processing is being done, but we have a 32 or 16 bit fixed point image, do a fast rescale to 8 bit
+  else if( complete_image.bpc > 8 ){
+    if( session->loglevel >= 5 ){
+      *(session->logfile) << "CVT :: Scaling from " << complete_image.bpc << " to 8 bits per channel in ";
+      function_timer.start();
+    }
+    session->processor->scale_to_8bit( complete_image );
+    if( session->loglevel >= 5 ) *(session->logfile) << function_timer.getTime() << " microseconds" << endl;
   }
 
 

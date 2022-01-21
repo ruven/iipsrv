@@ -1,3 +1,8 @@
+21/01/2022:
+	- Added fast scale_to_8bit() function to Transform class to allow 16 and 32 bit fixed point data to be efficiently
+	  scaled down to 8 bit without use of the floating point image processing pipeline
+
+
 19/01/2022:
 	- Added missing minmax variable to View class to indicate a user-defined min/max. Forces use of the floating point
 	  image processing pipeline in CVT.cc and JTL.cc
