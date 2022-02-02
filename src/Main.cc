@@ -298,8 +298,7 @@ int main( int argc, char *argv[] )
   Watermark watermark( Environment::getWatermark(),
 		       Environment::getWatermarkOpacity(),
 		       Environment::getWatermarkProbability(),
-		       Environment::getWatermarkMinCVT(),
-		       Environment::getWatermarkRepeat() );
+		       Environment::getWatermarkMinCVT() );
 
 
   // Get the CORS setting
@@ -425,7 +424,6 @@ int main( int argc, char *argv[] )
 		<< "': setting probability to " << watermark.getProbability()
 		<< " and opacity to " << watermark.getOpacity()
 		<< "; CVT threshold to " << watermark.getMinCVT()
-		<< " and repeat to " << watermark.getRepeat()
 		<< endl;
       }
       else{
