@@ -239,6 +239,7 @@ if test -n "$kakadu_path"; then
 
 		# Check for SSSE3 support in Kakadu
 		AC_CHECK_FILE( $kakadu_path/apps/make/ssse3_stripe_transfer.o,
+			AC_MSG_RESULT([configure: Kakadu has support for SSE3]);
 			KDU_SSSE3=true
 		)
 		if test "x${KDU_SSSE3}" = xtrue; then
@@ -247,12 +248,21 @@ if test -n "$kakadu_path"; then
 
 		# Check for AVX2 support in Kakadu
 		AC_CHECK_FILE( $kakadu_path/apps/make/avx2_stripe_transfer.o,
+			AC_MSG_RESULT([configure: Kakadu has support for AVX2]);
+			KDU_AVX2=true
+		)
+		if test "x${KDU_AVX2}" = xtrue; then
+			LIBS="$LIBS $kakadu_path/apps/make/avx2_stripe_transfer.o"
+		fi
+
+		# Check for addition of kdu_client_window in versions 7.5 and upwards
+		AC_CHECK_FILE( $kakadu_path/apps/make/kdu_client_window.o,
 			AC_MSG_RESULT([configure: Kakadu is >= v7.5]);
 			KDU_75=true,
 			AC_MSG_RESULT([configure: Kakadu is < v7.5])
 		)
 		if test "x${KDU_75}" = xtrue; then
-			LIBS="$LIBS $kakadu_path/apps/make/avx2_stripe_transfer.o $kakadu_path/apps/make/kdu_client_window.o"
+			LIBS="$LIBS $kakadu_path/apps/make/kdu_client_window.o"
 		fi
 
 		AC_CHECK_FILE( $kakadu_path/apps/make/supp_local.o,
