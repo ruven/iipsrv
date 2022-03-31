@@ -2,7 +2,7 @@
 
 /*  IIP Server: Tiled Pyramidal TIFF handler
 
-    Copyright (C) 2000-2021 Ruven Pillay.
+    Copyright (C) 2000-2022 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -28,6 +28,13 @@
 using namespace std;
 
 
+/* Set our TIFF open mode to read-only (r), no memory mapping (m) and on-demand strip/tile offset/bytecount array loading (O):
+   Memory mapping makes the kind of sparse random access we require for iipsrv slower
+   On-demand loading (available in libtiff 4.1.0) enables significantly faster loading of very large TIFF files
+*/
+static const char* mode = "rmO";
+
+
 void TPTImage::openImage()
 {
 
@@ -42,7 +49,7 @@ void TPTImage::openImage()
   updateTimestamp( filename );
 
   // Try to open and allocate a buffer
-  if( ( tiff = TIFFOpen( filename.c_str(), "rm" ) ) == NULL ){
+  if( ( tiff = TIFFOpen( filename.c_str(), mode ) ) == NULL ){
     throw file_error( "TPTImage :: TIFFOpen() failed for: " + filename );
   }
 
@@ -226,7 +233,7 @@ RawTile TPTImage::getTile( int seq, int ang, unsigned int res, int layers, unsig
   // Open the TIFF if it's not already open
   if( !tiff ){
     filename = getFileName( seq, ang );
-    if( ( tiff = TIFFOpen( filename.c_str(), "rm" ) ) == NULL ){
+    if( ( tiff = TIFFOpen( filename.c_str(), mode ) ) == NULL ){
       throw file_error( "TPTImage :: TIFFOpen() failed for:" + filename );
     }
   }

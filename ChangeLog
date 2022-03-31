@@ -1,3 +1,8 @@
+31/03/2022:
+	- Modified TIFFOpen() mode parameter to activate on-demand strip/tile offset/bytecount array loading. This functionality
+	  is available in libtiff 4.1.0 onwards and enables significantly faster loading of very large TIFF files
+
+
 30/03/2022:
 	- Modified configure.ac to separate SSE3 and AVX2 Kakadu support detection from version detection. Should fix
 	  compilation problem on ARM (https://github.com/ruven/iipsrv/pull/38#issuecomment-1072874587)
