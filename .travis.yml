@@ -19,10 +19,11 @@ addons:
     packages:
       - fcgi
       - libmemcached
-  pkg:
-    - png
-    - openjpeg
-    - libmemcached
+# pkg addon buggy - skip for now
+#  pkg:
+#    - png
+#    - openjpeg
+#    - libmemcached
 
 script:
   - ./autogen.sh
