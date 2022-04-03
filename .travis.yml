@@ -3,10 +3,26 @@ language: cpp
 os:
   - linux
   - osx
+  - freebsd
 
 compiler:
   - clang
   - gcc
+
+addons:
+  apt:
+    packages:
+      - libfcgi-dev
+      - libpng-dev
+      - libopenjp2-7-dev
+  homebrew:
+    packages:
+      - fcgi
+      - libmemcached
+  pkg:
+    - png
+    - openjpeg
+    - libmemcached
 
 script:
   - ./autogen.sh
