@@ -467,7 +467,7 @@ strptime (const char *buf, const char *fmt, struct tm *timeptr)
 	buf = s;
 	break;
       case 'Z' :
-	timeptr->isdst = 0;
+	timeptr->tm_isdst = 0;
 	return NULL;
       case '\0' :
 	--fmt;
