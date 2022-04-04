@@ -1,3 +1,11 @@
+04/04/2022:
+	- Switched mktime() to timegm() in FIF.cc, which fixes occasional errors when using mktime(). timegm() is not only faster,
+	  but avoids having to set our timezone with tzset(), and is therefore simpler. This change reverses commit
+	  https://github.com/ruven/iipsrv/commit/69b6a572147aaacf055b134af591559156a34d2e which is no longer relevant.
+	- Modification to the Windows implementation of strptime to fix crashing (https://github.com/ruven/iipsrv/issues/208)
+	  when parsing if-modified-since time stamps.
+
+
 31/03/2022:
 	- Modified TIFFOpen() mode parameter to activate on-demand strip/tile offset/bytecount array loading. This functionality
 	  is available in libtiff 4.1.0 onwards and enables significantly faster loading of very large TIFF files

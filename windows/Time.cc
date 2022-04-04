@@ -1,7 +1,7 @@
 /*  Missing time implementations for Windows
     Code taken largely from rtmpserver (www.rtmpd.com)
 
-    Copyright (C) 2011-2018 Ruven Pillay
+    Copyright (C) 2011-2022 Ruven Pillay
                   2010 Gavriloaie Eugen-Andrei
                   1997, 1998 Kungliga Tekniska Hogskolan
 		             (Royal Institute of Technology, Stockholm, Sweden)
@@ -467,7 +467,8 @@ strptime (const char *buf, const char *fmt, struct tm *timeptr)
 	buf = s;
 	break;
       case 'Z' :
-	abort ();
+	timeptr->isdst = 0;
+	return NULL;
       case '\0' :
 	--fmt;
 	/* FALLTHROUGH */
