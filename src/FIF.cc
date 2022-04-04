@@ -1,7 +1,7 @@
 /*
     IIP FIF Command Handler Class Member Function
 
-    Copyright (C) 2006-2015 Ruven Pillay.
+    Copyright (C) 2006-2022 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -228,9 +228,7 @@ void FIF::run( Session* session, const string& src ){
 
     strptime( (session->headers)["HTTP_IF_MODIFIED_SINCE"].c_str(), "%a, %d %b %Y %H:%M:%S %Z", &mod_t );
 
-    // Use POSIX cross-platform mktime() function to generate a timestamp.
-    // This needs UTC, but to avoid a slow TZ environment reset for each request, we set this once globally in Main.cc
-    t = mktime(&mod_t);
+    t = timegm( &mod_t );
     if( (session->loglevel >= 1) && (t == -1) ) *(session->logfile) << "FIF :: Error creating timestamp" << endl;
 
     if( (*session->image)->timestamp <= t ){

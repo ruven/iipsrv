@@ -1,7 +1,7 @@
 /*
     IIP FCGI server module - Main loop.
 
-    Copyright (C) 2000-2021 Ruven Pillay
+    Copyright (C) 2000-2022 Ruven Pillay
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -93,7 +93,6 @@ using namespace std;
 int loglevel;
 Logger logfile;
 unsigned long IIPcount;
-char *tz = NULL;
 
 
 
@@ -125,11 +124,6 @@ void IIPReloadCache( int signal )
 void IIPSignalHandler( int signal )
 {
   if( loglevel >= 1 ){
-
-    // Reset our time zone environment
-    if(tz) setenv("TZ", tz, 1);
-    else unsetenv("TZ");
-    tzset();
 
     time_t current_time = time( NULL );
     char *date = ctime( &current_time );
@@ -206,13 +200,6 @@ int main( int argc, char *argv[] )
     }
 
   }
-
-
-  // Set our environment to UTC as all file modification times are GMT,
-  // but save our current state to allow us to reset before quitting
-  tz = getenv("TZ");
-  setenv("TZ","",1);
-  tzset();
 
 
 
