@@ -1,3 +1,7 @@
+05/04/2022:
+	- Removed unnecessary FCGI include from Main.cc (already included in Writer.h)
+
+
 04/04/2022:
 	- Switched mktime() to timegm() in FIF.cc, which fixes occasional errors when using mktime(). timegm() is not only faster,
 	  but avoids having to set our timezone with tzset(), and is therefore simpler. This change reverses commit

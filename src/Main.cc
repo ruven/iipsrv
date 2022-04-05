@@ -22,7 +22,6 @@
 
 
 
-#include <fcgiapp.h>
 
 #include <ctime>
 #include <csignal>
