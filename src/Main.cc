@@ -43,11 +43,11 @@
 
 
 #ifdef HAVE_MEMCACHED
-#ifdef WIN32
-#include "../windows/MemcachedWindows.h"
-#else
+//#ifdef WIN32
+//#include "../windows/MemcachedWindows.h"
+//#else
 #include "Memcached.h"
-#endif
+//#endif
 #endif
 
 #ifdef ENABLE_DL
