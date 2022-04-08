@@ -202,7 +202,7 @@ int main( int argc, char *argv[] )
 
 
 
-  // Set up some FCGI items and make sure we are in FCGI mode
+  // Set up our FCGI connnection
 
 #ifndef DEBUG
 
@@ -210,6 +210,12 @@ int main( int argc, char *argv[] )
   int listen_socket = 0;
   bool standalone = false;
 
+
+  // Initialize FCGI library
+  if( FCGX_Init() ) return( 1 );
+
+
+  // Check if we're running directly from the command line
   if( argv[1] && (string(argv[1]) == "--bind") ){
     string socket = argv[2];
     if( !socket.length() ){
@@ -230,9 +236,12 @@ int main( int argc, char *argv[] )
     logfile << "Running in standalone mode on socket: " << socket << " with backlog: " << backlog << endl << endl;
   }
 
-  if( FCGX_InitRequest( &request, listen_socket, 0 ) ) return(1);
 
-  // Check whether we are really in FCGI mode - only if we are not in standalone mode
+  // Initialize FCGI request
+  if( FCGX_InitRequest( &request, listen_socket, 0 ) ) return( 1 );
+
+
+  // Check whether we really are in FCGI mode - only if we are not in standalone mode
   if( FCGX_IsCGI() ){
     if( !standalone ){
       if( loglevel >= 1 ) logfile << "CGI-only mode detected" << endl << endl;
@@ -944,6 +953,9 @@ int main( int argc, char *argv[] )
     ///////// End of FCGI_ACCEPT while loop or for loop in debug mode //////////
   }
 
+
+  // Close our FCGI connection
+  FCGX_Finish_r( &request );
 
 
   if( loglevel >= 1 ){

@@ -1,3 +1,8 @@
+08/04/2022:
+	- Added extra FCGI initialization call plus other FCGI-related tweaks. This finally allows iipsrv to be started
+	  directly on the command line on Windows
+
+
 05/04/2022:
 	- Removed unnecessary FCGI include from Main.cc (already included in Writer.h)
 
