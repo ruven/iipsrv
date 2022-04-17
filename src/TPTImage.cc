@@ -71,7 +71,6 @@ void TPTImage::loadImageInfo( int seq, int ang )
   tdir_t current_dir;
   int count;
   uint16_t colour, samplesperpixel, bitspersample, sampleformat;
-  double sminvaluearr[4] = {0.0}, smaxvaluearr[4] = {0.0};
   double *sminvalue = NULL, *smaxvalue = NULL;
   unsigned int w, h;
   string filename;
@@ -143,44 +142,61 @@ void TPTImage::loadImageInfo( int seq, int ang )
   }
   else colourspace = sRGB;
 
-  // Get the max and min values for our data type - required for floats
-  // This are usually single values per image, but can also be per channel
-  // in libtiff > 4.0.2 via http://www.asmail.be/msg0055458208.html
 
-#ifdef TIFFTAG_PERSAMPLE
-  if( channels > 1 ){
-    TIFFSetField(tiff, TIFFTAG_PERSAMPLE, PERSAMPLE_MULTI);
-    TIFFGetFieldDefaulted( tiff, TIFFTAG_SMINSAMPLEVALUE, &sminvalue );
-    TIFFGetFieldDefaulted( tiff, TIFFTAG_SMAXSAMPLEVALUE, &smaxvalue );
-    TIFFSetField(tiff, TIFFTAG_PERSAMPLE, PERSAMPLE_MERGED);
-    if (!sminvalue) sminvalue = sminvaluearr;
-    if (!smaxvalue) smaxvalue = smaxvaluearr;
+  // Get the max and min values for our data (important for float data)
+  // First initialize default values to zero in case
+  double *default_min = new double[channels];
+  double *default_max = new double[channels];
+  for( unsigned int k=0; k<channels; k++ ){
+    default_min[k] = 0.0;
+    default_max[k] = 0.0;
   }
-  else{
-#endif
-    sminvalue = sminvaluearr;
-    smaxvalue = smaxvaluearr;
-    TIFFGetFieldDefaulted( tiff, TIFFTAG_SMINSAMPLEVALUE, sminvalue );
-    TIFFGetFieldDefaulted( tiff, TIFFTAG_SMAXSAMPLEVALUE, smaxvalue );
+
+  // These max and min values can either be single values per image, or as from libtiff > 4.0.2
+  // per channel (see: http://www.asmail.be/msg0055458208.html)
 #ifdef TIFFTAG_PERSAMPLE
+
+  TIFFSetField( tiff, TIFFTAG_PERSAMPLE, PERSAMPLE_MULTI ); // Need to activate per sample mode
+  TIFFGetField( tiff, TIFFTAG_SMINSAMPLEVALUE, &sminvalue );
+  TIFFGetField( tiff, TIFFTAG_SMAXSAMPLEVALUE, &smaxvalue );
+
+  if( !sminvalue ) sminvalue = default_min;
+  if( !smaxvalue ) smaxvalue = default_max;
+
+#else
+  // Set defaults
+  sminvalue = default_min;
+  smaxvalue = default_max;
+
+  // Add the single min/max header value to each channel if tag exists
+  double minmax;
+  if( TIFFGetField( tiff, TIFFTAG_SMINSAMPLEVALUE, &minmax ) == 1 ){
+    for( unsigned int k=0; k<channels; k++ ) sminvalue[k] = minmax;
+  }
+  if( TIFFGetField( tiff, TIFFTAG_SMAXSAMPLEVALUE, &minmax ) == 1 ){
+    for( unsigned int k=0; k<channels; k++ ) smaxvalue[k] = minmax;
   }
 #endif
 
-  // Clear our arrays
+  // Make sure our min and max arrays are empty
   min.clear();
   max.clear();
 
   for( unsigned int i=0; i<channels; i++ ){
-    if( (!sminvalue) == smaxvalue[i] ){
-      // Set default values if values not included in header
+    // Set our max to the full bit range if max not set in header
+    if( smaxvalue[i] == 0 ){
       if( bpc <= 8 ) smaxvalue[i] = 255.0;
       else if( bpc == 12 ) smaxvalue[i] = 4095.0;
       else if( bpc == 16 ) smaxvalue[i] = 65535.0;
       else if( bpc == 32 && sampleType == FIXEDPOINT ) smaxvalue[i] = 4294967295.0;
+      else if( bpc == 32 && sampleType == FLOATINGPOINT ) smaxvalue[i] = 1.0;  // Set dummy value for float
     }
     min.push_back( (float)sminvalue[i] );
     max.push_back( (float)smaxvalue[i] );
   }
+  // Don't forget to delete our allocated arrays
+  delete[] default_min;
+  delete[] default_max;
 
   // Also get some basic metadata
   if( TIFFGetField( tiff, TIFFTAG_ARTIST, &tmp ) ) metadata["author"] = tmp;

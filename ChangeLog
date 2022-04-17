@@ -1,6 +1,8 @@
 17/04/2022:
 	- Re-write of Transform::twist() function to add OpenMP parallelization and allow supplied CTW matrix to determine
-	  number of output channels
+	  number of output channels.
+	- Updated TPTImage to better handle the SMINSAMPLEVALUE and SMAXSAMPLEVALUE tags. Multi-band images better supported
+	  as well as more robust support for missing tags.
 
 
 08/04/2022:
