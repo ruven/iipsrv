@@ -1,7 +1,7 @@
 /*
     IIP Command Handler Member Functions
 
-    Copyright (C) 2006-2021 Ruven Pillay.
+    Copyright (C) 2006-2022 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -21,6 +21,7 @@
 
 #include "Task.h"
 #include "Tokenizer.h"
+#include "URL.h"
 #include <cstdlib>
 #include <algorithm>
 
@@ -452,15 +453,22 @@ void LYR::run( Session* session, const string& argument ){
 }
 
 
-void CTW::run( Session* session, const string& argument ){
+void CTW::run( Session* session, const string& src ){
 
-  /* Matrices should be formatted as CTW=[a,b,c;d,e,f;g,h,i] where commas separate row values
-     and semi-colons separate columns.
-     Thus, the above argument represents the 3x3 square matrix:
+  /* Matrices should be formatted as CTW=[a,b,c;d,e,f;g,h,i] where commas separate the column
+     values within a single row and semi-colons separate each row.
+     Thus, the above example represents the 3x3 square matrix:
      [ a b c
        d e f
        g h i ]
+     Each row represents an output channel and each column the coefficients to be used for
+     each input band. There should, therefore, be as many columns (coefficients) as input
+     channels and as many rows as required output channels
   */
+
+  // First URL decode our string
+  URL url( src );
+  string argument = url.decode();
 
   if( argument.length() ){
     if( session->loglevel >= 2 ) *(session->logfile) << "CTW handler reached" << endl;

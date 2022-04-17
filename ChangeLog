@@ -1,3 +1,8 @@
+17/04/2022:
+	- Re-write of Transform::twist() function to add OpenMP parallelization and allow supplied CTW matrix to determine
+	  number of output channels
+
+
 08/04/2022:
 	- Added extra FCGI initialization call plus other FCGI-related tweaks. This finally allows iipsrv to be started
 	  directly on the command line on Windows

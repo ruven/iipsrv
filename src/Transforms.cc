@@ -62,7 +62,7 @@ using namespace std;
 void Transform::normalize( RawTile& in, const vector<float>& max, const vector<float>& min ) {
 
   float *normdata;
-  unsigned int np = in.dataLength * 8 / in.bpc;
+  unsigned int np = in.width * in.height * in.channels;
   unsigned int nc = in.channels;
 
   // Type pointers
@@ -78,6 +78,7 @@ void Transform::normalize( RawTile& in, const vector<float>& max, const vector<f
     normdata = new float[np];
   }
 
+  // Loop through each channel
   for( unsigned int c = 0 ; c<nc ; c++){
 
     float minc = min[c];
@@ -670,12 +671,12 @@ void Transform::scale_to_8bit( RawTile& in ){
 
 
 // Function to apply a contrast adjustment and convert to 8 bit
-void Transform::contrast( RawTile& in, float c ){
+void Transform::contrast( RawTile& in, float contrast ){
 
   size_t np = in.width * in.height * in.channels;
   unsigned char* buffer = new unsigned char[np];
   float* infptr = (float*)in.data;
-  const float max = 255.0;    // Max pixel value for 8 bit data
+  const float max8 = 255.0;    // Max pixel value for 8 bit data
 
 #if defined(__ICC) || defined(__INTEL_COMPILER)
 #pragma ivdep
@@ -683,8 +684,8 @@ void Transform::contrast( RawTile& in, float c ){
 #pragma omp parallel for if( in.width*in.height > PARALLEL_THRESHOLD )
 #endif
   for( size_t n=0; n<np; n++ ){
-    float v = infptr[n] * max * c;
-    buffer[n] = (unsigned char)( (v<max) ? (v<0.0? 0.0 : v) : max );
+    float v = infptr[n] * max8 * contrast;
+    buffer[n] = (unsigned char)( (v<max8) ? (v<0.0? 0.0 : v) : max8 );
   }
 
   // Replace original buffer with new
@@ -855,48 +856,78 @@ void Transform::greyscale( RawTile& rawtile ){
 
 
 
-// Apply twist or channel recombination to colour or multi-channel image
+// Apply twist or channel recombination to colour or multi-channel image.
+// Matrix is a vector of vectors. Each top level vector represents a row and
+// contains the output transform for one output channel. Each lower level vector
+// represents the columns and maps to the raw data and should contain as many
+// values as there are channels in the raw input data
 void Transform::twist( RawTile& rawtile, const vector< vector<float> >& matrix ){
 
-  unsigned long np = rawtile.width * rawtile.height;
+  size_t np = rawtile.width * rawtile.height;
 
-  // Create temporary buffer for our calculated values
-  float* pixel = new float[rawtile.channels];
+  // Determine the number of rows and, therefore, output channels (this can be different to the number of input channels)
+  int output_channels = matrix.size();
 
-  // Calculate the number of columns - limit to our number of channels if necessary
-  unsigned int ncols = (matrix.size()>(unsigned int)rawtile.channels) ? rawtile.channels : matrix.size();
-  unsigned int* nrows = new unsigned int[ncols];
+  // Output buffer
+  float *output = NULL;
 
-  // Pre-calculate the size of each row
-  for( unsigned int i=0; i<ncols; i++ ){
-    nrows[i] = (matrix[i].size()>(unsigned int)rawtile.channels) ? rawtile.channels : matrix[i].size();
+  // If we are creating an image with different number of output channels, create a new data buffer
+  if( output_channels == rawtile.channels ) output = (float*) rawtile.data;
+  else output = new float[np * output_channels];
+
+  // Need to make sure the matrix is adapted to the number of channels in the raw data
+  unsigned int* row_sizes = new unsigned int[output_channels]; // Number of columns for each row
+
+  // Get the number of columns in each row - can be less than number of channels - limit if there are more
+  for( int k=0; k<output_channels; k++ ){
+    row_sizes[k] = (matrix[k].size()>(unsigned int)rawtile.channels) ? rawtile.channels : matrix[k].size();
   }
 
+#pragma omp parallel if( rawtile.width*rawtile.height > PARALLEL_THRESHOLD )
+  {
+    // Create temporary buffer for our calculated values (need one for each thread)
+    float* pixel = new float[output_channels];
 
-  for( unsigned long i=0; i<np; i++ ){
+    // Loop through each pixel
+#pragma omp for
+    for( size_t i=0; i<np; i++ ){
 
-    unsigned long n = i*rawtile.channels;
+      size_t in = i*rawtile.channels;  // Pixel index in input buffer
+      size_t on = i*output_channels;   // Pixel index in output buffer
 
-    // Calculate value for each channel
-    for( unsigned int k=0; k<ncols; k++ ){
+      // Calculate pixel value for each output channel
+      for( int k=0; k<output_channels; k++ ){
 
-      // Zero our pixel buffer
-      pixel[k] = 0.0;
+	// First zero our pixel buffer
+	pixel[k] = 0.0;
 
-      for( unsigned int j=0; j<nrows[k]; j++ ){
-	float m = matrix[k][j];
-	if( m ){
-	  pixel[k] += (m == 1.0) ? ((float*)rawtile.data)[n+j] : ((float*)rawtile.data)[n+j] * m;
+	// Loop through each column (input channel coefficient ) in the matrix
+	for( unsigned int j=0; j<row_sizes[k]; j++ ){
+	  float m = matrix[k][j];
+	  if( m ){
+	    float p = ((float*)rawtile.data)[in+j];
+	    pixel[k] += (m == 1.0) ? p : p * m;
+	  }
 	}
       }
+
+      // Only write out to our buffer at the end as we reuse channel values several times during the twist loops
+      for( int k=0; k<output_channels; k++ ) output[on++] = pixel[k];
     }
 
-    // Only write our values at the end as we reuse channel values several times during the twist loops
-    for( int k=0; k<rawtile.channels; k++ ) ((float*)rawtile.data)[n++] = pixel[k];
-
+    delete[] pixel;
   }
-  delete[] nrows;
-  delete[] pixel;
+
+  delete[] row_sizes;
+
+  // If we have a different number of output channels, swap our buffer and update our rawtile parameters
+  if( output_channels != rawtile.channels ){
+    delete[] (float*) rawtile.data;
+    rawtile.data = output;
+    rawtile.channels = output_channels;
+    rawtile.dataLength = np * rawtile.channels * (rawtile.bpc/8);
+  }
+
 }
 
 
