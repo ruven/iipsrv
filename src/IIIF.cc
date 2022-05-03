@@ -256,7 +256,7 @@ void IIIF::run( Session* session, const string& src )
     else {
       infoStringStream << "  \"@id\" : \"" << iiif_id << "\"," << endl
 		       << "  \"profile\" : [" << endl
-		       << "     \"" << IIIF_PROTOCOL << "/" << iiif_version << "/" << IIIF_PROFILE << "\"," << endl
+		       << "     \"" << IIIF_PROTOCOL << "/" << iiif_version << "/" << IIIF_PROFILE << ".json\"," << endl
 		       << "     { \"formats\" : [ \"jpg\", \"png\" ]," << endl
 		       << "       \"qualities\" : [\"native\",\"color\",\"gray\",\"bitonal\"]," << endl
 		       << "       \"supports\" : [\"regionByPct\",\"regionSquare\",\"sizeByForcedWh\",\"sizeByWh\",\"sizeAboveFull\",\"sizeUpscaling\",\"rotationBy90s\",\"mirroring\"]," << endl
