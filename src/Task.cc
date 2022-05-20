@@ -53,6 +53,9 @@ Task* Task::factory( const string& t ){
 #ifdef HAVE_PNG
   else if( type == "ptl" ) return new PTL;
 #endif
+#ifdef HAVE_WEBP
+  else if( type == "wtl" ) return new WTL;
+#endif
   else if( type == "jtl" ) return new JTL;
   else if( type == "jtls" ) return new JTLS;
   else if( type == "icc" ) return new ICC;
@@ -99,6 +102,9 @@ void QLT::run( Session* session, const string& argument ){
     session->jpeg->setQuality( factor );
 #ifdef HAVE_PNG
     session->png->setQuality( factor );
+#endif
+#ifdef HAVE_WEBP
+    session->webp->setQuality( factor );
 #endif
 
     if( session->loglevel >= 2 ) *(session->logfile) << "QLT :: Requested quality is " << factor << endl;
@@ -223,6 +229,12 @@ void CVT::run( Session* session, const string& src ){
   else if( argument == "png" ){
     session->view->output_format = PNG;
     if( session->loglevel >= 3 ) *(session->logfile) << "CVT :: PNG output" << endl;
+  }
+#endif
+  #ifdef HAVE_WEBP
+  else if( argument == "webp" ){
+    session->view->output_format = WEBP;
+    if( session->loglevel >= 3 ) *(session->logfile) << "CVT :: WebP output" << endl;
   }
 #endif
   else{

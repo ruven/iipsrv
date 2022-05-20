@@ -273,6 +273,10 @@ int main( int argc, char *argv[] )
   int png_quality = Environment::getPNGQuality();
 
 
+  // Get our default WebP compression level
+  int webp_quality = Environment::getWebPQuality();
+
+
   // Get our max CVT size
   int max_CVT = Environment::getMaxCVT();
 
@@ -342,6 +346,9 @@ int main( int argc, char *argv[] )
     logfile << "Setting default JPEG quality to " << jpeg_quality << endl;
 #ifdef HAVE_PNG
     logfile << "Setting default PNG compression level to " << png_quality << endl;
+#endif
+#ifdef HAVE_WEBP
+    logfile << "Setting default WebP compression level to " << webp_quality << endl;
 #endif
     logfile << "Setting maximum CVT size to " << max_CVT << endl;
     logfile << "Setting HTTP Cache-Control header to '" << cache_control << "'" << endl;
@@ -561,6 +568,9 @@ int main( int argc, char *argv[] )
 #ifdef HAVE_PNG
     PNGCompressor png( png_quality );
 #endif
+#ifdef HAVE_WEBP
+    WebPCompressor webp( webp_quality );
+#endif
 
 
     // View object for use with the CVT command etc
@@ -588,6 +598,9 @@ int main( int argc, char *argv[] )
       session.jpeg = &jpeg;
 #ifdef HAVE_PNG
       session.png = &png;
+#endif
+#ifdef HAVE_WEBP
+      session.webp = &webp;
 #endif
       session.loglevel = loglevel;
       session.logfile = &logfile;

@@ -39,6 +39,9 @@
 #ifdef HAVE_PNG
 #include "PNGCompressor.h"
 #endif
+#ifdef HAVE_WEBP
+#include "WebPCompressor.h"
+#endif
 
 
 // Define our http header cache max age (24 hours)
@@ -68,6 +71,9 @@ struct Session {
   JPEGCompressor* jpeg;
 #ifdef HAVE_PNG
   PNGCompressor* png;
+#endif
+#ifdef HAVE_WEBP
+  WebPCompressor* webp;
 #endif
   View* view;
   IIPResponse* response;
@@ -240,6 +246,17 @@ class PTL : public JTL {
   void run( Session* session, const std::string& argument ){
     // Set our encoding format and call JTL::run
     session->view->output_format = PNG;
+    JTL::run( session, argument );
+  };
+};
+
+
+/// WebP Tile Command
+class WTL : public JTL {
+public:
+  void run( Session* session, const std::string& argument ){
+    // Set our encoding format and call JTL::run
+    session->view->output_format = WEBP;
     JTL::run( session, argument );
   };
 };

@@ -1,6 +1,6 @@
 # Process this file with autoconf to produce a configure script.
 
-AC_INIT(iipsrv,1.2,ruven@users.sourceforge.net)
+AC_INIT( [iipsrv], [1.2], [ruven@users.sourceforge.net] )
 AC_CONFIG_MACRO_DIR([m4])
 AM_INIT_AUTOMAKE
 
@@ -179,6 +179,33 @@ else
      else
 	AM_CONDITIONAL([ENABLE_PNG], [false])
      fi
+fi
+
+
+#************************************************************
+#     Check for WebP support
+#************************************************************
+
+WEBP=false
+AC_ARG_ENABLE( webp,
+    [  --disable-webp           disable WebP])
+
+
+if test "x$enable_png" == "xno"; then
+   AC_MSG_RESULT([disabling WebP support])
+   AM_CONDITIONAL([ENABLE_WEBP], [false])
+else
+   AC_CHECK_HEADERS( webp/encode.h, [WEBP=true], [WEBP=false] )
+   AC_SEARCH_LIBS( [WebPEncode], [webp], [WEBP=true], [WEBP=false] )
+   AC_SEARCH_LIBS( [WebPMuxAssemble], [webpmux], [WEBP=true], [WEBP=false] )
+
+   if test "x${WEBP}" = xtrue; then
+      AM_CONDITIONAL([ENABLE_WEBP], [true])
+      AC_DEFINE(HAVE_WEBP)
+   else
+      AM_CONDITIONAL([ENABLE_WEBP], [false])
+   fi
+
 fi
 
 
@@ -428,9 +455,10 @@ AC_OUTPUT
 AC_MSG_RESULT([
 Options Enabled:
 ---------------
- Memcached  :  ${MEMCACHED}
- JPEG2000   :  ${JPEG2000_CODEC}
- OpenMP     :  ${OPENMP}
- Loggers    :  ${LOGGING}
- PNG Output :  ${PNG}
+ Memcached   :  ${MEMCACHED}
+ JPEG2000    :  ${JPEG2000_CODEC}
+ OpenMP      :  ${OPENMP}
+ Loggers     :  ${LOGGING}
+ PNG Output  :  ${PNG}
+ WebP Output :  ${WEBP}
 ])

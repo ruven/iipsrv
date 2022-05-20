@@ -33,11 +33,8 @@ using namespace std;
 
 RawTile TileManager::getNewTile( int resolution, int tile, int xangle, int yangle, int layers, CompressionType ctype ){
 
-  RawTile ttt;
-
   // Get a raw tile from the IIPImage image object
-  ttt = image->getTile( xangle, yangle, resolution, layers, tile );
-
+  RawTile ttt = image->getTile( xangle, yangle, resolution, layers, tile );
 
   // Apply the watermark if we have one.
   // Do this before inserting into cache so that we cache watermarked tiles
@@ -92,7 +89,15 @@ RawTile TileManager::getNewTile( int resolution, int tile, int xangle, int yangl
     break;
 
 
-   case DEFLATE:
+    case WEBP:
+      if( loglevel >=2 ) compression_timer.start();
+      compressor->Compress( ttt );
+      if( loglevel >= 2 ) *logfile << "TileManager :: WebP Compression Time: "
+				   << compression_timer.getTime() << " microseconds" << endl;
+      break;
+
+
+    case DEFLATE:
     // No deflate for the time being ;-)
     if( loglevel >= 4 ) *logfile << "TileManager :: DEFLATE Compression requested: Not currently available" << endl;
     break;
@@ -155,7 +160,6 @@ void TileManager::crop( RawTile *ttt ){
   len = ttt->width * ttt->height * ttt->channels * (ttt->bpc/8);
   ttt->dataLength = len;
   ttt->padded = false;
-
 }
 
 
@@ -194,6 +198,14 @@ RawTile TileManager::getTile( int resolution, int tile, int xangle, int yangle, 
       break;
 
 
+    case WEBP:
+      if( (rawtile = tileCache->getTile( image->getImagePath(), resolution, tile,
+					 xangle, yangle, WEBP, compressor->getQuality() )) ) break;
+      if( (rawtile = tileCache->getTile( image->getImagePath(), resolution, tile,
+					 xangle, yangle, UNCOMPRESSED, 0 )) ) break;
+      break;
+
+
     case UNCOMPRESSED:
       if( (rawtile = tileCache->getTile( image->getImagePath(), resolution, tile,
 					 xangle, yangle, UNCOMPRESSED, 0 )) ) break;
@@ -212,6 +224,7 @@ RawTile TileManager::getTile( int resolution, int tile, int xangle, int yangle, 
     switch( ctype ){
       case JPEG: compName = "JPEG"; break;
       case PNG: compName = "PNG"; break;
+      case WEBP: compName = "WebP"; break;
       case DEFLATE: compName = "DEFLATE"; break;
       case UNCOMPRESSED: compName = "UNCOMPRESSED"; break;
       default: break;
@@ -235,7 +248,7 @@ RawTile TileManager::getTile( int resolution, int tile, int xangle, int yangle, 
 				 << "TileManager :: Cache Size: " << tileCache->getNumElements()
 				 << " tiles, " << tileCache->getMemorySize() << " MB" << endl;
 
-    
+
     RawTile newtile = this->getNewTile( resolution, tile, xangle, yangle, layers, ctype );
 
     if( loglevel >= 3 ) *logfile << "TileManager :: Total Tile Access Time: "
@@ -259,7 +272,7 @@ RawTile TileManager::getTile( int resolution, int tile, int xangle, int yangle, 
   // Perform JPEG compression iff we have an 8 bit per channel image and either 1 or 3 bands
   // PNG compression can have 8 or 16 bits and alpha channels
   if( (rawtile->compressionType == UNCOMPRESSED) &&
-      ( ( ctype==JPEG && rawtile->bpc==8 && (rawtile->channels==1 || rawtile->channels==3) ) || ctype==PNG ) ){
+      ( ( ctype==JPEG && rawtile->bpc==8 && (rawtile->channels==1 || rawtile->channels==3) ) || ctype==PNG || ctype==WEBP ) ){
 
     // Rawtile is a pointer to the cache data, so we need to create a copy of it in case we compress it
     RawTile ttt( *rawtile );

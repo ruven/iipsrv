@@ -30,6 +30,7 @@
 #define FILENAME_PATTERN "_pyr_"
 #define JPEG_QUALITY 75
 #define PNG_QUALITY 1
+#define WEBP_QUALITY 50
 #define MAX_CVT 5000
 #define MAX_LAYERS 0
 #define FILESYSTEM_PREFIX ""
@@ -123,6 +124,20 @@ class Environment {
       if( quality < 0 ) quality = 0;
     }
     else quality = PNG_QUALITY;
+
+    return quality;
+  }
+
+
+  static int getWebPQuality(){
+    char* envpara = getenv( "WEBP_QUALITY" );
+    int quality;
+    if( envpara ){
+      quality = atoi( envpara );
+      if( quality > 100 ) quality = 900;
+      if( quality < 0 ) quality = 0;
+    }
+    else quality = WEBP_QUALITY;
 
     return quality;
   }

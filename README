@@ -17,7 +17,7 @@ FEATURES
 * Fast lightweight embeddable FastCGI server module
 * High performance with inbuilt configurable cache
 * Support for gigapixel images
-* Dynamic JPEG export of whole or regions of images at any resolution
+* Dynamic JPEG, PNG and WebP export of whole or regions of images at any resolution
 * Supports IIP, Zoomify, DeepZoom and IIIF protocols
 * 1, 8, 16 and 32 bit image support including 32 bit floating point support
 * CIELAB support with automatic CIELAB->sRGB colour space conversion
@@ -57,7 +57,7 @@ See COPYING.FCGI for licensing information for these libraries.
 REQUIREMENTS
 ------------
 Requirements: libtiff, zlib and the IJG JPEG development libraries.
-Optional: libmemcached (for Memcached) and Kakadu or OpenJPEG (for JPEG2000).
+Optional: libmemcached (for Memcached), libpng( for PNG output), libwebp (for WebP output) and Kakadu or OpenJPEG (for JPEG2000 input).
 
 Plus, of course, an fcgi-enabled web server. The server has been successfully
 tested on the following servers:
@@ -167,8 +167,16 @@ will look for "${FILESYSTEM_PREFIX}/UUID.tif". In the IIIF info.json document,
 the image @id will be set without the ".tif" suuffix.
 
 JPEG_QUALITY: The default JPEG quality factor for compression when the
-client does not specify one . The value should be between 1 (highest level of
+client does not specify one. The value should be between 1 (highest level of
 compression) and 100 (highest image quality). The default is 75.
+
+PNG_QUALITY: The default PNG quality factor for compression when the
+client does not specify one. The value should be between 1 (highest level of
+compression) and 9 (highest image quality). The default is 1.
+
+WEBP_QUALITY: The default WebP quality factor for compression when the
+client does not specify one. The value should be between 0 (highest level of
+compression) and 100 (highest image quality). The default is 50.
 
 MAX_CVT: Limits the maximum output image dimensions (in pixels) allowable for dynamic
 image export via the CVT command or for IIIF requests. This prevents huge requests

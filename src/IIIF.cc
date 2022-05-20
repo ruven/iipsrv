@@ -2,7 +2,7 @@
 
     IIIF Request Command Handler Class Member Function
 
-    Copyright (C) 2014-2020 Ruven Pillay
+    Copyright (C) 2014-2022 Ruven Pillay
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -249,6 +249,9 @@ void IIIF::run( Session* session, const string& src )
 		       << "  \"maxWidth\" : " << max << "," << endl
 		       << "  \"maxHeight\" : " << max << "," << endl
 		       << "  \"extraQualities\": [\"color\",\"gray\",\"bitonal\"]," << endl
+#ifdef HAVE_WEBP
+		       << "  \"extraFormats\": [\"webp\"]," << endl
+#endif
 		       << "  \"extraFeatures\": [\"regionByPct\",\"sizeByForcedWh\",\"sizeByWh\",\"sizeAboveFull\",\"sizeUpscaling\",\"rotationBy90s\",\"mirroring\"]" << endl
 		       << "}";
     }
@@ -257,7 +260,7 @@ void IIIF::run( Session* session, const string& src )
       infoStringStream << "  \"@id\" : \"" << iiif_id << "\"," << endl
 		       << "  \"profile\" : [" << endl
 		       << "     \"" << IIIF_PROTOCOL << "/" << iiif_version << "/" << IIIF_PROFILE << ".json\"," << endl
-		       << "     { \"formats\" : [ \"jpg\", \"png\" ]," << endl
+		       << "     { \"formats\" : [ \"jpg\", \"png\", \"webp\" ]," << endl
 		       << "       \"qualities\" : [\"native\",\"color\",\"gray\",\"bitonal\"]," << endl
 		       << "       \"supports\" : [\"regionByPct\",\"regionSquare\",\"sizeByForcedWh\",\"sizeByWh\",\"sizeAboveFull\",\"sizeUpscaling\",\"rotationBy90s\",\"mirroring\"]," << endl
 		       << "       \"maxWidth\" : " << max << "," << endl
@@ -542,7 +545,7 @@ void IIIF::run( Session* session, const string& src )
       // Check for a format specifier
       pos = quality.find_last_of(".");
 
-      // Get requested output format: JPEG and PNG are currently supported
+      // Get requested output format: JPEG, PNG and WebP are currently supported
       if ( pos != string::npos ){
         format = quality.substr( pos + 1, string::npos );
         quality.erase( pos, string::npos );
@@ -550,6 +553,9 @@ void IIIF::run( Session* session, const string& src )
 	if( format == "jpg" ) session->view->output_format = JPEG;
 #ifdef HAVE_PNG
 	else if( format == "png" ) session->view->output_format = PNG;
+#endif
+#ifdef HAVE_WEBP
+	else if( format == "webp" ) session->view->output_format = WEBP;
 #endif
 	else throw invalid_argument( "IIIF :: unsupported output format" );
       }

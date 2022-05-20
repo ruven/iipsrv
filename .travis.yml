@@ -15,10 +15,12 @@ addons:
       - libfcgi-dev
       - libpng-dev
       - libopenjp2-7-dev
+      - libwebp-dev
   homebrew:
     packages:
       - fcgi
       - libmemcached
+      - webp
 # pkg addon buggy - skip for now
 #  pkg:
 #    - png

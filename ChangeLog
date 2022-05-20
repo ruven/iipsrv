@@ -1,3 +1,10 @@
+20/05/2022:
+	- Added WebP output support. Both tile and region output are supported for both IIP and IIIF. Individual tiles can
+	  be requested using the WTL paramter which works in the same way as PTL for PNG and JTL for JPEG. CVT region
+	  requests can be made with CVT=webp. WebP encoder supports alpha channels and 8 bit images. To compile, iipsrv
+	  requires the libwebp development headers and libraries, which are automatically detected in ./configure.
+
+
 17/04/2022:
 	- Re-write of Transform::twist() function to add OpenMP parallelization and allow supplied CTW matrix to determine
 	  number of output channels.

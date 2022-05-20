@@ -7,7 +7,7 @@ INCLUDES =		@INCLUDES@ @LIBFCGI_INCLUDES@ @JPEG_INCLUDES@ @TIFF_INCLUDES@
 LIBS =			@LIBS@ @LIBFCGI_LIBS@ @DL_LIBS@ @JPEG_LIBS@ @TIFF_LIBS@ -lm
 AM_LDFLAGS =		@LIBFCGI_LDFLAGS@
 
-iipsrv_fcgi_LDADD = Main.o
+iipsrv_fcgi_LDADD = Main.o WebPCompressor.o
 
 if ENABLE_KAKADU
 iipsrv_fcgi_LDADD += KakaduImage.o
@@ -25,7 +25,11 @@ if ENABLE_MODULES
 iipsrv_fcgi_LDADD += DSOImage.o
 endif
 
-EXTRA_iipsrv_fcgi_SOURCES = DSOImage.h DSOImage.cc KakaduImage.h KakaduImage.cc Main.cc OpenJPEGImage.h OpenJPEGImage.cc PNGCompressor.h PNGCompressor.cc
+EXTRA_iipsrv_fcgi_SOURCES = Main.cc DSOImage.h DSOImage.cc \
+			KakaduImage.h KakaduImage.cc \
+			OpenJPEGImage.h OpenJPEGImage.cc \
+			PNGCompressor.h PNGCompressor.cc \
+			WebPCompressor.h WebPCompressor.cc
 
 iipsrv_fcgi_SOURCES = \
 			IIPImage.h \

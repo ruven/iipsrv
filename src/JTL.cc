@@ -79,6 +79,9 @@ void JTL::send( Session* session, int resolution, int tile ){
 #ifdef HAVE_PNG
   else if( session->view->output_format == PNG ) compressor = session->png;
 #endif
+#ifdef HAVE_WEBP
+  else if( session->view->output_format == WEBP ) compressor = session->webp;
+#endif
   else compressor = session->jpeg;
 
 
@@ -318,9 +321,10 @@ void JTL::send( Session* session, int resolution, int tile ){
 
 
   // Reduce to 1 or 3 bands if we have an alpha channel or a multi-band image and have requested a JPEG tile
-  // For PNG, strip extra bands if we have more than 4 present
+  // For PNG and WebP, strip extra bands if we have more than 4 present
   if( ( (session->view->output_format == JPEG) && (rawtile.channels == 2 || rawtile.channels > 3) ) ||
-      ( (session->view->output_format == PNG) && (rawtile.channels > 4) ) ){
+      ( (session->view->output_format == PNG) && (rawtile.channels > 4) ) ||
+      ( (session->view->output_format == WEBP) && (rawtile.channels > 4) ) ){
 
     unsigned int bands = (rawtile.channels==2) ? 1 : 3;
     if( session->loglevel >= 4 ){

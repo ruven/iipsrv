@@ -53,6 +53,9 @@ void CVT::send( Session* session ){
 #ifdef HAVE_PNG
   else if( session->view->output_format == PNG ) compressor = session->png;
 #endif
+#ifdef HAVE_WEBP
+  else if( session->view->output_format == WEBP ) compressor = session->webp;
+#endif
   else return;
 
 
@@ -391,9 +394,10 @@ void CVT::send( Session* session ){
 
 
   // Reduce to 1 or 3 bands if we have an alpha channel or a multi-band image and have requested a JPEG tile
-  // For PNG, strip extra bands if we have more than 4 present
+  // For PNG and WebP, strip extra bands if we have more than 4 present
   if( ( (session->view->output_format == JPEG) && (complete_image.channels == 2 || complete_image.channels > 3) ) ||
-      ( (session->view->output_format == PNG) && (complete_image.channels > 4) ) ){
+      ( (session->view->output_format == PNG) && (complete_image.channels > 4) ) ||
+      ( (session->view->output_format == WEBP) && (complete_image.channels > 4) ) ){
 
     int output_channels = (complete_image.channels==2)? 1 : 3;
     if( session->loglevel >= 5 ) function_timer.start();
