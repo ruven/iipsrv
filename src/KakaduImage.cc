@@ -31,28 +31,39 @@
 #include <cmath>
 #include <sstream>
 
-// Required for get_nprocs_conf() on Linux
+
+// Define get_concurrency() function to return number of available threads
+#if __cplusplus >= 201103L
+// C++11 has support for thread::hardware_concurrency()
+#include <thread>
+unsigned int get_concurrency(){ return std::thread::hardware_concurrency(); }
+#else
+// If no C++11 threads support, use get_nprocs_conf() if exists
 #ifdef NPROCS
 #include <sys/sysinfo.h>
-#endif
-
-// On Mac OS X, define our own get_nprocs_conf()
+unsigned int get_concurrency(){ return get_nprocs_conf(); }
+#else
+// On Mac OS X and FreeBSD, no get_nprocs_conf()
 #if defined (__APPLE__) || defined(__FreeBSD__)
 #include <pthread.h>
 #include <sys/sysctl.h>
-unsigned int get_nprocs_conf(){
+unsigned int get_concurrency(){
   int numProcessors = 0;
   size_t size = sizeof(numProcessors);
   int returnCode = sysctlbyname("hw.ncpu", &numProcessors, &size, NULL, 0);
   if( returnCode != 0 ) return 1;
   else return (unsigned int)numProcessors;
 }
-#define NPROCS
+#else
+// Otherwise set as unthreaded
+unsigned int get_concurrency(){ return 0; }
+#endif  // endif defined APPLE
+#endif  // endif ifdef NPROCS
 #endif
 
 
 #include "Timer.h"
-//#define DEBUG 1
+#define DEBUG 1
 
 
 using namespace std;
@@ -515,12 +526,7 @@ void KakaduImage::process( unsigned int res, int layers, int xoffset, int yoffse
 
 
   // Create some worker threads
-#ifdef NPROCS
-  int num_threads = get_nprocs_conf();
-#else
-  int num_threads = 0;
-#endif
-
+  int num_threads = get_concurrency();
 
   kdu_thread_env env, *env_ref = NULL;
   if( num_threads > 0 ){

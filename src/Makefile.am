@@ -10,7 +10,7 @@ AM_LDFLAGS =		@LIBFCGI_LDFLAGS@
 iipsrv_fcgi_LDADD = Main.o WebPCompressor.o
 
 if ENABLE_KAKADU
-iipsrv_fcgi_LDADD += KakaduImage.o
+iipsrv_fcgi_LDADD += KakaduImage.o @KAKADU_OBJS@
 endif
 
 if ENABLE_OPENJPEG

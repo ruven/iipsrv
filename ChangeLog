@@ -1,5 +1,6 @@
 22/05/2022:
-	- Removed unnecessary <iostream> includes
+	- Removed unnecessary <iostream> includes.
+	- Tweak to Kakadu configure and updated concurrency check in KakaduImage.cc to use C++11 std::thread if available.
 
 
 20/05/2022:

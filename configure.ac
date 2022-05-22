@@ -260,9 +260,9 @@ if test -n "$kakadu_path"; then
 	if test "x${KAKADU}" = xtrue; then
 		AC_DEFINE(HAVE_KAKADU)
 		INCLUDES="$INCLUDES -I$kakadu_path/managed/all_includes/"
-		EXTRAS="KakaduImage.o"
+		KAKADU_OBJS="$kakadu_path/apps/make/jpx.o $kakadu_path/apps/make/jp2.o $kakadu_path/apps/make/kdu_stripe_decompressor.o"
 		kakadu_lib_name=`basename $kakadu_path/apps/make/*.so | sed 's/^lib//' | sed 's/.so$//'`
-		LIBS="$LIBS $kakadu_path/apps/make/jpx.o $kakadu_path/apps/make/jp2.o $kakadu_path/apps/make/kdu_stripe_decompressor.o -L$kakadu_path/apps/make -l$kakadu_lib_name -lpthread"
+		LIBS="$LIBS -L$kakadu_path/apps/make -l$kakadu_lib_name -lpthread"
 
 		# Check for SSSE3 support in Kakadu
 		AC_CHECK_FILE( $kakadu_path/apps/make/ssse3_stripe_transfer.o,
@@ -270,7 +270,7 @@ if test -n "$kakadu_path"; then
 			KDU_SSSE3=true
 		)
 		if test "x${KDU_SSSE3}" = xtrue; then
-			LIBS="$LIBS $kakadu_path/apps/make/ssse3_stripe_transfer.o"
+			KAKADU_OBJS="$KAKADU_OBJS $kakadu_path/apps/make/ssse3_stripe_transfer.o"
 		fi
 
 		# Check for AVX2 support in Kakadu
@@ -279,7 +279,7 @@ if test -n "$kakadu_path"; then
 			KDU_AVX2=true
 		)
 		if test "x${KDU_AVX2}" = xtrue; then
-			LIBS="$LIBS $kakadu_path/apps/make/avx2_stripe_transfer.o"
+			KAKADU_OBJS="$KAKADU_OBJS $kakadu_path/apps/make/avx2_stripe_transfer.o"
 		fi
 
 		# Check for addition of kdu_client_window in versions 7.5 and upwards
@@ -289,7 +289,7 @@ if test -n "$kakadu_path"; then
 			AC_MSG_RESULT([configure: Kakadu is < v7.5])
 		)
 		if test "x${KDU_75}" = xtrue; then
-			LIBS="$LIBS $kakadu_path/apps/make/kdu_client_window.o"
+			KAKADU_OBJS="$KAKADU_OBJS $kakadu_path/apps/make/kdu_client_window.o"
 		fi
 
 		AC_CHECK_FILE( $kakadu_path/apps/make/supp_local.o,
@@ -298,16 +298,16 @@ if test -n "$kakadu_path"; then
                         AC_MSG_RESULT([configure: Kakadu is < v7.10])
                 )
 		if test "x${KDU_7A}" = xtrue; then
-			LIBS="$LIBS $kakadu_path/apps/make/supp_local.o"
+			KAKADU_OBJS="$KAKADU_OBJS $kakadu_path/apps/make/supp_local.o"
 		fi
 
 		JPEG2000_CODEC="true (Kakadu)"
 
 		INCLUDES="$INCLUDES -I."
 		AC_SUBST(INCLUDES)
-		AC_SUBST(EXTRAS)
+		AC_SUBST(KAKADU_OBJS)
 
-		AC_CHECK_LIB(c,get_nprocs_conf,AC_DEFINE(NPROCS))
+		AC_CHECK_FUNC([get_nprocs_conf],[AC_DEFINE(NPROCS)])
 	fi
 else
 	AM_CONDITIONAL([ENABLE_KAKADU],[false])
@@ -373,10 +373,8 @@ else
 
 		if test "x$OPENJPEG" = xtrue; then
 		    AC_DEFINE(HAVE_OPENJPEG)
-		    EXTRAS="OpenJPEGImage.o"
 		    JPEG2000_CODEC="true (OpenJPEG)"
 		    AM_CONDITIONAL([ENABLE_OPENJPEG], [test x$OPENJPEG = xtrue])
-		    AC_SUBST(EXTRAS)
 		    AC_SUBST(INCLUDES)
 		    AC_SUBST(LIBS)
 		else
