@@ -1,7 +1,7 @@
 /*
     IIP OJB Command Handler Class Member Functions
 
-    Copyright (C) 2006-2019 Ruven Pillay.
+    Copyright (C) 2006-2022 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -20,7 +20,6 @@
 
 
 #include "Task.h"
-#include <iostream>
 #include <algorithm>
 
 

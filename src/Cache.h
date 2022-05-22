@@ -2,7 +2,7 @@
 
 /*  IIP Image Server
 
-    Copyright (C) 2005-2019 Ruven Pillay.
+    Copyright (C) 2005-2022 Ruven Pillay.
     Based on an LRU cache by Patrick Audley <http://blackcat.ca/lifeline/query.php/tag=LRU_CACHE>
     Copyright (C) 2004 by Patrick Audley
 
@@ -79,7 +79,6 @@ namespace __gnu_cxx {
 
 
 
-#include <iostream>
 #include <list>
 #include <string>
 #include "RawTile.h"
