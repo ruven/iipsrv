@@ -1,3 +1,8 @@
+23/05/2022:
+	- Fix to IIIF.cc to better determine whether a request is for a tile and suitable to be passed to JTL.
+	  Fixes problem identified in: https://github.com/ruven/iipsrv/issues/228
+
+
 22/05/2022:
 	- Removed unnecessary <iostream> includes.
 	- Tweak to Kakadu configure and updated concurrency check in KakaduImage.cc to use C++11 std::thread if available.

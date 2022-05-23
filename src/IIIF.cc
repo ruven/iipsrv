@@ -629,16 +629,17 @@ void IIIF::run( Session* session, const string& src )
     view_top = 0;
   }
 
-  // Determine whether this is a tile request which coincides with our tile boundaries
-  if ( ( session->view->maintain_aspect && (requested_res > 0) &&
-         (requested_width == (int) tw) && (requested_height == (int) th) &&
-         (view_left % tw == 0) && (view_top % th == 0) &&
-         (session->view->getViewWidth() % tw == 0) && (session->view->getViewHeight() % th == 0) &&
-         (session->view->getViewWidth() < im_width) && (session->view->getViewHeight() < im_height) )
-       ||
-       ( session->view->maintain_aspect && (requested_res == 0) &&
-         ((unsigned int) requested_width == im_width) && ((unsigned int) requested_height == im_height) )
-     ){
+
+  // Determine whether this is a request for an individual tile which, therefore, coincides exactly with our tile boundaries
+  if( ( session->view->maintain_aspect && (requested_res > 0) &&
+	(requested_width == (int) tw) && (requested_height == (int) th) &&                 // Request is for exact tile dimensions
+	(view_left % tw == 0) && (view_top % th == 0) &&                                   // Left / top boundaries align with tile positions
+	(session->view->getViewWidth() == tw) && (session->view->getViewHeight() == th) )  // View size should be identical to tile dimensions
+      ||
+      // For smallest resolution, image size can be less than tile size
+      ( session->view->maintain_aspect && (requested_res == 0) &&
+	((unsigned int) requested_width == im_width) && ((unsigned int) requested_height == im_height) )
+      ){
 
     // Get the width and height for last row and column tiles
     unsigned int rem_x = im_width % tw;
