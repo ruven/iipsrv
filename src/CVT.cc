@@ -222,11 +222,15 @@ void CVT::send( Session* session ){
 
 
   // Retrieve image region
+  if( session->loglevel >= 2 ) function_timer.start();
   RawTile complete_image = tilemanager.getRegion( requested_res,
 						  session->view->xangle, session->view->yangle,
 						  session->view->getLayers(),
 						  view_left, view_top, view_width, view_height );
-
+  if( session->loglevel >= 2 ){
+    *(session->logfile) << "CVT :: Region decoding time: "
+			<< function_timer.getTime() << " microseconds" << endl;
+  }
 
 
   // Convert CIELAB to sRGB

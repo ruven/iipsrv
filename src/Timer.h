@@ -1,8 +1,6 @@
-// Timer class
+/*  IIPImage server :: Timer class
 
-/*  IIP fcgi server module
-
-    Copyright (C) 2005-2013 Ruven Pillay.
+    Copyright (C) 2005-2022 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -28,11 +26,14 @@
 #include <sys/time.h>
 #endif
 
+// Use the STL chrono classes if available
+#ifdef HAVE_STL_CHRONO
+#include <chrono>
+#endif
 
 #ifdef WIN32
 #include "../windows/Time.h"
 #endif
-
 
 /// Simple Timer class to allow us to time our responses
 
@@ -41,20 +42,27 @@ class Timer {
 
  private:
 
-  /// Time structure
+#ifdef HAVE_STL_CHRONO
+  /// Our start time based on the high_resolution_clock
+  std::chrono::time_point<std::chrono::high_resolution_clock> start_t;
+#else
+
+  /// Time structure for sys time
   struct timeval tv;
 
-  /// Timezone structure
+  /// Timezone structure for sys time
   struct timezone tz;
 
-  /// Our start time in seconds
+  /// Start time in seconds
   long start_t;
 
-  /// The microsecond component of our start time
+  /// Start time in microseconds
   long start_u;
 
+#endif
 
- public:
+
+public:
 
   /// Constructor
   Timer() {;};
@@ -63,25 +71,32 @@ class Timer {
   /// Set our time
   /** Initialise with our start time */
   void start() {
+#ifdef HAVE_STL_CHRONO
+    start_t = std::chrono::high_resolution_clock::now();
+#else
     tz.tz_minuteswest = 0;
     if( gettimeofday( &tv, NULL ) == 0 ){
       start_t = tv.tv_sec;
       start_u = tv.tv_usec;
     }
     else start_t = start_u = 0;
+#endif
   }
 
 
   /// Return time since we were initialised in microseconds 
   long getTime() {
+#ifdef HAVE_STL_CHRONO
+    auto d = std::chrono::duration_cast<std::chrono::microseconds>( std::chrono::high_resolution_clock::now() - start_t );
+    return d.count();
+#else
     if( gettimeofday( &tv, NULL ) == 0 ) return (tv.tv_sec - start_t) * 1000000 + (tv.tv_usec - start_u);
     else return 0;
+#endif
   }
 
 
 };
 
 
-
 #endif
-

@@ -34,7 +34,11 @@ using namespace std;
 RawTile TileManager::getNewTile( int resolution, int tile, int xangle, int yangle, int layers, CompressionType ctype ){
 
   // Get a raw tile from the IIPImage image object
+  if( loglevel >= 2 ) insert_timer.start();
   RawTile ttt = image->getTile( xangle, yangle, resolution, layers, tile );
+  if( loglevel >= 2 ) *logfile << "TileManager :: Tile decoding time: " << insert_timer.getTime()
+			       << " microseconds" << endl;
+
 
   // Apply the watermark if we have one.
   // Do this before inserting into cache so that we cache watermarked tiles
@@ -75,31 +79,31 @@ RawTile TileManager::getNewTile( int resolution, int tile, int xangle, int yangl
     if( ttt.bpc == 8 && (ttt.channels==1 || ttt.channels==3) ){
       if( loglevel >= 4 ) compression_timer.start();
       compressor->Compress( ttt );
-      if( loglevel >= 4 ) *logfile << "TileManager :: JPEG Compression Time: "
+      if( loglevel >= 4 ) *logfile << "TileManager :: JPEG compression time: "
 				   << compression_timer.getTime() << " microseconds" << endl;
     }
     break;
 
 
    case PNG:
-    if( loglevel >=2 ) compression_timer.start();
+    if( loglevel >= 4 ) compression_timer.start();
     compressor->Compress( ttt );
-    if( loglevel >= 2 ) *logfile << "TileManager :: PNG Compression Time: "
+    if( loglevel >= 4 ) *logfile << "TileManager :: PNG compression time: "
 				 << compression_timer.getTime() << " microseconds" << endl;
     break;
 
 
     case WEBP:
-      if( loglevel >=2 ) compression_timer.start();
+      if( loglevel >= 4 ) compression_timer.start();
       compressor->Compress( ttt );
-      if( loglevel >= 2 ) *logfile << "TileManager :: WebP Compression Time: "
+      if( loglevel >= 4 ) *logfile << "TileManager :: WebP compression time: "
 				   << compression_timer.getTime() << " microseconds" << endl;
       break;
 
 
     case DEFLATE:
     // No deflate for the time being ;-)
-    if( loglevel >= 4 ) *logfile << "TileManager :: DEFLATE Compression requested: Not currently available" << endl;
+    if( loglevel >= 4 ) *logfile << "TileManager :: DEFLATE compression requested: Not currently available" << endl;
     break;
 
 
@@ -241,17 +245,17 @@ RawTile TileManager::getTile( int resolution, int tile, int xangle, int yangle, 
                                    << " ... updating" << endl;
     }
 
-    if( loglevel >= 4 ) *logfile << "TileManager :: Cache Miss for resolution: " << resolution
+    if( loglevel >= 4 ) *logfile << "TileManager :: Cache miss for resolution: " << resolution
 				 << ", tile: " << tile
 				 << ", compression: " << compName
 				 << ", quality: " << compressor->getQuality() << endl
-				 << "TileManager :: Cache Size: " << tileCache->getNumElements()
+				 << "TileManager :: Cache size: " << tileCache->getNumElements()
 				 << " tiles, " << tileCache->getMemorySize() << " MB" << endl;
 
 
     RawTile newtile = this->getNewTile( resolution, tile, xangle, yangle, layers, ctype );
 
-    if( loglevel >= 3 ) *logfile << "TileManager :: Total Tile Access Time: "
+    if( loglevel >= 3 ) *logfile << "TileManager :: Total tile access time: "
 				 << tile_timer.getTime() << " microseconds" << endl;
     return newtile;
   }
@@ -259,11 +263,11 @@ RawTile TileManager::getTile( int resolution, int tile, int xangle, int yangle, 
 
 
 
-  if( loglevel >= 3 ) *logfile << "TileManager :: Cache Hit for resolution: " << resolution
+  if( loglevel >= 3 ) *logfile << "TileManager :: Cache hit for resolution: " << resolution
 			       << ", tile: " << tile
 			       << ", compression: " << compName
 			       << ", quality: " << compressor->getQuality() << endl
-			       << "TileManager :: Cache Size: "
+			       << "TileManager :: Cache size: "
 			       << tileCache->getNumElements() << " tiles, "
 			       << tileCache->getMemorySize() << " MB" << endl;
 
@@ -298,12 +302,12 @@ RawTile TileManager::getTile( int resolution, int tile, int xangle, int yangle, 
     if( loglevel >= 3 ) *logfile << "TileManager :: Tile cache insertion time: " << insert_timer.getTime()
 				 << " microseconds" << endl;
 
-    if( loglevel >= 3 ) *logfile << "TileManager :: Total Tile Access Time: "
+    if( loglevel >= 3 ) *logfile << "TileManager :: Total tile access time: "
 				 << tile_timer.getTime() << " microseconds" << endl;
     return RawTile( ttt );
   }
 
-  if( loglevel >= 3 ) *logfile << "TileManager :: Total Tile Access Time: "
+  if( loglevel >= 3 ) *logfile << "TileManager :: Total tile access time: "
 			       << tile_timer.getTime() << " microseconds" << endl;
 
   return RawTile( *rawtile );

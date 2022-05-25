@@ -62,6 +62,11 @@ AS_IF([test "x$enable_openmp" != "xyes"], [
  OPENMP=true
 ])
 
+# Check for C++11 chrono timers
+AC_LANG_PUSH([C++])
+AC_CHECK_HEADER([chrono], [AC_DEFINE(HAVE_STL_CHRONO)])
+AC_LANG_POP([C++])
+
 
 #************************************************************
 # Enable debugging
@@ -94,7 +99,7 @@ AC_SEARCH_LIBS(gzopen, z)
 #************************************************************
 # Check for libmemcached
 
-AC_CHECK_HEADERS( libmemcached/memcached.h,
+AC_CHECK_HEADER( libmemcached/memcached.h,
 	AC_SEARCH_LIBS( memcached_create,
 		memcached,
 		MEMCACHED=true,
@@ -166,7 +171,7 @@ if test "x$enable_png" == "xno"; then
    AC_MSG_RESULT([disabling PNG support])
    AM_CONDITIONAL([ENABLE_PNG], [false])
 else
-   AC_CHECK_HEADERS( png.h,
+   AC_CHECK_HEADER( png.h,
      AC_SEARCH_LIBS(
        png_create_write_struct,
        png,
@@ -195,7 +200,7 @@ if test "x$enable_png" == "xno"; then
    AC_MSG_RESULT([disabling WebP support])
    AM_CONDITIONAL([ENABLE_WEBP], [false])
 else
-   AC_CHECK_HEADERS( webp/encode.h, [WEBP=true], [WEBP=false] )
+   AC_CHECK_HEADER( webp/encode.h, [WEBP=true], [WEBP=false] )
    AC_SEARCH_LIBS( [WebPEncode], [webp], [WEBP=true], [WEBP=false] )
    AC_SEARCH_LIBS( [WebPMuxAssemble], [webpmux], [WEBP=true], [WEBP=false] )
 
@@ -306,6 +311,10 @@ if test -n "$kakadu_path"; then
 		INCLUDES="$INCLUDES -I."
 		AC_SUBST(INCLUDES)
 		AC_SUBST(KAKADU_OBJS)
+
+		AC_LANG_PUSH([C++])
+		AC_CHECK_HEADER([thread], [AC_DEFINE(HAVE_STL_THREAD)])
+		AC_LANG_POP([C++])
 
 		AC_CHECK_FUNC([get_nprocs_conf],[AC_DEFINE(NPROCS)])
 	fi
