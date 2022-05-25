@@ -1,7 +1,7 @@
 /*
     IIP Generic Output Writer Classes
 
-    Copyright (C) 2006-2021 Ruven Pillay.
+    Copyright (C) 2006-2022 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -22,8 +22,13 @@
 #ifndef _WRITER_H
 #define _WRITER_H
 
-
+// Windows vcpkg requires prefix for include
+#ifdef WIN32
+#include <fastcgi/fcgiapp.h>
+#else
 #include <fcgiapp.h>
+#endif
+
 #include <cstdio>
 #include <cstring>
 

@@ -116,8 +116,8 @@
       <Optimization>Full</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;HAVE_MEMCACHED;HAVE_OPENJPEG;VERSION="1.2";_USE_MATH_DEFINES;HAVE_TIME_H;_BASETSD_H;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>$(ProjectDir)\..\dependencies\include;fastcgi;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;HAVE_OPENJPEG;VERSION="1.2";_USE_MATH_DEFINES;HAVE_TIME_H;HAVE_STL_CHRONO;HAVE_UNORDERED_MAP;HAVE_WEBP;_BASETSD_H;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>$(ProjectDir)\..\dependencies\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
       <OmitFramePointers>true</OmitFramePointers>
       <StringPooling>true</StringPooling>
@@ -133,7 +133,7 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <AdditionalLibraryDirectories>$(ProjectDir)\libs\$(Platform);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>libmemcached.lib;jpeg.lib;turbojpeg.lib;libfcgi.lib;tiff.lib;zlib.lib;openjp2.lib;lzma.lib;libpng16.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalOptions>/LTCG %(AdditionalOptions)</AdditionalOptions>
       <IgnoreSpecificDefaultLibraries>
       </IgnoreSpecificDefaultLibraries>
@@ -153,7 +153,7 @@
       <Optimization>Disabled</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;HAVE_MEMCACHED;HAVE_OPENJPEG;VERSION="1.2";_USE_MATH_DEFINES;HAVE_TIME_H;_BASETSD_H;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;HAVE_OPENJPEG;VERSION="1.2";_USE_MATH_DEFINES;HAVE_TIME_H;HAVE_STL_CHRONO;HAVE_UNORDERED_MAP;HAVE_WEBP;_BASETSD_H;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>$(ProjectDir)\..\dependencies\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
       <OmitFramePointers>false</OmitFramePointers>
@@ -169,7 +169,7 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <AdditionalLibraryDirectories>$(ProjectDir)\libs\x86;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>libmemcached.lib;jpeg.lib;turbojpeg.lib;libfcgi.lib;tiff.lib;zlib.lib;openjp2.lib;lzma.lib;libpng16.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>libmemcached.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalOptions>/LTCG %(AdditionalOptions)</AdditionalOptions>
       <IgnoreSpecificDefaultLibraries>
       </IgnoreSpecificDefaultLibraries>
@@ -189,8 +189,8 @@
       <Optimization>Full</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;HAVE_MEMCACHED;HAVE_OPENJPEG;HAVE_PNG;VERSION="1.2";HAVE_TIME_H;_BASETSD_H;_USE_MATH_DEFINES;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>$(ProjectDir)\..\dependencies\include;fastcgi;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;HAVE_OPENJPEG;HAVE_PNG;VERSION="1.2";HAVE_TIME_H;HAVE_STL_CHRONO;HAVE_UNORDERED_MAP;HAVE_WEBP;_BASETSD_H;_USE_MATH_DEFINES;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>$(ProjectDir)\..\dependencies\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
       <OmitFramePointers>true</OmitFramePointers>
       <StringPooling>true</StringPooling>
@@ -206,7 +206,7 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <AdditionalLibraryDirectories>$(ProjectDir)\libs\x64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>libmemcached.lib;jpeg.lib;turbojpeg.lib;libfcgi.lib;tiff.lib;zlib.lib;openjp2.lib;lzma.lib;libpng16.lib;legacy_stdio_definitions.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalOptions>/LTCG %(AdditionalOptions)</AdditionalOptions>
       <AssemblyDebug>false</AssemblyDebug>
     </Link>
@@ -219,7 +219,7 @@
       <Optimization>Disabled</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;HAVE_MEMCACHED;HAVE_OPENJPEG;HAVE_PNG;VERSION="1.2";HAVE_TIME_H;_BASETSD_H;_USE_MATH_DEFINES;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;HAVE_OPENJPEG;HAVE_PNG;VERSION="1.2";HAVE_TIME_H;HAVE_STL_CHRONO;HAVE_UNORDERED_MAP;HAVE_WEBP;_BASETSD_H;_USE_MATH_DEFINES;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>$(ProjectDir)\..\dependencies\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
       <OmitFramePointers>false</OmitFramePointers>
@@ -237,7 +237,7 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <AdditionalLibraryDirectories>$(ProjectDir)\libs\x64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>libmemcached.lib;jpeg.lib;turbojpeg.lib;libfcgi.lib;tiff.lib;zlib.lib;openjp2.lib;lzma.lib;libpng16.lib;legacy_stdio_definitions.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalOptions>/LTCG %(AdditionalOptions)</AdditionalOptions>
       <LinkTimeCodeGeneration>Default</LinkTimeCodeGeneration>
       <AssemblyDebug>false</AssemblyDebug>
@@ -267,6 +267,7 @@
     <ClCompile Include="..\..\src\Transforms.cc" />
     <ClCompile Include="..\..\src\View.cc" />
     <ClCompile Include="..\..\src\Watermark.cc" />
+    <ClCompile Include="..\..\src\WebPCompressor.cc" />
     <ClCompile Include="..\..\src\Zoomify.cc" />
     <ClCompile Include="..\Time.cc" />
   </ItemGroup>
@@ -290,6 +291,7 @@
     <ClInclude Include="..\..\src\Transforms.h" />
     <ClInclude Include="..\..\src\View.h" />
     <ClInclude Include="..\..\src\Watermark.h" />
+    <ClInclude Include="..\..\src\WebPCompressor.h" />
     <ClInclude Include="..\..\src\Writer.h" />
     <ClCompile Include="..\..\src\Logger.h" />
     <ClInclude Include="..\Time.h" />
