@@ -1106,7 +1106,7 @@ void Transform::equalize( RawTile& in, vector<unsigned int>& histogram ){
 
   // Allocate and initialize our array to zero using std::fill
   float *cdf = new float[bits];
-  fill( cdf, cdf+bits, 0.0 );
+  fill( cdf, cdf+bits, 0.0f );
 
   // Find first non-zero bin
   unsigned int n0 = 0;
