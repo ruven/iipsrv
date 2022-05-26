@@ -3,6 +3,7 @@ IIPImage - High Resolution Streaming Image Server
 
 [![GPLv3 Licensed](https://img.shields.io/badge/license-GPLv3-blue.svg)](https://www.gnu.org/copyleft/gpl.html)
 [![Build Status](https://api.travis-ci.com/ruven/iipsrv.svg)](https://travis-ci.com/github/ruven/iipsrv)
+[![Build Status](https://dev.azure.com/iipimage/iipsrv/_apis/build/status/iipsrv?branchName=master)](https://dev.azure.com/iipimage/iipsrv/_build/latest?definitionId=2&branchName=master)
 [![Coverity Scan](https://img.shields.io/coverity/scan/3997.svg)](https://scan.coverity.com/projects/ruven-iipsrv)
 [![CodeFactor](https://www.codefactor.io/repository/github/ruven/iipsrv/badge/master)](https://www.codefactor.io/repository/github/ruven/iipsrv/overview/master)
 
