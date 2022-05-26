@@ -7,7 +7,7 @@
     Culture of the Czech Republic.
 
 
-    Copyright (C) 2010-2021 Ruven Pillay.
+    Copyright (C) 2010-2022 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -58,7 +58,7 @@ void Watermark::init()
 
       // Set up the memory storage
       _watermark = new unsigned char[_width*_height*_channels];
-      memset( _watermark, 0, _width*_height*_channels );
+      memset( _watermark, 0, (size_t) _width*_height*_channels );
 
       // Load the data into our buffers
       for( uint32_t i=0; i<_width*_height; i++ ){

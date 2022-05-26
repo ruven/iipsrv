@@ -491,22 +491,22 @@ RawTile TileManager::getRegion( unsigned int res, int seq, int ang, int layers, 
 	if( bpc == 8 ){
 	  unsigned char* ptr = (unsigned char*) rawtile.data;
 	  unsigned char* buf = (unsigned char*) region.data;
-	  memcpy( &buf[buffer_index], &ptr[inx], dst_tile_width*channels );
+	  memcpy( &buf[buffer_index], &ptr[inx], (size_t)dst_tile_width*channels );
 	}
 	else if( bpc ==  16 ){
 	  unsigned short* ptr = (unsigned short*) rawtile.data;
 	  unsigned short* buf = (unsigned short*) region.data;
-	  memcpy( &buf[buffer_index], &ptr[inx], dst_tile_width*channels*2 );
+	  memcpy( &buf[buffer_index], &ptr[inx], (size_t)dst_tile_width*channels*2 );
 	}
 	else if( bpc == 32 && sampleType == FIXEDPOINT ){
 	  unsigned int* ptr = (unsigned int*) rawtile.data;
 	  unsigned int* buf = (unsigned int*) region.data;
-	  memcpy( &buf[buffer_index], &ptr[inx], dst_tile_width*channels*4 );
+	  memcpy( &buf[buffer_index], &ptr[inx], (size_t)dst_tile_width*channels*4 );
 	}
 	else if( bpc == 32 && sampleType == FLOATINGPOINT ){
 	  float* ptr = (float*) rawtile.data;
 	  float* buf = (float*) region.data;
-	  memcpy( &buf[buffer_index], &ptr[inx], dst_tile_width*channels*4 );
+	  memcpy( &buf[buffer_index], &ptr[inx], (size_t)dst_tile_width*channels*4 );
 	}
       }
 

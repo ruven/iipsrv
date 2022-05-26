@@ -62,7 +62,7 @@ using namespace std;
 void Transform::normalize( RawTile& in, const vector<float>& max, const vector<float>& min ) {
 
   float *normdata;
-  unsigned int np = in.width * in.height * in.channels;
+  uint32_t np = (uint32_t) in.width * in.height * in.channels;
   unsigned int nc = in.channels;
 
   // Type pointers
@@ -79,7 +79,7 @@ void Transform::normalize( RawTile& in, const vector<float>& max, const vector<f
   }
 
   // Loop through each channel
-  for( unsigned int c = 0 ; c<nc ; c++){
+  for( uint32_t c = 0 ; c<nc ; c++){
 
     float minc = min[c];
     float diffc = max[c] - minc;
@@ -94,8 +94,8 @@ void Transform::normalize( RawTile& in, const vector<float>& max, const vector<f
 #elif defined(_OPENMP)
 #pragma omp parallel for
 #endif
-      for( unsigned int n=c; n<np; n+=nc ){
-        normdata[n] = isfinite(fptr[n])? (fptr[n] - minc) * invdiffc : 0.0;
+      for( uint32_t n=c; n<np; n+=nc ){
+        normdata[n] = isfinite(fptr[n])? (fptr[n] - minc) * invdiffc : 0.0f;
       }
     }
     else if( in.bpc == 32 && in.sampleType == FIXEDPOINT ) {
@@ -106,7 +106,7 @@ void Transform::normalize( RawTile& in, const vector<float>& max, const vector<f
 #elif defined(_OPENMP)
 #pragma omp parallel for
 #endif
-      for( unsigned int n=c; n<np; n+=nc ){
+      for( uint32_t n=c; n<np; n+=nc ){
         normdata[n] = (uiptr[n] - minc) * invdiffc;
       }
     }
@@ -118,7 +118,7 @@ void Transform::normalize( RawTile& in, const vector<float>& max, const vector<f
 #elif defined(_OPENMP)
 #pragma omp parallel for
 #endif
-      for( unsigned int n=c; n<np; n+=nc ){
+      for( uint32_t n=c; n<np; n+=nc ){
         normdata[n] = (usptr[n] - minc) * invdiffc;
       }
     }
@@ -130,7 +130,7 @@ void Transform::normalize( RawTile& in, const vector<float>& max, const vector<f
 #elif defined(_OPENMP)
 #pragma omp parallel for
 #endif
-      for( unsigned int n=c; n<np; n+=nc ){
+      for( uint32_t n=c; n<np; n+=nc ){
         normdata[n] = (ucptr[n] - minc) * invdiffc;
       }
     }
@@ -151,7 +151,7 @@ void Transform::normalize( RawTile& in, const vector<float>& max, const vector<f
   in.data = normdata;
   in.bpc = 32;
   in.sampleType = FLOATINGPOINT;
-  in.dataLength = np * (in.bpc/8);
+  in.dataLength = (uint32_t) np * (in.bpc/8);
 
 }
 
@@ -182,12 +182,12 @@ void Transform::shade( RawTile& in, int h_angle, int v_angle ){
 
   float *buffer, *infptr;
 
-  unsigned int ndata = in.dataLength * 8 / in.bpc;
+  uint32_t np = (uint32_t) in.width * in.height * in.channels;
 
   infptr= (float*)in.data;
 
   // Create new (float) data buffer
-  buffer = new float[ndata];
+  buffer = new float[np];
 
 
 #if defined(__ICC) || defined(__INTEL_COMPILER)
@@ -195,7 +195,7 @@ void Transform::shade( RawTile& in, int h_angle, int v_angle ){
 #elif defined(_OPENMP)
 #pragma omp parallel for
 #endif
-  for( unsigned int k=0; k<ndata; k++ ){
+  for( uint32_t k=0; k<np; k++ ){
 
     unsigned int n = k*3;
     if( infptr[n] == 0.0 && infptr[n+1] == 0.0 && infptr[n+2] == 0.0 ){
@@ -223,7 +223,7 @@ void Transform::shade( RawTile& in, int h_angle, int v_angle ){
 
   in.data = buffer;
   in.channels = 1;
-  in.dataLength = in.width * in.height * (in.bpc/8);
+  in.dataLength = (uint32_t) in.width * in.height * (in.bpc/8);
 }
 
 
@@ -319,7 +319,7 @@ void Transform::LAB2sRGB( unsigned char *in, unsigned char *out ){
 // Convert whole tile from CIELAB to sRGB
 void Transform::LAB2sRGB( RawTile& in ){
 
-  unsigned long np = in.width * in.height * in.channels;
+  uint32_t np = (uint32_t) in.width * in.height * in.channels;
 
   // Parallelize code using OpenMP
 #if defined(__ICC) || defined(__INTEL_COMPILER)
@@ -327,7 +327,7 @@ void Transform::LAB2sRGB( RawTile& in ){
 #elif defined(_OPENMP)
 #pragma omp parallel for
 #endif
-  for( unsigned long n=0; n<np; n+=in.channels ){
+  for( uint32_t n=0; n<np; n+=in.channels ){
     unsigned char* ptr = (unsigned char*) in.data;
     unsigned char q[3];
     LAB2sRGB( &ptr[n], &q[0] );
@@ -347,13 +347,13 @@ void Transform::cmap( RawTile& in, enum cmap_type cmap ){
   float value;
   unsigned in_chan = in.channels;
   unsigned out_chan = 3;
-  unsigned int ndata = in.dataLength * 8 / in.bpc;
+  uint32_t np = (uint32_t) in.width * in.height * in.channels;
 
   const float max3 = 1.0/3.0;
   const float max8 = 1.0/8.0;
 
   float *fptr = (float*)in.data;
-  float *outptr = new float[ndata*out_chan];
+  float *outptr = new float[np*out_chan];
   float *outv = outptr;
 
   switch(cmap){
@@ -362,7 +362,7 @@ void Transform::cmap( RawTile& in, enum cmap_type cmap ){
 #if defined(__ICC) || defined(__INTEL_COMPILER)
 #pragma ivdep
 #endif
-      for( int unsigned n=0; n<ndata; n+=in_chan, outv+=3 ){
+      for( uint32_t n=0; n<np; n+=in_chan, outv+=3 ){
         value = fptr[n];
         if(value>1.)
           { outv[0]=outv[1]=outv[2]=1.; }
@@ -382,7 +382,7 @@ void Transform::cmap( RawTile& in, enum cmap_type cmap ){
 #if defined(__ICC) || defined(__INTEL_COMPILER)
 #pragma ivdep
 #endif
-      for( unsigned int n=0; n<ndata; n+=in_chan, outv+=3 ){
+      for( uint32_t n=0; n<np; n+=in_chan, outv+=3 ){
         value = fptr[n];
         if(value>1.)
           { outv[0]=outv[1]=outv[2]=1.; }
@@ -402,7 +402,7 @@ void Transform::cmap( RawTile& in, enum cmap_type cmap ){
 #if defined(__ICC) || defined(__INTEL_COMPILER)
 #pragma ivdep
 #endif
-      for( unsigned int n=0; n<ndata; n+=in_chan, outv+=3 ){
+      for( uint32_t n=0; n<np; n+=in_chan, outv+=3 ){
         value = fptr[n];
         if(value<0.)
           { outv[0]=outv[1]=outv[2]=0.; }
@@ -424,7 +424,7 @@ void Transform::cmap( RawTile& in, enum cmap_type cmap ){
 #if defined(__ICC) || defined(__INTEL_COMPILER)
 #pragma ivdep
 #endif
-      for( unsigned int n=0; n<ndata; n+=in_chan, outv+=3 ){
+      for( uint32_t n=0; n<np; n+=in_chan, outv+=3 ){
 	value = fptr[n];
 	outv[0] = value;
 	outv[1] = outv[2] = 0.;
@@ -435,7 +435,7 @@ void Transform::cmap( RawTile& in, enum cmap_type cmap ){
 #if defined(__ICC) || defined(__INTEL_COMPILER)
 #pragma ivdep
 #endif
-      for( unsigned int n=0; n<ndata; n+=in_chan, outv+=3 ) {
+      for( uint32_t n=0; n<np; n+=in_chan, outv+=3 ) {
 	value = fptr[n];
 	outv[0] = outv[2] = 0.;
 	outv[1] = value;
@@ -446,7 +446,7 @@ void Transform::cmap( RawTile& in, enum cmap_type cmap ){
 #if defined(__ICC) || defined(__INTEL_COMPILER)
 #pragma ivdep
 #endif
-      for( unsigned int n=0; n<ndata; n+=in_chan, outv+=3 ) {
+      for( uint32_t n=0; n<np; n+=in_chan, outv+=3 ) {
 	value = fptr[n];
 	outv[0] = outv[1] = 0;
 	outv[2] = value;
@@ -462,7 +462,7 @@ void Transform::cmap( RawTile& in, enum cmap_type cmap ){
   delete[] (float*) in.data;
   in.data = outptr;
   in.channels = out_chan;
-  in.dataLength = ndata * out_chan * (in.bpc/8);
+  in.dataLength = (uint32_t) np * out_chan * (in.bpc/8);
 }
 
 
@@ -470,7 +470,7 @@ void Transform::cmap( RawTile& in, enum cmap_type cmap ){
 // Inversion function
 void Transform::inv( RawTile& in ){
 
-  unsigned int np = in.dataLength * 8 / in.bpc;
+  uint32_t np = (uint32_t) in.width * in.height * in.channels;
   float *infptr = (float*) in.data;
 
   // Loop through our pixels for floating values
@@ -479,7 +479,7 @@ void Transform::inv( RawTile& in ){
 #elif defined(_OPENMP)
 #pragma omp parallel for
 #endif
-  for( unsigned int n=0; n<np; n++ ){
+  for( uint32_t n=0; n<np; n++ ){
     float v = infptr[n];
     infptr[n] = 1.0 - v;
   }
@@ -504,7 +504,7 @@ void Transform::interpolate_nearestneighbour( RawTile& in, unsigned int resample
   bool new_buffer = false;
   if( resampled_width*resampled_height > in.width*in.height ){
     new_buffer = true;
-    output = new unsigned char[(unsigned long long)resampled_width*resampled_height*in.channels];
+    output = new unsigned char[(uint32_t)resampled_width*resampled_height*in.channels];
   }
   else output = (unsigned char*) in.data;
 
@@ -517,12 +517,12 @@ void Transform::interpolate_nearestneighbour( RawTile& in, unsigned int resample
 
       // Indexes in the current pyramid resolution and resampled spaces
       // Make sure to limit our input index to the image surface
-      unsigned long ii = (unsigned int) floorf(i*xscale);
-      unsigned long jj = (unsigned int) floorf(j*yscale);
-      unsigned long pyramid_index = (unsigned int) channels * ( ii + jj*width );
+      uint32_t ii = (uint32_t) floorf(i*xscale);
+      uint32_t jj = (uint32_t) floorf(j*yscale);
+      uint32_t pyramid_index = (uint32_t) channels * ( ii + jj*width );
 
-      unsigned long long resampled_index = (unsigned long long)(i + j*resampled_width)*channels;
-      for( int k=0; k<in.channels; k++ ){
+      uint32_t resampled_index = (uint32_t)(i + j*resampled_width)*channels;
+      for( uint32_t k=0; k<(uint32_t)in.channels; k++ ){
 	output[resampled_index+k] = input[pyramid_index+k];
       }
     }
@@ -534,7 +534,7 @@ void Transform::interpolate_nearestneighbour( RawTile& in, unsigned int resample
   // Correctly set our Rawtile info
   in.width = resampled_width;
   in.height = resampled_height;
-  in.dataLength = (size_t)resampled_width * (size_t)resampled_height * (size_t)channels * (size_t)(in.bpc/8);
+  in.dataLength = (uint32_t) resampled_width * resampled_height * channels * (in.bpc/8);
   in.data = output;
 }
 
@@ -552,10 +552,10 @@ void Transform::interpolate_bilinear( RawTile& in, unsigned int resampled_width,
   unsigned int height = in.height;
 
   // Define a max index position on the input buffer
-  unsigned long max = ( (width*height) - 1 ) * channels;
+  uint32_t max = (uint32_t) ( (width*height) - 1 ) * channels;
 
   // Create new buffer and pointer for our output - make sure we have enough digits via unsigned long long
-  unsigned char *output = new unsigned char[(unsigned long long)resampled_width*resampled_height*channels];
+  unsigned char *output = new unsigned char[(uint32_t)resampled_width*resampled_height*channels];
 
   // Calculate our scale
   float xscale = (float)(width) / (float)resampled_width;
@@ -584,12 +584,12 @@ void Transform::interpolate_bilinear( RawTile& in, unsigned int resampled_width,
       int ii = (int) floor( i*xscale );
 
       // Calculate the indices of the 4 surrounding pixels
-      unsigned long p11, p12, p21, p22;
-      unsigned long jj_w = jj*width;
-      p11 = (unsigned long) ( channels * ( ii + jj_w ) );
-      p12 = (unsigned long) ( channels * ( ii + (jj_w+width) ) );
-      p21 = (unsigned long) ( channels * ( (ii+1) + jj_w ) );
-      p22 = (unsigned long) ( channels * ( (ii+1) + (jj_w+width) ) );
+      uint32_t p11, p12, p21, p22;
+      uint32_t jj_w = (uint32_t) jj*width;
+      p11 = (uint32_t) ( channels * ( ii + jj_w ) );
+      p12 = (uint32_t) ( channels * ( ii + (jj_w+width) ) );
+      p21 = (uint32_t) ( channels * ( (ii+1) + jj_w ) );
+      p22 = (uint32_t) ( channels * ( (ii+1) + (jj_w+width) ) );
 
       // Make sure we don't stray outside our input buffer boundary
       // - replicate at the edge
@@ -603,9 +603,9 @@ void Transform::interpolate_bilinear( RawTile& in, unsigned int resampled_width,
       float b = iscale - (float)ii;
 
       // Output buffer index
-      unsigned long long resampled_index = (unsigned long long)( (j*resampled_width + i) * channels );
+      uint32_t resampled_index = (uint32_t)( (j*resampled_width + i) * channels );
 
-      for( int k=0; k<channels; k++ ){
+      for( uint32_t k=0; k<(uint32_t)channels; k++ ){
 	float tx = input[p11+k]*a + input[p21+k]*b;
 	float ty = input[p12+k]*a + input[p22+k]*b;
 	unsigned char r = (unsigned char)( c*tx + d*ty );
@@ -620,7 +620,7 @@ void Transform::interpolate_bilinear( RawTile& in, unsigned int resampled_width,
   // Correctly set our Rawtile info
   in.width = resampled_width;
   in.height = resampled_height;
-  in.dataLength = (size_t)resampled_width * (size_t)resampled_height * (size_t)channels * (size_t)(in.bpc/8);
+  in.dataLength = (uint32_t) resampled_width * resampled_height * channels * (in.bpc/8);
   in.data = output;
 }
 
@@ -632,7 +632,7 @@ void Transform::scale_to_8bit( RawTile& in ){
   // Skip floating point data and data already in 8 bit form
   if( in.bpc == 8 || in.sampleType == FLOATINGPOINT ) return;
 
-  size_t np = in.width * in.height * in.channels;
+  uint32_t np = (uint32_t) in.width * in.height * in.channels;
   unsigned char* buffer = new unsigned char[np];
 
   // 32 bit fixed point integer
@@ -642,7 +642,7 @@ void Transform::scale_to_8bit( RawTile& in ){
 #elif defined(_OPENMP)
 #pragma omp parallel for if( in.width*in.height > PARALLEL_THRESHOLD )
 #endif
-    for( size_t n=0; n<np; n++ ){
+    for( uint32_t n=0; n<np; n++ ){
       buffer[n] = (unsigned char)(((unsigned int*)in.data)[n] >> 16);
     }
     delete[] (unsigned int*) in.data;
@@ -655,7 +655,7 @@ void Transform::scale_to_8bit( RawTile& in ){
 #elif defined(_OPENMP)
 #pragma omp parallel for if( in.width*in.height > PARALLEL_THRESHOLD )
 #endif
-    for( size_t n=0; n<np; n++ ){
+    for( uint32_t n=0; n<np; n++ ){
       buffer[n] = (unsigned char)(((unsigned short*)in.data)[n] >> 8);
     }
     delete[] (unsigned short*) in.data;
@@ -673,7 +673,7 @@ void Transform::scale_to_8bit( RawTile& in ){
 // Function to apply a contrast adjustment and convert to 8 bit
 void Transform::contrast( RawTile& in, float contrast ){
 
-  size_t np = in.width * in.height * in.channels;
+  uint32_t np = (uint32_t) in.width * in.height * in.channels;
   unsigned char* buffer = new unsigned char[np];
   float* infptr = (float*)in.data;
   const float max8 = 255.0;    // Max pixel value for 8 bit data
@@ -683,9 +683,9 @@ void Transform::contrast( RawTile& in, float contrast ){
 #elif defined(_OPENMP)
 #pragma omp parallel for if( in.width*in.height > PARALLEL_THRESHOLD )
 #endif
-  for( size_t n=0; n<np; n++ ){
+  for( uint32_t n=0; n<np; n++ ){
     float v = infptr[n] * max8 * contrast;
-    buffer[n] = (unsigned char)( (v<max8) ? (v<0.0? 0.0 : v) : max8 );
+    buffer[n] = (unsigned char)( (v<max8) ? (v<0.0? 0.0f : v) : max8 );
   }
 
   // Replace original buffer with new
@@ -703,7 +703,7 @@ void Transform::gamma( RawTile& in, float g ){
 
   if( g == 1.0 ) return;
 
-  unsigned int np = in.width * in.height * in.channels;
+  uint32_t np = (uint32_t) in.width * in.height * in.channels;
   float* infptr = (float*)in.data;
 
   // Loop through our pixels for floating values
@@ -712,9 +712,9 @@ void Transform::gamma( RawTile& in, float g ){
 #elif defined(_OPENMP)
 #pragma omp parallel for
 #endif
-  for( unsigned int n=0; n<np; n++ ){
+  for( uint32_t n=0; n<np; n++ ){
     float v = infptr[n];
-    infptr[n] = powf( v<0.0 ? 0.0 : v, g );
+    infptr[n] = powf( v<0.0 ? 0.0f : v, g );
   }
 }
 
@@ -730,14 +730,14 @@ void Transform::log( RawTile& in ){
   // Scale factor
   float scale = 1.0 / logf( max + 1.0 );
 
-  unsigned int np = in.width * in.height * in.channels;
+  uint32_t np = (uint32_t) in.width * in.height * in.channels;
 
 #if defined(__ICC) || defined(__INTEL_COMPILER)
 #pragma ivdep
 #elif defined(_OPENMP)
 #pragma omp parallel for if( in.width*in.height > PARALLEL_THRESHOLD )
 #endif
-  for( unsigned int i=0; i<np; i++ ){
+  for( uint32_t i=0; i<np; i++ ){
     float v = ((float*)in.data)[i] * max;
     ((float*)in.data)[i] = scale * logf( 1.0 + v );
   }
@@ -827,7 +827,7 @@ void Transform::greyscale( RawTile& rawtile ){
 
   if( rawtile.bpc != 8 || rawtile.channels != 3 ) return;
 
-  unsigned int np = rawtile.width * rawtile.height;
+  uint32_t np = (uint32_t) rawtile.width * rawtile.height;
   unsigned char* buffer = new unsigned char[rawtile.width * rawtile.height];
 
   // Calculate using fixed-point arithmetic
@@ -837,7 +837,7 @@ void Transform::greyscale( RawTile& rawtile ){
 #elif defined(_OPENMP)
 #pragma omp parallel for if( rawtile.width*rawtile.height > PARALLEL_THRESHOLD )
 #endif
-  for( unsigned int i=0; i<np; i++ ){
+  for( uint32_t i=0; i<np; i++ ){
     unsigned int n = i*rawtile.channels;
     unsigned char R = ((unsigned char*)rawtile.data)[n++];
     unsigned char G = ((unsigned char*)rawtile.data)[n++];
@@ -863,7 +863,7 @@ void Transform::greyscale( RawTile& rawtile ){
 // values as there are channels in the raw input data
 void Transform::twist( RawTile& rawtile, const vector< vector<float> >& matrix ){
 
-  size_t np = rawtile.width * rawtile.height;
+  uint32_t np = (uint32_t) rawtile.width * rawtile.height;
 
   // Determine the number of rows and, therefore, output channels (this can be different to the number of input channels)
   int output_channels = matrix.size();
@@ -890,16 +890,16 @@ void Transform::twist( RawTile& rawtile, const vector< vector<float> >& matrix )
 
     // Loop through each pixel
 #pragma omp for
-    for( size_t i=0; i<np; i++ ){
+    for( uint32_t i=0; i<np; i++ ){
 
-      size_t in = i*rawtile.channels;  // Pixel index in input buffer
-      size_t on = i*output_channels;   // Pixel index in output buffer
+      uint32_t in = (uint32_t) i*rawtile.channels;  // Pixel index in input buffer
+      uint32_t on = (uint32_t) i*output_channels;   // Pixel index in output buffer
 
       // Calculate pixel value for each output channel
       for( int k=0; k<output_channels; k++ ){
 
 	// First zero our pixel buffer
-	pixel[k] = 0.0;
+	pixel[k] = 0.0f;
 
 	// Loop through each column (input channel coefficient ) in the matrix
 	for( unsigned int j=0; j<row_sizes[k]; j++ ){
@@ -925,7 +925,7 @@ void Transform::twist( RawTile& rawtile, const vector< vector<float> >& matrix )
     delete[] (float*) rawtile.data;
     rawtile.data = output;
     rawtile.channels = output_channels;
-    rawtile.dataLength = np * rawtile.channels * (rawtile.bpc/8);
+    rawtile.dataLength = (uint32_t) np * rawtile.channels * (rawtile.bpc/8);
   }
 
 }
@@ -939,13 +939,13 @@ void Transform::flatten( RawTile& in, int bands ){
   // We cannot increase the number of channels
   if( bands >= in.channels ) return;
 
-  unsigned long np = in.width * in.height;
-  unsigned long ni = 0;
-  unsigned long no = 0;
+  uint32_t np = (uint32_t) in.width * in.height;
+  uint32_t ni = 0;
+  uint32_t no = 0;
   unsigned int gap = in.channels - bands;
 
   // Simply loop through assigning to the same buffer
-  for( unsigned long i=0; i<np; i++ ){
+  for( uint32_t i=0; i<np; i++ ){
     for( int k=0; k<bands; k++ ){
       ((unsigned char*)in.data)[ni++] = ((unsigned char*)in.data)[no++];
     }
@@ -1019,9 +1019,9 @@ vector<unsigned int> Transform::histogram( RawTile& in, const vector<float>& max
   vector<unsigned int> histogram( (1<<in.bpc), 0 );
 
   // Fill our histogram - for color or multiband images, use channel average
-  unsigned int np = in.width * in.height;
-  for( unsigned int n=0; n<np; n++ ){
-    float value = 0.0;
+  uint32_t np = (uint32_t) in.width * in.height;
+  for( uint32_t n=0; n<np; n++ ){
+    float value = 0.0f;
 
     // For color or multiband images, use channel average
     for( int k=0; k<in.channels; k++ ){
@@ -1045,8 +1045,8 @@ unsigned char Transform::threshold( vector<unsigned int>& histogram ){
 
   // Calculate sum
   float sum = 0.0, sumb = 0.0;
-  unsigned int np = 0;
-  for( unsigned int n=0; n<bits; n++ ){
+  uint32_t np = 0;
+  for( uint32_t n=0; n<bits; n++ ){
     np += histogram[n];
     sum += (float)n * histogram[n];
   }
@@ -1085,14 +1085,14 @@ void Transform::binary( RawTile &in, unsigned char threshold ){
   // First make sure our image is greyscale
   this->greyscale( in );
 
-  unsigned int np = in.width * in.height;
+  uint32_t np = (uint32_t) in.width * in.height;
 
 #if defined(__ICC) || defined(__INTEL_COMPILER)
 #pragma ivdep
 #elif defined(_OPENMP)
 #pragma omp parallel for if( in.width*in.height > PARALLEL_THRESHOLD )
 #endif
-  for( unsigned int i=0; i<np; i++ ){
+  for( uint32_t i=0; i<np; i++ ){
     ((unsigned char*)in.data)[i] = ( ((unsigned char*)in.data)[i] < threshold ? (unsigned char)0 : (unsigned char)255 );
   }
 }
@@ -1100,6 +1100,8 @@ void Transform::binary( RawTile &in, unsigned char threshold ){
 
 
 void Transform::equalize( RawTile& in, vector<unsigned int>& histogram ){
+
+  uint32_t np = (uint32_t) in.width * in.height;
 
   // Number of levels in our histogram
   const unsigned int bits = histogram.size();
@@ -1136,9 +1138,9 @@ void Transform::equalize( RawTile& in, vector<unsigned int>& histogram ){
 #elif defined(_OPENMP)
 #pragma omp parallel for if( in.width*in.height > PARALLEL_THRESHOLD )
 #endif
-  for( unsigned int i=0; i<in.width*in.height; i++ ){
+  for( uint32_t i=0; i<np; i++ ){
     for( int j=0; j<in.channels; j++ ){
-      unsigned int index = i*in.channels + j;
+      uint32_t index = (uint32_t) i*in.channels + j;
       unsigned int value = (unsigned int) (((unsigned char*)in.data)[index]);
       ((unsigned char*)in.data)[index] = (unsigned char) cdf[value];
     }

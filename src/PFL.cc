@@ -1,7 +1,7 @@
 /*
     IIP Profile Command Handler Class Member Function
 
-    Copyright (C) 2013-2021 Ruven Pillay.
+    Copyright (C) 2013-2022 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -113,7 +113,7 @@ void PFL::run( Session* session, const std::string& argument ){
     width = 1;
     height = 1;
   }
-  unsigned long length = width * height;
+  uint32_t length = (uint32_t) width * height;
 
 
   // Create our tilemanager object
@@ -149,7 +149,7 @@ void PFL::run( Session* session, const std::string& argument ){
 
     // Loop through our pixels
     length *= rawtile.channels;
-    for( unsigned int j=0; j<length; j++ ){
+    for( uint32_t j=0; j<length; j++ ){
 
       float intensity = 0.0;
       void *ptr;

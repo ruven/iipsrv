@@ -79,7 +79,7 @@ class RawTile{
   int memoryManaged;
 
   /// The size of the data pointed to by data
-  size_t dataLength;
+  uint32_t dataLength;
 
   /// The width in pixels of this tile
   unsigned int width;

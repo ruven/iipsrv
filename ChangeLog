@@ -1,3 +1,8 @@
+26/05/2022:
+	- Standardized all pixel index counters to type uint32_t in Transforms.cc and RawTile.h with added type-casting when
+	  necessary. Fixes CodeQL warnings about potential integer overflow.
+
+
 25/05/2022:
 	- Changes to improve logging of timer reporting and addition of std::chrono to Timer.h for supported platforms
 
