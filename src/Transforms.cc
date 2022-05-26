@@ -971,9 +971,9 @@ void Transform::flip( RawTile& rawtile, int orientation ){
 #pragma omp parallel for if( rawtile.width*rawtile.height > PARALLEL_THRESHOLD )
 #endif
     for( int j=rawtile.height-1; j>=0; j-- ){
-      unsigned long n = (rawtile.height-1-j)*rawtile.width*rawtile.channels;
+      uint32_t n = (uint32_t) (rawtile.height-1-j)*rawtile.width*rawtile.channels;
       for( unsigned int i=0; i<rawtile.width; i++ ){
-        unsigned long index = (rawtile.width*j + i)*rawtile.channels;
+        uint32_t index = (uint32_t) (rawtile.width*j + i)*rawtile.channels;
         for( int k=0; k<rawtile.channels; k++ ){
           buffer[n++] = ((unsigned char*)rawtile.data)[index++];
         }
@@ -988,9 +988,9 @@ void Transform::flip( RawTile& rawtile, int orientation ){
 #pragma omp parallel for if( rawtile.width*rawtile.height > PARALLEL_THRESHOLD )
 #endif
     for( unsigned int j=0; j<rawtile.height; j++ ){
-      unsigned long n = j*rawtile.width*rawtile.channels;
+      uint32_t n = (uint32_t) j*rawtile.width*rawtile.channels;
       for( int i=rawtile.width-1; i>=0; i-- ){
-        unsigned long index = (rawtile.width*j + i)*rawtile.channels;
+        uint32_t index = (uint32_t) (rawtile.width*j + i)*rawtile.channels;
         for( int k=0; k<rawtile.channels; k++ ){
 	  buffer[n++] = ((unsigned char*)rawtile.data)[index++];
         }
