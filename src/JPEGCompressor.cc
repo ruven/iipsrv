@@ -442,7 +442,7 @@ unsigned int JPEGCompressor::Compress( RawTile& rawtile )
   unsigned long dataLength;
   dataLength = dest->written;
   if( dataLength > rawtile.dataLength ){
-    delete[] (unsigned char*) rawtile.data;
+    if( rawtile.memoryManaged ) delete[] (unsigned char*) rawtile.data;
     rawtile.data = new unsigned char[dataLength];
   }
   

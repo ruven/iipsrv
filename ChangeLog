@@ -1,3 +1,8 @@
+30/05/2022:
+	- Added check to output encoders (JPEG, PNG and WebP) to make sure we don't delete memory from RawTiles that is not
+	  owned by the RawTile itself
+
+
 26/05/2022:
 	- Standardized all pixel index counters to type uint32_t in Transforms.cc and RawTile.h with added type-casting when
 	  necessary. Fixes CodeQL warnings about potential integer overflow.
