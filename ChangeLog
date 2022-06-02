@@ -1,3 +1,6 @@
+02/06/2022:
+	- Corrected throw in FIF.cc to rethrow original exception and not make a copy
+
 30/05/2022:
 	- Added check to output encoders (JPEG, PNG and WebP) to make sure we don't delete memory from RawTiles that is not
 	  owned by the RawTile itself

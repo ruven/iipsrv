@@ -216,7 +216,7 @@ void FIF::run( Session* session, const string& src ){
   catch( const file_error& error ){
     // Unavailable file error code is 1 3
     session->response->setError( "1 3", "FIF" );
-    throw error;
+    throw;
   }
 
 
