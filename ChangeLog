@@ -1,5 +1,8 @@
 02/06/2022:
-	- Corrected throw in FIF.cc to rethrow original exception and not make a copy
+	- Corrected throw in FIF.cc to rethrow original exception and not make a copy.
+	- Improved detection of pure tile requests in IIIF.cc. Improvements also to View class to eliminate rounding errors
+	  when calculating view sizes.
+
 
 30/05/2022:
 	- Added check to output encoders (JPEG, PNG and WebP) to make sure we don't delete memory from RawTiles that is not

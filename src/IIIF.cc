@@ -630,15 +630,22 @@ void IIIF::run( Session* session, const string& src )
   }
 
 
+  // For edge tiles, adjust the tile width and height accordingly so that we can detect pure tile requests
+  unsigned int vtw = tw;
+  unsigned int vth = th;
+  if( (width%tw > 0) && (view_left == im_width - (im_width%tw)) ) vtw = im_width%tw;
+  if( (height%th > 0) && (view_top == im_height - (im_height%th)) ) vth = im_height%th;
+
+
   // Determine whether this is a request for an individual tile which, therefore, coincides exactly with our tile boundaries
   if( ( session->view->maintain_aspect && (requested_res > 0) &&
-	(requested_width == (int) tw) && (requested_height == (int) th) &&                 // Request is for exact tile dimensions
-	(view_left % tw == 0) && (view_top % th == 0) &&                                   // Left / top boundaries align with tile positions
-	(session->view->getViewWidth() == tw) && (session->view->getViewHeight() == th) )  // View size should be identical to tile dimensions
-      ||
-      // For smallest resolution, image size can be less than tile size
-      ( session->view->maintain_aspect && (requested_res == 0) &&
-	((unsigned int) requested_width == im_width) && ((unsigned int) requested_height == im_height) )
+	(view_left % tw == 0) && (view_top % th == 0) &&                                        // Left / top boundaries align with tile positions
+	(requested_width == (int) vtw) && (requested_height == (int) vth) &&                    // Request is for exact tile dimensions
+	(session->view->getViewWidth() == vtw) && (session->view->getViewHeight() == vth) ) ||  // View size should also be identical to tile dimensions
+      // For smallest resolution, image size can be given as equal or less than tile size or exactly equal to tile size
+      ( ( session->view->maintain_aspect && (requested_res == 0) ) &&
+	( ( ((unsigned int) requested_width == im_width) && ((unsigned int) requested_height == im_height)) ||
+	  ( ((unsigned int) requested_width == tw) && ((unsigned int) requested_height == th)) ) )
       ){
 
     // Get the width and height for last row and column tiles

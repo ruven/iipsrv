@@ -1,7 +1,7 @@
 /*
     View Member Functions
 
-    Copyright (C) 2004-2020 Ruven Pillay.
+    Copyright (C) 2004-2022 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -17,7 +17,6 @@
     along with this program; if not, write to the Free Software Foundation,
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA.
 */
-
 
 #include "View.h"
 #include <cmath>
@@ -41,7 +40,7 @@ void View::calculateResolution( unsigned int dimension,
 
   // Find the resolution level closest but higher than the requested size
   while( true ){
-    d = (unsigned int) floor( d/2.0 );
+    d = (unsigned int) floor(d/2.0);
     if( d < rs ) break;
     j--;
   }
@@ -148,7 +147,7 @@ void View::setViewTop( float y ) {
 
 void View::setViewWidth( float w ) {
   // Crop region widths > 100% of image size
-  if( view_left+w > 1.0 ) w = 1.0-view_left;
+  //if( view_left+w > 1.0 ) w = 1.0-view_left;
 
   // Sanity check
   if( w > 1.0 ) view_width = 1.0;
@@ -196,11 +195,11 @@ unsigned int View::getViewTop(){
 unsigned int View::getViewWidth(){
 
   // Scale up our viewport, then make sure our size is not too large or too small
-  unsigned int rw = (unsigned int) round( (float)width / (1<<(max_resolutions-resolution-1)) );
-  unsigned int w = (unsigned int) round( view_width*rw );
-  unsigned int left = (unsigned int) round( view_left*rw );
+  float scale = (float) width / (1<<(max_resolutions-resolution-1));   // Calculate exact scale from largest resolution
+  unsigned int w = (unsigned int) round( view_width * scale );
+  unsigned int left = (unsigned int) round( view_left * scale );
 
-  if( (w + left) > rw ) w = rw - left;
+  if( (w + left) > res_width ) w = res_width - left;                   // Need to use width of current resolution
   if( w < min_size ) w = min_size;
   return w;
 }
@@ -209,11 +208,11 @@ unsigned int View::getViewWidth(){
 unsigned int View::getViewHeight(){
 
   // Scale up our viewport, then make sure our size is not too large or too small
-  unsigned int rh = (unsigned int) round( (float)height / (1<<(max_resolutions-resolution-1)) );
-  unsigned int h = (unsigned int) round( view_height*rh );
-  unsigned int top = (unsigned int) round( view_top*rh );
+  float scale = (float) height / (1<<(max_resolutions-resolution-1));  // Calculate exact scale from largest resolution
+  unsigned int h = (unsigned int) round( view_height * scale );
+  unsigned int top = (unsigned int) round( view_top * scale );
 
-  if( (h + top) > rh ) h = rh - top;
+  if( (h + top) > res_height ) h = res_height - top;                   // Need to use height of current resolution
   if( h < min_size ) h = min_size;
   return h;
 }

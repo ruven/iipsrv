@@ -38,7 +38,7 @@ class View{
 
  private:
 
-  // Resolution independent x,y,w,h region viewport
+  // Resolution independent x,y,w,h region viewport in range 0 -> 1.0
   float view_left, view_top, view_width, view_height; /// viewport
 
   int resolution;                             /// Requested resolution where 0 is smallest available
