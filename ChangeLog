@@ -1,3 +1,8 @@
+22/06/2022:
+	- Large number of small changes including: conversion of functions to const functions, change of string parameters to
+	  const reference and other const-related changes that fix the code analysis suggestions provided by SonarCloud
+
+
 02/06/2022:
 	- Corrected throw in FIF.cc to rethrow original exception and not make a copy.
 	- Improved detection of pure tile requests in IIIF.cc. Improvements also to View class to eliminate rounding errors

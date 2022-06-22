@@ -72,7 +72,7 @@ static void png_flush( png_structp png_ptr ){
 }
 
 
-static void png_cexcept_error( png_structp png_ptr, png_const_charp msg ){
+static void png_cexcept_error( const png_structp png_ptr, const png_const_charp msg ){
   png_destination_ptr dest = (png_destination_ptr)( png_get_io_ptr(png_ptr) );
   png_destroy_write_struct( &(dest->png_ptr), &(dest->info_ptr) );
 

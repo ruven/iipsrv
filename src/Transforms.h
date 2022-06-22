@@ -51,7 +51,7 @@ struct Transform {
  public:
 
   /// Get description of processing engine
-  std::string getDescription(){ return "CPU processor"; };
+  std::string getDescription() const { return "CPU processor"; };
 
 
   /// Function to create normalized array

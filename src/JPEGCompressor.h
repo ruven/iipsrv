@@ -97,7 +97,7 @@ class JPEGCompressor: public Compressor{
 
 
   /// Get the current quality level
-  inline int getQuality() { return Q; }
+  inline int getQuality() const { return Q; }
 
 
   /// Initialise strip based compression
@@ -128,19 +128,19 @@ class JPEGCompressor: public Compressor{
   unsigned int Compress( RawTile& t );
 
   /// Return the JPEG header size
-  inline unsigned int getHeaderSize() { return header_size; }
+  inline unsigned int getHeaderSize() const { return header_size; }
 
   /// Return a pointer to the header itself
   inline unsigned char* getHeader() { return header; }
 
   /// Return the JPEG mime type
-  inline const char* getMimeType(){ return "image/jpeg"; }
+  inline const char* getMimeType() const { return "image/jpeg"; }
 
   /// Return the image filename suffix
-  inline const char* getSuffix(){ return "jpg"; }
+  inline const char* getSuffix() const { return "jpg"; }
 
   /// Get compression type
-  inline CompressionType getCompressionType(){ return JPEG; };
+  inline CompressionType getCompressionType() const { return JPEG; };
 
 };
 

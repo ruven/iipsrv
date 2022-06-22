@@ -481,7 +481,7 @@ void JPEGCompressor::writeICCProfile()
 
   // Skip if our profile has zero size or is too big
   //  if( icc.size() == 0 || icc.size() > MAX_DATA_BYTES_IN_MARKER ) return;
-  if( icc.size() == 0 ) return;
+  if( icc.empty() ) return;
 
   unsigned int icc_data_len = icc.size();
   const char* icc_data_ptr = icc.c_str();
@@ -539,7 +539,7 @@ void JPEGCompressor::writeICCProfile()
 void JPEGCompressor::writeXMPMetadata()
 {
   // Make sure our XMP data has a valid size (namespace prefix is 29 bytes)
-  if( xmp.size()==0 || xmp.size()>(65536-XMP_PREFIX_SIZE) ) return;
+  if( xmp.empty() || xmp.size()>(65536-XMP_PREFIX_SIZE) ) return;
 
   // The XMP data in a JPEG stream needs to be prefixed with a zero-terminated ID string
   // ref http://www.adobe.com/content/dam/Adobe/en/devnet/xmp/pdfs/cs6/XMPSpecificationPart3.pdf (pp13-14)

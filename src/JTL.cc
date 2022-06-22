@@ -90,7 +90,7 @@ void JTL::send( Session* session, int resolution, int tile ){
 
   // First calculate histogram if we have asked for either binarization,
   //  histogram equalization or contrast stretching
-  if( session->view->requireHistogram() && (*session->image)->histogram.size()==0 ){
+  if( session->view->requireHistogram() && (*session->image)->histogram.empty() ){
 
     if( session->loglevel >= 4 ) function_timer.start();
 
@@ -429,7 +429,7 @@ void JTL::send( Session* session, int resolution, int tile ){
   // Send HTTP header
   stringstream header;
   header << session->response->createHTTPHeader( compressor->getMimeType(), (*session->image)->getTimestamp(), len );
-  if( session->out->putStr( (const char*) header.str().c_str(), header.tellp() ) == -1 ){
+  if( session->out->putStr( header.str().c_str(), (int) header.tellp() ) == -1 ){
     if( session->loglevel >= 1 ){
       *(session->logfile) << "JTL :: Error writing HTTP header" << endl;
     }

@@ -2,7 +2,7 @@
 
 /*  IIP Image Server
 
-    Copyright (C) 2000-2019 Ruven Pillay.
+    Copyright (C) 2000-2022 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -27,6 +27,10 @@
 #include <string>
 #include <cstdlib>
 #include <ctime>
+
+#if !( (__cplusplus >= 201103L) || ((defined(_MSC_VER) && _MSC_VER >= 1900)) )
+#include <stdint.h>          // Required for C++98
+#endif
 
 
 
@@ -221,7 +225,7 @@ class RawTile{
 
 
   /// Return the size of the data
-  unsigned int size() { return dataLength; }
+  unsigned int size() const { return dataLength; }
 
 
   /// Overloaded equality operator
@@ -233,9 +237,9 @@ class RawTile{
 	(A.compressionType == B.compressionType) &&
 	(A.quality == B.quality) &&
 	(A.filename == B.filename) ){
-      return( 1 );
+      return 1;
     }
-    else return( 0 );
+    else return 0;
   }
 
 
@@ -248,9 +252,9 @@ class RawTile{
 	(A.compressionType == B.compressionType) &&
 	(A.quality == B.quality) &&
 	(A.filename == B.filename) ){
-      return( 0 );
+      return 0;
     }
-    else return( 1 );
+    else return 1;
   }
 
 

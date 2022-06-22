@@ -65,7 +65,7 @@ class Timer {
 public:
 
   /// Constructor
-  Timer() {;};
+  Timer() {};
 
 
   /// Set our time

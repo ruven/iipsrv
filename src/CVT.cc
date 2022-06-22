@@ -195,7 +195,7 @@ void CVT::send( Session* session ){
 
   // First calculate histogram if we have asked for either binarization,
   //  histogram equalization or contrast stretching
-  if( session->view->requireHistogram() && (*session->image)->histogram.size()==0 &&
+  if( session->view->requireHistogram() && (*session->image)->histogram.empty() &&
       (*session->image)->getColourSpace() != BINARY ){
 
     if( session->loglevel >= 5 ) function_timer.start();

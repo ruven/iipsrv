@@ -129,24 +129,24 @@ class PNGCompressor : public Compressor {
 
 
   /// Return the PNG header size
-  inline unsigned int getHeaderSize() { return header_size; }
+  inline unsigned int getHeaderSize() const { return header_size; }
 
   /// Return a pointer to the header itself
   inline unsigned char* getHeader() { return header; }
 
   /// Return the PNG mime type
-  inline const char* getMimeType(){ return "image/png"; }
+  inline const char* getMimeType() const { return "image/png"; }
 
   /// Return the image filename suffix
-  inline const char* getSuffix(){ return "png"; }
+  inline const char* getSuffix() const { return "png"; }
 
   /// Get compression type
-  inline CompressionType getCompressionType(){ return PNG; };
+  inline CompressionType getCompressionType() const { return PNG; };
 
 
   /// Get the current compression level
   /** @return Deflate compresson level */
-  inline int getQuality(){ return Q; }
+  inline int getQuality() const { return Q; }
 
 
   /// Set the compression level

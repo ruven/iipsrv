@@ -1,7 +1,7 @@
 /*
     Simple URL decoder Class
 
-    Copyright (C) 2014-2015 Ruven Pillay.
+    Copyright (C) 2014-2022 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -40,13 +40,13 @@ class URL{
   std::string warning_message;
 
   // Internal utility function to decode hex values
-  char hexToChar( char first, char second );
+  char hexToChar( char first, char second ) const;
 
  public:
 
   /// Constructor
   /** @param s input url string */
-  URL( std::string s ){ url = s; };
+  URL( const std::string& s ){ url = s; };
 
   /// Decode and filter URL
   std::string decode();
@@ -55,12 +55,12 @@ class URL{
   std::string escape();
 
   /// Return any warning message
-  std::string warning(){ return warning_message; };
+  std::string warning() const { return warning_message; };
 
 };
 
 
-inline char URL::hexToChar( char first, char second ){
+inline char URL::hexToChar ( char first, char second ) const {
   int digit;
   digit = (first >= 'A' ? ((first & 0xDF) - 'A') + 10 : (first - '0'));
   digit *= 16;

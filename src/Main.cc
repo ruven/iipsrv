@@ -110,7 +110,7 @@ void IIPReloadCache( int signal )
 #ifdef WIN32
     int sigstr = signal;
 #else
-    char *sigstr = strsignal( signal );
+    const char *sigstr = strsignal( signal );
 #endif
     logfile << "Caught " << sigstr << " signal. Emptying internal caches" << endl << endl;
   }
@@ -134,7 +134,7 @@ void IIPSignalHandler( int signal )
 #ifdef WIN32
     int sigstr = signal;
 #else
-    char *sigstr = strsignal( signal );
+    const char *sigstr = strsignal( signal );
 #endif
 
     logfile << endl << "Caught " << sigstr << " signal. "
@@ -189,7 +189,7 @@ int main( int argc, char *argv[] )
 
       // Get current time
       time_t current_time = time( NULL );
-      char *date = ctime( &current_time );
+      const char *date = ctime( &current_time );
 
       logfile << "<----------------------------------->" << endl
 	      << date << endl
@@ -329,7 +329,7 @@ int main( int argc, char *argv[] )
 
 
   // Create our image processing engine
-  Transform* processor = new Transform();
+  Transform processor;
 
 
 #ifdef HAVE_KAKADU
@@ -369,7 +369,7 @@ int main( int argc, char *argv[] )
 #elif defined(HAVE_OPENJPEG)
     logfile << "Setting up JPEG2000 support via OpenJPEG" << endl;
 #endif
-    logfile << "Setting image processing engine to " << processor->getDescription() << endl;
+    logfile << "Setting image processing engine to " << processor.getDescription() << endl;
 #ifdef _OPENMP
     int num_threads = 0;
 #pragma omp parallel
@@ -609,7 +609,7 @@ int main( int argc, char *argv[] )
       session.out = &writer;
       session.watermark = &watermark;
       session.headers.clear();
-      session.processor = processor;
+      session.processor = &processor;
       session.codecOptions["IIIF_VERSION"] = iiif_version;
 #ifdef HAVE_KAKADU
       session.codecOptions["KAKADU_READMODE"] = kdu_readmode;
@@ -965,6 +965,11 @@ int main( int argc, char *argv[] )
 
     ///////// End of FCGI_ACCEPT while loop or for loop in debug mode //////////
   }
+
+
+  // Avoid dangling global pointers
+  ic = NULL;
+  tc = NULL;
 
 
   // Close our FCGI connection

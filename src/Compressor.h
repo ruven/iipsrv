@@ -1,6 +1,6 @@
 /*  Generic compressor class - extended by JPEG and PNG Compressor classes
 
-    Copyright (C) 2017-2020 Ruven Pillay
+    Copyright (C) 2017-2022 Ruven Pillay
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -68,7 +68,7 @@ class Compressor {
 
 
   /// Get the current quality level
-  inline int getQuality() { return Q; }
+  inline int getQuality() const { return Q; }
 
 
   /// Set the physical output resolution
@@ -87,7 +87,7 @@ class Compressor {
 
   /// Return the image header size
   /** @return header size in bytes */
-  virtual unsigned int getHeaderSize() { return 0; };
+  virtual unsigned int getHeaderSize() const { return 0; };
 
 
   /// Return a pointer to the image header itself
@@ -135,17 +135,17 @@ class Compressor {
 
   /// Get mime type
   /** @return IANA mime type as const char* */
-  virtual const char* getMimeType() { return "image/example"; };
+  virtual const char* getMimeType() const { return "image/example"; };
 
 
   /// Get file suffix
   /** @return suffix as const char* */
-  virtual const char* getSuffix() { return "img"; };
+  virtual const char* getSuffix() const { return "img"; };
 
 
   /// Get compression type
   /** @return compressionType */
-  virtual CompressionType getCompressionType(){ return UNCOMPRESSED; };
+  virtual CompressionType getCompressionType() const { return UNCOMPRESSED; };
 
 };
 

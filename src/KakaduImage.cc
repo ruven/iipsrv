@@ -33,37 +33,43 @@
 
 
 // Define get_concurrency() function to return number of available threads
-#if __cplusplus >= 201103L
+#if __cplusplus >= 201103L || (defined(_MSC_VER) && _MSC_VER >= 1900)
 // C++11 has support for thread::hardware_concurrency()
 #include <thread>
-unsigned int get_concurrency(){ return std::thread::hardware_concurrency(); }
+static unsigned int get_concurrency(){ return std::thread::hardware_concurrency(); }
 #else
 // If no C++11 threads support, use get_nprocs_conf() if exists
 #ifdef NPROCS
 #include <sys/sysinfo.h>
-unsigned int get_concurrency(){ return get_nprocs_conf(); }
+static unsigned int get_concurrency(){ return get_nprocs_conf(); }
 #else
 // On Mac OS X and FreeBSD, no get_nprocs_conf()
 #if defined (__APPLE__) || defined(__FreeBSD__)
 #include <pthread.h>
 #include <sys/sysctl.h>
-unsigned int get_concurrency(){
+static unsigned int get_concurrency(){
   int numProcessors = 0;
   size_t size = sizeof(numProcessors);
   int returnCode = sysctlbyname("hw.ncpu", &numProcessors, &size, NULL, 0);
   if( returnCode != 0 ) return 1;
   else return (unsigned int)numProcessors;
 }
+#elif defined(WIN32)
+static unsigned int get_concurrency(){
+  SYSTEM_INFO sysinfo;
+  GetSystemInfo(&sysinfo);
+  return sysinfo.dwNumberOfProcessors;
+}
 #else
 // Otherwise set as unthreaded
-unsigned int get_concurrency(){ return 0; }
+static unsigned int get_concurrency(){ return 0; }
 #endif  // endif defined APPLE
 #endif  // endif ifdef NPROCS
 #endif
 
 
 #include "Timer.h"
-#define DEBUG 1
+//#define DEBUG 1
 
 
 using namespace std;

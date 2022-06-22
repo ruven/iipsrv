@@ -84,24 +84,9 @@ unsigned int WebPCompressor::Finish( unsigned char* output ){
 /// Compress a single tile of data
 unsigned int WebPCompressor::Compress( RawTile& rawtile ){
 
-  // Create WebP input data structure
-  WebPPicture pic;
-  WebPPictureInit( &pic );
-
-  pic.use_argb = false;
-  pic.width = rawtile.width;
-  pic.height = rawtile.height;
-  //  WebPPictureAlloc( &pic );       // WebPPictureImport calls this itself
-
-  WebPMemoryWriter writer;
-  WebPMemoryWriterInit( &writer );
-  pic.writer = WebPMemoryWrite;
-  pic.custom_ptr = &writer;
-
   // Import data from our RawTile structure
   unsigned char* tmp = NULL;
   const uint8_t* rgb = (uint8_t*) rawtile.data;
-
 
   // WebP cannot handle greyscale, so duplicate our data to 3 bands
   if( rawtile.channels == 1 ){
@@ -116,6 +101,21 @@ unsigned int WebPCompressor::Compress( RawTile& rawtile ){
     rgb = (uint8_t*) tmp;
     rawtile.channels = 3;
   }
+
+
+  // Create WebP input data structure
+  WebPPicture pic;
+  WebPPictureInit( &pic );
+
+  pic.use_argb = false;
+  pic.width = rawtile.width;
+  pic.height = rawtile.height;
+  //  WebPPictureAlloc( &pic );       // WebPPictureImport calls this itself
+
+  WebPMemoryWriter writer;
+  WebPMemoryWriterInit( &writer );
+  pic.writer = WebPMemoryWrite;
+  pic.custom_ptr = &writer;
 
 
   if( rawtile.channels == 4 ){

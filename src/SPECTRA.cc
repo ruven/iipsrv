@@ -91,7 +91,7 @@ void SPECTRA::run( Session* session, const std::string& argument ){
   // Output our HTTP header
   stringstream header;
   header << session->response->createHTTPHeader( "xml", (*session->image)->getTimestamp() );
-  session->out->putStr( (const char*) header.str().c_str(), header.tellp() );
+  session->out->putStr( header.str().c_str(), (int) header.tellp() );
   session->out->flush();
 #endif
 

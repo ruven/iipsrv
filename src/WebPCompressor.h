@@ -116,24 +116,24 @@ class WebPCompressor : public Compressor {
 
 
   /// Return the WebP header size
-  inline unsigned int getHeaderSize() { return header_size; }
+  inline unsigned int getHeaderSize() const { return header_size; }
 
   /// Return a pointer to the header itself
   inline unsigned char* getHeader() { return header; }
 
   /// Return the WebP mime type
-  inline const char* getMimeType(){ return "image/webp"; }
+  inline const char* getMimeType() const { return "image/webp"; }
 
   /// Return the image filename suffix
-  inline const char* getSuffix(){ return "webp"; }
+  inline const char* getSuffix() const { return "webp"; }
 
   /// Get compression type
-  inline CompressionType getCompressionType(){ return WEBP; };
+  inline CompressionType getCompressionType() const { return WEBP; };
 
 
   /// Get the current compression level
   /** @return compresson level */
-  inline int getQuality(){ return Q; }
+  inline int getQuality() const { return Q; }
 
 
   /// Set the compression level

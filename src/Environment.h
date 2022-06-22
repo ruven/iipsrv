@@ -62,7 +62,7 @@ class Environment {
 
   static int getVerbosity(){
     int loglevel = VERBOSITY;
-    char *envpara = getenv( "VERBOSITY" );
+    const char *envpara = getenv( "VERBOSITY" );
     if( envpara ){
       loglevel = atoi( envpara );
       // If not a realistic level, set to zero
@@ -73,7 +73,7 @@ class Environment {
 
 
   static std::string getLogFile(){
-    char* envpara = getenv( "LOGFILE" );
+    const char* envpara = getenv( "LOGFILE" );
     if( envpara ) return std::string( envpara );
     else return LOGFILE;
   }
@@ -81,7 +81,7 @@ class Environment {
 
   static float getMaxImageCacheSize(){
     float max_image_cache_size = MAX_IMAGE_CACHE_SIZE;
-    char* envpara = getenv( "MAX_IMAGE_CACHE_SIZE" );
+    const char* envpara = getenv( "MAX_IMAGE_CACHE_SIZE" );
     if( envpara ){
       max_image_cache_size = atof( envpara );
     }
@@ -90,7 +90,7 @@ class Environment {
 
 
   static std::string getFileNamePattern(){
-    char* envpara = getenv( "FILENAME_PATTERN" );
+    const char* envpara = getenv( "FILENAME_PATTERN" );
     std::string filename_pattern;
     if( envpara ){
       filename_pattern = std::string( envpara );
@@ -102,7 +102,7 @@ class Environment {
 
 
   static int getJPEGQuality(){
-    char* envpara = getenv( "JPEG_QUALITY" );
+    const char* envpara = getenv( "JPEG_QUALITY" );
     int jpeg_quality;
     if( envpara ){
       jpeg_quality = atoi( envpara );
@@ -116,7 +116,7 @@ class Environment {
 
 
   static int getPNGQuality(){
-    char* envpara = getenv( "PNG_QUALITY" );
+    const char* envpara = getenv( "PNG_QUALITY" );
     int quality;
     if( envpara ){
       quality = atoi( envpara );
@@ -130,7 +130,7 @@ class Environment {
 
 
   static int getWebPQuality(){
-    char* envpara = getenv( "WEBP_QUALITY" );
+    const char* envpara = getenv( "WEBP_QUALITY" );
     int quality;
     if( envpara ){
       quality = atoi( envpara );
@@ -144,7 +144,7 @@ class Environment {
 
 
   static int getMaxCVT(){
-    char* envpara = getenv( "MAX_CVT" );
+    const char* envpara = getenv( "MAX_CVT" );
     int max_CVT;
     if( envpara ){
       max_CVT = atoi( envpara );
@@ -160,7 +160,7 @@ class Environment {
 
 
   static int getMaxLayers(){
-    char* envpara = getenv( "MAX_LAYERS" );
+    const char* envpara = getenv( "MAX_LAYERS" );
     int layers;
     if( envpara ) layers = atoi( envpara );
     else layers = MAX_LAYERS;
@@ -170,7 +170,7 @@ class Environment {
 
 
   static std::string getFileSystemPrefix(){
-    char* envpara = getenv( "FILESYSTEM_PREFIX" );
+    const char* envpara = getenv( "FILESYSTEM_PREFIX" );
     std::string filesystem_prefix;
     if( envpara ){
       filesystem_prefix = std::string( envpara );
@@ -182,7 +182,7 @@ class Environment {
 
 
   static std::string getFileSystemSuffix(){
-    char* envpara = getenv( "FILESYSTEM_SUFFIX" );
+    const char* envpara = getenv( "FILESYSTEM_SUFFIX" );
     std::string filesystem_suffix;
     if( envpara ){
       filesystem_suffix = std::string( envpara );
@@ -194,7 +194,7 @@ class Environment {
 
 
   static std::string getWatermark(){
-    char* envpara = getenv( "WATERMARK" );
+    const char* envpara = getenv( "WATERMARK" );
     std::string watermark;
     if( envpara ){
       watermark = std::string( envpara );
@@ -207,7 +207,7 @@ class Environment {
 
   static float getWatermarkProbability(){
     float watermark_probability = WATERMARK_PROBABILITY;
-    char* envpara = getenv( "WATERMARK_PROBABILITY" );
+    const char* envpara = getenv( "WATERMARK_PROBABILITY" );
 
     if( envpara ){
       watermark_probability = atof( envpara );
@@ -221,7 +221,7 @@ class Environment {
 
   static float getWatermarkOpacity(){
     float watermark_opacity = WATERMARK_OPACITY;
-    char* envpara = getenv( "WATERMARK_OPACITY" );
+    const char* envpara = getenv( "WATERMARK_OPACITY" );
 
     if( envpara ){
       watermark_opacity = atof( envpara );
@@ -234,7 +234,7 @@ class Environment {
 
 
   static std::string getMemcachedServers(){
-    char* envpara = getenv( "MEMCACHED_SERVERS" );
+    const char* envpara = getenv( "MEMCACHED_SERVERS" );
     std::string memcached_servers;
     if( envpara ){
       memcached_servers = std::string( envpara );
@@ -246,7 +246,7 @@ class Environment {
 
 
   static unsigned int getMemcachedTimeout(){
-    char* envpara = getenv( "MEMCACHED_TIMEOUT" );
+    const char* envpara = getenv( "MEMCACHED_TIMEOUT" );
     unsigned int memcached_timeout;
     if( envpara ) memcached_timeout = atoi( envpara );
     else memcached_timeout = LIBMEMCACHED_TIMEOUT;
@@ -256,7 +256,7 @@ class Environment {
 
 
   static unsigned int getInterpolation(){
-    char* envpara = getenv( "INTERPOLATION" );
+    const char* envpara = getenv( "INTERPOLATION" );
     unsigned int interpolation;
     if( envpara ) interpolation = atoi( envpara );
     else interpolation = INTERPOLATION;
@@ -266,7 +266,7 @@ class Environment {
 
 
   static std::string getCORS(){
-    char* envpara = getenv( "CORS" );
+    const char* envpara = getenv( "CORS" );
     std::string cors;
     if( envpara ) cors = std::string( envpara );
     else cors = CORS;
@@ -275,7 +275,7 @@ class Environment {
 
 
   static std::string getBaseURL(){
-    char* envpara = getenv( "BASE_URL" );
+    const char* envpara = getenv( "BASE_URL" );
     std::string base_url;
     if( envpara ) base_url = std::string( envpara );
     else base_url = BASE_URL;
@@ -284,7 +284,7 @@ class Environment {
 
 
   static std::string getCacheControl(){
-    char* envpara = getenv( "CACHE_CONTROL" );
+    const char* envpara = getenv( "CACHE_CONTROL" );
     std::string cache_control;
     if( envpara ) cache_control = std::string( envpara );
     else cache_control = CACHE_CONTROL;
@@ -293,7 +293,7 @@ class Environment {
 
 
   static bool getAllowUpscaling(){
-    char* envpara = getenv( "ALLOW_UPSCALING" );
+    const char* envpara = getenv( "ALLOW_UPSCALING" );
     bool allow_upscaling;
     if( envpara ) allow_upscaling =  atoi( envpara ); // Implicit cast to boolean, all values other than '0' treated as true
     else allow_upscaling = ALLOW_UPSCALING;
@@ -302,7 +302,7 @@ class Environment {
 
 
   static std::string getURIMap(){
-    char* envpara = getenv( "URI_MAP" );
+    const char* envpara = getenv( "URI_MAP" );
     std::string uri_map;
     if( envpara ) uri_map = std::string( envpara );
     else uri_map = URI_MAP;
@@ -311,7 +311,7 @@ class Environment {
 
 
   static unsigned int getEmbedICC(){
-    char* envpara = getenv( "EMBED_ICC" );
+    const char* envpara = getenv( "EMBED_ICC" );
     bool embed;
     if( envpara ) embed = atoi( envpara );
     else embed = EMBED_ICC;
@@ -321,7 +321,7 @@ class Environment {
 
   static unsigned int getKduReadMode(){
     unsigned int readmode;
-    char* envpara = getenv( "KAKADU_READMODE" );
+    const char* envpara = getenv( "KAKADU_READMODE" );
     if( envpara ){
       readmode = atoi( envpara );
       if( readmode > 2 ) readmode = 2;
@@ -333,7 +333,7 @@ class Environment {
 
   static unsigned int getIIIFVersion(){
     unsigned int version;
-    char* envpara = getenv( "IIIF_VERSION" );
+    const char* envpara = getenv( "IIIF_VERSION" );
     if( envpara ){
       version = atoi( envpara );
       if( version < 1 ) version = IIIF_VERSION;
