@@ -1,3 +1,7 @@
+23/07/2022:
+	- Fix to IIIF parsing problem when requesting certain region sizes at "full" size
+
+
 22/06/2022:
 	- Large number of small changes including: conversion of functions to const functions, change of string parameters to
 	  const reference and other const-related changes that fix the code analysis suggestions provided by SonarCloud

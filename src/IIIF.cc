@@ -27,7 +27,6 @@
 #include "Transforms.h"
 #include "URL.h"
 
-
 // Define several IIIF strings
 #define IIIF_SYNTAX "IIIF syntax is {identifier}/{region}/{size}/{rotation}/{quality}{.format}"
 
@@ -294,11 +293,15 @@ void IIIF::run( Session* session, const string& src )
     // Keep track of the number of parameters than have been given
     int numOfTokens = 0;
 
+    // Our region parameters
+    float region[4];
+
     // Region Parameter: { "full"; "square"; "x,y,w,h"; "pct:x,y,w,h" }
     if ( izer.hasMoreTokens() ){
 
       // Our region parameters
-      float region[4] = { 0.0, 0.0, 1.0, 1.0 };
+      region[0] = region[1] = 0.0;
+      region[2] = region[3] = 0.0;
 
       // Get our region string and convert to lower case if necessary
       string regionString = izer.nextToken();
@@ -387,8 +390,9 @@ void IIIF::run( Session* session, const string& src )
       transform( sizeString.begin(), sizeString.end(), sizeString.begin(), ::tolower );
 
       // Calculate the width and height of our region
-      requested_width = session->view->getViewWidth();
-      requested_height = session->view->getViewHeight();
+      requested_width = region[2];
+      requested_height = region[3];
+
       float ratio = (float)requested_width / (float)requested_height;
       unsigned int max_size = session->view->getMaxSize();
 
@@ -461,7 +465,7 @@ void IIIF::run( Session* session, const string& src )
 
 
       if ( requested_width <= 0 || requested_height <= 0 ){
-        throw invalid_argument( "IIIF: invalid size" );
+        throw invalid_argument( "IIIF: invalid size: requested width or height < 0" );
       }
 
       // Check for malformed upscaling request
