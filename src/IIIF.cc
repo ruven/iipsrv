@@ -293,15 +293,11 @@ void IIIF::run( Session* session, const string& src )
     // Keep track of the number of parameters than have been given
     int numOfTokens = 0;
 
-    // Our region parameters
-    float region[4];
-
     // Region Parameter: { "full"; "square"; "x,y,w,h"; "pct:x,y,w,h" }
     if ( izer.hasMoreTokens() ){
 
       // Our region parameters
-      region[0] = region[1] = 0.0;
-      region[2] = region[3] = 0.0;
+      float region[4] = {0.0, 0.0, 1.0, 1.0};
 
       // Get our region string and convert to lower case if necessary
       string regionString = izer.nextToken();
@@ -309,7 +305,10 @@ void IIIF::run( Session* session, const string& src )
 
       // Full export request
       if ( regionString == "full" ){
-	// Do nothing - region array already initialized
+        session->view->setViewLeft(region[0]);
+        session->view->setViewTop( region[1] );
+        session->view->setViewWidth(region[2]);
+        session->view->setViewHeight( region[3] );
       }
       // Square region export using centered crop - avaialble in IIIF version 3
       else if (regionString == "square" ){
@@ -318,7 +317,9 @@ void IIIF::run( Session* session, const string& src )
 	  region[2] = 1.0;
 	  region[3] = (float)width/(float)height;
 	  region[1] = (1.0-region[3])/2.0;
+    session->view->setViewLeft(region[0]);
 	  session->view->setViewTop( region[1] );
+    session->view->setViewWidth(region[2]);
 	  session->view->setViewHeight( region[3] );
         }
 	else if ( width > height ){
@@ -327,7 +328,9 @@ void IIIF::run( Session* session, const string& src )
 	  region[2] = (float)height/(float)width;
 	  region[0] = (1.0-region[2])/2.0;
 	  session->view->setViewLeft( region[0] );
+    session->view->setViewTop( region[1] );
 	  session->view->setViewWidth( region[2] );
+    session->view->setViewHeight( region[3] );
         }
 	// No need for default else clause if image is already square
       }
@@ -390,8 +393,8 @@ void IIIF::run( Session* session, const string& src )
       transform( sizeString.begin(), sizeString.end(), sizeString.begin(), ::tolower );
 
       // Calculate the width and height of our region
-      requested_width = region[2];
-      requested_height = region[3];
+      requested_width = width;
+      requested_height = height;
 
       float ratio = (float)requested_width / (float)requested_height;
       unsigned int max_size = session->view->getMaxSize();
