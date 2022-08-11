@@ -293,11 +293,11 @@ void IIIF::run( Session* session, const string& src )
     // Keep track of the number of parameters than have been given
     int numOfTokens = 0;
 
+    // Our region parameters (always between 0 and 1)
+    float region[4] = {0.0, 0.0, 1.0, 1.0};
+
     // Region Parameter: { "full"; "square"; "x,y,w,h"; "pct:x,y,w,h" }
     if ( izer.hasMoreTokens() ){
-
-      // Our region parameters
-      float region[4] = {0.0, 0.0, 1.0, 1.0};
 
       // Get our region string and convert to lower case if necessary
       string regionString = izer.nextToken();
@@ -360,14 +360,21 @@ void IIIF::run( Session* session, const string& src )
         float hd = (float)height;
 
         if ( isPCT ){
-          wd = 100.0;
-          hd = 100.0;
+          region[0] = (1.0/region[0]) * wd;
+          region[1] = (1.0/region[1]) * hd;
+          region[2] = (1.0/region[2]) * wd;
+          region[3] = (1.0/region[3]) * hd;
+        } else {
+          region[0] = region[0] / wd;
+          region[1] = region[1] / hd;
+          region[2] = region[2] / wd;
+          region[3] = region[3] / hd;
         }
 
-        session->view->setViewLeft( region[0] / wd );
-        session->view->setViewTop( region[1] / hd );
-        session->view->setViewWidth( region[2] / wd );
-        session->view->setViewHeight( region[3] / hd );
+        session->view->setViewLeft( region[0] );
+        session->view->setViewTop( region[1] );
+        session->view->setViewWidth( region[2] );
+        session->view->setViewHeight( region[3] );
 
         // Incorrect region request
         if ( region[2] <= 0.0 || region[3] <= 0.0 || regionIzer.hasMoreTokens() || n < 4 ){
@@ -393,8 +400,8 @@ void IIIF::run( Session* session, const string& src )
       transform( sizeString.begin(), sizeString.end(), sizeString.begin(), ::tolower );
 
       // Calculate the width and height of our region
-      requested_width = width;
-      requested_height = height;
+      requested_width = region[2] * width; // view->getViewWidth not trust worth yet (no resolution set)
+      requested_height = region[3] * height;
 
       float ratio = (float)requested_width / (float)requested_height;
       unsigned int max_size = session->view->getMaxSize();
