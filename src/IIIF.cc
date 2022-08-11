@@ -128,8 +128,8 @@ void IIIF::run( Session* session, const string& src )
   filename = (*session->image)->getImagePath();
 
   // Get the information about image, that can be shown in info.json
-  int requested_width;
-  int requested_height;
+  unsigned int requested_width;
+  unsigned int requested_height;
   unsigned int width = (*session->image)->getImageWidth();
   unsigned int height = (*session->image)->getImageHeight();
   unsigned tw = (*session->image)->getTileWidth();
