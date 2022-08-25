@@ -360,10 +360,10 @@ void IIIF::run( Session* session, const string& src )
         float hd = (float)height;
 
         if ( isPCT ){
-          region[0] = (1.0/region[0]) * wd;
-          region[1] = (1.0/region[1]) * hd;
-          region[2] = (1.0/region[2]) * wd;
-          region[3] = (1.0/region[3]) * hd;
+          region[0] = region[0] / 100.0;
+          region[1] = region[1] / 100.0;
+          region[2] = region[2] / 100.0;
+          region[3] = region[3] / 100.0;
         } else {
           region[0] = region[0] / wd;
           region[1] = region[1] / hd;
