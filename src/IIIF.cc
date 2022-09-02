@@ -128,8 +128,8 @@ void IIIF::run( Session* session, const string& src )
   filename = (*session->image)->getImagePath();
 
   // Get the information about image, that can be shown in info.json
-  int requested_width;
-  int requested_height;
+  unsigned int requested_width;
+  unsigned int requested_height;
   unsigned int width = (*session->image)->getImageWidth();
   unsigned int height = (*session->image)->getImageHeight();
   unsigned tw = (*session->image)->getTileWidth();
@@ -293,46 +293,34 @@ void IIIF::run( Session* session, const string& src )
     // Keep track of the number of parameters than have been given
     int numOfTokens = 0;
 
-    // Our region parameters
-    float region[4];
+    // Our region parameters (always between 0 and 1)
+    float region[4] = {0.0, 0.0, 1.0, 1.0};
 
     // Region Parameter: { "full"; "square"; "x,y,w,h"; "pct:x,y,w,h" }
     if ( izer.hasMoreTokens() ){
-
-      // Our region parameters
-      region[0] = region[1] = 0.0;
-      region[2] = region[3] = 0.0;
 
       // Get our region string and convert to lower case if necessary
       string regionString = izer.nextToken();
       transform( regionString.begin(), regionString.end(), regionString.begin(), ::tolower );
 
-      // Full export request
+      // Export request for full image
       if ( regionString == "full" ){
 	// Do nothing - region array already initialized
       }
       // Square region export using centered crop - avaialble in IIIF version 3
       else if (regionString == "square" ){
         if ( height > width ){
-	  region[0] = 0.0;
-	  region[2] = 1.0;
-	  region[3] = (float)width/(float)height;
-	  region[1] = (1.0-region[3])/2.0;
-	  session->view->setViewTop( region[1] );
-	  session->view->setViewHeight( region[3] );
+	  region[1] = (1.0-region[3]) / 2.0;
+	  region[3] = (float)width / (float)height;
         }
 	else if ( width > height ){
-	  region[1] = 0.0;
-	  region[3] = 1.0;
-	  region[2] = (float)height/(float)width;
-	  region[0] = (1.0-region[2])/2.0;
-	  session->view->setViewLeft( region[0] );
-	  session->view->setViewWidth( region[2] );
+	  region[0] = (1.0-region[2]) / 2.0;
+	  region[2] = (float)height / (float)width;
         }
-	// No need for default else clause if image is already square
+	// No need for default else clause if image is already perfectly square
       }
 
-      // Region export request
+      // Export request for region from image
       else{
 
         // Check for pct (%) and strip it from the beginning
@@ -353,18 +341,18 @@ void IIIF::run( Session* session, const string& src )
         }
 
         // Define our denominators as our session view expects a ratio, not pixel values
-        float wd = (float)width;
-        float hd = (float)height;
+        float wd = (float) width;
+        float hd = (float) height;
 
-        if ( isPCT ){
-          wd = 100.0;
-          hd = 100.0;
+        if( isPCT ){
+	  wd = 100.0;
+	  hd = 100.0;
         }
 
-        session->view->setViewLeft( region[0] / wd );
-        session->view->setViewTop( region[1] / hd );
-        session->view->setViewWidth( region[2] / wd );
-        session->view->setViewHeight( region[3] / hd );
+	region[0] = region[0] / wd;
+	region[1] = region[1] / hd;
+	region[2] = region[2] / wd;
+	region[3] = region[3] / hd;
 
         // Incorrect region request
         if ( region[2] <= 0.0 || region[3] <= 0.0 || regionIzer.hasMoreTokens() || n < 4 ){
@@ -373,11 +361,18 @@ void IIIF::run( Session* session, const string& src )
 
       } // end of else - end of parsing x,y,w,h
 
+      // Update our view with our region values
+      session->view->setViewLeft( region[0] );
+      session->view->setViewTop( region[1] );
+      session->view->setViewWidth( region[2] );
+      session->view->setViewHeight( region[3] );
+
       numOfTokens++;
 
       if ( session->loglevel > 4 ){
-        *(session->logfile) << "IIIF :: Requested Region: x:" << region[0] << ", y:" << region[1]
-                            << ", w:" << region[2] << ", h:" << region[3] << endl;
+        *(session->logfile) << "IIIF :: Requested Region (x, y, w. h): " << round( region[0] * width ) << ", " << round( region[1] * height )
+			    << ", " << round( region[2] * width ) << ", " << round( region[3] * height ) << " (ratios: "
+			    << region[0] << ", " << region[1] << ", " << region[2] << ", " << region[3] << ")" << endl;
       }
 
     }
@@ -390,10 +385,12 @@ void IIIF::run( Session* session, const string& src )
       transform( sizeString.begin(), sizeString.end(), sizeString.begin(), ::tolower );
 
       // Calculate the width and height of our region
-      requested_width = region[2];
-      requested_height = region[3];
+      requested_width = region[2] * width;   // view->getViewWidth not trustworthy yet (no resolution set)
+      requested_height = region[3] * height;
 
-      float ratio = (float)requested_width / (float)requested_height;
+      // Calculate ratio - use region float array directly to avoid rounding errors
+      float ratio = (region[2] * width) / (region[3] * height);
+
       unsigned int max_size = session->view->getMaxSize();
 
       // ^ request prefix (upscaling) - remove ^ symbol and continue usual parsing
@@ -471,13 +468,13 @@ void IIIF::run( Session* session, const string& src )
       // Check for malformed upscaling request
       if( iiif_version >= 3 ){
 	if( session->view->allow_upscaling == false &&
-	    ( requested_width > (int) width || requested_height > (int) height ) ){
+	    ( requested_width > width || requested_height > height ) ){
 	  throw invalid_argument( "IIIF: upscaling should be prefixed with ^" );
 	}
       }
 
       // Limit our requested size to the maximum allowable size if necessary
-      if( requested_width > (int) max_size || requested_height > (int) max_size ){
+      if( requested_width > max_size || requested_height > max_size ){
 	if( ratio > 1.0 ){
 	  requested_width = max_size;
 	  requested_height = session->view->maintain_aspect ? round(max_size*ratio) : max_size;
@@ -599,6 +596,13 @@ void IIIF::run( Session* session, const string& src )
   }
   // End of parsing input parameters
 
+
+  // Get most suitable resolution and recalculate width and height of region in this resolution
+  int requested_res = session->view->getResolution();
+  unsigned int im_width = (*session->image)->image_widths[numResolutions - requested_res - 1];
+  unsigned int im_height = (*session->image)->image_heights[numResolutions - requested_res - 1];
+
+
   // Write info about request to log
   if ( session->loglevel >= 3 ){
     if ( suffix == "info.json" ){
@@ -606,7 +610,7 @@ void IIIF::run( Session* session, const string& src )
     }
     else{
       *(session->logfile) << "IIIF :: image request for " << (*session->image)->getImagePath()
-                          << " with arguments: region: " << session->view->getViewLeft() << "," << session->view->getViewTop() << ","
+                          << " with arguments: scaled region: " << session->view->getViewLeft() << "," << session->view->getViewTop() << ","
                           << session->view->getViewWidth() << "," << session->view->getViewHeight()
                           << "; size: " << requested_width << "x" << requested_height
                           << "; rotation: " << session->view->getRotation()
@@ -615,14 +619,8 @@ void IIIF::run( Session* session, const string& src )
     }
   }
 
-  // Get most suitable resolution and recalculate width and height of region in this resolution
-  int requested_res = session->view->getResolution();
-
-  unsigned int im_width = (*session->image)->image_widths[numResolutions - requested_res - 1];
-  unsigned int im_height = (*session->image)->image_heights[numResolutions - requested_res - 1];
 
   unsigned int view_left, view_top;
-
   if ( session->view->viewPortSet() ){
     // Set the absolute viewport size and extract the co-ordinates
     view_left = session->view->getViewLeft();
@@ -643,8 +641,8 @@ void IIIF::run( Session* session, const string& src )
 
   // Determine whether this is a request for an individual tile which, therefore, coincides exactly with our tile boundaries
   if( ( session->view->maintain_aspect && (requested_res > 0) &&
-	(view_left % tw == 0) && (view_top % th == 0) &&                                        // Left / top boundaries align with tile positions
-	(requested_width == (int) vtw) && (requested_height == (int) vth) &&                    // Request is for exact tile dimensions
+	(view_left % tw == 0) && (view_top % th == 0) &&                            // Left / top boundaries align with tile positions
+	(requested_width == vtw) && (requested_height == vth) &&                    // Request is for exact tile dimensions
 	(session->view->getViewWidth() == vtw) && (session->view->getViewHeight() == vth) ) ||  // View size should also be identical to tile dimensions
       // For smallest resolution, image size can be given as equal or less than tile size or exactly equal to tile size
       ( ( session->view->maintain_aspect && (requested_res == 0) ) &&
