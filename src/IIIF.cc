@@ -370,8 +370,9 @@ void IIIF::run( Session* session, const string& src )
       numOfTokens++;
 
       if ( session->loglevel > 4 ){
-        *(session->logfile) << "IIIF :: Requested Region: x:" << region[0] << ", y:" << region[1]
-                            << ", w:" << region[2] << ", h:" << region[3] << endl;
+        *(session->logfile) << "IIIF :: Requested Region (x, y, w. h): " << round( region[0] * width ) << ", " << round( region[1] * height )
+			    << ", " << round( region[2] * width ) << ", " << round( region[3] * height ) << " (ratios: "
+			    << region[0] << ", " << region[1] << ", " << region[2] << ", " << region[3] << ")" << endl;
       }
 
     }
@@ -387,7 +388,9 @@ void IIIF::run( Session* session, const string& src )
       requested_width = region[2] * width;   // view->getViewWidth not trustworthy yet (no resolution set)
       requested_height = region[3] * height;
 
-      float ratio = (float)requested_width / (float)requested_height;
+      // Calculate ratio - use region float array directly to avoid rounding errors
+      float ratio = (region[2] * width) / (region[3] * height);
+
       unsigned int max_size = session->view->getMaxSize();
 
       // ^ request prefix (upscaling) - remove ^ symbol and continue usual parsing
@@ -607,7 +610,7 @@ void IIIF::run( Session* session, const string& src )
     }
     else{
       *(session->logfile) << "IIIF :: image request for " << (*session->image)->getImagePath()
-                          << " with arguments: region: " << session->view->getViewLeft() << "," << session->view->getViewTop() << ","
+                          << " with arguments: scaled region: " << session->view->getViewLeft() << "," << session->view->getViewTop() << ","
                           << session->view->getViewWidth() << "," << session->view->getViewHeight()
                           << "; size: " << requested_width << "x" << requested_height
                           << "; rotation: " << session->view->getRotation()
@@ -638,7 +641,7 @@ void IIIF::run( Session* session, const string& src )
 
   // Determine whether this is a request for an individual tile which, therefore, coincides exactly with our tile boundaries
   if( ( session->view->maintain_aspect && (requested_res > 0) &&
-	(view_left % tw == 0) && (view_top % th == 0) &&                                        // Left / top boundaries align with tile positions
+	(view_left % tw == 0) && (view_top % th == 0) &&                            // Left / top boundaries align with tile positions
 	(requested_width == vtw) && (requested_height == vth) &&                    // Request is for exact tile dimensions
 	(session->view->getViewWidth() == vtw) && (session->view->getViewHeight() == vth) ) ||  // View size should also be identical to tile dimensions
       // For smallest resolution, image size can be given as equal or less than tile size or exactly equal to tile size
