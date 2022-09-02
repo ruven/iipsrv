@@ -336,6 +336,36 @@ void KakaduImage::loadImageInfo( int seq, int ang )
     else max.push_back( 255.0 );
   }
 
+
+  // Get XMP metadata
+  jpx_meta_manager meta = jpx_input.access_meta_manager();
+  if( meta.exists() ){
+    // Filter only XML boxes
+    kdu_uint32 box_filter[1] = {jp2_xml_4cc};
+    meta.set_box_filter( 1, box_filter );
+    // Start at root node and find first matching box - should perhaps rather loop through all descendants
+    jpx_metanode root = meta.access_root();
+    jpx_metanode node = root.get_next_descendant( NULL, 0, NULL);
+    jp2_input_box box;
+    if( node.open_existing( box ) && box.exists() && node.is_xmp_uuid() ){
+      // If we find a box, read the contents - assume it's XMP metadata
+      kdu_long bs = box.get_box_bytes();
+      kdu_long hs = box.get_box_header_length();
+      kdu_long xmp_size = bs - hs;
+#if DEBUG
+      logfile << "Kakadu :: XML metadata size: " << xmp_size << endl;
+#endif
+      // Skip box header
+      box.seek( hs );
+      // Create buffer and read box contents into it
+      kdu_byte *buffer = new kdu_byte[xmp_size];
+      int nb = box.read( &buffer[0], xmp_size );
+      // Store this as XMP data
+      if( nb > 0 ) metadata["xmp"] = string( (const char*) buffer, nb );
+      delete[] buffer;
+    }
+  }
+
   isSet = true;
 }
 

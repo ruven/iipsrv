@@ -1,3 +1,7 @@
+02/09/2022:
+	- Added XMP metadata support for Kakadu
+
+
 23/07/2022:
 	- Fix to IIIF parsing problem when requesting certain region sizes at "full" size
 
