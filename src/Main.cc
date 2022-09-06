@@ -646,6 +646,7 @@ int main( int argc, char *argv[] )
 
       // If the request string hasn't been set through a URI map, get it from the QUERY_STRING variable
       if( request_string.empty() ){
+
 	// Get the query into a string
 #ifdef DEBUG
 	header = argv[1];
@@ -654,13 +655,27 @@ int main( int argc, char *argv[] )
 #endif
 
 	request_string = (header!=NULL)? header : "";
-      }
 
+	// Check for requests sent using POST, PUT or other HTTP methods
+	if( request_string.empty() ){
+	  header = FCGX_GetParam( "CONTENT_LENGTH", request.envp );
+	  int contentLength = atoi( header );
+	  header = FCGX_GetParam( "REQUEST_METHOD", request.envp );
+	  if( loglevel >=2 ) logfile << "HTTP " << header << " request with contentLength " << contentLength << endl;
+	  if( contentLength > 0 ){
+	    char *contentBuffer = new char[contentLength];
+	    FCGX_GetStr( contentBuffer, contentLength, request.in );
+	    request_string = string( contentBuffer, contentLength );
+	    delete[] contentBuffer;
+	  }
+	  else request_string = "";
+	}
+      }
 
 
       // Check that we actually have a request string. If not, just show server home page
       if( request_string.empty() ){
-        response.setStatus( "200 OK" );
+	response.setStatus( "200 OK" );
 	throw string( "QUERY_STRING not set" );
       }
 

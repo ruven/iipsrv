@@ -1,3 +1,7 @@
+06/09/2022:
+	- Added support for reading POST, PUT and other HTTP methods
+
+
 02/09/2022:
 	- Added XMP metadata support for Kakadu
 
