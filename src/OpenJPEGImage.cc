@@ -215,9 +215,8 @@ void OpenJPEGImage::loadImageInfo( int seq, int ang )
 	    << n-numResolutions << " extra levels dynamically -" << endl
 	    << "OpenJPEG :: However, you are advised to regenerate the file with at least " << n << " levels" << endl;
 #endif
+    virtual_levels = n-numResolutions;
   }
-
-  if( n > numResolutions ) virtual_levels = n-numResolutions-1;
   numResolutions = n;
 
 
@@ -458,9 +457,9 @@ void OpenJPEGImage::process( unsigned int res, int layers, int xoffset, int yoff
 
 #ifdef DEBUG
   logfile << "OpenJPEG :: decoding " << layers << " quality layers" << endl;
-  logfile << "OpenJPEG :: requested region on high resolution canvas: position: "
+  logfile << "OpenJPEG :: requested region at requested resolution: position: "
 	  << xoffset << "x" << yoffset << ". size: " << tw << "x" << th << endl;
-  logfile << "OpenJPEG :: mapped resolution region size: " << (tw<<vipsres) << "x" << (th<<vipsres) << endl;
+  logfile << "OpenJPEG :: region size mapped to full resolution: " << (tw<<vipsres) << "x" << (th<<vipsres) << endl;
 #endif
 
 
@@ -474,7 +473,6 @@ void OpenJPEGImage::process( unsigned int res, int layers, int xoffset, int yoff
     throw file_error( "OpenJPEG :: process() :: opj_decode() failed" );
   }
 
-
   // Extract any ICC profile - unfortunately, can only get ICC profile after decoding
   int icc_length = _image->icc_profile_len;
   const char* icc = (const char*) _image->icc_profile_buf;
@@ -485,29 +483,27 @@ void OpenJPEGImage::process( unsigned int res, int layers, int xoffset, int yoff
   }
 #endif
 
-
   // Copy our decoded data by looping over all pixels
-  unsigned int n = 0;
-  unsigned int nk = 0;
+  size_t n = 0;
 
   for( unsigned int j=0; j < th; j += factor ){
     for( unsigned int i = 0; i < tw; i += factor ){
+      size_t index = tw*j + i;
       for( unsigned int k = 0; k < channels; k++ ){
         // Handle 16 and 8 bit data:
 	// OpenJPEG's output data is 32 bit unsigned int, so just mask of the bottom 2 bytes
 	// for 16 bit output or bottom 1 byte for 8 bit
 	if( obpc == 16 ){
-	  ((unsigned short*)d)[nk++] =(  (_image->comps[k].data[n]) & 0x0000ffff );
+	  ((unsigned short*)d)[n++] =(  (_image->comps[k].data[index]) & 0x0000ffff );
 	}
 	// Binary (bi-level) images need to be scaled up to 8 bits
 	else if( bpc == 1 ){
-	  ((unsigned char*)d)[nk++] = ((_image->comps[k].data[n]) & 0x000000f) * 255;
+	  ((unsigned char*)d)[n++] = ((_image->comps[k].data[index]) & 0x000000f) * 255;
 	}
 	else{
-	  ((unsigned char*)d)[nk++] = (_image->comps[k].data[n]) & 0x000000ff;
+	  ((unsigned char*)d)[n++] = (_image->comps[k].data[index]) & 0x000000ff;
 	}
       }
-      n++;
     }
   }
 

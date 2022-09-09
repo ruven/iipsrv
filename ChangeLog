@@ -1,3 +1,7 @@
+09/09/2022:
+	- Fix to incorrect decoding of virtual levels within OpenJPEG: resolves https://github.com/ruven/iipsrv/issues/235
+
+
 06/09/2022:
 	- Added support for reading POST, PUT and other HTTP methods
 
