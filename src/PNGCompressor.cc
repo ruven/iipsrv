@@ -409,6 +409,11 @@ void PNGCompressor::writeICCProfile(){
   png_set_option( dest.png_ptr, PNG_SKIP_sRGB_CHECK_PROFILE, PNG_OPTION_ON );
 #endif
 
+  // Disable profile illuminant errors such as "'ICC': 0h: PCS illuminant is not D50 errors"
+#if PNG_LIBPNG_VER >= 10420
+  png_set_benign_errors( dest.png_ptr, 1 );
+#endif
+
   // Write out ICC profile
   png_set_iCCP( dest.png_ptr, dest.info_ptr, ICC_PROFILE_NAME, PNG_COMPRESSION_TYPE_BASE, icc_profile_buf_png, len );
 
