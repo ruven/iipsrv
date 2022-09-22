@@ -1,4 +1,8 @@
-21/09/2021:
+22/09/2022:
+	- Added check for empty HTTP CONTENT_LENGTH to avoid risk of passing NULL pointer to atoi()
+
+
+21/09/2022:
 	- Further disabled overly stringent ICC profile checks in libpng. Fixes https://github.com/ruven/iipsrv/issues/239
 
 

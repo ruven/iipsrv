@@ -658,8 +658,8 @@ int main( int argc, char *argv[] )
 
 	// Check for requests sent using POST, PUT or other HTTP methods
 	if( request_string.empty() ){
-	  header = FCGX_GetParam( "CONTENT_LENGTH", request.envp );
-	  int contentLength = atoi( header );
+	  int contentLength = 0;
+	  if( ( header = FCGX_GetParam("CONTENT_LENGTH",request.envp) ) ) contentLength = atoi( header );
 	  header = FCGX_GetParam( "REQUEST_METHOD", request.envp );
 	  if( loglevel >=2 ) logfile << "HTTP " << header << " request with contentLength " << contentLength << endl;
 	  if( contentLength > 0 ){
