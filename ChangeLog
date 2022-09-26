@@ -1,3 +1,7 @@
+26/09/2022:
+	- Modified SDS parameter parsing to allow single values to be passed as well as comma-separated pairs of values.
+
+
 22/09/2022:
 	- Added check for empty HTTP CONTENT_LENGTH to avoid risk of passing NULL pointer to atoi()
 

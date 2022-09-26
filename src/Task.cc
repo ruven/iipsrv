@@ -116,15 +116,18 @@ void SDS::run( Session* session, const string& argument ){
 
   if( session->loglevel >= 3 ) *(session->logfile) << "SDS handler reached" << endl;
 
-  // Parse the argument list
-  int delimitter = argument.find( "," );
-  string tmp = argument.substr( 0, delimitter );
-  session->view->xangle = atoi( tmp.c_str() );
-  string arg2 = argument.substr( delimitter + 1, argument.length() );
-
-  delimitter = arg2.find( "," );
-  tmp = arg2.substr( 0, delimitter );
-  session->view->yangle = atoi( tmp.c_str() );
+  // Parse the argument - check whether we have a single value or 2 separated by a camma
+  std::string::size_type delimitter = argument.find( "," );
+  if( delimitter != string::npos ){
+    string arg1 = argument.substr( 0, delimitter );
+    session->view->xangle = atoi( arg1.c_str() );
+    string arg2 = argument.substr( delimitter + 1, argument.length() );
+    session->view->yangle = atoi( arg2.c_str() );
+  }
+  else{
+    session->view->xangle = atoi( argument.c_str() );
+    session->view->yangle = 0;
+  }
 
   if( session->loglevel >= 2 ) *(session->logfile) << "SDS :: set to " << session->view->xangle << ", "
 						   << session->view->yangle << endl;
