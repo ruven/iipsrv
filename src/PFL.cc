@@ -20,6 +20,7 @@
 
 #include "Task.h"
 #include <cmath>
+#include <sstream>
 #include <iomanip>
 
 using namespace std;

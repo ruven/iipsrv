@@ -1,5 +1,6 @@
 26/09/2022:
 	- Modified SDS parameter parsing to allow single values to be passed as well as comma-separated pairs of values.
+	- Added setMimeType() function to IIPResponse class to allow response Mime type to be modified on-demand.
 
 
 22/09/2022:

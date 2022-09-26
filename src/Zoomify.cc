@@ -23,6 +23,7 @@
 */
 
 #include <cmath>
+#include <sstream>
 
 #include "Task.h"
 #include "Transforms.h"

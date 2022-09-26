@@ -20,6 +20,7 @@
 */
 
 #include <algorithm>
+#include <sstream>
 #include <cmath>
 #include <cstdlib>
 #include "Task.h"

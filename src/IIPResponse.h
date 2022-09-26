@@ -1,7 +1,7 @@
 /*
     IIP Response Handler Class
 
-    Copyright (C) 2003-2021 Ruven Pillay.
+    Copyright (C) 2003-2022 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -33,7 +33,6 @@
 
 
 #include <string>
-#include <sstream>
 
 
 /// Class to handle non-image IIP responses including errors
@@ -67,6 +66,11 @@ class IIPResponse{
   /// Set the IIP protocol version
   /** @param p IIP protocol version */
   void setProtocol( const std::string& p ) { protocol = p; };
+
+
+  /// Set the Mime Type
+  /** @param m Mime Type */
+  void setMimeType( const std::string& m ) { mimeType = "Content-Type: " + m; };
 
 
   /// Set the Last Modified header

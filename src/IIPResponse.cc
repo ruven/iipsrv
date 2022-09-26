@@ -1,7 +1,7 @@
 /*
     IIP Response Handler Class
 
-    Copyright (C) 2003-2021 Ruven Pillay.
+    Copyright (C) 2003-2022 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -21,6 +21,7 @@
 #include "IIPResponse.h"
 #include <cstdio>
 #include <cstring>
+#include <sstream>
 
 using namespace std;
 
