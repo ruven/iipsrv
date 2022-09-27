@@ -441,9 +441,11 @@ unsigned int JPEGCompressor::Compress( RawTile& rawtile )
   // This can happen on small tiles with high quality factors. If so delete and reallocate memory.
   unsigned long dataLength;
   dataLength = dest->written;
-  if( dataLength > rawtile.dataLength ){
+
+  if( dataLength > rawtile.capacity ){
     if( rawtile.memoryManaged ) delete[] (unsigned char*) rawtile.data;
     rawtile.data = new unsigned char[dataLength];
+    rawtile.capacity = dataLength;
   }
   
   // Copy memory back to the tile

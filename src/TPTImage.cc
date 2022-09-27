@@ -39,9 +39,7 @@ void TPTImage::openImage()
 {
 
   // Insist that the tiff and tile_buf be NULL
-  if( tiff || tile_buf ){
-    throw file_error( "TPTImage :: tiff or tile_buf is not NULL" );
-  }
+  if( tiff ) throw file_error( "TPTImage :: tiff pointer is not NULL" );
 
   string filename = getFileName( currentX, currentY );
 
@@ -216,10 +214,6 @@ void TPTImage::closeImage()
     TIFFClose( tiff );
     tiff = NULL;
   }
-  if( tile_buf != NULL ){
-    _TIFFfree( tile_buf );
-    tile_buf = NULL;
-  }
 }
 
 
@@ -300,8 +294,8 @@ RawTile TPTImage::getTile( int seq, int ang, unsigned int res, int layers, unsig
   }
 
 
-  // Total number of bytes in tile
-  unsigned int np = tw * th;
+  // Total number of pixels in tile
+  size_t np = tw * th;
 
 
   // Get the width and height for last row and column tiles
@@ -345,29 +339,23 @@ RawTile TPTImage::getTile( int seq, int ang, unsigned int res, int layers, unsig
   else colourspace = sRGB;
 
 
-  // Allocate memory for our tile.
-  if( !tile_buf ){
-    if( ( tile_buf = _TIFFmalloc( TIFFTileSize(tiff) ) ) == NULL ){
-      throw file_error( "TPTImage :: TIFFmalloc() failed" );
-    }
-  }
-
-  // Decode and read the tile
-  int length = TIFFReadEncodedTile( tiff, (ttile_t) tile,
-				    tile_buf, (tsize_t) - 1 );
-  if( length == -1 ) {
-    throw file_error( "TPTImage :: TIFFReadEncodedTile() failed for " + getFileName( seq, ang ) );
-  }
-
-
+  // Initialize our RawTile object
   RawTile rawtile( tile, res, seq, ang, tw, th, channels, bpc );
-  rawtile.data = tile_buf;
-  rawtile.dataLength = length;
   rawtile.filename = getImagePath();
   rawtile.timestamp = timestamp;
-  rawtile.memoryManaged = 0;
   rawtile.padded = true;
   rawtile.sampleType = sampleType;
+
+  // Allocate sufficient memory for the tile (width and height may be smaller than padded tile size)
+  uint32_t bytes = TIFFTileSize( tiff );
+  rawtile.allocate( bytes );
+
+  // Decode and read the tile - dump data directly into RawTile buffer
+  int length = TIFFReadEncodedTile( tiff, (ttile_t) tile, (tdata_t) rawtile.data, (tsize_t) bytes );
+  if( length == -1 ){
+    throw file_error( "TPTImage :: TIFFReadEncodedTile() failed for " + getFileName( seq, ang ) );
+  }
+  rawtile.dataLength = length;
 
 
   // Pad 1 bit 1 channel bilevel images to 8 bits for output
@@ -390,7 +378,7 @@ RawTile TPTImage::getTile( int seq, int ang, unsigned int res, int layers, unsig
 
     // Unpack each raw byte into 8 8-bit pixels
     for( unsigned int i=0; i<nbytes; i++ ){
-      unsigned char t = ((unsigned char*)tile_buf)[i];
+      unsigned char t = ((unsigned char*)rawtile.data)[i];
       // Count backwards as TIFF is usually MSB2LSB
       for( int k=7; k>=0; k-- ){
 	// Set values depending on whether bit is set
@@ -401,11 +389,9 @@ RawTile TPTImage::getTile( int seq, int ang, unsigned int res, int layers, unsig
     rawtile.dataLength = n;
     rawtile.data = buffer;
     rawtile.bpc = 8;
-    rawtile.memoryManaged = 1;
   }
 
-
-  return( rawtile );
+  return rawtile;
 
 }
 

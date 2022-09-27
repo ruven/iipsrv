@@ -1,3 +1,9 @@
+27/09/2022:
+	- Major changes to the Rawtile class to enable move assignment and copy operators for C++11 compatible compilers.
+	  This eliminates a number of unnecessary memory allocation and copy operations when using Rawtile objects,
+	  improving speed and reducing memory usage
+
+
 26/09/2022:
 	- Modified SDS parameter parsing to allow single values to be passed as well as comma-separated pairs of values.
 	- Added setMimeType() function to IIPResponse class to allow response Mime type to be modified on-demand.

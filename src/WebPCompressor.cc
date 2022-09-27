@@ -167,9 +167,10 @@ unsigned int WebPCompressor::Compress( RawTile& rawtile ){
 
 
   // Allocate the appropriate amount of memory if the encoded WebP is larger than the raw image buffer
-  if( size > rawtile.dataLength ){
+  if( size > rawtile.capacity ){
     if( rawtile.memoryManaged ) delete[] (unsigned char*) rawtile.data;
     rawtile.data = new unsigned char[size];
+    rawtile.capacity = size;
   }
 
   // Copy our data back into our rawtile buffer

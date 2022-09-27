@@ -352,9 +352,10 @@ unsigned int PNGCompressor::Compress( RawTile& rawtile )
 
  
   // Allocate the appropriate amount of memory if the encoded PNG is larger than the raw image buffer
-  if( dest.written > rawtile.dataLength ){
+  if( dest.written > rawtile.capacity ){
     if( rawtile.memoryManaged ) delete[] (unsigned char*) rawtile.data;
     rawtile.data = new unsigned char[dest.written];
+    rawtile.capacity = dest.written;
   }
 
   rawtile.dataLength = dest.written;

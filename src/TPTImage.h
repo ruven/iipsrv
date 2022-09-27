@@ -39,24 +39,21 @@ class TPTImage : public IIPImage {
   /// Pointer to the TIFF library struct
   TIFF *tiff;
 
-  /// Tile data buffer pointer
-  tdata_t tile_buf;
-
 
  public:
 
   /// Constructor
-  TPTImage():IIPImage(), tiff( NULL ), tile_buf( NULL ) {};
+  TPTImage():IIPImage(), tiff( NULL ) {};
 
   /// Constructor
   /** @param path image path
    */
-  TPTImage( const std::string& path ): IIPImage( path ), tiff( NULL ), tile_buf( NULL ) {};
+  TPTImage( const std::string& path ): IIPImage( path ), tiff( NULL ) {};
 
   /// Copy Constructor
   /** @param image IIPImage object
    */
-  TPTImage( const TPTImage& image ): IIPImage( image ), tiff( NULL ), tile_buf( NULL ) {};
+  TPTImage( const TPTImage& image ): IIPImage( image ), tiff( NULL ) {};
 
   /// Assignment Operator
   /** @param image TPTImage object
@@ -66,7 +63,6 @@ class TPTImage : public IIPImage {
       closeImage();
       IIPImage::operator=(image);
       tiff = image.tiff;
-      tile_buf = image.tile_buf;
     }
     return *this;
   }
@@ -75,7 +71,7 @@ class TPTImage : public IIPImage {
   /** @param image IIPImage object
    */
   TPTImage( const IIPImage& image ): IIPImage( image ) {
-    tiff = NULL; tile_buf = NULL; 
+    tiff = NULL;
   };
 
   /// Destructor
