@@ -152,6 +152,7 @@ void Transform::normalize( RawTile& in, const vector<float>& max, const vector<f
   in.bpc = 32;
   in.sampleType = FLOATINGPOINT;
   in.dataLength = (uint32_t) np * (in.bpc/8);
+  in.capacity = in.dataLength;
 
 }
 
@@ -224,6 +225,7 @@ void Transform::shade( RawTile& in, int h_angle, int v_angle ){
   in.data = buffer;
   in.channels = 1;
   in.dataLength = (uint32_t) in.width * in.height * (in.bpc/8);
+  in.capacity = in.dataLength;
 }
 
 
@@ -463,6 +465,7 @@ void Transform::cmap( RawTile& in, enum cmap_type cmap ){
   in.data = outptr;
   in.channels = out_chan;
   in.dataLength = (uint32_t) np * out_chan * (in.bpc/8);
+  in.capacity = in.dataLength;
 }
 
 
@@ -535,6 +538,7 @@ void Transform::interpolate_nearestneighbour( RawTile& in, unsigned int resample
   in.width = resampled_width;
   in.height = resampled_height;
   in.dataLength = (uint32_t) resampled_width * resampled_height * channels * (in.bpc/8);
+  in.capacity = in.dataLength;
   in.data = output;
 }
 
@@ -621,6 +625,7 @@ void Transform::interpolate_bilinear( RawTile& in, unsigned int resampled_width,
   in.width = resampled_width;
   in.height = resampled_height;
   in.dataLength = (uint32_t) resampled_width * resampled_height * channels * (in.bpc/8);
+  in.capacity = in.dataLength;
   in.data = output;
 }
 
@@ -666,6 +671,7 @@ void Transform::scale_to_8bit( RawTile& in ){
   in.bpc = 8;
   in.sampleType = FIXEDPOINT;
   in.dataLength = np;
+  in.capacity = np;
 }
 
 
@@ -694,6 +700,7 @@ void Transform::contrast( RawTile& in, float contrast ){
   in.bpc = 8;
   in.sampleType = FIXEDPOINT;
   in.dataLength = np;
+  in.capacity = np;
 }
 
 
@@ -852,6 +859,7 @@ void Transform::greyscale( RawTile& rawtile ){
   // Update our number of channels and data length
   rawtile.channels = 1;
   rawtile.dataLength = np;
+  rawtile.capacity = np;
 }
 
 
@@ -926,6 +934,7 @@ void Transform::twist( RawTile& rawtile, const vector< vector<float> >& matrix )
     rawtile.data = output;
     rawtile.channels = output_channels;
     rawtile.dataLength = (uint32_t) np * rawtile.channels * (rawtile.bpc/8);
+    rawtile.capacity = rawtile.dataLength;
   }
 
 }
@@ -954,6 +963,7 @@ void Transform::flatten( RawTile& in, int bands ){
 
   in.channels = bands;
   in.dataLength = ni * (in.bpc/8);
+  // Note that we haven't changed our data buffer, so no change in capacity
 }
 
 

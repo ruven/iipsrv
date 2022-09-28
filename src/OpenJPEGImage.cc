@@ -337,16 +337,14 @@ RawTile OpenJPEGImage::getTile( int seq, int ang, unsigned int res, int layers, 
   logfile << "OpenJPEG :: Tile size: " << tw << "x" << th << " @" << channels << endl;
 #endif
 
+  // OpenJPEG only supports 8 or 16 bit images
+  if( !( (obpc == 8) || (obpc == 16) ) ) throw file_error( "OpenJPEG :: Unsupported number of bits" );
+
   // Create our Rawtile object and initialize with data
   RawTile rawtile( tile, res, seq, ang, tw, th, channels, obpc );
-
-  if( obpc == 16 ) rawtile.data = new unsigned short[tw*th*channels];
-  else if( obpc == 8 ) rawtile.data = new unsigned char[tw*th*channels];
-  else throw file_error( "OpenJPEG :: Unsupported number of bits" );
-
-  rawtile.dataLength = tw*th*channels*(obpc/8);
   rawtile.filename = getImagePath();
   rawtile.timestamp = timestamp;
+  rawtile.allocate();
 
   // Process the tile
   process( res, layers, xoffset, yoffset, tw, th, rawtile.data );
@@ -373,16 +371,13 @@ RawTile OpenJPEGImage::getRegion( int ha, int va, unsigned int res, int layers, 
   timer.start();
 #endif
 
+  // OpenJPEG only supports 8 or 16 bit images
+  if( !( (obpc == 8) || (obpc == 16) ) ) throw file_error( "OpenJPEG :: Unsupported number of bits" );
+
   RawTile rawtile( 0, res, ha, va, w, h, channels, obpc );
-
-  size_t np = (size_t) w * (size_t) h * (size_t) channels;
-  if( obpc == 16 ) rawtile.data = new unsigned short[np];
-  else if( obpc == 8 ) rawtile.data = new unsigned char[np];
-  else throw file_error( "OpenJPEG :: Unsupported number of bits" );
-
-  rawtile.dataLength = np*(obpc/8);
   rawtile.filename = getImagePath();
   rawtile.timestamp = timestamp;
+  rawtile.allocate();
 
   process( res, layers, x, y, w, h, rawtile.data );
 

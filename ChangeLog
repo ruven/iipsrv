@@ -1,3 +1,8 @@
+28/09/2002:
+	- Updated KakaduImage and OpenJPEGImage classes to use Rawtile's new allocate() function. Also updated Transform
+	  class to correctly update Rawtile capacity value
+
+
 27/09/2022:
 	- Major changes to the Rawtile class to enable move assignment and copy operators for C++11 compatible compilers.
 	  This eliminates a number of unnecessary memory allocation and copy operations when using Rawtile objects,

@@ -388,15 +388,8 @@ RawTile TileManager::getRegion( unsigned int res, int seq, int ang, int layers, 
 
   // Create an empty tile with the correct dimensions
   RawTile region( 0, res, seq, ang, width, height, channels, bpc );
-  size_t np = (size_t) width * (size_t) height * (size_t) channels;
-  region.dataLength = np * (bpc/8);
   region.sampleType = sampleType;
-
-  // Allocate memory for the region
-  if( bpc == 8 ) region.data = new unsigned char[np];
-  else if( bpc == 16 ) region.data = new unsigned short[np];
-  else if( bpc == 32 && sampleType == FIXEDPOINT ) region.data = new int[np];
-  else if( bpc == 32 && sampleType == FLOATINGPOINT ) region.data = new float[np];
+  region.allocate();
 
   unsigned int current_height = 0;
 

@@ -452,18 +452,14 @@ RawTile KakaduImage::getTile( int seq, int ang, unsigned int res, int layers, un
 #endif
 
 
+  // Only handle 8 or 16 bit images
+  if( !( (obpc == 8) || (obpc == 16) ) ) throw file_error( "Kakadu :: Unsupported number of bits" );
+
   // Create our Rawtile object and initialize with data
   RawTile rawtile( tile, res, seq, ang, tw, th, channels, obpc );
-
-
-  // Create our raw tile buffer and initialize some values
-  if( obpc == 16 ) rawtile.data = new unsigned short[tw*th*channels];
-  else if( obpc == 8 ) rawtile.data = new unsigned char[tw*th*channels];
-  else throw file_error( "Kakadu :: Unsupported number of bits" );
-
-  rawtile.dataLength = tw*th*channels*(obpc/8);
   rawtile.filename = getImagePath();
   rawtile.timestamp = timestamp;
+  rawtile.allocate();
 
   // Process the tile
   process( res, layers, xoffset, yoffset, tw, th, rawtile.data );
@@ -492,16 +488,13 @@ RawTile KakaduImage::getRegion( int seq, int ang, unsigned int res, int layers, 
   timer.start();
 #endif
 
+  // Only handle 8 or 16 bit images
+  if( !( (obpc == 8) || (obpc == 16) ) ) throw file_error( "Kakadu :: Unsupported number of bits" );
+
   RawTile rawtile( 0, res, seq, ang, w, h, channels, obpc );
-
-  size_t np = (size_t) w * (size_t) h * (size_t) channels;
-  if( obpc == 16 ) rawtile.data = new unsigned short[np];
-  else if( obpc == 8 ) rawtile.data = new unsigned char[np];
-  else throw file_error( "Kakadu :: Unsupported number of bits" );
-
-  rawtile.dataLength = np*(obpc/8);
   rawtile.filename = getImagePath();
   rawtile.timestamp = timestamp;
+  rawtile.allocate();
 
   process( res, layers, x, y, w, h, rawtile.data );
 
