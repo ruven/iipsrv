@@ -1,6 +1,8 @@
 29/09/2022:
 	- Update to Rawtile class to ensure enough memory allocation takes place when dataLength is greater than the raw
-	  space required for the given sample type, width, height and number of channels
+	  space required for the given sample type, width, height and number of channels.
+	- Re-factoring of MINMAX handler: channel indices now start from zero and a dash "-" can be used to indicate that
+	  the min and max should be applied to all channels.
 
 
 28/09/2002:

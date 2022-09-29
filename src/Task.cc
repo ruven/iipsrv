@@ -135,38 +135,60 @@ void SDS::run( Session* session, const string& argument ){
 }
 
 
+/// Syntax: MINXMAX=<channel>:<min>,<max> where channel is an int from 0 to number of channels - 1
+/// and min, max are integers or floats
 void MINMAX::run( Session* session, const string& argument ){
+
+  int channel = 0;
+  float min, max;
+  bool all = false;
 
   if( session->loglevel >= 3 ) *(session->logfile) << "MINMAX handler reached" << endl;
 
-  // Parse the argument list: command is of the form MINXMAX=<channel>:<min>,<max>
+  // Parse the argument and extract our channel index first
   int delimitter = argument.find( ":" );
   string tmp = argument.substr( 0, delimitter );
-  int nchan = atoi( tmp.c_str() ) - 1;
+
+  if( tmp == "-" ) all = true;
+  else channel = atoi( tmp.c_str() );
+
+  unsigned int nc = (*session->image)->getNumChannels();
 
   // Sanity check for channel index
-  if( nchan < 0 || nchan > (int)(*session->image)->getNumChannels() ){
+  if( channel < 0 || channel >= (int)nc ){
     if( session->loglevel >= 1 ) *(session->logfile) << "MINMAX :: Error: channel number out of bounds: "
 						     << tmp.c_str() << endl;
     return;
   }
 
-  string arg2 = argument.substr( delimitter + 1, argument.length() );
-
+  // Parse our min
+  string arg2 = argument.substr( delimitter + 1, string::npos );
   delimitter = arg2.find( "," );
-  tmp = arg2.substr( 0, delimitter );
-  (*(session->image))->min[nchan] = atof( tmp.c_str() );
-  string arg3 = arg2.substr( delimitter + 1, arg2.length() );
+  min = atof( arg2.substr( 0, delimitter ).c_str() );
 
-  delimitter = arg3.find( "," );
-  tmp = arg3.substr( 0, delimitter );
-  (*(session->image))->max[nchan] = atof( tmp.c_str() );
+  // Parse our max
+  string arg3 = arg2.substr( delimitter + 1, string::npos );
+  max = atof( arg3.c_str() );
 
   // Indicate that we have a user-defined min/max
   session->view->minmax = true;
 
-  if( session->loglevel >= 2 ) *(session->logfile) << "MINMAX :: set to " << (*(session->image))->min[nchan] << ", "
-						   << (*(session->image))->max[nchan] << " for channel " << nchan << endl;
+  if( all ){
+    for( unsigned int n=0; n < nc; n++ ){
+      (*(session->image))->min[n] = min;
+      (*(session->image))->max[n] = max;
+    }
+  }
+  else{
+    (*(session->image))->min[channel] = min;
+    (*(session->image))->max[channel] = max;
+  }
+
+  if( session->loglevel >= 2 ){
+    *(session->logfile) << "MINMAX :: min and max input range set to " << min << "-" << max << " for ";
+    if( all ) *(session->logfile) << "all channels" << endl;
+    else *(session->logfile) << "channel " << channel << endl;
+  }
 }
 
 
