@@ -22,7 +22,6 @@
 
 #ifndef _RAWTILE_H
 #define _RAWTILE_H
-
 #include <cstring>
 #include <string>
 #include <cstdlib>
@@ -184,7 +183,7 @@ class RawTile {
   {
 
     if( tile.data && tile.dataLength > 0 ){
-      allocate();
+      allocate( tile.dataLength );
       memcpy( data, tile.data, tile.dataLength );
       memoryManaged = 1;
     }
@@ -217,7 +216,7 @@ class RawTile {
       capacity = tile.capacity;
 
       if( tile.data && tile.dataLength > 0 ){
-	allocate();
+	allocate( tile.dataLength );
 	memcpy( data, tile.data, tile.dataLength );
 	memoryManaged = 1;
       }
@@ -322,8 +321,8 @@ class RawTile {
       tile.memoryManaged = 0;
     }
     // Need to copy data if other tile is not owner of its data
-    else if( tile.data && dataLength>0 ){
-      allocate();
+    else if( tile.data && tile.dataLength > 0 ){
+      allocate( tile.dataLength );
       memcpy( data, tile.data, tile.dataLength );
       memoryManaged = 1;
     }
@@ -368,8 +367,8 @@ class RawTile {
 	tile.capacity = 0;
 	tile.memoryManaged = 0;
       }
-      else if( tile.data && tile.dataLength>0 ){
-	allocate();
+      else if( tile.data && tile.dataLength > 0 ){
+	allocate( tile.dataLength );
 	memcpy( data, tile.data, tile.dataLength );
 	memoryManaged = 1;
       }

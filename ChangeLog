@@ -1,3 +1,8 @@
+29/09/2022:
+	- Update to Rawtile class to ensure enough memory allocation takes place when dataLength is greater than the raw
+	  space required for the given sample type, width, height and number of channels
+
+
 28/09/2002:
 	- Updated KakaduImage and OpenJPEGImage classes to use Rawtile's new allocate() function. Also updated Transform
 	  class to correctly update Rawtile capacity value
