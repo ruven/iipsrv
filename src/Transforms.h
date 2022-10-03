@@ -193,6 +193,13 @@ struct Transform {
   void equalize( RawTile& in, std::vector<unsigned int>& histogram );
 
 
+  /// Apply convolution
+  /** @param in input image
+      @param conv convolution matrix
+  */
+  void convolution( RawTile& in, const std::vector<float>& conv );
+
+
 };
 
 #endif

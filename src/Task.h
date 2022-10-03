@@ -371,4 +371,11 @@ class COL : public Task {
 };
 
 
+/// CNV Convolution Filter Command
+class CNV : public Task {
+ public:
+  void run( Session* session, const std::string& argument );
+};
+
+
 #endif

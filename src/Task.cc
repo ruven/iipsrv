@@ -23,6 +23,7 @@
 #include "Tokenizer.h"
 #include "URL.h"
 #include <cstdlib>
+#include <cmath>
 #include <algorithm>
 
 
@@ -70,6 +71,7 @@ Task* Task::factory( const string& t ){
   else if( type == "deepzoom" ) return new DeepZoom;
   else if( type == "ctw" ) return new CTW;
   else if( type == "col" ) return new COL;
+  else if( type == "cnv" ) return new CNV;
   else if( type == "iiif" ) return new IIIF;
   else return NULL;
 
@@ -566,4 +568,103 @@ void COL::run( Session* session, const string& argument ){
   if( ctype == "grey" || ctype == "gray" ) session->view->colourspace = GREYSCALE;
   else if( ctype == "binary" ) session->view->colourspace = BINARY;
   
+}
+
+
+void CNV::run( Session* session, const string& src ){
+
+  /* The argument is a predefined convolution kernel name or a comma separated
+     list of values which are entries in a convolution filter kernel matrix.
+     The matrix must be square and of odd dimension.
+  */
+
+  if( session->loglevel >= 3 ) *(session->logfile) << "CNV handler reached" << endl;
+
+  // First URL decode our string
+  URL url( src );
+  string argument = url.decode();
+
+  int pos1 = argument.find("[");
+  int pos2 = argument.find("]");
+  string matrix = argument.substr( pos1+1, pos2-pos1-1 );
+
+  // Extract the contents of the array and convert to lower-case if necessary
+  string ctype = matrix;
+  transform( ctype.begin(), ctype.end(), ctype.begin(), ::tolower );
+
+  if( ctype == "sobel" ){
+    session->view->convolution = { -1, 0, +1,
+                                   -2, 0, +2,
+                                   -1, 0, +1 };
+  }
+  else if( ctype == "prewitt" ){
+    session->view->convolution = { +1, 0, -1,
+                                   +1, 0, -1,
+                                   +1, 0, -1 };
+  }
+  else if( ctype == "scharr" ){
+    session->view->convolution = { -3, 0, +3,
+                                  -10, 0, 10,
+                                   -3, 0, +3 };
+  }
+  else if( ctype == "laplace" ){
+    session->view->convolution = { -1, -1, -1,
+                                   -1, +8, -1,
+                                   -1, -1, -1 };
+  }
+  else if( ctype == "gaussian" ){
+    session->view->convolution = { 1, 2, 1,
+                                   2, 4, 2,
+                                   1, 2, 1 };
+  }
+  else if( ctype == "sharpen" ){
+    session->view->convolution = {  0, -1,  0,
+                                   -1,  5, -1,
+                                    0, -1,  0 };
+  }
+  else if( ctype == "emboss" ){
+    session->view->convolution = { -2, -1, 0,
+                                   -1, 1, 1,
+                                    0, 1, 2 };
+  }
+  else{
+
+    Tokenizer izer( matrix, "," );
+
+    vector<float> kernel;
+
+    while( izer.hasMoreTokens() && kernel.size()<26 ){
+      try{
+       kernel.push_back( atof( izer.nextToken().c_str() ));
+      }
+      catch( const string& error ){
+       if( session->loglevel >= 1 ) *(session->logfile) << error << endl;
+      }
+    }
+
+    unsigned int dimension = (unsigned int) sqrtf( kernel.size() );
+
+    if( kernel.size() >= 26 ){
+      if( session->loglevel >= 2 ){
+	*(session->logfile) << "CNV :: Maximum convolution matrix size is 5x5. Supplied matrix: "
+			    << argument << " will be ignored" << endl;
+      }
+    }
+    else if( dimension * dimension != kernel.size() ){
+      if( session->loglevel >= 2 ){
+	*(session->logfile) << "CNV :: Convolution matrix must be square. Supplied matrix: "
+			    << argument << " will be ignored" << endl;
+      }
+    }
+    else if( dimension % 2 == 0 ){
+      if( session->loglevel >= 2 ){
+	*(session->logfile) << "CNV :: Convolution matrix must have odd dimension. Supplied matrix: "
+			    << argument << " will be ignored" << endl;
+      }
+    }
+    else {
+      session->view->convolution = kernel;
+    }
+  }
+
 }

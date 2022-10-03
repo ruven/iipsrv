@@ -1,7 +1,7 @@
 /*
     IIP CVT Command Handler Class Member Function
 
-    Copyright (C) 2006-2021 Ruven Pillay.
+    Copyright (C) 2006-2022 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -345,6 +345,21 @@ void CVT::send( Session* session ){
       session->processor->cmap( complete_image, session->view->cmap );
       if( session->loglevel >= 5 ){
 	*(session->logfile) << "CVT :: Applying color map in " << function_timer.getTime() << " microseconds" << endl;
+      }
+    }
+
+
+    // Apply convolution
+    if( session->view->convolution.size() > 0 ){
+
+      if( session->loglevel >= 5 ) function_timer.start();
+
+      // Apply convolution
+      session->processor->convolution( complete_image, session->view->convolution );
+
+      if( session->loglevel >= 5 ){
+	*(session->logfile) << "CVT :: Convolution applied in "
+			    << function_timer.getTime() << " microseconds" << endl;
       }
     }
 

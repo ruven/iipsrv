@@ -80,6 +80,7 @@ class View{
   CompressionType output_format;              /// Requested output format
   float contrast;                             /// Contrast adjustment requested by CNT command
   float gamma;                                /// Gamma adjustment requested by GAM command
+  std::vector<float> convolution;             /// Convolution matrix
   bool equalization;                          /// Whether to perform histogram equalization
   bool minmax;                                /// Whether to perform contrast stretching using user-defined min/max
 
@@ -259,7 +260,7 @@ class View{
 
   /// Whether view requires floating point processing
   bool floatProcessing(){
-    if( contrast != 1.0 || gamma != 1.0 || cmapped || shaded || inverted || minmax || ctw.size() ){
+    if( contrast != 1.0 || gamma != 1.0 || cmapped || shaded || inverted || minmax || ctw.size() || convolution.size() ){
       return true;
     }
     else return false;

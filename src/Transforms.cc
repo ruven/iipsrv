@@ -21,6 +21,7 @@
 
 #include <cmath>
 #include <algorithm>
+#include <numeric>
 #include "Transforms.h"
 
 
@@ -349,13 +350,14 @@ void Transform::cmap( RawTile& in, enum cmap_type cmap ){
   float value;
   unsigned in_chan = in.channels;
   unsigned out_chan = 3;
-  uint32_t np = (uint32_t) in.width * in.height * in.channels;
+  uint32_t np = (uint32_t) in.width * in.height * in.channels; // pixels in input image
+  uint32_t onp = (uint32_t) in.width * in.height * out_chan;   // pixels in output image
 
   const float max3 = 1.0/3.0;
   const float max8 = 1.0/8.0;
 
   float *fptr = (float*)in.data;
-  float *outptr = new float[np*out_chan];
+  float *outptr = new float[onp];
   float *outv = outptr;
 
   switch(cmap){
@@ -464,7 +466,7 @@ void Transform::cmap( RawTile& in, enum cmap_type cmap ){
   delete[] (float*) in.data;
   in.data = outptr;
   in.channels = out_chan;
-  in.dataLength = (uint32_t) np * out_chan * (in.bpc/8);
+  in.dataLength = onp * (in.bpc/8);
   in.capacity = in.dataLength;
 }
 
@@ -1158,4 +1160,49 @@ void Transform::equalize( RawTile& in, vector<unsigned int>& histogram ){
 
   // Free our dynamically allocated array
   delete[] cdf;
+}
+
+
+
+// Apply convolution kernel to image
+void Transform::convolution( RawTile& in, const vector<float>& kernel ){
+
+  float* data = (float*)in.data;
+  float* buffer = new float[in.width * in.height * in.channels];
+
+  unsigned int ksize = kernel.size();
+  unsigned int side = (unsigned int) sqrtf( ksize );
+  int half_side = side / 2;
+
+  // Sum kernel elements using STL accumulate function
+  float total = accumulate( kernel.begin(), kernel.end(), 0.0 );
+
+#if defined(__ICC) || defined(__INTEL_COMPILER)
+#pragma ivdep
+#elif defined(_OPENMP)
+#pragma omp parallel for
+#endif
+  for( unsigned long y=0; y<in.height; y++ ){
+    for( unsigned long x=0; x<in.width; x++ ){
+      for( int c=0; c < in.channels; c++) {
+	uint32_t n = ((y*in.width) + x) * in.channels + c;
+        double v = 0;
+	for( unsigned int fy=0; fy<side; fy++ ){
+	  // Note that we do wrapping at the edges
+	  long iny = (y + fy - half_side + in.height) % in.height;
+          for( unsigned int fx=0; fx<side; fx++ ){
+            long inx = (x + fx - half_side + in.width) % in.width;
+            long i = (inx + (iny * in.width)) * in.channels + c;
+            v += data[i] * kernel[(fy*side) + fx];
+          }
+        }
+	// Normalize our values
+	v = v / total;
+	buffer[n++] = v;
+      }
+    }
+  }
+
+  delete[] (float*) in.data;
+  in.data = (void*) buffer;
 }

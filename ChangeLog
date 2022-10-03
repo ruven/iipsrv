@@ -1,3 +1,11 @@
+03/10/2022:
+	- Added ability to apply a convolution kernel to an image through the CNV parameter. Kernel matrices should contain
+	  comma separated values (int or floats) and be enclosed in square brackets: CNV=[a,b,c,d,e,f ...]. Kernels should
+	  be 3x3 or 5x5 elements in size only. Several pre-defined kernels can be used: gaussian, sharpen, emboss, sobel,
+	  laplace, prewitt and scharr, which can be used like so: CNV=sharpen. The CNV functionality is only available for
+	  CVT (and equivalent IIIF requests) and not for tile requests due to edge distorsions (wrapping is used here).
+
+
 29/09/2022:
 	- Update to Rawtile class to ensure enough memory allocation takes place when dataLength is greater than the raw
 	  space required for the given sample type, width, height and number of channels.
