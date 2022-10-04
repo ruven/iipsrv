@@ -22,6 +22,7 @@
 
 
 #include "TPTImage.h"
+#include "Logger.h"
 #include <sstream>
 
 
@@ -33,6 +34,32 @@ using namespace std;
    On-demand loading (available in libtiff 4.1.0) enables significantly faster loading of very large TIFF files
 */
 static const char* mode = "rmO";
+
+
+// Reference our logging object
+extern Logger logfile;
+
+
+// Handle libtiff errors as exceptions and log warnings to our Logger
+static void errorHandler( const char* module, const char* fmt, va_list args ){
+  char buffer[1024];
+  vsnprintf( buffer, sizeof(buffer), fmt, args );
+  throw file_error( "TPTImage :: TIFF error: " + string(buffer) );
+}
+
+static void warningHandler( const char* module, const char* fmt, va_list args ){
+  if( IIPImage::logging ){
+    char buffer[1024];
+    vsnprintf( buffer, sizeof(buffer), fmt, args );
+    logfile << "TPTImage :: TIFF warning: " << buffer << endl;
+  }
+}
+
+
+void TPTImage::setupLogging(){
+  TIFFSetErrorHandler( errorHandler );
+  TIFFSetWarningHandler( warningHandler );
+}
 
 
 void TPTImage::openImage()

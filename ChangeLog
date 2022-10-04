@@ -1,6 +1,8 @@
 04/10/2022:
 	- Modification to TPTImage's getTile() and TileManager's getRegion() to handle images with different numbers of
-	  channels or bits within the same image sequence or stack
+	  channels or bits within the same image sequence or stack.
+	- Harmonized codec warning and error logging across libtiff, Kakadu and OpenJPEG with all warnings and errors
+	  now fully handled by our internal Logger instance.
 
 
 03/10/2022:

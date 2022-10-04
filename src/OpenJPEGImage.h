@@ -26,7 +26,6 @@
 
 #define TILESIZE 256
 
-extern std::ofstream logfile;
 
 /// Image class for JPEG 2000 Images:
 /// Inherits from IIPImage. Uses the OpenJPEG library.

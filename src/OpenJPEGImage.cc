@@ -19,8 +19,8 @@
 //#define DEBUG 1
 
 #include "OpenJPEGImage.h"
+#include "Logger.h"
 #include <sstream>
-#include <fstream>
 #include <cmath>
 #ifdef DEBUG
 #include "Timer.h"
@@ -34,6 +34,10 @@
 using namespace std;
 
 
+// Reference our logging object
+extern Logger logfile;
+
+
 // Handle info, warning and error messages from OpenJPEG
 static void error_callback( const char* msg, void* ){
   stringstream ss;
@@ -43,10 +47,10 @@ static void error_callback( const char* msg, void* ){
 
 #ifdef DEBUG
 static void warning_callback( const char* msg, void* ){
-  logfile << "OpenJPEG warning :: " << msg << endl;
+  if( IIPImage::logging ) logfile << "OpenJPEG warning :: " << msg << endl;
 }
 static void info_callback( const char* msg, void* ){
-  logfile << "OpenJPEG info :: " << msg;
+  if( IIPImage::logging ) logfile << "OpenJPEG info :: " << msg;
 }
 #endif
 
@@ -62,7 +66,7 @@ void OpenJPEGImage::openImage()
   // Create decompression codec
   _codec = opj_create_decompress( OPJ_CODEC_JP2 );
 
-  // Set info, warning and error handlers for codec
+  // Set info, warning and error handlers for codec - these need to be done after codec initialization
 #ifdef DEBUG
   opj_set_info_handler( _codec, info_callback, NULL );
   opj_set_warning_handler( _codec, warning_callback, NULL );

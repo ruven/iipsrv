@@ -24,9 +24,10 @@
 #define _IIPIMAGE_H
 
 
-// Fix missing snprintf in Windows
+// Fix missing snprintf and vsnprintf in Windows
 #if defined _MSC_VER && _MSC_VER<1900
 #define snprintf _snprintf
+#define vsnprintf _vsnprintf
 #endif
 
 
@@ -159,6 +160,9 @@ class IIPImage {
 
   /// Image modification timestamp
   time_t timestamp;
+
+  /// Our logging stream - declared statically
+  static bool logging;
 
 
  public:
@@ -392,12 +396,18 @@ class IIPImage {
   */
   virtual RawTile getRegion( int ha, int va, unsigned int r, int layers, int x, int y, unsigned int w, unsigned int h ){ return RawTile(); };
 
+
   /// Assignment operator
   /** @param image IIPImage object */
   IIPImage& operator = ( IIPImage image ){
     swap( *this, image );
     return *this;
   };
+
+
+  /// Setup logging for codec library errors and warnings
+  static void setupLogging(){;};
+
 
   /// Comparison equality operator
   friend int operator == ( const IIPImage&, const IIPImage& );

@@ -42,6 +42,11 @@ using namespace std;
 
 
 
+// Static initialization
+bool IIPImage::logging = false;
+
+
+
 // Swap function
 void IIPImage::swap( IIPImage& first, IIPImage& second ) // nothrow
 {

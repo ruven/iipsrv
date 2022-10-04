@@ -40,7 +40,9 @@
 #include "Environment.h"
 #include "Writer.h"
 #include "Logger.h"
-
+#ifdef HAVE_KAKADU
+#include "KakaduImage.h"
+#endif
 
 #ifdef HAVE_MEMCACHED
 //#ifdef WIN32
@@ -332,10 +334,18 @@ int main( int argc, char *argv[] )
   Transform processor;
 
 
+  // Setup codec logging only once for TIFF and Kakadu
+  // Note that OpenJPEG requires codec to be initialized before setting logging functions, so cannot do statically here
+  if( loglevel > 2 ) IIPImage::logging = true;
+  TPTImage::setupLogging();
+
 #ifdef HAVE_KAKADU
   // Get the Kakadu readmode
   unsigned int kdu_readmode = Environment::getKduReadMode();
+  // Setup codec logging
+  KakaduImage::setupLogging();
 #endif
+
 
 
   // Print out some information

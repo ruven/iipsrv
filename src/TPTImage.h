@@ -77,6 +77,9 @@ class TPTImage : public IIPImage {
   /// Destructor
   ~TPTImage() { closeImage(); };
 
+  /// Overloaded static function for seting up logging for codec library
+  static void setupLogging();
+
   /// Overloaded function for opening a TIFF image
   void openImage();
 

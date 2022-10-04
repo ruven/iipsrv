@@ -27,6 +27,7 @@
 
 
 #include "KakaduImage.h"
+#include "Logger.h"
 #include <kdu_compressed.h>
 #include <cmath>
 #include <sstream>
@@ -75,6 +76,52 @@ static unsigned int get_concurrency(){ return 0; }
 using namespace std;
 
 
+// Reference our logging object
+extern Logger logfile;
+
+// Whether our logging object is a warning or error
+enum logtype { WARNING, ERROR };
+
+/// Wrapper class to handle error messages from Kakadu
+class kdu_stream_message : public kdu_message {
+
+ private:
+  Logger *logfile;
+  logtype _type;
+  string info;
+
+ public:
+
+  kdu_stream_message( Logger *stream, logtype t ){
+    this->logfile = stream;
+    _type = t;
+    // Define an info string
+    if( _type == WARNING ) info = "warning: ";
+    else if( _type == ERROR ) info = "error: ";
+    else info = "";
+  }
+  void put_text( const char *string ){
+    if( IIPImage::logging ) *(this->logfile) << "Kakadu :: " << info << string;
+  }
+  void flush( bool end_of_message=false ){
+    if( IIPImage::logging ) *(this->logfile) << std::endl;
+    if( end_of_message && _type == ERROR ) throw 1;  // Need to throw to avoid an exit() call from Kakadu
+  }
+};
+
+// Create static objects from kdu_stream_message class
+static kdu_stream_message warning_logger( &logfile, WARNING );
+static kdu_stream_message error_logger( &logfile, ERROR );
+
+
+// Static function to set our error and warning handlers
+void KakaduImage::setupLogging(){
+  kdu_customize_warnings( &warning_logger );
+  kdu_customize_errors( &error_logger );
+}
+
+
+
 void KakaduImage::openImage()
 {
   string filename = getFileName( currentX, currentY );
@@ -82,9 +129,6 @@ void KakaduImage::openImage()
   // Update our timestamp
   updateTimestamp( filename );
 
-  // Set our error handlers
-  kdu_customize_warnings(&pretty_cout);
-  kdu_customize_errors(&pretty_cerr);
 
 #ifdef DEBUG
   Timer timer;
