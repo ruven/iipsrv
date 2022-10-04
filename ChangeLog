@@ -1,3 +1,8 @@
+04/10/2022:
+	- Modification to TPTImage's getTile() and TileManager's getRegion() to handle images with different numbers of
+	  channels or bits within the same image sequence or stack
+
+
 03/10/2022:
 	- Added ability to apply a convolution kernel to an image through the CNV parameter. Kernel matrices should contain
 	  comma separated values (int or floats) and be enclosed in square brackets: CNV=[a,b,c,d,e,f ...]. Kernels should

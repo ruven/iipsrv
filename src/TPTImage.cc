@@ -284,8 +284,8 @@ RawTile TPTImage::getTile( int seq, int ang, unsigned int res, int layers, unsig
   TIFFGetField( tiff, TIFFTAG_IMAGEWIDTH, &im_width );
   TIFFGetField( tiff, TIFFTAG_IMAGELENGTH, &im_height );
   TIFFGetField( tiff, TIFFTAG_PHOTOMETRIC, &colour );
-//   TIFFGetField( tiff, TIFFTAG_SAMPLESPERPIXEL, &channels );
-//   TIFFGetField( tiff, TIFFTAG_BITSPERSAMPLE, &bpc );
+  TIFFGetField( tiff, TIFFTAG_SAMPLESPERPIXEL, &channels );
+  TIFFGetField( tiff, TIFFTAG_BITSPERSAMPLE, &bpc );
 
 
   // Make sure this resolution is tiled
