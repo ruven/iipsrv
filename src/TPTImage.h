@@ -70,9 +70,7 @@ class TPTImage : public IIPImage {
   /// Construct from an IIPImage object
   /** @param image IIPImage object
    */
-  TPTImage( const IIPImage& image ): IIPImage( image ) {
-    tiff = NULL;
-  };
+  TPTImage( const IIPImage& image ): IIPImage( image ), tiff( NULL ) {};
 
   /// Destructor
   ~TPTImage() { closeImage(); };

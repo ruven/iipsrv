@@ -173,6 +173,10 @@ void OpenJPEGImage::loadImageInfo( int seq, int ang )
   bpc = _image->comps[0].prec;
 
 
+  // Empty any existing list of available resolution sizes
+  image_widths.clear();
+  image_heights.clear();
+
   // Save first resolution level
   unsigned int w = _image->x1 - _image->x0;
   unsigned int h = _image->y1 - _image->y0;

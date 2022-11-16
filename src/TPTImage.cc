@@ -132,6 +132,10 @@ void TPTImage::loadImageInfo( int seq, int ang )
     throw file_error( "TPTImage :: TIFFSetDirectory() failed" );
   }
 
+  // Empty any existing list of available resolution sizes
+  image_widths.clear();
+  image_heights.clear();
+
   // Store the list of image dimensions available
   image_widths.push_back( w );
   image_heights.push_back( h );

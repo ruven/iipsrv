@@ -222,6 +222,10 @@ void KakaduImage::loadImageInfo( int seq, int ang )
   j2k_colour = jpx_layer.access_colour(0);
   layer_size = jpx_layer.get_layer_size();
 
+  // Empty any existing list of available resolution sizes
+  image_widths.clear();
+  image_heights.clear();
+
   image_widths.push_back(layer_size.x);
   image_heights.push_back(layer_size.y);
   channels = codestream.get_num_components();

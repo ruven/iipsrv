@@ -1,3 +1,10 @@
+16/11/2022:
+	- Changes to TPTImage, KakaduImage and OpenJPEGImage to ensure image width and height vectors are empty in
+	  loadImageInfo(). This fixes problem when a source image is modified and loadImageInfo() is called specifically.
+	  Also modified FIF and TileManager classes to take into account any differences between timestamps and not just
+	  when a timestamp is more recent.
+
+
 04/10/2022:
 	- Modification to TPTImage's getTile() and TileManager's getRegion() to handle images with different numbers of
 	  channels or bits within the same image sequence or stack.

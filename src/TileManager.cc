@@ -237,10 +237,10 @@ RawTile TileManager::getTile( int resolution, int tile, int xangle, int yangle, 
 
 
   // If we haven't been able to get a tile, get a raw one
-  if( !rawtile || (rawtile && (rawtile->timestamp < image->timestamp)) ){
+  if( !rawtile || (rawtile && (rawtile->timestamp != image->timestamp)) ){
 
-    if( rawtile && (rawtile->timestamp < image->timestamp) ){
-      if( loglevel >= 3 ) *logfile << "TileManager :: Tile has old timestamp "
+    if( rawtile && (rawtile->timestamp != image->timestamp) ){
+      if( loglevel >= 3 ) *logfile << "TileManager :: Tile has different timestamp "
 			           << rawtile->timestamp << " - " << image->timestamp
                                    << " ... updating" << endl;
     }
