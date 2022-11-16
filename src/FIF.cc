@@ -232,7 +232,7 @@ void FIF::run( Session* session, const string& src ){
     t = timegm( &mod_t );
     if( (session->loglevel >= 1) && (t == -1) ) *(session->logfile) << "FIF :: Error creating timestamp" << endl;
 
-    if( (timestamp != -1) && ((*session->image)->timestamp != t) ){
+    if( (timestamp != -1) && ((*session->image)->timestamp == t) ){
       if( session->loglevel >= 2 ){
 	*(session->logfile) << "FIF :: Unmodified content" << endl;
 	*(session->logfile) << "FIF :: Total command time " << command_timer.getTime() << " microseconds" << endl;
