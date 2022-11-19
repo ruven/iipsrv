@@ -1,3 +1,8 @@
+19/11/2022:
+	- Fixed typo in TileManager getRegion() function which was preventing bit depth and number of channels being
+	  correctly assigned to output region in some cases
+
+
 16/11/2022:
 	- Changes to TPTImage, KakaduImage and OpenJPEGImage to ensure image width and height vectors are empty in
 	  loadImageInfo(). This fixes problem when a source image is modified and loadImageInfo() is called specifically.

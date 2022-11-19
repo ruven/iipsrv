@@ -409,7 +409,7 @@ RawTile TileManager::getRegion( unsigned int res, int seq, int ang, int layers, 
       // Need to initialize our output region with the actual data types we find in our raw data - these can potentially be different                                         
       // between images which are in a sequence or image stack. To do that requires knowledge of the contents of the tiles,
       // so we do ii after retrieving our first tile and only once
-      if( i==starty && j==starty ){
+      if( i==starty && j==startx ){
 
 	region.channels = rawtile.channels;
 	region.bpc = rawtile.bpc;
