@@ -271,8 +271,9 @@ void IIIF::run( Session* session, const string& src )
 
 
     // Now output the HTTP header and info text
+    string mime = string("application/ld+json;profile=\"") + iiif_context + "\"";
     stringstream header;
-    header << session->response->createHTTPHeader( "ld+json", (*session->image)->getTimestamp() )
+    header << session->response->createHTTPHeader( mime, (*session->image)->getTimestamp() )
 	   << infoStringStream.str();
 
     session->out->putStr( header.str().c_str(), (int) header.tellp() );
