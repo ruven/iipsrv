@@ -1,7 +1,7 @@
 /*
     View Member Functions
 
-    Copyright (C) 2004-2022 Ruven Pillay.
+    Copyright (C) 2004-2023 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -180,6 +180,7 @@ unsigned int View::getViewLeft(){
   // Scale up our view to a real pixel value.
   // Note that we calculate from our full resolution image to avoid errors from the rounding at each resolution size
   unsigned int l = round( width*view_left/(1 << (max_resolutions-resolution-1)) );
+  if( l > res_width ) l = res_width;   // As we use round(), possible to have sizes > than existing resolution size
   return l;
 }
 
@@ -188,6 +189,7 @@ unsigned int View::getViewTop(){
   // Scale up our view to a real pixel value
   // Note that we calculate from our full resolution image to avoid errors from the rounding at each resolution size
   unsigned int t = round( height*view_top/(1<<(max_resolutions-resolution-1)) );
+  if( t > res_height ) t = res_height;   // As we use round(), possible to have sizes > than existing resolution size
   return t;
 }
 
@@ -199,6 +201,7 @@ unsigned int View::getViewWidth(){
   unsigned int w = (unsigned int) round( view_width * scale );
   unsigned int left = (unsigned int) round( view_left * scale );
 
+  if( left > res_width ) left = res_width;   // As we use round(), possible to have sizes > than existing resolution size
   if( (w + left) > res_width ) w = res_width - left;                   // Need to use width of current resolution
   if( w < min_size ) w = min_size;
   return w;
@@ -212,9 +215,10 @@ unsigned int View::getViewHeight(){
   unsigned int h = (unsigned int) round( view_height * scale );
   unsigned int top = (unsigned int) round( view_top * scale );
 
+  if( top > res_height ) top = res_height;   // As we use round(), possible to have sizes > than existing resolution size
   if( (h + top) > res_height ) h = res_height - top;                   // Need to use height of current resolution
   if( h < min_size ) h = min_size;
-  return h;
+  return (unsigned int) h;
 }
 
 

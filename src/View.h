@@ -117,7 +117,12 @@ class View{
   /// Get the maximum allowed output size
   /* @return maximum output dimension */
   int getMaxSize(){ return max_size; };
-  
+
+
+  /// Get the minimum allowed output size
+  /* @return minimum output dimension */
+  unsigned int getMinSize(){ return min_size; };
+
 
   /// Set the allow_upscaling flag
   /** @param upscale allow upscaling of source image */

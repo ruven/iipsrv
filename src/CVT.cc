@@ -1,7 +1,7 @@
 /*
     IIP CVT Command Handler Class Member Function
 
-    Copyright (C) 2006-2022 Ruven Pillay.
+    Copyright (C) 2006-2023 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -103,6 +103,10 @@ void CVT::send( Session* session ){
     if( view_width + view_left > im_width ) view_width = im_width - view_left;
     if( view_height + view_top > im_height ) view_height = im_height - view_top;
 
+    // Make sure we don't have zero size dimensions
+    if( view_width == 0 ) view_width = session->view->getMinSize();
+    if( view_height == 0 ) view_height = session->view->getMinSize();
+
     resampled_width = session->view->getRequestWidth();
     resampled_height = session->view->getRequestHeight();
 
@@ -141,6 +145,10 @@ void CVT::send( Session* session ){
     }
   }
 
+
+  // Make sure we don't have zero sized dimensions
+  if( resampled_width == 0 ) resampled_width = session->view->getMinSize();
+  if( resampled_height == 0 ) resampled_height = session->view->getMinSize();
 
   if( session->loglevel >= 3 ){
     *(session->logfile) << "CVT :: Requested scaled region size is " << resampled_width << "x" << resampled_height

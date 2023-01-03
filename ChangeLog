@@ -1,3 +1,7 @@
+03/01/2023:
+	- Fixed potential integer overflow errors in View.cc and CVT.cc
+
+
 07/12/2022:
 	- Added IIIF profile with appropriate version number to content type responses for info.json
 
