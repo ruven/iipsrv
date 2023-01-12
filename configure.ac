@@ -196,7 +196,7 @@ AC_ARG_ENABLE( webp,
     [  --disable-webp           disable WebP])
 
 
-if test "x$enable_png" == "xno"; then
+if test "x$enable_webp" == "xno"; then
    AC_MSG_RESULT([disabling WebP support])
    AM_CONDITIONAL([ENABLE_WEBP], [false])
 else

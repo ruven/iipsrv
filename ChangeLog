@@ -1,3 +1,7 @@
+12/01/2023:
+	- Fixed typo in configure script (https://github.com/ruven/iipsrv/issues/249). Thanks @irv
+
+
 03/01/2023:
 	- Fixed potential integer overflow errors in View.cc and CVT.cc
 
