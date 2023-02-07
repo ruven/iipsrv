@@ -304,6 +304,7 @@ if test -n "$kakadu_path"; then
                 )
 		if test "x${KDU_7A}" = xtrue; then
 			KAKADU_OBJS="$KAKADU_OBJS $kakadu_path/apps/make/supp_local.o"
+			AC_DEFINE([HAVE_KAKADUMETANODE])
 		fi
 
 		JPEG2000_CODEC="true (Kakadu)"

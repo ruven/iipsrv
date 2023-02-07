@@ -384,7 +384,8 @@ void KakaduImage::loadImageInfo( int seq, int ang )
     else max.push_back( 255.0 );
   }
 
-
+  // Metadata handling requires a version of Kakadu that is not too old
+#ifdef HAVE_KAKADUMETANODE
   // Get XMP metadata
   jpx_meta_manager meta = jpx_input.access_meta_manager();
   if( meta.exists() ){
@@ -413,6 +414,7 @@ void KakaduImage::loadImageInfo( int seq, int ang )
       delete[] buffer;
     }
   }
+#endif
 
   isSet = true;
 }
