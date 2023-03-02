@@ -125,8 +125,7 @@ iip_empty_output_buffer( j_compress_ptr cinfo )
   dest->source = source;
 
   // Reset the pointer to the beginning of the buffer
-  dest->written += dest->source_size;
-  dest->pub.free_in_buffer = new_size - dest->written;
+  dest->pub.free_in_buffer = new_size - dest->source_size;
   dest->pub.next_output_byte = &(dest->source[dest->source_size]);
   dest->source_size = new_size;
 

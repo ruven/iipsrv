@@ -1,3 +1,8 @@
+02/03/2023:
+	- Fixed free space calculation in JPEGCompressor causing corruption when tile sizes are very small and the working
+	  buffer is too small
+
+
 07/01/2023:
 	- Added extra Kakadu version check as the metadata handling code does not compile with old versions of Kakadu
 
