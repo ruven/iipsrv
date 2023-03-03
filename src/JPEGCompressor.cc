@@ -402,9 +402,9 @@ unsigned int JPEGCompressor::Compress( RawTile& rawtile )
   jpeg_set_defaults( &cinfo );
 
   // Set our physical output resolution (JPEG only supports integers)
-  cinfo.X_density = round( dpi_x );
-  cinfo.Y_density = round( dpi_y );
-  cinfo.density_unit = dpi_units;
+  if( dpi_x ) cinfo.X_density = round( dpi_x );
+  if( dpi_y ) cinfo.Y_density = round( dpi_y );
+  if( dpi_x || dpi_y ) cinfo.density_unit = dpi_units;
   
   // Set compression quality (fastest, but possibly slower depending
   //  on hardware) - must do this after we've set the defaults!

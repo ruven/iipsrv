@@ -150,9 +150,11 @@ void PNGCompressor::InitCompression( const RawTile& rawtile, unsigned int strip_
 
 
   // Set physical resolution - convert from inches or cm to meters
-  png_uint_32 res_x = (dpi_units==2) ? dpi_x*10 : ( (dpi_units==1) ? dpi_x*25.4 : dpi_x );
-  png_uint_32 res_y = (dpi_units==2) ? dpi_y*10 : ( (dpi_units==1) ? dpi_y*25.4 : dpi_y );
-  png_set_pHYs( dest.png_ptr, dest.info_ptr, res_x, res_y, ((dpi_units==0) ? PNG_RESOLUTION_UNKNOWN : PNG_RESOLUTION_METER) );
+  if( dpi_x || dpi_y ){
+    png_uint_32 res_x = (dpi_units==2) ? dpi_x*10 : ( (dpi_units==1) ? dpi_x*25.4 : dpi_x );
+    png_uint_32 res_y = (dpi_units==2) ? dpi_y*10 : ( (dpi_units==1) ? dpi_y*25.4 : dpi_y );
+    png_set_pHYs( dest.png_ptr, dest.info_ptr, res_x, res_y, ((dpi_units==0) ? PNG_RESOLUTION_UNKNOWN : PNG_RESOLUTION_METER) );
+  }
 
 
   // Set some text metadata
@@ -301,9 +303,11 @@ unsigned int PNGCompressor::Compress( RawTile& rawtile )
   png_set_filter( dest.png_ptr, 0, filterType );
 
   // Set physical resolution - convert from inches or cm to meters
-  png_uint_32 res_x = (dpi_units==2) ? dpi_x*10 : ( (dpi_units==1) ? dpi_x*25.4 : dpi_x );
-  png_uint_32 res_y = (dpi_units==2) ? dpi_y*10 : ( (dpi_units==1) ? dpi_y*25.4 : dpi_y );
-  png_set_pHYs( dest.png_ptr, dest.info_ptr, res_x, res_y, ((dpi_units==0) ? PNG_RESOLUTION_UNKNOWN : PNG_RESOLUTION_METER) );
+  if( dpi_x || dpi_y ){
+    png_uint_32 res_x = (dpi_units==2) ? dpi_x*10 : ( (dpi_units==1) ? dpi_x*25.4 : dpi_x );
+    png_uint_32 res_y = (dpi_units==2) ? dpi_y*10 : ( (dpi_units==1) ? dpi_y*25.4 : dpi_y );
+    png_set_pHYs( dest.png_ptr, dest.info_ptr, res_x, res_y, ((dpi_units==0) ? PNG_RESOLUTION_UNKNOWN : PNG_RESOLUTION_METER) );
+  }
 
 
   // Set some text metadata

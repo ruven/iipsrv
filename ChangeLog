@@ -1,3 +1,7 @@
+03/03/2023:
+	- Added Compressor constructer with inline initialization and checks in JPEG and PNG classes for whether DPI is set
+
+
 02/03/2023:
 	- Fixed free space calculation in JPEGCompressor causing corruption when tile sizes are very small and the working
 	  buffer is too small

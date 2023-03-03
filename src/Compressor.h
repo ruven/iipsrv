@@ -1,6 +1,6 @@
 /*  Generic compressor class - extended by JPEG and PNG Compressor classes
 
-    Copyright (C) 2017-2022 Ruven Pillay
+    Copyright (C) 2017-2023 Ruven Pillay
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -63,6 +63,8 @@ class Compressor {
 
 
  public:
+
+  Compressor() : header(NULL), header_size(0), dpi_x(0), dpi_y(0), dpi_units(0) {};
 
   virtual ~Compressor() {};
 
