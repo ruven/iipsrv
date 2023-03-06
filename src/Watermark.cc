@@ -87,29 +87,47 @@ void Watermark::init()
 
 
 // Apply the watermark to a buffer of data
-void Watermark::apply( void* data, unsigned int width, unsigned int height, unsigned int channels, unsigned int bpc )
+void Watermark::apply( void* data, unsigned int repeatStep, unsigned int width, unsigned int height, unsigned int channels, unsigned int bpc )
 {
 
   // Sanity check
   if( !_isSet || (_probability==0) || (_opacity==0) ) return;
 
+  float random;
+  
+  unsigned int bigxoffset = 0;
+  unsigned int bigyoffset = 0;
+  unsigned int availablespace;
+
+  // crude way to ensure only one loop if repeatStep is 0
+  unsigned int repeatIncrement = (repeatStep == 0) ? std::max(width, height) : repeatStep;
+
+  for (bigxoffset = 0; bigxoffset < (width - _width); bigxoffset += repeatIncrement) {
+    for (bigyoffset = 0; bigyoffset < (height - _height); bigyoffset += repeatIncrement) {
+
+  // indentation reduced to make diffing easier.
+
   // Get random number as a float between 0 and 1
-  float random = (float) rand() / RAND_MAX;
- 
+  random = (float) rand() / RAND_MAX;
+
   // Only apply if our random number is less than our given probability
   if( random < _probability ){
 
     // Vary watermark position randomly within the tile depending on available space
-    unsigned int xoffset = 0;
-    if( width > _width ){
+    unsigned int xoffset = bigxoffset;
+    availablespace = width - xoffset;
+    if (repeatStep > 0) availablespace = std::min(availablespace, repeatStep);
+    if( availablespace > _width ){
       random = (float) rand() / RAND_MAX;
-      xoffset = random * (width - _width);
+      xoffset += random * (availablespace - _width);
     }
 
-    unsigned int yoffset = 0;
-    if( height > _height ){
+    unsigned int yoffset = bigyoffset;
+    availablespace = height - yoffset;
+    if (repeatStep > 0) availablespace = std::min(availablespace, repeatStep);
+    if( availablespace > _height ){
       random = (float) rand() / RAND_MAX;
-      yoffset = random * (height - _height);
+      yoffset += random * (availablespace - _height);
     }
 
     // Limit the area of the watermark to the size of the tile
@@ -142,6 +160,9 @@ void Watermark::apply( void* data, unsigned int width, unsigned int height, unsi
 	  }
 	}
       }
+    }
+  }
+
     }
   }
 

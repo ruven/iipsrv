@@ -63,6 +63,9 @@ class Watermark {
   /// Watermark probability
   float _probability;
 
+  /// Watermark min CVT to apply
+  unsigned int _mincvt;
+
   /// Whether we have a valid watermark
   bool _isSet;
 
@@ -78,6 +81,7 @@ class Watermark {
     _watermark = NULL;
     _opacity = 0.0;
     _probability = 0.0;
+    _mincvt = 0;
   };
 
   /// Constructor
@@ -85,7 +89,7 @@ class Watermark {
       @param opacity opacity applied to watermark
       @param probability probability that watermark will be applied to a particular tile
    */
-  Watermark( const std::string& file, float opacity, float probability ){
+  Watermark( const std::string& file, float opacity, float probability, unsigned int mincvt ){
     _image = file;
     _width = 0;
     _height = 0;
@@ -93,6 +97,7 @@ class Watermark {
     _bpc = 0;
     _opacity = opacity;
     _probability = probability;
+    _mincvt = mincvt;
     _isSet = false;
     _watermark = NULL;
   };
@@ -109,7 +114,7 @@ class Watermark {
       @param channels number of channels
       @param bpc bits per channel (8 or 16)
     */
-  void apply( void* data, unsigned int width, unsigned int height, unsigned int channels, unsigned int bpc );
+  void apply( void* data, unsigned int repeatTileSize, unsigned int width, unsigned int height, unsigned int channels, unsigned int bpc );
 
   /// Return watermark image path
   std::string getImage(){ return _image; };
@@ -119,6 +124,9 @@ class Watermark {
 
   /// Return watermark probability
   float getProbability(){ return _probability; };
+
+  /// Return watermark threshold for CVT
+  float getMinCVT(){ return _mincvt; };
 
   /// Initialize our watermark image
   void init();
