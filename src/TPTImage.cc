@@ -2,7 +2,7 @@
 
 /*  IIP Server: Tiled Pyramidal TIFF handler
 
-    Copyright (C) 2000-2022 Ruven Pillay.
+    Copyright (C) 2000-2023 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -82,7 +82,7 @@ void TPTImage::openImage()
   if( bpc == 0 ) loadImageInfo( currentX, currentY );
 
   // Insist on a tiled image
-  if( (tile_width == 0) && (tile_height == 0) ){
+  if( (tile_widths[0] == 0) && (tile_heights[0] == 0) ){
     throw file_error( "TPTImage :: Image is not tiled" );
   }
 
@@ -97,7 +97,7 @@ void TPTImage::loadImageInfo( int seq, int ang )
   int count;
   uint16_t colour, samplesperpixel, bitspersample, sampleformat;
   double *sminvalue = NULL, *smaxvalue = NULL;
-  unsigned int w, h;
+  unsigned int tw, th, w, h;
   string filename;
   char *tmp = NULL;
 
@@ -105,8 +105,8 @@ void TPTImage::loadImageInfo( int seq, int ang )
   currentY = ang;
 
   // Get the tile and image sizes
-  TIFFGetField( tiff, TIFFTAG_TILEWIDTH, &tile_width );
-  TIFFGetField( tiff, TIFFTAG_TILELENGTH, &tile_height );
+  TIFFGetField( tiff, TIFFTAG_TILEWIDTH, &tw );
+  TIFFGetField( tiff, TIFFTAG_TILELENGTH, &th );
   TIFFGetField( tiff, TIFFTAG_IMAGEWIDTH, &w );
   TIFFGetField( tiff, TIFFTAG_IMAGELENGTH, &h );
   TIFFGetField( tiff, TIFFTAG_SAMPLESPERPIXEL, &samplesperpixel );
@@ -135,17 +135,30 @@ void TPTImage::loadImageInfo( int seq, int ang )
   // Empty any existing list of available resolution sizes
   image_widths.clear();
   image_heights.clear();
+  tile_widths.clear();
+  tile_heights.clear();
 
   // Store the list of image dimensions available
   image_widths.push_back( w );
   image_heights.push_back( h );
+  tile_widths.push_back( tw );
+  tile_heights.push_back( th );
 
   for( count = 0; TIFFReadDirectory( tiff ); count++ ){
+
+    // Store exact image size for each resolution level
     TIFFGetField( tiff, TIFFTAG_IMAGEWIDTH, &w );
     TIFFGetField( tiff, TIFFTAG_IMAGELENGTH, &h );
     image_widths.push_back( w );
     image_heights.push_back( h );
+
+    // Tile sizes can vary between resolutions
+    TIFFGetField( tiff, TIFFTAG_TILEWIDTH, &tw );
+    TIFFGetField( tiff, TIFFTAG_TILELENGTH, &th );
+    tile_widths.push_back( tw );
+    tile_heights.push_back( th );
   }
+
 
   // Reset the TIFF directory
   if( !TIFFSetDirectory( tiff, current_dir ) ){
@@ -286,9 +299,8 @@ RawTile TPTImage::getTile( int seq, int ang, unsigned int res, int layers, unsig
   }
 
 
-  // The first resolution is the highest, so we need to invert
-  //  the resolution - can avoid this if we store our images with
-  //  the smallest image first.
+  // The IIP protocol defines the first resolution as the smallest, so we need to invert
+  //  the requested resolution as our TIFF images are stored with the largest resolution first
   int vipsres = ( numResolutions - 1 ) - res;
 
 
@@ -306,20 +318,20 @@ RawTile TPTImage::getTile( int seq, int ang, unsigned int res, int layers, unsig
   }
 
 
-  // Get the size of this tile, the current image,
-  //  the number of samples and the colourspace.
-  // TIFFTAG_TILEWIDTH give us the values for the resolution,
-  //  not for the tile itself
-  TIFFGetField( tiff, TIFFTAG_TILEWIDTH, &tw );
-  TIFFGetField( tiff, TIFFTAG_TILELENGTH, &th );
+  // Get the size of this tile, the size of the current resolution,
+  //   the number of samples and the colourspace.
+  //  TIFFGetField( tiff, TIFFTAG_TILEWIDTH, &tw );
+  //  TIFFGetField( tiff, TIFFTAG_TILELENGTH, &th );
   TIFFGetField( tiff, TIFFTAG_IMAGEWIDTH, &im_width );
   TIFFGetField( tiff, TIFFTAG_IMAGELENGTH, &im_height );
   TIFFGetField( tiff, TIFFTAG_PHOTOMETRIC, &colour );
   TIFFGetField( tiff, TIFFTAG_SAMPLESPERPIXEL, &channels );
   TIFFGetField( tiff, TIFFTAG_BITSPERSAMPLE, &bpc );
 
+  // Get tile size for this resolution - make sure it is tiled
+  tw = tile_widths[vipsres];
+  th = tile_heights[vipsres];
 
-  // Make sure this resolution is tiled
   if( (tw == 0) || (th == 0) ){
     throw file_error( "TPTImage :: Requested resolution is not tiled" );
   }
@@ -417,8 +429,9 @@ RawTile TPTImage::getTile( int seq, int ang, unsigned int res, int layers, unsig
       }
     }
 
-    rawtile.dataLength = n;
     rawtile.data = buffer;
+    rawtile.capacity = np;
+    rawtile.dataLength = n;
     rawtile.bpc = 8;
   }
 

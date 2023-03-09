@@ -1,3 +1,7 @@
+09/03/2023:
+	- Added ability to handle TIFF files with differing tile sizes at each resolution level
+
+
 03/03/2023:
 	- Added Compressor constructer with inline initialization and checks in JPEG and PNG classes for whether DPI is set
 

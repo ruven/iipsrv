@@ -45,8 +45,8 @@ RawTile TileManager::getNewTile( int resolution, int tile, int xangle, int yangl
   if( watermark && watermark->isSet() ){
 
     if( loglevel >= 4 ) insert_timer.start();
-    unsigned int tw = ttt.padded? image->getTileWidth() : ttt.width;
-    unsigned int th = ttt.padded? image->getTileHeight() : ttt.height;
+    unsigned int tw = ttt.padded? image->getTileWidth(resolution) : ttt.width;
+    unsigned int th = ttt.padded? image->getTileHeight(resolution) : ttt.height;
 
     watermark->apply( ttt.data, tw, th, ttt.channels, ttt.bpc );
     if( loglevel >= 4 ) *logfile << "TileManager :: Watermark applied: " << insert_timer.getTime()
@@ -55,7 +55,7 @@ RawTile TileManager::getNewTile( int resolution, int tile, int xangle, int yangl
 
 
   // We need to crop our edge tiles if they are padded
-  if( ((ttt.width != image->getTileWidth()) || (ttt.height != image->getTileHeight())) && ttt.padded ){
+  if( ((ttt.width != image->getTileWidth(resolution)) || (ttt.height != image->getTileHeight(resolution))) && ttt.padded ){
     if( loglevel >= 5 ) * logfile << "TileManager :: Cropping tile" << endl;
     this->crop( &ttt );
   }
@@ -128,8 +128,8 @@ RawTile TileManager::getNewTile( int resolution, int tile, int xangle, int yangl
 
 void TileManager::crop( RawTile *ttt ){
 
-  int tw = image->getTileWidth();
-  int th = image->getTileHeight();
+  int tw = image->getTileWidth(ttt->resolution);
+  int th = image->getTileHeight(ttt->resolution);
 
   if( loglevel >= 5 ){
     *logfile << "TileManager :: Edge tile: Base size: " << tw << "x" << th
@@ -282,7 +282,7 @@ RawTile TileManager::getTile( int resolution, int tile, int xangle, int yangle, 
     RawTile ttt( *rawtile );
 
     // Crop if this is an edge tile
-    if( ( (ttt.width != image->getTileWidth()) || (ttt.height != image->getTileHeight()) ) && ttt.padded ){
+    if( ( (ttt.width != image->getTileWidth(resolution)) || (ttt.height != image->getTileHeight(resolution)) ) && ttt.padded ){
       if( loglevel >= 5 ) * logfile << "TileManager :: Cropping tile" << endl;
       this->crop( &ttt );
     }
@@ -327,10 +327,11 @@ RawTile TileManager::getRegion( unsigned int res, int seq, int ang, int layers, 
   }
 
   // Otherwise do the compositing ourselves
+  int vipsres = image->getNativeResolution( res );
 
   // The tile size of the source tile
-  unsigned int src_tile_width = image->getTileWidth();
-  unsigned int src_tile_height = image->getTileHeight();
+  unsigned int src_tile_width = image->tile_widths[vipsres];
+  unsigned int src_tile_height = image->tile_heights[vipsres];
 
   // The tile size of the destination tile
   unsigned int dst_tile_width = src_tile_width;
@@ -340,9 +341,8 @@ RawTile TileManager::getRegion( unsigned int res, int seq, int ang, int layers, 
   unsigned int basic_tile_width = src_tile_width;
   unsigned int basic_tile_height = src_tile_height;
 
-  int num_res = image->getNumResolutions();
-  unsigned int im_width = image->image_widths[num_res-res-1];
-  unsigned int im_height = image->image_heights[num_res-res-1];
+  unsigned int im_width = image->image_widths[vipsres];
+  unsigned int im_height = image->image_heights[vipsres];
 
   unsigned int rem_x = im_width % src_tile_width;
   unsigned int rem_y = im_height % src_tile_height;

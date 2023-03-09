@@ -1,7 +1,7 @@
 /*
     IIP TIL Command Handler Class Member Function
 
-    Copyright (C) 2006-2021 Ruven Pillay.
+    Copyright (C) 2006-2023 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -67,15 +67,14 @@ void TIL::run( Session* session, const std::string& a ){
    */
 
   // Calculate the number of tiles at the requested resolution
-  int num_res = (*session->image)->getNumResolutions();
-  int requested_res = resolution;
 
   // Get the image width and height for this resolution
-  unsigned int im_width = (*session->image)->getImageWidth(num_res-requested_res-1);
-  unsigned int im_height = (*session->image)->getImageHeight(num_res-requested_res-1);
+  int vipsres = (*session->image)->getNativeResolution( resolution );
+  unsigned int im_width = (*session->image)->image_widths[vipsres];
+  unsigned int im_height = (*session->image)->image_heights[vipsres];
 
-  unsigned int tile_width = (*session->image)->getTileWidth();
-  unsigned int tile_height = (*session->image)->getTileHeight();
+  unsigned int tile_width = (*session->image)->tile_widths[vipsres];
+  unsigned int tile_height = (*session->image)->tile_heights[vipsres];
   unsigned int rem_x = im_width % tile_width;
   unsigned int rem_y = im_height % tile_height;
   int ntlx = (im_width / tile_width) + (rem_x == 0 ? 0 : 1);

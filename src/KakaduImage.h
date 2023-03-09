@@ -95,14 +95,14 @@ class KakaduImage : public IIPImage {
 
   /// Constructor
   KakaduImage(): IIPImage(){
-    tile_width = TILESIZE; tile_height = TILESIZE; input = NULL;
+    tile_widths.push_back(TILESIZE); tile_heights.push_back(TILESIZE); input = NULL;
   };
 
   /// Constructor
   /** @param path image path
    */
   KakaduImage( const std::string& path ): IIPImage( path ){
-    tile_width = TILESIZE; tile_height = TILESIZE; input = NULL;
+    tile_widths.push_back(TILESIZE); tile_heights.push_back(TILESIZE); input = NULL;
   };
 
   /// Copy Constructor
@@ -114,7 +114,7 @@ class KakaduImage : public IIPImage {
   /** @param image IIPImage object
    */
   KakaduImage( const IIPImage& image ): IIPImage( image ){
-    tile_width = TILESIZE; tile_height = TILESIZE; input = NULL;
+    tile_widths.push_back(TILESIZE); tile_heights.push_back(TILESIZE); input = NULL;
   };
 
   /// Assignment Operator

@@ -1,7 +1,7 @@
 /*
     IIP SPECTRA Command Handler Class Member Function
 
-    Copyright (C) 2009-2022 Ruven Pillay.
+    Copyright (C) 2009-2023 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -72,8 +72,8 @@ void SPECTRA::run( Session* session, const std::string& argument ){
   }
 
   // Make sure our x,y coordinates are within the tile dimensions
-  if( x < 0 || x >= (int)(*session->image)->getTileWidth() ||
-      y < 0 || y >= (int)(*session->image)->getTileHeight() ){
+  if( x < 0 || x >= (int)(*session->image)->getTileWidth(resolution) ||
+      y < 0 || y >= (int)(*session->image)->getTileHeight(resolution) ){
     throw invalid_argument( "SPECTRA :: Error: x,y coordinates outside of tile boundaries" );
   }
   
@@ -115,7 +115,7 @@ void SPECTRA::run( Session* session, const std::string& argument ){
     }
 
 
-    unsigned int tw = (*session->image)->getTileWidth();
+    unsigned int tw = (*session->image)->getTileWidth(resolution);
     unsigned int index = y*tw + x;
 
     void *ptr;

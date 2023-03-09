@@ -1,7 +1,7 @@
 /*
     IIP JTL Command Handler Class Member Function: Export a single tile
 
-    Copyright (C) 2006-2022 Ruven Pillay.
+    Copyright (C) 2006-2023 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -55,11 +55,12 @@ void JTL::send( Session* session, int resolution, int tile ){
 
   }
   else if( (int)((session->view)->getRotation()) % 360 == 180 ){
-    unsigned int im_width = (*session->image)->image_widths[num_res-resolution-1];
-    unsigned int im_height = (*session->image)->image_heights[num_res-resolution-1];
-    unsigned int tw = (*session->image)->getTileWidth();
-    //    unsigned int th = (*session->image)->getTileHeight();
-    int ntiles = (int) ceil( (double)im_width/tw ) * (int) ceil( (double)im_height/tw );
+    int vipsres = (*session->image)->getNativeResolution( resolution );
+    unsigned int im_width = (*session->image)->image_widths[vipsres];
+    unsigned int im_height = (*session->image)->image_heights[vipsres];
+    unsigned int tw = (*session->image)->tile_widths[vipsres];
+    unsigned int th = (*session->image)->tile_heights[vipsres];
+    int ntiles = (int) ceil( (double)im_width/tw ) * (int) ceil( (double)im_height/th );
     tile = ntiles - tile - 1;
   }
 

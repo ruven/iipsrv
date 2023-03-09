@@ -2,7 +2,7 @@
 
 /*  IIP fcgi server module
 
-    Copyright (C) 2000-2022 Ruven Pillay.
+    Copyright (C) 2000-2023 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -115,8 +115,8 @@ class IIPImage {
   /// The image pixel dimensions
   std::vector <unsigned int> image_widths, image_heights;
 
-  /// The base tile pixel dimensions
-  unsigned int tile_width, tile_height;
+  /// The tile dimensions for each resolution
+  std::vector <unsigned int> tile_widths, tile_heights;
 
   /// The colour space of the image
   ColourSpaces colourspace;
@@ -172,8 +172,6 @@ class IIPImage {
    : isFile( false ),
     virtual_levels( 0 ),
     format( UNSUPPORTED ),
-    tile_width( 0 ),
-    tile_height( 0 ),
     colourspace( NONE ),
     dpi_x( 0 ),
     dpi_y( 0 ),
@@ -196,8 +194,6 @@ class IIPImage {
     isFile( false ),
     virtual_levels( 0 ),
     format( UNSUPPORTED ),
-    tile_width( 0 ),
-    tile_height( 0 ),
     colourspace( NONE ),
     dpi_x( 0 ),
     dpi_y( 0 ),
@@ -229,8 +225,8 @@ class IIPImage {
     format( image.format ),
     image_widths( image.image_widths ),
     image_heights( image.image_heights ),
-    tile_width( image.tile_width ),
-    tile_height( image.tile_height ),
+    tile_widths( image.tile_widths ),
+    tile_heights( image.tile_heights ),
     colourspace( image.colourspace ),
     dpi_x( image.dpi_x ),
     dpi_y( image.dpi_y ),
@@ -302,6 +298,11 @@ class IIPImage {
   /// Return the number of available resolutions in the image
   unsigned int getNumResolutions() const { return numResolutions; };
 
+  /// Return index of the resolution within the image file
+  /** @param res IIP protocol resolution level where 0 is smallest image
+   */
+  int getNativeResolution( const int res ) const { return numResolutions - res - 1; };
+
   /// Return the number of bits per pixel for this image
   unsigned int getNumBitsPerPixel() const { return bpc; };
 
@@ -331,11 +332,25 @@ class IIPImage {
    */
   unsigned int getImageHeight( int n=0 ) const { return image_heights[n]; };
 
-  /// Return the base tile height in pixels for a given resolution
-  unsigned int getTileHeight() const { return tile_height; };
+  /// Return the tile width in pixels for a given resolution
+  /** @param n IIP resolution (tile size for full resolution image by default)
+   */
+  unsigned int getTileWidth( int n=-1 ) const {
+    if( n == -1 ) n = 0;
+    else n = getNativeResolution( n );
+    if( tile_widths.size() < (size_t) n+1 ) n = 0;
+    return tile_widths[n];
+  };
 
-  /// Return the base tile width in pixels
-  unsigned int getTileWidth() { return tile_width; };
+  /// Return the tile height in pixels for a given resolution
+  /** @param n IIP resolution (tile size for full reslolution image by default)
+   */
+  unsigned int getTileHeight( int n=-1 ) const {
+    if( n == -1 ) n = 0;
+    else n = getNativeResolution( n );
+    if( tile_heights.size() < (size_t) n+1 ) n = 0;
+    return tile_heights[n];
+  };
 
   /// Return the colour space for this image
   ColourSpaces getColourSpace() const { return colourspace; };

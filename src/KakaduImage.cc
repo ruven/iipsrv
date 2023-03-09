@@ -276,7 +276,7 @@ void KakaduImage::loadImageInfo( int seq, int ang )
   unsigned int n = 1;
   w = image_widths[0];
   h = image_heights[0];
-  while( (w>tile_width) || (h>tile_height) ){
+  while( (w>tile_widths[0]) || (h>tile_heights[0]) ){
     n++;
     w = floor( w/2.0 );
     h = floor( h/2.0 );
@@ -461,15 +461,16 @@ RawTile KakaduImage::getTile( int seq, int ang, unsigned int res, int layers, un
     throw file_error( tile_no.str() );
   }
 
-  int vipsres = ( numResolutions - 1 ) - res;
+  // Convert IIP resolution to index of resolution within file
+  int vipsres = getNativeResolution( res );
 
-  unsigned int tw = tile_width;
-  unsigned int th = tile_height;
+  unsigned int tw = tile_widths[0];
+  unsigned int th = tile_heights[0];
 
 
   // Get the width and height for last row and column tiles
-  unsigned int rem_x = image_widths[vipsres] % tile_width;
-  unsigned int rem_y = image_heights[vipsres] % tile_height;
+  unsigned int rem_x = image_widths[vipsres] % tile_widths[0];
+  unsigned int rem_y = image_heights[vipsres] % tile_heights[0];
 
 
   // Calculate the number of tiles in each direction
@@ -494,8 +495,8 @@ RawTile KakaduImage::getTile( int seq, int ang, unsigned int res, int layers, un
 
 
   // Calculate the pixel offsets for this tile
-  int xoffset = (tile % ntlx) * tile_width;
-  int yoffset = (unsigned int) floor((double)(tile/ntlx)) * tile_height;
+  int xoffset = (tile % ntlx) * tile_widths[0];
+  int yoffset = (unsigned int) floor((double)(tile/ntlx)) * tile_heights[0];
 
 #ifdef DEBUG
   logfile << "Kakadu :: Tile size: " << tw << "x" << th << "@" << channels << endl;

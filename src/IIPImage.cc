@@ -3,7 +3,7 @@
 
 /*  IIP fcgi server module
 
-    Copyright (C) 2000-2019 Ruven Pillay.
+    Copyright (C) 2000-2023 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -64,8 +64,8 @@ void IIPImage::swap( IIPImage& first, IIPImage& second ) // nothrow
   std::swap( first.lut, second.lut );
   std::swap( first.image_widths, second.image_widths );
   std::swap( first.image_heights, second.image_heights );
-  std::swap( first.tile_width, second.tile_width );
-  std::swap( first.tile_height, second.tile_height );
+  std::swap( first.tile_widths, second.tile_widths );
+  std::swap( first.tile_heights, second.tile_heights );
   std::swap( first.dpi_x, second.dpi_x );
   std::swap( first.dpi_y, second.dpi_y );
   std::swap( first.dpi_units, second.dpi_units );
