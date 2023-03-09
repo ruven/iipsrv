@@ -2,7 +2,7 @@
 
 /*  IIP Image Server
 
-    Copyright (C) 2005-2022 Ruven Pillay.
+    Copyright (C) 2005-2023 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -39,7 +39,7 @@
 #include "Logger.h"
 
 
-/// Class to manage access to the tile cache and tile cropping
+/// Class to manage access to the tile cache
 
 class TileManager{
 
@@ -58,7 +58,7 @@ class TileManager{
   /**
    *  If the encoded tile already exists in the cache, use that, otherwise check for
    *  an uncompressed tile. If that does not exist either, extract a tile from the
-   *  image. If this is an edge tile, crop it.
+   *  image.
    *  @param resolution resolution number
    *  @param tile tile number
    *  @param xangle horizontal sequence number
@@ -68,12 +68,6 @@ class TileManager{
    *  @return RawTile
    */
   RawTile getNewTile( int resolution, int tile, int xangle, int yangle, int layers, CompressionType c );
-
-
-  /// Crop a tile to remove padding
-  /** @param t pointer to tile to crop
-   */
-  void crop( RawTile* t );
 
 
  public:
@@ -103,7 +97,7 @@ class TileManager{
   /**
    *  If the encoded tile already exists in the cache, use that, otherwise check for
    *  an uncompressed tile. If that does not exist either, extract a tile from the
-   *  image. If this is an edge tile, crop it.
+   *  image.
    *  @param resolution resolution number
    *  @param tile tile number
    *  @param xangle horizontal sequence number

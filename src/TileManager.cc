@@ -4,7 +4,7 @@
 
 /*  IIP Server: Tile Cache Handler
 
-    Copyright (C) 2005-2022 Ruven Pillay.
+    Copyright (C) 2005-2023 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -45,19 +45,9 @@ RawTile TileManager::getNewTile( int resolution, int tile, int xangle, int yangl
   if( watermark && watermark->isSet() ){
 
     if( loglevel >= 4 ) insert_timer.start();
-    unsigned int tw = ttt.padded? image->getTileWidth(resolution) : ttt.width;
-    unsigned int th = ttt.padded? image->getTileHeight(resolution) : ttt.height;
-
-    watermark->apply( ttt.data, tw, th, ttt.channels, ttt.bpc );
+    watermark->apply( ttt.data, ttt.width, ttt.height, ttt.channels, ttt.bpc );
     if( loglevel >= 4 ) *logfile << "TileManager :: Watermark applied: " << insert_timer.getTime()
 				 << " microseconds" << endl;
-  }
-
-
-  // We need to crop our edge tiles if they are padded
-  if( ((ttt.width != image->getTileWidth(resolution)) || (ttt.height != image->getTileHeight(resolution))) && ttt.padded ){
-    if( loglevel >= 5 ) * logfile << "TileManager :: Cropping tile" << endl;
-    this->crop( &ttt );
   }
 
 
@@ -123,49 +113,6 @@ RawTile TileManager::getNewTile( int resolution, int tile, int xangle, int yangl
   return ttt;
 
 }
-
-
-
-void TileManager::crop( RawTile *ttt ){
-
-  int tw = image->getTileWidth(ttt->resolution);
-  int th = image->getTileHeight(ttt->resolution);
-
-  if( loglevel >= 5 ){
-    *logfile << "TileManager :: Edge tile: Base size: " << tw << "x" << th
-	     << ": This tile: " << ttt->width << "x" << ttt->height
-	     << endl;
-  }
-
-  // Create a new buffer, fill it with the old data, then copy
-  // back the cropped part into the RawTile buffer
-  unsigned int len = tw * th * ttt->channels * (ttt->bpc/8);
-  unsigned char* buffer = (unsigned char*) malloc( len );
-
-  // Check whether we have successfully allocated memory via malloc
-  if( buffer == NULL ){
-    std::bad_alloc e;
-    throw e;
-  }
-  unsigned char* src_ptr = (unsigned char*) memcpy( buffer, ttt->data, len );
-  unsigned char* dst_ptr = (unsigned char*) ttt->data;
-
-  // Copy one scanline at a time
-  len =  ttt->width * ttt->channels * (ttt->bpc/8);
-  for( unsigned int i=0; i<ttt->height; i++ ){
-    memcpy( dst_ptr, src_ptr, len );
-    dst_ptr += len;
-    src_ptr += tw * ttt->channels * (ttt->bpc/8);
-  }
-
-  free( buffer );
-
-  // Reset the data length
-  len = ttt->width * ttt->height * ttt->channels * (ttt->bpc/8);
-  ttt->dataLength = len;
-  ttt->padded = false;
-}
-
 
 
 
@@ -280,12 +227,6 @@ RawTile TileManager::getTile( int resolution, int tile, int xangle, int yangle, 
 
     // Rawtile is a pointer to the cache data, so we need to create a copy of it in case we compress it
     RawTile ttt( *rawtile );
-
-    // Crop if this is an edge tile
-    if( ( (ttt.width != image->getTileWidth(resolution)) || (ttt.height != image->getTileHeight(resolution)) ) && ttt.padded ){
-      if( loglevel >= 5 ) * logfile << "TileManager :: Cropping tile" << endl;
-      this->crop( &ttt );
-    }
 
     if( loglevel >=2 ) compression_timer.start();
     unsigned int oldlen = rawtile->dataLength;
@@ -451,7 +392,7 @@ RawTile TileManager::getRegion( unsigned int res, int seq, int ang, int layers, 
 	  xf = xoffset;
 	}
 	else if( j == endx-1 ){
-	  // If this is the final row, calculate the remaining number of pixels
+	  // If this is the final column, calculate the remaining number of pixels
 	  remainder = (width+x) % basic_tile_width;
 	  if( remainder != 0 ) dst_tile_width = remainder;
 	}
@@ -474,7 +415,6 @@ RawTile TileManager::getRegion( unsigned int res, int seq, int ang, int layers, 
 		   << ", tile height: " << dst_tile_height << endl;
 	}
       }
-
 
       // Copy our tile data into the appropriate part of the strip memory
       // one whole tile width at a time

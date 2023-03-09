@@ -1,5 +1,6 @@
 09/03/2023:
-	- Added ability to handle TIFF files with differing tile sizes at each resolution level
+	- Added ability to handle TIFF files with differing tile sizes at each resolution level.
+	- Moved tile cropping out of TileManager and directly into RawTile class.
 
 
 03/03/2023:

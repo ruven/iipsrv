@@ -2,7 +2,7 @@
 
 /*  IIPImage Server
 
-    Copyright (C) 2000-2022 Ruven Pillay.
+    Copyright (C) 2000-2023 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -87,9 +87,6 @@ class RawTile {
   /// The vertical angle to which this tile belongs
   int vSequence;
 
-  /// Wehther image is padded
-  bool padded;
-
   /// Amount of memory actually allocated in bytes
   uint32_t capacity;
 
@@ -129,7 +126,6 @@ class RawTile {
       resolution( res ),
       hSequence( hs ),
       vSequence( vs ),
-      padded( false ),
       capacity( 0 ),
       dataLength( 0 ),
       memoryManaged( 1 ),
@@ -139,23 +135,7 @@ class RawTile {
 
   /// Destructor to free the data array if is has previously be allocated locally
   ~RawTile() {
-    if( data && memoryManaged ){
-      switch( bpc ){
-        case 32:
-	  if( sampleType == FLOATINGPOINT ) delete[] (float*) data;
-	  else delete[] (unsigned int*) data;
-	  break;
-        case 16:
-	  delete[] (unsigned short*) data;
-	  break;
-        default:
-	  delete[] (unsigned char*) data;
-	  break;
-      }
-      data = NULL;
-      dataLength = 0;
-      capacity = 0;
-    }
+    if( memoryManaged ) deallocate( data );
   }
 
 
@@ -175,7 +155,6 @@ class RawTile {
       resolution( tile.resolution ),
       hSequence( tile.hSequence ),
       vSequence( tile.vSequence ),
-      padded( tile.padded ),
       capacity( tile.capacity ),
       dataLength( tile.dataLength ),
       memoryManaged( tile.memoryManaged ),
@@ -212,7 +191,6 @@ class RawTile {
       channels = tile.channels;
       bpc = tile.bpc;
       sampleType = tile.sampleType;
-      padded = tile.padded;
       capacity = tile.capacity;
 
       if( tile.data && tile.dataLength > 0 ){
@@ -246,8 +224,73 @@ class RawTile {
 	data = new unsigned char[size];
 	break;
     }
+
     memoryManaged = 1;
     capacity = size;
+  };
+
+
+
+  /// Free our data buffer
+  void deallocate( void* buffer ) {
+
+    if( buffer ){
+      switch( bpc ){
+        case 32:
+	  if( sampleType == FLOATINGPOINT ) delete[] (float*) buffer;
+	  else delete[] (unsigned int*) buffer;
+	  break;
+        case 16:
+	  delete[] (unsigned short*) buffer;
+	  break;
+        default:
+	  delete[] (unsigned char*) buffer;
+	  break;
+      }
+
+      buffer = NULL;
+      capacity = 0;
+      dataLength = 0;
+    }
+  };
+
+
+
+  /// Crop tile to the defined dimensions
+  /** @param w width of cropped tile
+      @param h height of cropped tile
+   */
+  void crop( const unsigned int w, const unsigned int h ) {
+
+    // Keep track of original data buffer and whether we manage it
+    void* buffer = data;
+    int mm = memoryManaged;
+
+    // Create a new buffer with the new size
+    unsigned int len = w * h * channels * (bpc/8);
+    allocate( len );
+
+    unsigned char* src_ptr = (unsigned char*) buffer;
+    unsigned char* dst_ptr = (unsigned char*) data;
+
+    // Copy one scanline at a time
+    unsigned int dlen = w * channels * (bpc/8);
+    unsigned int slen = width * channels * (bpc/8);
+
+    for( unsigned int i=0; i<h; i++ ){
+      memcpy( dst_ptr, src_ptr, dlen );
+      dst_ptr += dlen;
+      src_ptr += slen;
+    }
+
+    // Delete original memory buffer
+    if( mm ) deallocate( buffer );
+
+    // Set the new tile dimensions and data storage size
+    capacity = len;   // Need to set this manually as deallocate sets this to zero
+    dataLength = len;
+    width = w;
+    height = h;
   };
 
 
@@ -302,7 +345,6 @@ class RawTile {
       resolution( tile.resolution ),
       hSequence( tile.hSequence ),
       vSequence( tile.vSequence ),
-      padded( tile.padded ),
       capacity( tile.capacity ),
       dataLength( tile.dataLength ),
       memoryManaged( tile.memoryManaged ),
@@ -354,7 +396,6 @@ class RawTile {
       channels = tile.channels;
       bpc = tile.bpc;
       sampleType = tile.sampleType;
-      padded = tile.padded;
 
       if( tile.memoryManaged == 1 ){
 

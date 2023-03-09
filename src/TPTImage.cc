@@ -336,10 +336,8 @@ RawTile TPTImage::getTile( int seq, int ang, unsigned int res, int layers, unsig
     throw file_error( "TPTImage :: Requested resolution is not tiled" );
   }
 
-
   // Total number of pixels in tile
   size_t np = tw * th;
-
 
   // Get the width and height for last row and column tiles
   rem_x = im_width % tw;
@@ -383,10 +381,9 @@ RawTile TPTImage::getTile( int seq, int ang, unsigned int res, int layers, unsig
 
 
   // Initialize our RawTile object
-  RawTile rawtile( tile, res, seq, ang, tw, th, channels, bpc );
+  RawTile rawtile( tile, res, seq, ang, tile_widths[vipsres], tile_heights[vipsres], channels, bpc );
   rawtile.filename = getImagePath();
   rawtile.timestamp = timestamp;
-  rawtile.padded = true;
   rawtile.sampleType = sampleType;
 
   // Allocate sufficient memory for the tile (width and height may be smaller than padded tile size)
@@ -429,11 +426,16 @@ RawTile TPTImage::getTile( int seq, int ang, unsigned int res, int layers, unsig
       }
     }
 
+    // Free old data buffer and assign pointer to new data
+    rawtile.deallocate( rawtile.data );
     rawtile.data = buffer;
     rawtile.capacity = np;
     rawtile.dataLength = n;
     rawtile.bpc = 8;
   }
+
+  // Crop our tile if necessary
+  if( tw != tile_widths[vipsres] || th != tile_heights[vipsres] ) rawtile.crop( tw, th );
 
   return rawtile;
 
