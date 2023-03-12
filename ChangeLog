@@ -1,3 +1,9 @@
+12/03/2023:
+	- Re-aligned metadata field names to Dublin Core norms and changed encoding to plain text for non-core IIP metadata
+	  requests - allows requests like OBJ=description or OBJ=xmp. Also added new "metadata" argument to OBJ command
+	  (OBJ=metadata) to export all available metadata in JSON format
+
+
 09/03/2023:
 	- Added ability to handle TIFF files with differing tile sizes at each resolution level.
 	- Moved tile cropping out of TileManager and directly into RawTile class.

@@ -1,7 +1,7 @@
 /*
     IIP Response Handler Class
 
-    Copyright (C) 2003-2022 Ruven Pillay.
+    Copyright (C) 2003-2023 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -109,7 +109,8 @@ string IIPResponse::formatResponse(){
   else{
     response = server + eof + powered + eof + cacheControl + eof + modified + eof + mimeType + eof;
     if( !cors.empty() ) response += cors + eof;
-    response += eof + protocol + eof + responseBody;
+    if( !protocol.empty() ) response += protocol + eof;
+    response += eof + responseBody;
   }
 
   return response;

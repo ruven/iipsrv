@@ -241,11 +241,13 @@ void TPTImage::loadImageInfo( int seq, int ang )
   delete[] default_max;
 
   // Also get some basic metadata
-  if( TIFFGetField( tiff, TIFFTAG_ARTIST, &tmp ) ) metadata["author"] = tmp;
-  if( TIFFGetField( tiff, TIFFTAG_COPYRIGHT, &tmp ) ) metadata["copyright"] = tmp;
-  if( TIFFGetField( tiff, TIFFTAG_DATETIME, &tmp ) ) metadata["create-dtm"] = tmp;
-  if( TIFFGetField( tiff, TIFFTAG_IMAGEDESCRIPTION, &tmp ) ) metadata["subject"] = tmp;
-  if( TIFFGetField( tiff, TIFFTAG_SOFTWARE, &tmp ) ) metadata["app-name"] = tmp;
+  if( TIFFGetField( tiff, TIFFTAG_ARTIST, &tmp ) ) metadata["creator"] = tmp;
+  if( TIFFGetField( tiff, TIFFTAG_COPYRIGHT, &tmp ) ) metadata["rights"] = tmp;
+  if( TIFFGetField( tiff, TIFFTAG_DATETIME, &tmp ) ) metadata["date"] = tmp;
+  if( TIFFGetField( tiff, TIFFTAG_IMAGEDESCRIPTION, &tmp ) ) metadata["description"] = tmp;
+  if( TIFFGetField( tiff, TIFFTAG_SOFTWARE, &tmp ) ) metadata["software"] = tmp;
+  if( TIFFGetField( tiff, TIFFTAG_MAKE, &tmp ) ) metadata["make"] = tmp;
+  if( TIFFGetField( tiff, TIFFTAG_MODEL, &tmp ) ) metadata["model"] = tmp;
   if( TIFFGetField( tiff, TIFFTAG_XMLPACKET, &count, &tmp ) ) metadata["xmp"] = string(tmp,count);
   if( TIFFGetField( tiff, TIFFTAG_ICCPROFILE, &count, &tmp ) ) metadata["icc"] = string(tmp,count);
 
