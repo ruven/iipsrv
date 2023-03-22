@@ -1,3 +1,8 @@
+22/03/2023:
+	- Added partial support for non-interleaved planar configuration TIFFs where each color channel is stored separately.
+	  For the moment, only the first channel is returned for such images.
+
+
 12/03/2023:
 	- Re-aligned metadata field names to Dublin Core norms and changed encoding to plain text for non-core IIP metadata
 	  requests - allows requests like OBJ=description or OBJ=xmp. Also added new "metadata" argument to OBJ command

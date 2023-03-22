@@ -267,7 +267,7 @@ RawTile TPTImage::getTile( int seq, int ang, unsigned int res, int layers, unsig
 {
   uint32_t im_width, im_height, tw, th, ntlx, ntly;
   uint32_t rem_x, rem_y;
-  uint16_t colour;
+  uint16_t colour, planar;
   string filename;
 
 
@@ -329,6 +329,7 @@ RawTile TPTImage::getTile( int seq, int ang, unsigned int res, int layers, unsig
   TIFFGetField( tiff, TIFFTAG_PHOTOMETRIC, &colour );
   TIFFGetField( tiff, TIFFTAG_SAMPLESPERPIXEL, &channels );
   TIFFGetField( tiff, TIFFTAG_BITSPERSAMPLE, &bpc );
+  TIFFGetField( tiff, TIFFTAG_PLANARCONFIG, &planar );
 
   // Get tile size for this resolution - make sure it is tiled
   tw = tile_widths[vipsres];
@@ -399,6 +400,12 @@ RawTile TPTImage::getTile( int seq, int ang, unsigned int res, int layers, unsig
   }
   rawtile.dataLength = length;
 
+  // For non-interleaved channels (separate image planes), each color channel is stored as a separate image, which is stored consecutively.
+  // A color image will, therefore, have 3x the number of tiles. For now just handle the first plane and classify the image as greyscale.
+  if( channels > 1 && planar == PLANARCONFIG_SEPARATE ){
+    if( IIPImage::logging ) logfile << "TPTImage :: Image contains separate image planes: extracting first plane only" << endl;
+    rawtile.channels = 1;
+  }
 
   // Pad 1 bit 1 channel bilevel images to 8 bits for output
   if( bpc==1 && channels==1 ){
