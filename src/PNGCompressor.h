@@ -1,7 +1,7 @@
 /*  IIP PNG Compressor Class:
     Handles alpha channels, 8 or 16 bit data, ICC profiles and XMP metadata
 
-    Copyright (C) 2012-2021 Ruven Pillay
+    Copyright (C) 2012-2023 Ruven Pillay
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -93,6 +93,10 @@ class PNGCompressor : public Compressor {
     // Zlib range is 0-9
     this->Q = compressionLevel;
 
+    // Filters are an optional pre-processing step before Deflate compression
+    //  - set this to the fastest set of filters
+    filterType = PNG_FAST_FILTERS;
+
   };
 
 
@@ -159,10 +163,6 @@ class PNGCompressor : public Compressor {
     if( quality < 0 ) Q = 0;
     else if( quality > 9 ) Q = 9;
     else Q = quality;
-
-    // Filters are an optional pre-processing step before Deflate compression
-    //  - set this to the fastest set of filters
-    filterType = PNG_FAST_FILTERS;
   }
 
 

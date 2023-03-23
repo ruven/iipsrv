@@ -1,3 +1,7 @@
+23/03/2023:
+	- Make sure the PNG filter type is always initialized: code moved from setQuality() to class constructor
+
+
 22/03/2023:
 	- Added partial support for non-interleaved planar configuration TIFFs where each color channel is stored separately.
 	  For the moment, only the first channel is returned for such images.
