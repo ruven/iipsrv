@@ -167,7 +167,7 @@ FILESYSTEM_SUFFIX: This  is a suffix added to the end of each file system path.
 It can be combined with FILESYSTEM_PREFIX. It is not used in combination with
 FILENAME_PATTERN. If e.g. this is set to ".tif", an image URL such as  "/UUID"
 will look for "${FILESYSTEM_PREFIX}/UUID.tif". In the IIIF info.json document,
-the image @id will be set without the ".tif" suuffix.
+the image @id will be set without the ".tif" suffix.
 
 JPEG_QUALITY: The default JPEG quality factor for compression when the
 client does not specify one. The value should be between 1 (highest level of
@@ -514,4 +514,4 @@ For example with lighttpd:
 Please refer to the project site https://iipimage.sourceforge.io for further details
 
 ------------------------------------------------------------------------------------
-(c) 2000-2022 Ruven Pillay <ruven@users.sourceforge.net>
+(c) 2000-2023 Ruven Pillay <ruven@users.sourceforge.net>

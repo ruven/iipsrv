@@ -136,13 +136,36 @@ void PFL::run( Session* session, const std::string& argument ){
 
   unsigned int k = 0;
 
+  bool haveStack = false;
+  std::list <Stack> stack = (*session->image)->getStack();
+  list<Stack> :: const_iterator j = stack.begin();
+  if( stack.size() > 0 ) haveStack = true;
+
   // Loop through our spectral bands
   for( i = views.begin(); i != views.end(); i++ ){
 
     int wavelength = *i;
+    string name;
+    float scale = 1.0;
+
+    // Get details from our stack if we have one
+    if( haveStack ){
+      if( j != stack.end() ){
+	if( (*j).name.size() > 0 ) name = (*j).name;
+	scale = (*j).scale;
+	j++;   // Advance our stack iterator
+      }
+    }
+    if( name.empty() ){
+      // Format our integer value
+      char tmp[16];
+      snprintf( tmp, 16, "%d", *i );
+      name = string( tmp );
+    }
+
 
     // Add our opening brackets and prefix with the wavelenth if we have multi-spectral data
-    if( n > 1 ) profile << "\t\t" << wavelength << ": ";
+    if( n > 1 ) profile << "\t\t\"" << name << "\": ";
     profile << "[";
 
     // Get the region of data for this wavelength and line profile
@@ -174,6 +197,9 @@ void PFL::run( Session* session, const std::string& argument ){
 	  intensity = (float)((float*)ptr)[j];
 	}
       }
+
+      // Scale our value if we have defined a scale
+      intensity = (scale == 1.0) ? intensity : intensity * scale;
 
       if( rawtile.sampleType == FLOATINGPOINT ) profile << fixed << setprecision(9);
       profile << intensity;

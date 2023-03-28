@@ -72,6 +72,7 @@ void OBJ::run( Session* s, const std::string& a )
   else if( argument == "min-max-sample-values" ) min_max_values();
   // List of available resolutions
   else if( argument == "resolutions" ) resolutions();
+  else if( argument == "stack" ) stack();
 
   // Colorspace
   /* The request can have a suffix, which we don't need, so do a
@@ -97,7 +98,8 @@ void OBJ::run( Session* s, const std::string& a )
 	   argument == "edit-time" || argument == "last-printed" ||
 	   argument == "date" || argument == "last-save-dtm" ||
 	   argument == "software"  || argument == "make" ||
-	   argument == "model" || argument == "xmp" ){
+	   argument == "model" || argument == "xmp" ||
+	   argument == "scale" ){
 
     metadata( argument );
   }
@@ -338,5 +340,42 @@ void OBJ::metadata( string field ){
     if( field == "xmp" ) mimeType = "application/xml";
     session->response->setMimeType( mimeType );
     session->response->addResponse( metadata );
+  }
+}
+
+
+// Return image stack metadata in JSON format
+void OBJ::stack(){
+
+  checkImage();
+
+  if( (*session->image)->isStack() ){
+
+    list<Stack> items = (*session->image)->getStack();
+    list<Stack> :: const_iterator i;
+    int n = 0;
+
+    stringstream json;
+    json.precision(9);
+    json << "[ ";
+
+    for( i=items.begin(); i != items.end(); i++ ){
+      json << endl << "\t{" << endl
+	   << "\t\t\"id\": " << n++ << "," << endl
+	   << "\t\t\"name\": \"" << (*i).name << "\"," << endl
+	   << "\t\t\"scale\": " << (*i).scale << endl << "\t},";
+    }
+
+    // Remove trailling comma - if no items were added, this safely removes extra white space after opening {
+    json.seekp( -1, std::ios_base::end );
+    json << endl << "]";
+
+    session->response->setMimeType( "application/json" );
+    session->response->addResponse( json.str() );
+  }
+  else{
+    if( session->loglevel >= 3 ){
+      *(session->logfile) << "OBJ :: stack handler: not an image stack" << endl;
+    }
   }
 }

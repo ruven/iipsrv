@@ -152,6 +152,7 @@ class OBJ : public Task {
   void min_max_values();
   void resolutions();
   void metadata( std::string field );
+  void stack();
 
 };
 

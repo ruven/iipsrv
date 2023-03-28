@@ -1,3 +1,11 @@
+28/03/2023:
+	- Added support for pyramid resolutions stored within SubIFDs for TIFF images. This allows for support for image
+	  stacks or sequences consisting of different images stored as a single multi-page TIFF. Each image has it's own
+	  set of pyramid resolutions and each image within the stack can be accessed using the existing IIP SDS command.
+	  for example SDS=3 for the 4th image in the stack. Enables support for pyramid OME-TIFF whole-slide microscopy
+	  image stacks. Also added OBJ=stack command to get the list of stack images and scale in JSON.
+
+
 23/03/2023:
 	- Make sure the PNG filter type is always initialized: code moved from setQuality() to class constructor
 

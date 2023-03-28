@@ -64,8 +64,7 @@ void TPTImage::setupLogging(){
 
 void TPTImage::openImage()
 {
-
-  // Insist that the tiff and tile_buf be NULL
+  // Insist that the tiff pointer be NULL
   if( tiff ) throw file_error( "TPTImage :: tiff pointer is not NULL" );
 
   string filename = getFileName( currentX, currentY );
@@ -94,12 +93,13 @@ void TPTImage::openImage()
 void TPTImage::loadImageInfo( int seq, int ang )
 {
   tdir_t current_dir;
-  int count;
+  int count = 0;
   uint16_t colour, samplesperpixel, bitspersample, sampleformat;
   double *sminvalue = NULL, *smaxvalue = NULL;
+  double scale;
   unsigned int tw, th, w, h;
   string filename;
-  char *tmp = NULL;
+  const char *tmp = NULL;
 
   currentX = seq;
   currentY = ang;
@@ -128,9 +128,11 @@ void TPTImage::loadImageInfo( int seq, int ang )
   // Check for the no. of resolutions in the pyramidal image
   current_dir = TIFFCurrentDirectory( tiff );
 
-  if( !TIFFSetDirectory( tiff, 0 ) ){
-    throw file_error( "TPTImage :: TIFFSetDirectory() failed" );
+  // In order to get our list of image sizes, make sure we start in the first TIFF directory
+  if( current_dir != 0 ){
+    if( !TIFFSetDirectory( tiff, 0 ) ) throw file_error( "TPTImage :: TIFFSetDirectory() failed" );
   }
+
 
   // Empty any existing list of available resolution sizes
   image_widths.clear();
@@ -138,33 +140,94 @@ void TPTImage::loadImageInfo( int seq, int ang )
   tile_widths.clear();
   tile_heights.clear();
 
-  // Store the list of image dimensions available
+  // Store the list of image dimensions available, starting with the full resolution
   image_widths.push_back( w );
   image_heights.push_back( h );
   tile_widths.push_back( tw );
   tile_heights.push_back( th );
 
-  for( count = 0; TIFFReadDirectory( tiff ); count++ ){
+  // Sub-resolutions can either be stored within the SubIFDs of a top-level IFD or in separate top-level IFDs.
+  // Check first for sub-resolution levels stored within SubIFDs (as used by OME-TIFF).
+  // In these files, the full resolution image is stored in the first IFD and subsequent
+  // resolutions are stored in SubIFDs
+  loadSubIFDs();
+  subifd_ifd = 0;
 
-    // Store exact image size for each resolution level
-    TIFFGetField( tiff, TIFFTAG_IMAGEWIDTH, &w );
-    TIFFGetField( tiff, TIFFTAG_IMAGELENGTH, &h );
-    image_widths.push_back( w );
-    image_heights.push_back( h );
+  if( subifds.size() > 0 ){
+    // Start from 1 as the top-level IFD already holds the full resolution image
+    for( unsigned int n = 1; n<subifds.size(); n++ ){
+      if( TIFFSetSubDirectory( tiff, subifds[n] ) ){
+	uint32_t stype;
+	// Only use valid reduced image subfile types
+	if( (TIFFGetField( tiff, TIFFTAG_SUBFILETYPE, &stype ) == 1) && (stype == 0x01) ){
 
-    // Tile sizes can vary between resolutions
-    TIFFGetField( tiff, TIFFTAG_TILEWIDTH, &tw );
-    TIFFGetField( tiff, TIFFTAG_TILELENGTH, &th );
-    tile_widths.push_back( tw );
-    tile_heights.push_back( th );
+	  // Store exact image size for each resolution level
+	  TIFFGetField( tiff, TIFFTAG_IMAGEWIDTH, &w );
+	  TIFFGetField( tiff, TIFFTAG_IMAGELENGTH, &h );
+	  image_widths.push_back( w );
+	  image_heights.push_back( h );
+
+	  // Tile sizes can vary between resolutions
+	  TIFFGetField( tiff, TIFFTAG_TILEWIDTH, &tw );
+	  TIFFGetField( tiff, TIFFTAG_TILELENGTH, &th );
+	  tile_widths.push_back( tw );
+	  tile_heights.push_back( th );
+
+	  count++;
+	}
+      }
+    }
+
+    // If there are valid SubIFDs, tag this image appropriately and check whether we have a stack of images
+    if( count > 0 ){
+      pyramid = SUBIFD;
+      loadStackInfo();
+    }
+
+    // Reset to first TIFF directory
+    if( !TIFFSetDirectory( tiff, 0 ) ) throw file_error( "TPTImage :: TIFFSetDirectory() failed" );
+  }
+
+  // If there are no SubIFD resolutions, look for them in the main sequence of IFD TIFF directories
+  if( pyramid == NORMAL ){
+    for( count = 0; TIFFReadDirectory( tiff ); count++ ){
+
+      // Store exact image size for each resolution level
+      TIFFGetField( tiff, TIFFTAG_IMAGEWIDTH, &w );
+      TIFFGetField( tiff, TIFFTAG_IMAGELENGTH, &h );
+      image_widths.push_back( w );
+      image_heights.push_back( h );
+
+      // Tile sizes can vary between resolutions
+      TIFFGetField( tiff, TIFFTAG_TILEWIDTH, &tw );
+      TIFFGetField( tiff, TIFFTAG_TILELENGTH, &th );
+      tile_widths.push_back( tw );
+      tile_heights.push_back( th );
+
+    }
+
+    // Check whether this is in fact a stack from an image too small to have SubIFD resolutions
+    if( (count > 0) && (image_widths[0] == image_widths[1]) && (image_heights[0] == image_heights[1]) ){
+      loadStackInfo();
+      if( stack.size() > 0 ){
+	// Remove duplicate sizes
+	image_widths.resize(1);
+	image_heights.resize(1);
+	tile_widths.resize(1);
+	tile_heights.resize(1);
+	count = 0;
+      }
+    }
   }
 
 
-  // Reset the TIFF directory
-  if( !TIFFSetDirectory( tiff, current_dir ) ){
-    throw file_error( "TPTImage :: TIFFSetDirectory() failed" );
-  }
+  // Total number of available resolutions
   numResolutions = count+1;
+
+
+  // Reset the TIFF directory to where it was
+  if( !TIFFSetDirectory( tiff, current_dir ) ) throw file_error( "TPTImage :: TIFFSetDirectory() failed" );
+
 
   // Handle various colour spaces
   if( colour == PHOTOMETRIC_CIELAB ) colourspace = CIELAB;
@@ -250,8 +313,13 @@ void TPTImage::loadImageInfo( int seq, int ang )
   if( TIFFGetField( tiff, TIFFTAG_MODEL, &tmp ) ) metadata["model"] = tmp;
   if( TIFFGetField( tiff, TIFFTAG_XMLPACKET, &count, &tmp ) ) metadata["xmp"] = string(tmp,count);
   if( TIFFGetField( tiff, TIFFTAG_ICCPROFILE, &count, &tmp ) ) metadata["icc"] = string(tmp,count);
-
+  if( TIFFGetField( tiff, TIFFTAG_STONITS, &scale ) ){
+    char buffer[32];
+    snprintf( buffer, sizeof(buffer), "%g", scale );
+    metadata["scale"] = buffer;
+  }
 }
+
 
 
 void TPTImage::closeImage()
@@ -263,7 +331,8 @@ void TPTImage::closeImage()
 }
 
 
-RawTile TPTImage::getTile( int seq, int ang, unsigned int res, int layers, unsigned int tile )
+
+RawTile TPTImage::getTile( int x, int y, unsigned int res, int layers, unsigned int tile )
 {
   uint32_t im_width, im_height, tw, th, ntlx, ntly;
   uint32_t rem_x, rem_y;
@@ -281,23 +350,23 @@ RawTile TPTImage::getTile( int seq, int ang, unsigned int res, int layers, unsig
 
   // If we are currently working on a different sequence number, then
   //  close and reload the image.
-  if( (currentX != seq) || (currentY != ang) ){
+  if( stack.empty() && ( (currentX != x) || (currentY != y) ) ){
     closeImage();
   }
 
 
   // Open the TIFF if it's not already open
   if( !tiff ){
-    filename = getFileName( seq, ang );
+    filename = getFileName( x, y );
     if( ( tiff = TIFFOpen( filename.c_str(), mode ) ) == NULL ){
       throw file_error( "TPTImage :: TIFFOpen() failed for:" + filename );
     }
   }
 
 
-  // Reload our image information in case the tile size etc is different
-  if( (currentX != seq) || (currentY != ang) ){
-    loadImageInfo( seq, ang );
+  // Reload our image information in case the tile size etc is different - no need to do this for image stacks
+  if( stack.empty() && ( (currentX != x) || (currentY != y) ) ){
+    loadImageInfo( x, y );
   }
 
 
@@ -306,9 +375,38 @@ RawTile TPTImage::getTile( int seq, int ang, unsigned int res, int layers, unsig
   int vipsres = ( numResolutions - 1 ) - res;
 
 
-  // Change to the right directory for the resolution
-  if( !TIFFSetDirectory( tiff, vipsres ) ) {
-    throw file_error( "TPTImage :: TIFFSetDirectory() failed" );
+  // Check in which directory we currently are
+  tdir_t cd = TIFFCurrentDirectory( tiff );
+
+  // Handle SubIFD-based resolution levels
+  if( pyramid == SUBIFD ){
+
+    // If we have an image stack within our TIFF, change to the appropriate directory
+    if( cd != x ){
+      if( !TIFFSetDirectory( tiff, x ) ) throw file_error( "TPTImage :: TIFFSetDirectory() failed for stack " + x );
+      cd = x;
+    }
+
+    // Reload our SubIFD list if necessary
+    if( subifds.empty() || x != subifd_ifd ){
+      loadSubIFDs();
+      subifd_ifd = cd;
+    }
+
+    // Change to the appropriate SubIFD directory if necessary
+    if( (vipsres < (int)subifds.size()) && (subifds[vipsres] > 0) ){
+      if( !TIFFSetSubDirectory( tiff, subifds[vipsres] ) ){
+	throw file_error( "TPTImage :: TIFFSetSubDirectory() failed for SubIFD offset " + subifds[vipsres] );
+      }
+    }
+  }
+  // If TIFF pyramid is a "classic" image pyramid with sub-resolutions within successive IFDs, just move to the appropriate directory
+  else {
+    if( vipsres != cd ){
+      if( !TIFFSetDirectory( tiff, vipsres ) ){
+	throw file_error( "TPTImage :: TIFFSetDirectory() failed for resolution " + vipsres );
+      }
+    }
   }
 
 
@@ -384,7 +482,7 @@ RawTile TPTImage::getTile( int seq, int ang, unsigned int res, int layers, unsig
 
 
   // Initialize our RawTile object
-  RawTile rawtile( tile, res, seq, ang, tile_widths[vipsres], tile_heights[vipsres], channels, bpc );
+  RawTile rawtile( tile, res, x, y, tile_widths[vipsres], tile_heights[vipsres], channels, bpc );
   rawtile.filename = getImagePath();
   rawtile.timestamp = timestamp;
   rawtile.sampleType = sampleType;
@@ -396,7 +494,7 @@ RawTile TPTImage::getTile( int seq, int ang, unsigned int res, int layers, unsig
   // Decode and read the tile - dump data directly into RawTile buffer
   int length = TIFFReadEncodedTile( tiff, (ttile_t) tile, (tdata_t) rawtile.data, (tsize_t) bytes );
   if( length == -1 ){
-    throw file_error( "TPTImage :: TIFFReadEncodedTile() failed for " + getFileName( seq, ang ) );
+    throw file_error( "TPTImage :: TIFFReadEncodedTile() failed for " + getFileName( x, y ) );
   }
   rawtile.dataLength = length;
 
@@ -450,3 +548,50 @@ RawTile TPTImage::getTile( int seq, int ang, unsigned int res, int layers, unsig
 
 }
 
+
+
+// Load any list of SubIFDs linked to this IFD
+void TPTImage::loadSubIFDs()
+{
+  uint16_t n_subifd;
+  toff_t *subifd;
+  subifds.clear();
+  if( TIFFGetField( tiff, TIFFTAG_SUBIFD, &n_subifd, &subifd ) == 1 ){
+    if( n_subifd > 0 ){
+      subifds.push_back(0);
+      for( int n = 0; n<n_subifd; n++ ) subifds.push_back( subifd[n] );
+    }
+  }
+}
+
+
+
+// Load name and scale metadata for image stacks
+void TPTImage::loadStackInfo()
+{
+  double scale;
+  const char *tmp = NULL;
+
+  // Reset to first TIFF directory
+  if( !TIFFSetDirectory( tiff, 0 ) ) throw file_error( "TPTImage :: TIFFSetDirectory() failed" );
+
+  // Start from 1 as horizontalAnglesList is initialized with 0 by default
+  int n = 1;
+
+  // Loop through our IFDs and get the name and scaling factor for each
+  do {
+    uint32_t stype;
+
+    // Stack layers should really be in multi-page type sub file types
+    if( (TIFFGetField( tiff, TIFFTAG_SUBFILETYPE, &stype ) == 1) && (stype == 0x02) ){
+      Stack s;
+      horizontalAnglesList.push_back(n++);
+      if( TIFFGetField( tiff, TIFFTAG_DOCUMENTNAME, &tmp ) ) s.name = string(tmp);
+      if( TIFFGetField( tiff, TIFFTAG_STONITS, &scale ) ) s.scale = (float) scale;
+      stack.push_back( s );
+    }
+  } while( TIFFReadDirectory(tiff) );
+
+  // Need to remove last item from stack list
+  if( horizontalAnglesList.size() > 1 ) horizontalAnglesList.pop_back();
+}

@@ -52,6 +52,19 @@ class file_error : public std::runtime_error {
 enum ImageFormat { TIF, JPEG2000, UNSUPPORTED };
 
 
+// Multi-resolution pyramid type
+enum PyramidType { NORMAL, SUBIFD };
+
+
+// Structure for storing basic information on image stacks
+// - for now just stores stack name and scaling factor
+struct Stack {
+  std::string name;
+  float scale;
+  Stack() : scale(1) {};
+};
+
+
 
 /// Main class to handle the pyramidal image source
 /** Provides functions to open, get various information from an image source
@@ -91,14 +104,14 @@ class IIPImage {
   /// If we have a sequence of images, determine which vertical angles exist
   void measureVerticalAngles();
 
+
+ protected:
+
   /// The list of available horizontal angles (for image sequences)
   std::list <int> horizontalAnglesList;
 
   /// The list of available vertical angles (for image sequences)
   std::list <int> verticalAnglesList;
-
-
- protected:
 
   /// LUT
   std::vector <int> lut;
@@ -108,6 +121,12 @@ class IIPImage {
 
   /// Return the image format e.g. tif
   ImageFormat format;
+
+  /// Define how pyramid is structured
+  PyramidType pyramid;
+
+  /// Whether we have an image stack consisting of multiple images within a single file
+  std::list <Stack> stack;
 
 
  public:
@@ -168,10 +187,11 @@ class IIPImage {
  public:
 
   /// Default Constructor
-  IIPImage()
-   : isFile( false ),
+  IIPImage() :
+    isFile( false ),
     virtual_levels( 0 ),
     format( UNSUPPORTED ),
+    pyramid( NORMAL ),
     colourspace( NONE ),
     dpi_x( 0 ),
     dpi_y( 0 ),
@@ -189,11 +209,12 @@ class IIPImage {
   /// Constructer taking the image path as parameter
   /** @param s image path
    */
-  IIPImage( const std::string& s )
-   : imagePath( s ),
+  IIPImage( const std::string& s ) :
+    imagePath( s ),
     isFile( false ),
     virtual_levels( 0 ),
     format( UNSUPPORTED ),
+    pyramid( NORMAL ),
     colourspace( NONE ),
     dpi_x( 0 ),
     dpi_y( 0 ),
@@ -211,8 +232,8 @@ class IIPImage {
   /// Copy Constructor taking reference to another IIPImage object
   /** @param image IIPImage object
    */
-  IIPImage( const IIPImage& image )
-   : imagePath( image.imagePath ),
+  IIPImage( const IIPImage& image ) :
+    imagePath( image.imagePath ),
     fileSystemPrefix( image.fileSystemPrefix ),
     fileSystemSuffix( image.fileSystemSuffix ),
     fileNamePattern( image.fileNamePattern ),
@@ -223,6 +244,8 @@ class IIPImage {
     lut( image.lut ),
     virtual_levels( image.virtual_levels ),
     format( image.format ),
+    pyramid( image.pyramid ),
+    stack( image.stack ),
     image_widths( image.image_widths ),
     image_heights( image.image_heights ),
     tile_widths( image.tile_widths ),
@@ -354,6 +377,15 @@ class IIPImage {
 
   /// Return the colour space for this image
   ColourSpaces getColourSpace() const { return colourspace; };
+
+  /// Return whether image is a single-file image stack
+  bool isStack() const {
+    if( stack.size() > 0 ) return true;
+    return false;
+  };
+
+  /// Load stack info
+  std::list <Stack> getStack() const { return stack; };
 
   /// Return image metadata
   /** @param index metadata field name */

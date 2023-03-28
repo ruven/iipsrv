@@ -2,7 +2,7 @@
 
 /*  IIPImage Tiled Pyramidal TIFF Class
 
-    Copyright (C) 2000-2022 Ruven Pillay.
+    Copyright (C) 2000-2023 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -38,6 +38,18 @@ class TPTImage : public IIPImage {
 
   /// Pointer to the TIFF library struct
   TIFF *tiff;
+
+  /// List of SubIFD sub-resolutions
+  std::vector<uint32_t> subifds;
+
+  /// To which IFD do these SubIFDs belong
+  tdir_t subifd_ifd;
+
+  /// Load any SubIFD offsets
+  void loadSubIFDs();
+
+  /// Load any stack metadata - name and scale
+  void loadStackInfo();
 
 
  public:

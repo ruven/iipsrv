@@ -202,15 +202,20 @@ void FIF::run( Session* session, const string& src ){
     session->response->setLastModified( (*session->image)->getTimestamp() );
 
     if( session->loglevel >= 2 ){
+      tm *t = gmtime( &(*session->image)->timestamp );
+      char strt[64];
+      strftime( strt, 64, "%a, %d %b %Y %H:%M:%S GMT", t );
+
       *(session->logfile) << "FIF :: Image dimensions are " << (*session->image)->getImageWidth()
 			  << " x " << (*session->image)->getImageHeight() << endl
 			  << "FIF :: Image contains " << (*session->image)->channels
 			  << " channel" << (((*session->image)->channels>1)?"s":"") << " with "
-			  << (*session->image)->bpc << " bit" << (((*session->image)->bpc>1)?"s":"") << " per channel" << endl;
-      tm *t = gmtime( &(*session->image)->timestamp );
-      char strt[64];
-      strftime( strt, 64, "%a, %d %b %Y %H:%M:%S GMT", t );
-      *(session->logfile) << "FIF :: Image timestamp: " << strt << endl;
+			  << (*session->image)->bpc << " bit" << (((*session->image)->bpc>1)?"s":"") << " per channel" << endl
+			  << "FIF :: Image timestamp: " << strt << endl;
+      if( (*session->image)->isStack() ){
+	std::list <Stack> stack = (*session->image)->getStack();
+	*(session->logfile) << "FIF :: Image is a stack containing " << stack.size() << " elements" << endl;
+      }
     }
 
   }
