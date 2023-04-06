@@ -2,7 +2,7 @@
 
     IIIF Request Command Handler Class Member Function
 
-    Copyright (C) 2014-2022 Ruven Pillay
+    Copyright (C) 2014-2023 Ruven Pillay
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -252,8 +252,7 @@ void IIIF::run( Session* session, const string& src )
 #ifdef HAVE_WEBP
 		       << "  \"extraFormats\": [\"webp\"]," << endl
 #endif
-		       << "  \"extraFeatures\": [\"regionByPct\",\"sizeByForcedWh\",\"sizeByWh\",\"sizeAboveFull\",\"sizeUpscaling\",\"rotationBy90s\",\"mirroring\"]" << endl
-		       << "}";
+		       << "  \"extraFeatures\": [\"regionByPct\",\"sizeByForcedWh\",\"sizeByWh\",\"sizeAboveFull\",\"sizeUpscaling\",\"rotationBy90s\",\"mirroring\"]";
     }
     // Profile for IIIF versions 1 and 2
     else {
@@ -265,10 +264,24 @@ void IIIF::run( Session* session, const string& src )
 		       << "       \"supports\" : [\"regionByPct\",\"regionSquare\",\"sizeByForcedWh\",\"sizeByWh\",\"sizeAboveFull\",\"sizeUpscaling\",\"rotationBy90s\",\"mirroring\"]," << endl
 		       << "       \"maxWidth\" : " << max << "," << endl
 		       << "       \"maxHeight\" : " << max << "\n     }" << endl
-		       << "  ]" << endl
-		       << "}";
+		       << "  ]";
     }
 
+    // Add physical dimensions service if DPI resolution exists
+    if( (*session->image)->dpi_x ){
+      infoStringStream << "," << endl
+		       << "  \"service\": [" << endl
+		       << "    {" << endl
+		       << "      \"@context\": \"http://iiif.io/api/annex/services/physdim/1/context.json\"," << endl
+		       << "      \"profile\": \"http://iiif.io/api/annex/services/physdim\"," << endl
+		       << "      \"physicalScale\": " << 1.0/(*session->image)->dpi_x << "," << endl
+		       << "      \"physicalUnits\": " << ( ((*session->image)->dpi_units==1) ? "\"in\"" : "\"cm\"" ) << endl
+		       << "    }" << endl
+		       << "  ]" << endl;
+    }
+
+    // Add final closing brackets
+    infoStringStream << endl << "}";
 
     // Now output the HTTP header and info text
     string mime = string("application/ld+json;profile=\"") + iiif_context + "\"";

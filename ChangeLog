@@ -1,3 +1,8 @@
+06/04/2023:
+	- Added ability to serve DPI information through metadata retrieval via OBJ class and through physical dimensions
+	  service for IIIF info.json
+
+
 28/03/2023:
 	- Added support for pyramid resolutions stored within SubIFDs for TIFF images. This allows for support for image
 	  stacks or sequences consisting of different images stored as a single multi-page TIFF. Each image has it's own

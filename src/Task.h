@@ -1,7 +1,7 @@
 /*
     IIP Generic Task Class
 
-    Copyright (C) 2006-2022 Ruven Pillay
+    Copyright (C) 2006-2023 Ruven Pillay
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -151,6 +151,7 @@ class OBJ : public Task {
   void vertical_views();
   void min_max_values();
   void resolutions();
+  void dpi();
   void metadata( std::string field );
   void stack();
 

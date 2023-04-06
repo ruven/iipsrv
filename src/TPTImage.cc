@@ -308,6 +308,7 @@ void TPTImage::loadImageInfo( int seq, int ang )
   if( TIFFGetField( tiff, TIFFTAG_COPYRIGHT, &tmp ) ) metadata["rights"] = tmp;
   if( TIFFGetField( tiff, TIFFTAG_DATETIME, &tmp ) ) metadata["date"] = tmp;
   if( TIFFGetField( tiff, TIFFTAG_IMAGEDESCRIPTION, &tmp ) ) metadata["description"] = tmp;
+  if( TIFFGetField( tiff, TIFFTAG_DOCUMENTNAME, &tmp ) ) metadata["title"] = tmp;
   if( TIFFGetField( tiff, TIFFTAG_SOFTWARE, &tmp ) ) metadata["software"] = tmp;
   if( TIFFGetField( tiff, TIFFTAG_MAKE, &tmp ) ) metadata["make"] = tmp;
   if( TIFFGetField( tiff, TIFFTAG_MODEL, &tmp ) ) metadata["model"] = tmp;

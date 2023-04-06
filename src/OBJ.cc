@@ -72,6 +72,8 @@ void OBJ::run( Session* s, const std::string& a )
   else if( argument == "min-max-sample-values" ) min_max_values();
   // List of available resolutions
   else if( argument == "resolutions" ) resolutions();
+  // Get physical resolution (DPI)
+  else if( argument == "dpi" ) dpi();
   else if( argument == "stack" ) stack();
 
   // Colorspace
@@ -186,6 +188,23 @@ void OBJ::resolution_number(){
   }
   session->response->addResponse( "Resolution-number", no_res );
 
+}
+
+
+void OBJ::dpi(){
+
+  checkImage();
+  float dpix = (*session->image)->getHorizontalDPI();
+  float dpiy = (*session->image)->getVerticalDPI();
+
+  if( dpix && dpiy ){
+    char tmp[64];
+    snprintf( tmp, 64, "DPI:%f %f", dpix, dpiy );
+    if( session->loglevel >= 5 ){
+      *(session->logfile) << "OBJ :: DPI handler returning " << tmp << endl;
+    }
+    session->response->addResponse( tmp );
+  }
 }
 
 

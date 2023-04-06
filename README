@@ -17,21 +17,19 @@ well as advanced image features such as 8, 16 and 32 bits per channel, CIELAB co
 
 FEATURES
 --------
-* Fast lightweight embeddable FastCGI server module
+* Fast lightweight FastCGI server
 * High performance with inbuilt configurable cache
-* Support for gigapixel images
-* Dynamic JPEG, PNG and WebP export of whole or regions of images at any resolution
-* Supports IIP, Zoomify, DeepZoom and IIIF protocols
+* Support for extremely large images: tera-pixel and multi gigapixel support
+* TIFF and JPEG2000 input support
+* JPEG, PNG and WebP output support: export of whole or regions of images at any size
+* Supports IIP, Zoomify, DeepZoom and IIIF API's
 * 1, 8, 16 and 32 bit image support including 32 bit floating point support
 * CIELAB support with automatic CIELAB->sRGB colour space conversion
-* JPEG2000 support
-* Multispectral image support
+* Multispectral and hyperspectral image support
+* Image stacks and image sequence support
+* Dynamic hillshading of 3D surface topologies
 * Dynamic watermarking
 * Memcached support
-* 3D panoramic views
-* Dynamic hillshading of 3D surface topologies
-* Dynamic decoder module capability
-
 
 
 DOCUMENTATION
