@@ -37,6 +37,7 @@ IIPResponse::IIPResponse(){
   modified = "";
   mimeType = "Content-Type: application/vnd.netfpx";
   cors = "";
+  contentDisposition = "";
   eof = "\r\n";
   _sent = false;
   _cachable = true;
@@ -138,8 +139,8 @@ string IIPResponse::createHTTPHeader( const string& mimeType, const string& time
   if( mimeType.find("/") == string::npos ) _mimeType = "application/" + mimeType;
 
   stringstream header;
-  header << "Server: iipsrv/" << VERSION << eof
-         << "X-Powered-By: IIPImage" << eof
+  header << server << eof
+         << powered << eof
          << "Content-Type: " << _mimeType << eof
          << "Last-Modified: " << timeStamp << eof
 	 << cacheControl << eof;
@@ -147,7 +148,10 @@ string IIPResponse::createHTTPHeader( const string& mimeType, const string& time
   if( contentLength > 0 ) header << "Content-Length: " << contentLength << eof;
 
   // Add CORS header if we have one
-  if ( !cors.empty() ) header << cors << eof;
+  if( !cors.empty() ) header << cors << eof;
+
+  // Add content disposition if we have one
+  if( !contentDisposition.empty() ) header << contentDisposition << eof;
 
   // Need extra EOF separator
   header << eof;

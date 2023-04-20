@@ -23,8 +23,8 @@
 #include "Environment.h"
 #include <cmath>
 #include <algorithm>
+#include <sstream>
 
-//#define CHUNKED 1
 
 using namespace std;
 
@@ -166,35 +166,24 @@ void CVT::send( Session* session ){
   const string separator = "/";
 #endif
 
-
   // Get our image file name and strip of the directory path and any suffix
   string filename = (*session->image)->getImagePath();
   int pos = filename.rfind(separator)+1;
-  string basename = filename.substr( pos, filename.rfind(".")-pos );
 
-  char str[1024];
-  snprintf( str, 1024,
-	    "Server: iipsrv/%s\r\n"
-	    "X-Powered-By: IIPImage\r\n"
-	    "%s\r\n"
-	    "Last-Modified: %s\r\n"
-	    "Content-Type: %s\r\n"
-	    "Content-Disposition: inline;filename=\"%s.%s\"\r\n"
-#ifdef CHUNKED
-	    "Transfer-Encoding: chunked\r\n"
-#endif
-	    "\r\n",
-	    VERSION, session->response->getCacheControl().c_str(),
-	    (*session->image)->getTimestamp().c_str(),
-	    compressor->getMimeType(), basename.c_str(), compressor->getSuffix() );
+  // Add output size to name and change suffix to match requested format
+  ostringstream basename;
+  basename << filename.substr( pos, filename.rfind(".")-pos ) << "_" << resampled_width << "x" << resampled_height << "." << compressor->getSuffix();
 
-  if( session->out->putS( (const char*) str ) == -1 ){
+  // Set our content disposition type: use "attachment" for POST requests which will make browser download rather than display image
+  session->response->setContentDisposition( basename.str(), ((session->headers["REQUEST_METHOD"]=="POST")?"attachment":"inline") );
+  string header = session->response->createHTTPHeader( compressor->getMimeType(), (*session->image)->getTimestamp() );
+
+  if( session->out->putS( header.c_str() ) == -1 ){
     if( session->loglevel >= 1 ){
       *(session->logfile) << "CVT :: Error writing HTTP header" << endl;
     }
   }
 #endif
-
 
 
   // Set up our TileManager object
@@ -564,21 +553,12 @@ void CVT::send( Session* session ){
 
   len = compressor->getHeaderSize();
 
-#ifdef CHUNKED
-  snprintf( str, 1024, "%X\r\n", len );
-  if( session->loglevel >= 4 ) *(session->logfile) << "CVT :: Output Header Chunk : " << str;
-  session->out->putS( str );
-#endif
-
   if( session->out->putStr( (const char*) compressor->getHeader(), len ) != len ){
     if( session->loglevel >= 1 ){
       *(session->logfile) << "CVT :: Error writing header" << endl;
     }
   }
 
-#ifdef CHUNKED
-  session->out->putStr( "\r\n", 2 );
-#endif
 
   // Flush our block of data
   if( session->out->flush() == -1 ) {
@@ -615,24 +595,12 @@ void CVT::send( Session* session ){
       *(session->logfile) << "CVT :: Compressed data strip length is " << len << endl;
     }
 
-#ifdef CHUNKED
-    // Send chunk length in hex
-    snprintf( str, 1024, "%X\r\n", len );
-    if( session->loglevel >= 4 ) *(session->logfile) << "CVT :: Chunk : " << str;
-    session->out->putS( str );
-#endif
-
     // Send this strip out to the client
     if( len != session->out->putStr( (const char*) output, len ) ){
       if( session->loglevel >= 1 ){
 	*(session->logfile) << "CVT :: Error writing strip: " << len << endl;
       }
     }
-
-#ifdef CHUNKED
-    // Send closing chunk CRLF
-    session->out->putStr( "\r\n", 2 );
-#endif
 
     // Flush our block of data
     if( session->out->flush() == -1 ) {
@@ -646,27 +614,15 @@ void CVT::send( Session* session ){
   // Finish off the image compression
   len = compressor->Finish( output );
 
-#ifdef CHUNKED
-  snprintf( str, 1024, "%X\r\n", len );
-  if( session->loglevel >= 4 ) *(session->logfile) << "CVT :: Final Data Chunk : " << str << endl;
-  session->out->putS( str );
-#endif
-
   if( session->out->putStr( (const char*) output, len ) != len ){
     if( session->loglevel >= 1 ){
       *(session->logfile) << "CVT :: Error writing output" << endl;
     }
   }
 
+  // Delete our output buffer
   delete[] output;
 
-
-#ifdef CHUNKED
-  // Send closing chunk CRLF
-  session->out->putStr( "\r\n", 2 );
-  // Send closing blank chunk
-  session->out->putS( "0\r\n\r\n" );
-#endif
 
   if( session->out->flush()  == -1 ) {
     if( session->loglevel >= 1 ){
@@ -676,7 +632,6 @@ void CVT::send( Session* session ){
 
   // Inform our response object that we have sent something to the client
   session->response->setImageSent();
-
 
 
   // Total CVT response time

@@ -1,7 +1,7 @@
 /*
     IIP Response Handler Class
 
-    Copyright (C) 2003-2022 Ruven Pillay.
+    Copyright (C) 2003-2023 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -23,7 +23,7 @@
 #define _IIPRESPONSE_H
 
 #ifndef VERSION
-#define VERSION "0.9.9.9"
+#define VERSION "999"
 #endif
 
 // Fix missing snprintf in Windows
@@ -52,6 +52,7 @@ class IIPResponse{
   std::string responseBody;        // The main response
   std::string error;               // Error message
   std::string cors;                // CORS (Cross-Origin Resource Sharing) setting
+  std::string contentDisposition;  // File name to use for Content Disposition header
   std::string status;              // HTTP status code
   bool _cachable;                  // Indicate whether response should be cached
   bool _sent;                      // Indicate whether a response has been sent
@@ -76,6 +77,13 @@ class IIPResponse{
   /// Set the Last Modified header
   /** @param m Last modified date as a HTTP RFC 1123 formatted timestamp */
   void setLastModified( const std::string& m ) { modified = "Last-Modified: " + m; };
+
+
+  /// Set Content Disposition header
+  /** @param name File name for Content-disposition header */
+  void setContentDisposition( const std::string& name, const std::string& type = "inline" ) {
+    contentDisposition = "Content-Disposition: " + type + "; filename=\"" + name + "\"";
+  }
 
 
   /// Add a response string

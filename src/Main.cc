@@ -671,6 +671,7 @@ int main( int argc, char *argv[] )
 	  int contentLength = 0;
 	  if( ( header = FCGX_GetParam("CONTENT_LENGTH",request.envp) ) ) contentLength = atoi( header );
 	  header = FCGX_GetParam( "REQUEST_METHOD", request.envp );
+	  session.headers["REQUEST_METHOD"] = header;
 	  if( loglevel >=2 ) logfile << "HTTP " << header << " request with contentLength " << contentLength << endl;
 	  if( contentLength > 0 ){
 	    char *contentBuffer = new char[contentLength];
