@@ -58,6 +58,7 @@ void IIPImage::swap( IIPImage& first, IIPImage& second ) // nothrow
   std::swap( first.format, second.format );
   std::swap( first.pyramid, second.pyramid );
   std::swap( first.stack, second.stack );
+  std::swap( first.resolution_ids, second.resolution_ids );
   std::swap( first.fileSystemPrefix, second.fileSystemPrefix );
   std::swap( first.fileSystemSuffix, second.fileSystemSuffix );
   std::swap( first.fileNamePattern, second.fileNamePattern );

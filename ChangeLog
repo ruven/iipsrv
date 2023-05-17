@@ -1,6 +1,8 @@
 17/05/2023:
 	- Changed the IIIF scaleFactors variable in info.json to calculate the real scale between levels and not
 	  just assume powers of 2.
+	- TPTImage now skips non-tiled IFDs: this enables compatibility with formats such as Aperio SVS and others
+	  that include non-resolution images such as thumbnails within the IFD sequence.
 
 
 20/04/2023:

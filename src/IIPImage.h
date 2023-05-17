@@ -128,6 +128,7 @@ class IIPImage {
   /// Whether we have an image stack consisting of multiple images within a single file
   std::list <Stack> stack;
 
+  std::vector <uint32_t> resolution_ids;
 
  public:
 
@@ -246,6 +247,7 @@ class IIPImage {
     format( image.format ),
     pyramid( image.pyramid ),
     stack( image.stack ),
+    resolution_ids( image.resolution_ids ),
     image_widths( image.image_widths ),
     image_heights( image.image_heights ),
     tile_widths( image.tile_widths ),
