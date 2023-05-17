@@ -233,8 +233,8 @@ void IIIF::run( Session* session, const string& src )
                      << "     { \"width\" : " << tw << ", \"height\" : " << th
                      << ", \"scaleFactors\" : [ 1"; // Scale 1 is original image
 
-    for ( unsigned int i = 1; i < numResolutions; i++ ){
-      infoStringStream << ", " << (1<<i);
+    for( unsigned int i = 1; i < numResolutions; i++ ){
+      infoStringStream << ", " << (int)( width / (*session->image)->image_widths[i] );
     }
 
     infoStringStream << " ] }" << endl

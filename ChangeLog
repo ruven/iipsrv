@@ -1,3 +1,8 @@
+17/05/2023:
+	- Changed the IIIF scaleFactors variable in info.json to calculate the real scale between levels and not
+	  just assume powers of 2.
+
+
 20/04/2023:
 	- CVT now uses same header create function as all other commands, thereby adding missing CORS headers
 	  (Fixes: https://github.com/ruven/iipsrv/issues/256). Also removed obsolete chunking code from CVT.cc
