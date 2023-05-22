@@ -129,8 +129,11 @@ class IIPResponse{
   /** @param c setting */
   void setCORS( const std::string& c ){
     if(!c.empty()){
-      cors = "Access-Control-Allow-Origin: " + c + eof +
-	"Access-Control-Allow-Headers: X-Requested-With";
+      cors =
+	"Access-Control-Allow-Origin: " + c + eof +
+	"Access-Control-Allow-Methods: GET, POST, OPTIONS" + eof +
+	"Access-Control-Allow-Headers: Accept, Content-Type, X-Requested-With, If-Modified-Since" + eof +
+	"Access-Control-Max-Age: 86400";
     }
   };
 

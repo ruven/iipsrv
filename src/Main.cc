@@ -666,13 +666,20 @@ int main( int argc, char *argv[] )
 
 	request_string = (header!=NULL)? header : "";
 
+	header = FCGX_GetParam( "REQUEST_METHOD", request.envp );
+	session.headers["REQUEST_METHOD"] = header;
+
+	// Handle OPTIONS request
+	if( session.headers["REQUEST_METHOD"] == "OPTIONS" ){
+	  if( loglevel >=2 ) logfile << "HTTP OPTIONS request" << endl;
+	  throw( 204 );
+	}
+
 	// Check for requests sent using POST, PUT or other HTTP methods
 	if( request_string.empty() ){
 	  int contentLength = 0;
 	  if( ( header = FCGX_GetParam("CONTENT_LENGTH",request.envp) ) ) contentLength = atoi( header );
-	  header = FCGX_GetParam( "REQUEST_METHOD", request.envp );
-	  session.headers["REQUEST_METHOD"] = header;
-	  if( loglevel >=2 ) logfile << "HTTP " << header << " request with contentLength " << contentLength << endl;
+	  if( loglevel >=2 ) logfile << "HTTP " << session.headers["REQUEST_METHOD"] << " request with contentLength " << contentLength << endl;
 	  if( contentLength > 0 ){
 	    char *contentBuffer = new char[contentLength];
 	    FCGX_GetStr( contentBuffer, contentLength, request.in );
@@ -858,6 +865,17 @@ int main( int argc, char *argv[] )
 	  writer.flush();
           if( loglevel >= 2 ){
 	    logfile << "Sending HTTP 304 Not Modified" << endl;
+	  }
+	  break;
+
+        case 204:
+	  // Handle HTTP OPTIONS requests
+	  status = "Status: 204 No Content\r\nServer: iipsrv/" + version + "\r\nX-Powered-By: IIPImage\r\n" +
+	    "Content-Length: 0\r\n" + response.getCORS() + "\r\n\r\n";
+	  writer.putS( status.c_str() );
+	  writer.flush();
+	  if( loglevel >= 2 ){
+	    logfile << "Returning HTTP 204 No Content" << endl;
 	  }
 	  break;
 

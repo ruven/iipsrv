@@ -1,3 +1,7 @@
+22/05/2023:
+	- Added ability to handle CORS preflight requests using the HTTP OPTIONS method
+
+
 17/05/2023:
 	- Changed the IIIF scaleFactors variable in info.json to calculate the real scale between levels and not
 	  just assume powers of 2.
