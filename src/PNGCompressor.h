@@ -78,7 +78,9 @@ class PNGCompressor : public Compressor {
  public:
 
   /// Constructor
-  PNGCompressor( int compressionLevel ){
+  /** @param compressionLevel PNG compression level (zlib range is 0-9)
+   */
+  PNGCompressor( int compressionLevel ) : Compressor(compressionLevel) {
 
     dest.png_ptr = NULL;
     dest.info_ptr = NULL;
@@ -89,9 +91,6 @@ class PNGCompressor : public Compressor {
     width = 0;
     height = 0;
     channels = 0;
-
-    // Zlib range is 0-9
-    this->Q = compressionLevel;
 
     // Filters are an optional pre-processing step before Deflate compression
     //  - set this to the fastest set of filters

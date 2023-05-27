@@ -64,7 +64,16 @@ class Compressor {
 
  public:
 
-  Compressor() : header(NULL), header_size(0), dpi_x(0), dpi_y(0), dpi_units(0) {};
+  /// Constructor
+  /** @param compressionLevel default compression level for codec */
+  Compressor( int compressionLevel ) :
+    Q( compressionLevel ),
+    header( NULL ),
+    header_size( 0 ),
+    dpi_x( 0 ),
+    dpi_y( 0 ),
+    dpi_units( 0 ) {};
+
 
   virtual ~Compressor() {};
 

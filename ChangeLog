@@ -1,3 +1,7 @@
+27/05/2023:
+	- Refactored codec class constructors to call base class constructor with member initialization list.
+
+
 22/05/2023:
 	- Added ability to handle CORS preflight requests using the HTTP OPTIONS method
 

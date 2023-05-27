@@ -1,6 +1,6 @@
 /*  JPEG class wrapper to ijg libjpeg library
 
-    Copyright (C) 2000-2021 Ruven Pillay.
+    Copyright (C) 2000-2023 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -84,7 +84,7 @@ class JPEGCompressor: public Compressor{
 
   /// Constructor
   /** @param quality JPEG Quality factor (0-100) */
-  JPEGCompressor( int quality ) { Q = quality; dest = NULL; header_size = 0; };
+  JPEGCompressor( int quality ) : Compressor(quality), dest(NULL) {};
 
 
   /// Set the compression quality

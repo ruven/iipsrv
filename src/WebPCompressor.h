@@ -1,7 +1,7 @@
 /*  WebP Compressor Class:
     Handles alpha channels, ICC profiles and XMP metadata
 
-    Copyright (C) 2022 Ruven Pillay
+    Copyright (C) 2022-2023 Ruven Pillay
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -57,13 +57,9 @@ class WebPCompressor : public Compressor {
  public:
 
   /// Constructor
-  WebPCompressor( int compressionLevel ){
-
-    header = NULL;
-    header_size = 0;
-
-    // WebP compression range is 0-100
-    this->Q = compressionLevel;
+  /** @param compressionLevel WebP compression level (range 0-100)
+   */
+  WebPCompressor( int compressionLevel ) : Compressor(compressionLevel) {
 
     // Initialize our configuration structure with default values
     WebPConfigInit( &config );
