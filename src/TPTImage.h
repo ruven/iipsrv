@@ -60,12 +60,12 @@ class TPTImage : public IIPImage {
   /// Constructor
   /** @param path image path
    */
-  TPTImage( const std::string& path ): IIPImage( path ), tiff( NULL ) {};
+  TPTImage( const std::string& path ): IIPImage(path), tiff(NULL), subifd_ifd(0) {};
 
   /// Copy Constructor
   /** @param image IIPImage object
    */
-  TPTImage( const TPTImage& image ): IIPImage( image ), tiff( NULL ) {};
+  TPTImage( const TPTImage& image ): IIPImage(image), tiff(NULL), subifd_ifd(0) {};
 
   /// Assignment Operator
   /** @param image TPTImage object
@@ -82,7 +82,7 @@ class TPTImage : public IIPImage {
   /// Construct from an IIPImage object
   /** @param image IIPImage object
    */
-  TPTImage( const IIPImage& image ): IIPImage( image ), tiff( NULL ) {};
+  TPTImage( const IIPImage& image ): IIPImage(image), tiff(NULL), subifd_ifd(0) {};
 
   /// Destructor
   ~TPTImage() { closeImage(); };

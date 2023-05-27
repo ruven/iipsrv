@@ -392,13 +392,13 @@ RawTile TPTImage::getTile( int x, int y, unsigned int res, int layers, unsigned 
   if( pyramid == SUBIFD ){
 
     // If we have an image stack within our TIFF, change to the appropriate directory
-    if( cd != x ){
+    if( (int)cd != x ){
       if( !TIFFSetDirectory( tiff, x ) ) throw file_error( "TPTImage :: TIFFSetDirectory() failed for stack " + x );
       cd = x;
     }
 
     // Reload our SubIFD list if necessary
-    if( subifds.empty() || x != subifd_ifd ){
+    if( subifds.empty() || x != (int)subifd_ifd ){
       loadSubIFDs();
       subifd_ifd = cd;
     }
@@ -412,7 +412,7 @@ RawTile TPTImage::getTile( int x, int y, unsigned int res, int layers, unsigned 
   }
   // If TIFF pyramid is a "classic" image pyramid with sub-resolutions within successive IFDs, just move to the appropriate directory
   else {
-    if( vipsres != cd ){
+    if( vipsres != (int)cd ){
       if( !TIFFSetDirectory( tiff, resolution_ids[vipsres] ) ){
 	throw file_error( "TPTImage :: TIFFSetDirectory() failed for resolution " + vipsres );
       }

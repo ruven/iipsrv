@@ -1,5 +1,6 @@
 27/05/2023:
 	- Refactored codec class constructors to call base class constructor with member initialization list.
+	- Fixed number of compiler and Coverity warnings.
 
 
 22/05/2023:
