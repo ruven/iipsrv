@@ -1,3 +1,7 @@
+31/05/2023:
+	- Updated IIIF to default to version 3 of the Image API
+
+
 27/05/2023:
 	- Refactored codec class constructors to call base class constructor with member initialization list.
 	- Fixed number of compiler and Coverity warnings.

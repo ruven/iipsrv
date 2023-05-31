@@ -244,7 +244,7 @@ KAKADU_READMODE: Set the Kakadu JPEG2000 read-mode. 0 for 'fast' mode with minim
 recovery, 2 for 'resilient' mode with maximum recovery from codestream errors. See the Kakadu documentation for further details.
 
 IIIF_VERSION: Set the major IIIF Image API version. Values should be a single digit. For example: 2 for versions 2 or 2.1 etc.
-3 for IIIF version 3.x. If not set, defaults to version IIIF 2.x
+3 for IIIF version 3.x. If not set, defaults to version IIIF 3.x
 
 DECODER_MODULES: Comma separated list of external modules for decoding 
 other image formats. This is only necessary if you have activated 
@@ -506,6 +506,9 @@ For example with lighttpd:
       )
     )
 
+For Apache, load mod_proxy and mod_proxy_fcgi and add the following line to Apache's configuration:
+
+    ProxyPass "/fcgi-bin/iipsrv.fcgi" "fcgi://192.168.0.1:9000/"
 
 
 ------------------------------------------------------------------------------------

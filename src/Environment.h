@@ -1,7 +1,7 @@
 /*
     IIP Environment Variable Class
 
-    Copyright (C) 2006-2021 Ruven Pillay.
+    Copyright (C) 2006-2023 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -48,7 +48,7 @@
 #define URI_MAP ""
 #define EMBED_ICC true
 #define KAKADU_READMODE 0
-#define IIIF_VERSION 2
+#define IIIF_VERSION 3
 
 
 #include <string>
