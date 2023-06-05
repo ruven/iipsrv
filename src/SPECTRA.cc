@@ -84,6 +84,12 @@ void SPECTRA::run( Session* session, const std::string& argument ){
   list <int> views = (*session->image)->getHorizontalViewsList();
   list <int> :: const_iterator i;
 
+  // Check whether we have an image stack
+  bool haveStack = false;
+  std::list <Stack> stack = (*session->image)->getStack();
+  list<Stack> :: const_iterator j = stack.begin();
+  if( stack.size() > 0 ) haveStack = true;
+
   // Our list of spectral reflectance values for the requested point
   list <float> spectrum;
 
@@ -120,6 +126,7 @@ void SPECTRA::run( Session* session, const std::string& argument ){
 
     void *ptr;
     float reflectance = 0.0;
+    string name;
 
     if( session->loglevel >= 5 ) (*session->logfile) << "SPECTRA :: " << rawtile.bpc << " bits per channel data" << endl;
 
@@ -145,10 +152,23 @@ void SPECTRA::run( Session* session, const std::string& argument ){
 
     spectrum.push_front( reflectance );
 
-    string metadata = (*session->image)->getMetadata( "subject" );
+    // Get details from our stack if we have one
+    if( haveStack ){
+      if( j != stack.end() ){
+	if( (*j).name.size() > 0 ) name = (*j).name;
+	j++;   // Advance our stack iterator
+      }
+    }
+    if( name.empty() ){
+      // Format our integer value
+      char tmp[16];
+      snprintf( tmp, 16, "%d", *i );
+      name = string( tmp );
+    }
+
 
     char tmp[1024];
-    snprintf( tmp, 1024, "\t<point>\n\t\t<wavelength>%d</wavelength>\n\t\t<reflectance>%f</reflectance>\n\t</point>\n", n, reflectance );
+    snprintf( tmp, 1024, "\t<point>\n\t\t<wavelength>%s</wavelength>\n\t\t<reflectance>%f</reflectance>\n\t</point>\n", name.c_str(), reflectance );
     session->out->putS( tmp );
     session->out->flush();
 
