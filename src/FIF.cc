@@ -1,7 +1,7 @@
 /*
     IIP FIF Command Handler Class Member Function
 
-    Copyright (C) 2006-2022 Ruven Pillay.
+    Copyright (C) 2006-2023 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -250,10 +250,6 @@ void FIF::run( Session* session, const string& src ){
       }
     }
   }
-
-  // Reset our angle values
-  session->view->xangle = 0;
-  session->view->yangle = 90;
 
 
   if( session->loglevel >= 2 ){

@@ -121,6 +121,19 @@ void IIIF::run( Session* session, const string& src )
     return;
   }
 
+  // Extract any meta-identifier in the file name that may refer to a page within an image stack or multi-page image
+  // These consist of a semi-colon and a page or stack index of the form <image>;<index> For example: image.tif;3
+  const char delimitter = ',';
+  if( filename.find_last_of( delimitter ) != string::npos ){
+    size_t pos = filename.find_last_of( delimitter );
+    int page = atoi( filename.substr(pos+1).c_str() );
+    session->view->xangle = page;
+    filename = filename.substr(0,pos);
+    if ( session->loglevel >= 3 ){
+      *(session->logfile) << "IIIF :: Requested stack or page index: " << page << endl;
+    }
+  }
+
   // Check whether requested image exists
   FIF fif;
   fif.run( session, filename );
