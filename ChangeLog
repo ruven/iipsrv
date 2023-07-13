@@ -1,3 +1,7 @@
+13/07/2023:
+	- Added missing spaces to configure.ac test for Kakadu, which was causing false positive in certain conditions
+
+
 19/06/2023:
 	- Harmonized iipsrv identity string between JPEG and PNG.
 	- Added ability to choose a particular page or slice in an image stack when using IIIF by using

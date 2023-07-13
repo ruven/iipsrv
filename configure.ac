@@ -260,7 +260,7 @@ if test -n "$kakadu_path"; then
 		AC_MSG_RESULT([configure: Found Kakadu sources. Will compile JPEG2000 support]); KAKADU=true;,
 		AC_MSG_RESULT([configure: No Kakadu JPEG2000 Sources Found]); KAKADU=false
 	)
-	AM_CONDITIONAL([ENABLE_KAKADU],[test x$KAKADU=xtrue])
+	AM_CONDITIONAL([ENABLE_KAKADU],[test x$KAKADU = xtrue])
 
 	if test "x${KAKADU}" = xtrue; then
 		AC_DEFINE(HAVE_KAKADU)
