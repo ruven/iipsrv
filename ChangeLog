@@ -1,3 +1,6 @@
+03/09/2023: Version 1.2 Released
+
+
 13/07/2023:
 	- Added missing spaces to configure.ac test for Kakadu, which was causing false positive in certain conditions
 
