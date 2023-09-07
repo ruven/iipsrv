@@ -1197,7 +1197,7 @@ void Transform::convolution( RawTile& in, const vector<float>& kernel ){
           }
         }
 	// Normalize our values
-	v = v / total;
+	if( total > 0.0 ) v = v / total;
 	buffer[n++] = v;
       }
     }

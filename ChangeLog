@@ -1,3 +1,8 @@
+
+07/09/2023:
+	- Fix normalization in convolution when kernel sums to zero
+
+
 03/09/2023: Version 1.2 Released
 
 
