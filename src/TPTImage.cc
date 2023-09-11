@@ -103,9 +103,7 @@ void TPTImage::loadImageInfo( int seq, int ang )
   currentX = seq;
   currentY = ang;
 
-  // Get the tile and image sizes
-  TIFFGetField( tiff, TIFFTAG_TILEWIDTH, &tw );
-  TIFFGetField( tiff, TIFFTAG_TILELENGTH, &th );
+  // Get various essential image parameters
   TIFFGetField( tiff, TIFFTAG_IMAGEWIDTH, &w );
   TIFFGetField( tiff, TIFFTAG_IMAGELENGTH, &h );
   TIFFGetField( tiff, TIFFTAG_SAMPLESPERPIXEL, &samplesperpixel );
@@ -115,6 +113,10 @@ void TPTImage::loadImageInfo( int seq, int ang )
   TIFFGetField( tiff, TIFFTAG_XRESOLUTION, &dpi_x );
   TIFFGetField( tiff, TIFFTAG_YRESOLUTION, &dpi_y );
   TIFFGetField( tiff, TIFFTAG_RESOLUTIONUNIT, &dpi_units );
+
+  // If image is untiled, set tile sizes to zero
+  if( TIFFGetField( tiff, TIFFTAG_TILEWIDTH, &tw ) == 0 ) tw = 0;
+  if( TIFFGetField( tiff, TIFFTAG_TILEWIDTH, &th ) == 0 ) th = 0;
 
   // Units for libtiff are 1=unknown, 2=DPI and 3=pixels/cm, whereas we want 0=unknown, 1=DPI and 2=pixels/cm
   dpi_units--;
