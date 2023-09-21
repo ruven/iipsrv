@@ -16,13 +16,12 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-//#define DEBUG 1
 
 #include "OpenJPEGImage.h"
 #include "Logger.h"
 #include <sstream>
 #include <cmath>
-#ifdef DEBUG
+#ifdef OPENJPEG_DEBUG
 #include "Timer.h"
 #endif
 
@@ -45,7 +44,7 @@ static void error_callback( const char* msg, void* ){
   throw file_error( ss.str() );
 }
 
-#ifdef DEBUG
+#ifdef OPENJPEG_DEBUG
 static void warning_callback( const char* msg, void* ){
   if( IIPImage::logging ) logfile << "OpenJPEG warning :: " << msg << endl;
 }
@@ -67,7 +66,7 @@ void OpenJPEGImage::openImage()
   _codec = opj_create_decompress( OPJ_CODEC_JP2 );
 
   // Set info, warning and error handlers for codec - these need to be done after codec initialization
-#ifdef DEBUG
+#ifdef OPENJPEG_DEBUG
   opj_set_info_handler( _codec, info_callback, NULL );
   opj_set_warning_handler( _codec, warning_callback, NULL );
 #endif
@@ -80,7 +79,7 @@ void OpenJPEGImage::openImage()
     throw file_error( "OpenJPEG :: openImage() :: error setting up decoder" );
   }
 
-#ifdef DEBUG
+#ifdef OPENJPEG_DEBUG
   Timer timer;
   timer.start();
 #endif
@@ -90,7 +89,7 @@ void OpenJPEGImage::openImage()
     throw file_error( "OpenJPEG :: Unable to open '" + filename + "'" );
   }
 
-#ifdef DEBUG
+#ifdef OPENJPEG_DEBUG
   logfile << "OpenJPEG :: openImage() :: " << "Stream created" << endl;
 #endif
 
@@ -99,14 +98,14 @@ void OpenJPEGImage::openImage()
     throw file_error( "OpenJPEG :: process() :: opj_read_header() failed" );
   }
 
-#ifdef DEBUG
+#ifdef OPENJPEG_DEBUG
   logfile << "OpenJPEG :: openImage() :: " << "Header read" << endl;
 #endif
 
   // Load our metadata if not already loaded
   if( bpc == 0 ) loadImageInfo( currentX, currentY );
 
-#ifdef DEBUG
+#ifdef OPENJPEG_DEBUG
   logfile << "OpenJPEG :: openImage() :: " << timer.getTime() << " microseconds" << endl;
 #endif
 
@@ -116,7 +115,7 @@ void OpenJPEGImage::openImage()
 
 void OpenJPEGImage::closeImage()
 {
-#ifdef DEBUG
+#ifdef OPENJPEG_DEBUG
   Timer timer;
   timer.start();
 #endif
@@ -135,7 +134,7 @@ void OpenJPEGImage::closeImage()
     _image = NULL;
   }
 
-#ifdef DEBUG
+#ifdef OPENJPEG_DEBUG
   logfile << "OpenJPEG :: closeImage() :: " << timer.getTime() << " microseconds" << endl;
 #endif
 }
@@ -145,7 +144,7 @@ void OpenJPEGImage::closeImage()
 void OpenJPEGImage::loadImageInfo( int seq, int ang )
 {
 
-#ifdef DEBUG
+#ifdef OPENJPEG_DEBUG
   Timer timer;
   timer.start();
 #endif
@@ -157,7 +156,7 @@ void OpenJPEGImage::loadImageInfo( int seq, int ang )
 
 
   // High Throughput JPEG2000
-#if defined(DEBUG) && defined(J2K_CCP_CBLKSTY_HT)
+#ifdef J2K_CCP_CBLKSTY_HT
   if( (cst_info->m_default_tile_info.tccp_info[0].cblksty & J2K_CCP_CBLKSTY_HT) != 0 ||
       (cst_info->m_default_tile_info.tccp_info[0].cblksty & J2K_CCP_CBLKSTY_HTMIXED) != 0 ){
     logfile << "OpenJPEG :: HTJ2K codestream" << endl;
@@ -183,7 +182,7 @@ void OpenJPEGImage::loadImageInfo( int seq, int ang )
   image_widths.push_back(w);
   image_heights.push_back(h);
 
-#ifdef DEBUG
+#ifdef OPENJPEG_DEBUG
   logfile << "OpenJPEG :: DWT Levels: " << numResolutions << endl;
   logfile << "OpenJPEG :: Resolution : " << w << "x" << h << endl;
 #endif
@@ -196,7 +195,7 @@ void OpenJPEGImage::loadImageInfo( int seq, int ang )
     h = floor( h/2.0 );
     image_widths.push_back(w);
     image_heights.push_back(h);
-#ifdef DEBUG
+#ifdef OPENJPEG_DEBUG
     logfile << "OpenJPEG :: Resolution : " << w << "x" << h << endl;
 #endif
   }
@@ -218,7 +217,7 @@ void OpenJPEGImage::loadImageInfo( int seq, int ang )
   }
 
   if( n > numResolutions ){
-#ifdef DEBUG
+#ifdef OPENJPEG_DEBUG
     logfile << "OpenJPEG :: Warning! Insufficient resolution levels in JPEG2000 stream. Will generate "
 	    << n-numResolutions << " extra levels dynamically -" << endl
 	    << "OpenJPEG :: However, you are advised to regenerate the file with at least " << n << " levels" << endl;
@@ -258,7 +257,7 @@ void OpenJPEGImage::loadImageInfo( int seq, int ang )
   }
 
 
-#ifdef DEBUG
+#ifdef OPENJPEG_DEBUG
   logfile << "OpenJPEG :: " << bpc << " bit data" << endl
 	  << "OpenJPEG :: " << channels << " channels" << endl
  	  << "OpenJPEG :: colour space: " << cs << endl
@@ -280,7 +279,7 @@ void OpenJPEGImage::loadImageInfo( int seq, int ang )
   isSet = true;
 
 
-#ifdef DEBUG
+#ifdef OPENJPEG_DEBUG
   logfile << "OpenJPEG :: loadImageInfo() :: " << timer.getTime() << " microseconds" << endl;
 #endif
 }
@@ -296,7 +295,7 @@ RawTile OpenJPEGImage::getTile( int seq, int ang, unsigned int res, int layers, 
   if( bpc <= 16 && bpc > 8 ) obpc = 16;
   else if( bpc <= 8 ) obpc = 8;
 
-#ifdef DEBUG
+#ifdef OPENJPEG_DEBUG
   Timer timer;
   timer.start();
 #endif
@@ -341,7 +340,7 @@ RawTile OpenJPEGImage::getTile( int seq, int ang, unsigned int res, int layers, 
   int xoffset = (tile % ntlx) * tile_widths[0];
   int yoffset = (unsigned int) floor((double)(tile/ntlx)) * tile_heights[0];
   
-#ifdef DEBUG
+#ifdef OPENJPEG_DEBUG
   logfile << "OpenJPEG :: Tile size: " << tw << "x" << th << " @" << channels << endl;
 #endif
 
@@ -357,7 +356,7 @@ RawTile OpenJPEGImage::getTile( int seq, int ang, unsigned int res, int layers, 
   // Process the tile
   process( res, layers, xoffset, yoffset, tw, th, rawtile.data );
 
-#ifdef DEBUG
+#ifdef OPENJPEG_DEBUG
   logfile << "OpenJPEG :: getTile() :: " << timer.getTime() << " microseconds" << endl;
 #endif
 
@@ -374,7 +373,7 @@ RawTile OpenJPEGImage::getRegion( int ha, int va, unsigned int res, int layers, 
   if( bpc <= 16 && bpc > 8 ) obpc = 16;
   else if( bpc <= 8 ) obpc = 8;
   
-#ifdef DEBUG
+#ifdef OPENJPEG_DEBUG
   Timer timer;
   timer.start();
 #endif
@@ -389,7 +388,7 @@ RawTile OpenJPEGImage::getRegion( int ha, int va, unsigned int res, int layers, 
 
   process( res, layers, x, y, w, h, rawtile.data );
 
-#ifdef DEBUG
+#ifdef OPENJPEG_DEBUG
   logfile << "OpenJPEG :: getRegion() :: " << timer.getTime() << " microseconds" << endl;
 #endif
 
@@ -422,7 +421,7 @@ void OpenJPEGImage::process( unsigned int res, int layers, int xoffset, int yoff
     th *= factor;
     // Set our resolution level back to the smallest original resolution
     vipsres = numResolutions - 1 - virtual_levels;
-#ifdef DEBUG
+#ifdef OPENJPEG_DEBUG
   logfile << "OpenJPEG :: using smallest existing resolution " << virtual_levels << endl;
 #endif
   }
@@ -458,7 +457,7 @@ void OpenJPEGImage::process( unsigned int res, int layers, int xoffset, int yoff
   unsigned int w0 = (xoffset + tw) << vipsres;
   unsigned int h0 = (yoffset + th) << vipsres;
 
-#ifdef DEBUG
+#ifdef OPENJPEG_DEBUG
   logfile << "OpenJPEG :: decoding " << layers << " quality layers" << endl;
   logfile << "OpenJPEG :: requested region at requested resolution: position: "
 	  << xoffset << "x" << yoffset << ". size: " << tw << "x" << th << endl;
@@ -480,7 +479,7 @@ void OpenJPEGImage::process( unsigned int res, int layers, int xoffset, int yoff
   int icc_length = _image->icc_profile_len;
   const char* icc = (const char*) _image->icc_profile_buf;
   if( icc_length > 0 ) metadata["icc"] = string( icc, icc_length );
-#ifdef DEBUG
+#ifdef OPENJPEG_DEBUG
   if( icc_length > 0 ){
     logfile << "OpenJPEG :: ICC profile detected with size " << icc_length << endl;
   }

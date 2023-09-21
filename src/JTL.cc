@@ -161,7 +161,7 @@ void JTL::send( Session* session, int resolution, int tile ){
     *(session->logfile) << "JTL :: Tile size: " << rawtile.width << " x " << rawtile.height << endl
 			<< "JTL :: Channels per sample: " << rawtile.channels << endl
 			<< "JTL :: Bits per channel: " << rawtile.bpc << endl
-			<< "JTL :: Data size is " << len << " bytes" << endl;
+			<< "JTL :: Data size: " << len << " bytes" << endl;
   }
 
 
@@ -418,9 +418,8 @@ void JTL::send( Session* session, int resolution, int tile ){
     }
     len = compressor->Compress( rawtile );
     if( session->loglevel >= 4 ){
-      *(session->logfile) << " in " << function_timer.getTime() << " microseconds to "
-                          << rawtile.dataLength << " bytes" << endl;
-
+      *(session->logfile) << " to " << rawtile.dataLength << " bytes in "
+			  << function_timer.getTime() << " microseconds" << endl;
     }
   }
 
@@ -441,14 +440,14 @@ void JTL::send( Session* session, int resolution, int tile ){
 
   if( session->out->putStr( static_cast<const char*>(rawtile.data), len ) != len ){
    if( session->loglevel >= 1 ){
-     *(session->logfile) << "JTL :: Error writing JPEG tile" << endl;
+     *(session->logfile) << "JTL :: Error writing tile" << endl;
    }
   }
 
 
   if( session->out->flush() == -1 ) {
     if( session->loglevel >= 1 ){
-      *(session->logfile) << "JTL :: Error flushing JPEG tile" << endl;
+      *(session->logfile) << "JTL :: Error flushing tile" << endl;
     }
   }
 

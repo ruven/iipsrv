@@ -1,3 +1,11 @@
+21/09/2023:
+	- Major update of debug mode to allow requests to be made directly on the command line using standard input with
+	  output sent directly to a file without the need for a web server or FCGI. Debug mode activated when DEBUG
+	  defined in pre-processor during compilation.
+	  Also updated debugging information handling for both JPEG2000 codecs, which are now activated through separate
+	  KAKADU_DEBUG and OPENJPEG_DEBUG defines.
+
+
 11/09/2023:
 	- Added extra check for untiled TIFF images
 

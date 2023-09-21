@@ -1,7 +1,7 @@
 /*
     IIP FCGI server module - Main loop.
 
-    Copyright (C) 2000-2022 Ruven Pillay
+    Copyright (C) 2000-2023 Ruven Pillay
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -29,6 +29,9 @@
 #include <utility>
 #include <map>
 #include <algorithm>
+#ifdef DEBUG
+#include <iostream>
+#endif
 
 #include "TPTImage.h"
 #include "Tokenizer.h"
@@ -82,7 +85,6 @@ static void unsetenv(char *env_name) {
 // Define our default socket backlog
 #define DEFAULT_BACKLOG 2048
 
-//#define DEBUG 1
 
 using namespace std;
 
@@ -203,10 +205,11 @@ int main( int argc, char *argv[] )
   }
 
 
+#ifdef DEBUG
+  if( loglevel >= 1 ) logfile << "DEBUG mode: listening to input on command line and sending output to 'iipsrv.debug'" << endl << endl;
+#else
 
   // Set up our FCGI connnection
-
-#ifndef DEBUG
 
   FCGX_Request request;
   int listen_socket = 0;
@@ -221,7 +224,7 @@ int main( int argc, char *argv[] )
   if( argv[1] && (string(argv[1]) == "--bind") ){
     string socket = argv[2];
     if( !socket.length() ){
-      logfile << "No socket specified" << endl << endl;
+      if( loglevel >= 1 ) logfile << "No socket specified" << endl << endl;
       exit(1);
     }
     int backlog = DEFAULT_BACKLOG;
@@ -231,11 +234,11 @@ int main( int argc, char *argv[] )
     }
     listen_socket = FCGX_OpenSocket( socket.c_str(), backlog );
     if( listen_socket < 0 ){
-      logfile << "Unable to open socket '" << socket << "'" << endl << endl;
+      if( loglevel >= 1 ) logfile << "Unable to open socket '" << socket << "'" << endl << endl;
       exit(1);
     }
     standalone = true;
-    logfile << "Running in standalone mode on socket: " << socket << " with backlog: " << backlog << endl << endl;
+    if( loglevel >= 1 ) logfile << "Running in standalone mode on socket: " << socket << " with backlog: " << backlog << endl << endl;
   }
 
 
@@ -542,24 +545,28 @@ int main( int argc, char *argv[] )
   // Create our tile cache
   Cache tileCache( max_image_cache_size );
   tc = &tileCache;
+
+  // Declare our task object and request string
   Task* task = NULL;
+  string request_string;
 
 
-
-  /****************
-    Main FCGI loop
-  ****************/
+  /********************
+    Main Request Loop
+  ********************/
 
 #ifdef DEBUG
-  int status = true;
-  while( status ){
 
-    FILE *f = fopen( "test.jpg", "w" );
+  // When in debug mode, listen for requests on standard in and output to a file
+  while( getline( cin, request_string ) ){
+
+    FILE *f = fopen( "iipsrv.debug", "w" );
+    if( f == NULL ) exit( 1 );
     FileWriter writer( f );
-    status = false;
 
 #else
 
+  // In FCGI mode, listen for FCGI requests
   while( FCGX_Accept_r( &request ) >= 0 ){
 
     FCGIWriter writer( request.out );
@@ -591,12 +598,12 @@ int main( int argc, char *argv[] )
     view.setEmbedICC( embed_icc );
 
 
-
     // Create an IIPResponse object - we use this for the OBJ requests.
     // As the commands return images etc, they handle their own responses.
     IIPResponse response;
     response.setCORS( cors );
     response.setCacheControl( cache_control );
+
 
     try{
 
@@ -625,10 +632,11 @@ int main( int argc, char *argv[] )
       session.codecOptions["KAKADU_READMODE"] = kdu_readmode;
 #endif
 
-      char* header = NULL;
-      string request_string;
 
 #ifndef DEBUG
+
+      char* header = NULL;
+
       // If we have a URI prefix mapping, first test for a match between the map prefix string
       //  and the full REQUEST_URI variable
       if( !uri_map.empty() ){
@@ -652,18 +660,13 @@ int main( int argc, char *argv[] )
 	  if( loglevel >= 2 ) logfile << "Request URI mapped to " << request_string << endl;
 	}
       }
-#endif
+
 
       // If the request string hasn't been set through a URI map, get it from the QUERY_STRING variable
       if( request_string.empty() ){
 
 	// Get the query into a string
-#ifdef DEBUG
-	header = argv[1];
-#else
 	header = FCGX_GetParam( "QUERY_STRING", request.envp );
-#endif
-
 	request_string = (header!=NULL)? header : "";
 
 	header = FCGX_GetParam( "REQUEST_METHOD", request.envp );
@@ -690,7 +693,6 @@ int main( int argc, char *argv[] )
 	}
       }
 
-
       // Check that we actually have a request string. If not, just show server home page
       if( request_string.empty() ){
 	response.setStatus( "200 OK" );
@@ -702,12 +704,7 @@ int main( int argc, char *argv[] )
       }
 
 
-      // Store some headers
-      session.headers["QUERY_STRING"] = request_string;
-      session.headers["BASE_URL"] = base_url;
-
-#ifndef DEBUG
-      // Get several other HTTP headers
+      // Get several important HTTP headers
       if( (header = FCGX_GetParam("SERVER_PROTOCOL", request.envp)) ){
         session.headers["SERVER_PROTOCOL"] = string(header);
       }
@@ -736,7 +733,14 @@ int main( int argc, char *argv[] )
       }
 #endif
 
+
+      // Store some key session information not necessarily found in HTTP headers
+      session.headers["QUERY_STRING"] = request_string;
+      session.headers["BASE_URL"] = base_url;
+
+
 #ifdef HAVE_MEMCACHED
+#ifndef DEBUG
       // Check whether this exists in memcached, but only if we haven't had an if_modified_since
       // request, which should always be faster to send
       if( !header || session.headers["HTTP_IF_MODIFIED_SINCE"].empty() ){
@@ -749,10 +753,10 @@ int main( int argc, char *argv[] )
 	}
       }
 #endif
+#endif
 
 
       // Parse up the command list
-
       list < pair<string,string> > requests;
       list < pair<string,string> > :: const_iterator commands;
 
@@ -833,6 +837,7 @@ int main( int argc, char *argv[] )
       ////////////////////////////////////////////////////////
 
 #ifdef HAVE_MEMCACHED
+#ifndef DEBUG
       if( response.cachable() && memcached.connected() ){
 	Timer memcached_timer;
 	memcached_timer.start();
@@ -843,7 +848,7 @@ int main( int argc, char *argv[] )
 	}
       }
 #endif
-
+#endif
 
 
       //////////////////////////////////////////////////////
@@ -988,26 +993,22 @@ int main( int argc, char *argv[] )
     image = NULL;
     IIPcount ++;
 
+
 #ifdef DEBUG
     fclose( f );
 #endif
 
 
-
     // How long did this request take?
     if( loglevel >= 2 ){
-      logfile << "Total Request Time: " << request_timer.getTime() << " microseconds" << endl;
-    }
-
-
-    if( loglevel >= 2 ){
-      logfile << "image closed and deleted" << endl
-	      << "Server count is " << IIPcount << endl << endl;
+      logfile << "Total Request Time: " << request_timer.getTime() << " microseconds" << endl
+	      << "Image closed and deleted" << endl
+	      << "Server count: " << IIPcount << endl << endl;
     }
 
 
 
-    ///////// End of FCGI_ACCEPT while loop or for loop in debug mode //////////
+    ///////// End of FCGI_ACCEPT while loop or while loop in debug mode //////////
   }
 
 
@@ -1017,7 +1018,9 @@ int main( int argc, char *argv[] )
 
 
   // Close our FCGI connection
+#ifndef DEBUG
   FCGX_Finish_r( &request );
+#endif
 
 
   if( loglevel >= 1 ){

@@ -7,7 +7,7 @@
     Culture of the Czech Republic.
 
 
-    Copyright (C) 2009-2022 IIPImage.
+    Copyright (C) 2009-2023 IIPImage.
     Author: Ruven Pillay
 
     This program is free software; you can redistribute it and/or modify
@@ -70,7 +70,6 @@ static unsigned int get_concurrency(){ return 0; }
 
 
 #include "Timer.h"
-//#define DEBUG 1
 
 
 using namespace std;
@@ -130,7 +129,7 @@ void KakaduImage::openImage()
   updateTimestamp( filename );
 
 
-#ifdef DEBUG
+#ifdef KAKADU_DEBUG
   Timer timer;
   timer.start();
 #endif
@@ -185,7 +184,7 @@ void KakaduImage::openImage()
   // Load our metadata if not already loaded
   if( bpc == 0 ) loadImageInfo( currentX, currentY );
 
-#ifdef DEBUG
+#ifdef KAKADU_DEBUG
   logfile << "Kakadu :: openImage() :: " << timer.getTime() << " microseconds" << endl;
 #endif
 
@@ -202,12 +201,12 @@ void KakaduImage::loadImageInfo( int seq, int ang )
   jpx_layer_source jpx_layer;
 
   // Check for High Throughput JPEG2000 codestream
-#ifdef DEBUG
-  siz_params *siz = codestream.access_siz();
-  int pcap_value = 0;
-  siz->get( Scap, 0, 0, pcap_value );
-  if( pcap_value & 0x00020000 ) logfile << "Kakadu :: HTJ2K codestream" << endl;
-#endif
+  if( IIPImage::logging ){
+    siz_params *siz = codestream.access_siz();
+    int pcap_value = 0;
+    siz->get( Scap, 0, 0, pcap_value );
+    if( pcap_value & 0x00020000 ) logfile << "Kakadu :: HTJ2K codestream" << endl;
+  }
 
   // Malformed images can throw exceptions here with older versions of Kakadu
   try{
@@ -245,7 +244,7 @@ void KakaduImage::loadImageInfo( int seq, int ang )
   unsigned int w = layer_size.x;
   unsigned int h = layer_size.y;
 
-#ifdef DEBUG
+#ifdef KAKADU_DEBUG
   logfile << "Kakadu :: DWT Levels: " << numResolutions << endl;
   logfile << "Kakadu :: Pixel Resolution : " << w << "x" << h << endl;
   logfile << "Kakadu :: Capture Resolution : " << dpi_x << "x" << dpi_y << " pixels/cm" << endl;
@@ -264,7 +263,7 @@ void KakaduImage::loadImageInfo( int seq, int ang )
     h = floor( h/2.0 );
     image_widths.push_back(w);
     image_heights.push_back(h);
-#ifdef DEBUG
+#ifdef KAKADU_DEBUG
     logfile << "Kakadu :: Resolution : " << w << "x" << h << endl;
 #endif
   }
@@ -287,7 +286,7 @@ void KakaduImage::loadImageInfo( int seq, int ang )
   }
 
   if( n > numResolutions ){
-#ifdef DEBUG
+#ifdef KAKADU_DEBUG
     logfile << "Kakadu :: Warning! Insufficient resolution levels in JPEG2000 stream. Will generate " << n-numResolutions << " extra levels dynamically -" << endl
 	    << "Kakadu :: However, you are advised to regenerate the file with at least " << n << " levels" << endl;
 #endif
@@ -317,7 +316,7 @@ void KakaduImage::loadImageInfo( int seq, int ang )
       lut.push_back((int)((lt[n]+0.5)*255));
     }
     delete[] lt;
-#ifdef DEBUG
+#ifdef KAKADU_DEBUG
     logfile << "Kakadu :: Palette with " << j2k_palette.get_num_luts() << " LUT and " << entries
 	    << " entries/LUT with values " << lut[0] << "," << lut[1] << endl;
 #endif
@@ -339,7 +338,7 @@ void KakaduImage::loadImageInfo( int seq, int ang )
     if( cs == JP2_sRGB_SPACE || cs == JP2_iccRGB_SPACE || cs == JP2_esRGB_SPACE || cs == JP2_CIELab_SPACE ) colourspace = sRGB;
     //else if ( cs == JP2_CIELab_SPACE ) colourspace = CIELAB;
     else {
-#ifdef DEBUG
+#ifdef KAKADU_DEBUG
     	logfile << "WARNING : colour space not found, setting sRGB colour space value" << endl;
 #endif
     	colourspace = sRGB;
@@ -350,7 +349,7 @@ void KakaduImage::loadImageInfo( int seq, int ang )
   // Get the number of quality layers - must first open a tile, however
   kdu_tile kt = codestream.open_tile(kdu_coords(0,0),NULL);
   quality_layers = codestream.get_max_tile_layers();
-#ifdef DEBUG
+#ifdef KAKADU_DEBUG
   string cs;
   switch( j2k_colour.get_space() ){
     case JP2_sRGB_SPACE:
@@ -401,7 +400,7 @@ void KakaduImage::loadImageInfo( int seq, int ang )
       kdu_long bs = box.get_box_bytes();
       kdu_long hs = box.get_box_header_length();
       kdu_long xmp_size = bs - hs;
-#if DEBUG
+#if KAKADU_DEBUG
       logfile << "Kakadu :: XML metadata size: " << xmp_size << endl;
 #endif
       // Skip box header
@@ -423,7 +422,7 @@ void KakaduImage::loadImageInfo( int seq, int ang )
 // Close our image descriptors
 void KakaduImage::closeImage()
 {
-#ifdef DEBUG
+#ifdef KAKADU_DEBUG
   Timer timer;
   timer.start();
 #endif
@@ -435,7 +434,7 @@ void KakaduImage::closeImage()
   src.close();
   jpx_input.close();
 
-#ifdef DEBUG
+#ifdef KAKADU_DEBUG
   logfile << "Kakadu :: closeImage() :: " << timer.getTime() << " microseconds" << endl;
 #endif
 }
@@ -450,7 +449,7 @@ RawTile KakaduImage::getTile( int seq, int ang, unsigned int res, int layers, un
   if( bpc <= 16 && bpc > 8 ) obpc = 16;
   else if( bpc <= 8 ) obpc = 8;
 
-#ifdef DEBUG
+#ifdef KAKADU_DEBUG
   Timer timer;
   timer.start();
 #endif
@@ -498,7 +497,7 @@ RawTile KakaduImage::getTile( int seq, int ang, unsigned int res, int layers, un
   int xoffset = (tile % ntlx) * tile_widths[0];
   int yoffset = (unsigned int) floor((double)(tile/ntlx)) * tile_heights[0];
 
-#ifdef DEBUG
+#ifdef KAKADU_DEBUG
   logfile << "Kakadu :: Tile size: " << tw << "x" << th << "@" << channels << endl;
 #endif
 
@@ -516,7 +515,7 @@ RawTile KakaduImage::getTile( int seq, int ang, unsigned int res, int layers, un
   process( res, layers, xoffset, yoffset, tw, th, rawtile.data );
 
 
-#ifdef DEBUG
+#ifdef KAKADU_DEBUG
   logfile << "Kakadu :: bytes parsed: " << codestream.get_total_bytes(true) << endl;
   logfile << "Kakadu :: getTile() :: " << timer.getTime() << " microseconds" << endl;
 #endif
@@ -534,7 +533,7 @@ RawTile KakaduImage::getRegion( int seq, int ang, unsigned int res, int layers, 
   if( bpc <= 16 && bpc > 8 ) obpc = 16;
   else if( bpc <= 8 ) obpc = 8;
 
-#ifdef DEBUG
+#ifdef KAKADU_DEBUG
   Timer timer;
   timer.start();
 #endif
@@ -549,7 +548,7 @@ RawTile KakaduImage::getRegion( int seq, int ang, unsigned int res, int layers, 
 
   process( res, layers, x, y, w, h, rawtile.data );
 
-#ifdef DEBUG
+#ifdef KAKADU_DEBUG
   logfile << "Kakadu :: getRegion() :: " << timer.getTime() << " microseconds" << endl;
 #endif
 
@@ -577,7 +576,7 @@ void KakaduImage::process( unsigned int res, int layers, int xoffset, int yoffse
     tw *= factor;
     th *= factor;
     vipsres = numResolutions - 1 - virtual_levels;
-#ifdef DEBUG
+#ifdef KAKADU_DEBUG
   logfile << "Kakadu :: using smallest existing resolution " << virtual_levels << endl;
 #endif
   }
@@ -620,7 +619,7 @@ void KakaduImage::process( unsigned int res, int layers, int xoffset, int yoffse
 
 
 
-#ifdef DEBUG
+#ifdef KAKADU_DEBUG
   logfile << "Kakadu :: decompressor init with " << num_threads << " threads" << endl;
   logfile << "Kakadu :: decoding " << layers << " quality layers" << endl;
 #endif
@@ -641,7 +640,7 @@ void KakaduImage::process( unsigned int res, int layers, int xoffset, int yoffse
     stripe_heights = new int[channels];
     codestream.get_dims(0,comp_dims,true);
 
-#ifdef DEBUG
+#ifdef KAKADU_DEBUG
     logfile << "Kakadu :: decompressor starting" << endl;
 
     logfile << "Kakadu :: requested region on high resolution canvas: position: "
@@ -654,7 +653,7 @@ void KakaduImage::process( unsigned int res, int layers, int xoffset, int yoffse
 
     // Make sure we don't have zero or negative sized images
     if( comp_dims.size.x <= 0 || comp_dims.size.y <= 0 ){
-#ifdef DEBUG
+#ifdef KAKADU_DEBUG
       logfile << "Kakadu :: Error: region of zero size requested" << endl;
 #endif
       throw 1;
@@ -668,7 +667,7 @@ void KakaduImage::process( unsigned int res, int layers, int xoffset, int yoffse
     decompressor.get_recommended_stripe_heights( comp_dims.size.y,
 						 1024, stripe_heights, NULL );
 
-#ifdef DEBUG
+#ifdef KAKADU_DEBUG
     logfile << "Kakadu :: Allocating memory for stripe height " << stripe_heights[0] << endl;
 #endif
 
@@ -706,14 +705,14 @@ void KakaduImage::process( unsigned int res, int layers, int xoffset, int yoffse
 	  stripe_buffer = new kdu_byte[tw*stripe_heights[0]*channels];
 	}
 
-#ifdef DEBUG
+#ifdef KAKADU_DEBUG
 	logfile << "Kakadu :: Stripe height increase: re-allocating memory for height " << stripe_heights[0] << endl;
 #endif
       }
 
       // Check for zero height, which can occur with incorrect position or size parameters
       if( stripe_heights[0] == 0 ){
-#ifdef DEBUG
+#ifdef KAKADU_DEBUG
 	logfile << "Kakadu :: Error: Zero stripe height" << endl;
 #endif
 	throw 1;
@@ -730,7 +729,7 @@ void KakaduImage::process( unsigned int res, int layers, int xoffset, int yoffse
       }
 
 
-#ifdef DEBUG
+#ifdef KAKADU_DEBUG
       logfile << "Kakadu :: stripe pulled" << endl;
 #endif
 
@@ -773,7 +772,7 @@ void KakaduImage::process( unsigned int res, int layers, int xoffset, int yoffse
       // Advance our output buffer pointer
       index += tw * stripe_heights[0] * channels;
 
-#ifdef DEBUG
+#ifdef KAKADU_DEBUG
       logfile << "Kakadu :: stripe complete with height " << stripe_heights[0] << endl;
 #endif
 
@@ -788,7 +787,7 @@ void KakaduImage::process( unsigned int res, int layers, int xoffset, int yoffse
     // Shrink virtual resolution tiles
     if( res < virtual_levels ){
 
-#ifdef DEBUG
+#ifdef KAKADU_DEBUG
       logfile << "Kakadu :: resizing tile to virtual resolution with factor " << (1 << (virtual_levels-res)) << endl;
 #endif
 
@@ -813,7 +812,7 @@ void KakaduImage::process( unsigned int res, int layers, int xoffset, int yoffse
     // Delete our local buffer
     delete_buffer( buffer );
 
-#ifdef DEBUG
+#ifdef KAKADU_DEBUG
     logfile << "Kakadu :: decompressor completed" << endl;
 #endif
 

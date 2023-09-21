@@ -511,6 +511,47 @@ For Apache, load mod_proxy and mod_proxy_fcgi and add the following line to Apac
     ProxyPass "/fcgi-bin/iipsrv.fcgi" "fcgi://192.168.0.1:9000/"
 
 
+
+DEBUGGING
+---------
+
+Basic debugging can be carried out by simply using the server logs. Verbose logging can be obtained
+by increasing the VERBOSITY startup variable. Implemented levels of verbosity range from 0 (no logging)
+to 6 (maximum amount of logging). The pre-processor defines KAKADU_DEBUG and OPENJPEG_DEBUG can
+additionally be set at compile time to generate additional detailed logging from these particular decoders.
+
+It is also possible to test iipsrv without the use of FCGI or a web server. In this case, you will need to
+compile iipsrv with DEBUG defined for the pre-processor. This can be done during the ./configure stage before
+building using make:
+
+    CXXFLAGS="-DDEBUG" ./configure
+    make
+
+The resulting binary can be started on the command line and will accept any supported imaging protocol requests
+(IIP, IIIF, Deepzoom or Zoomify) without any HTTP prefix or domain name (e.g. FIF=test.tif&WID=500&CVT=JPEG) as
+standard input on the command line and output the image or data to the file "iipsrv.debug" in the same directory.
+Successive requests will replace the contents of iipsrv.debug with the output of the new request. For example:
+
+    % ./src/iipsrv.fcgi
+    FIF=test.tif&WID=500&CVT=JPEG
+    IIIF=/test.tif/full/500,/0/default.jpg
+    FIF=test.tif&WID=600&ROT=90&&CVT=PNG
+
+On Linux/Unix based systems, it's also possible to use pipes or redirection to send a list of requests within a file
+with iipsrv automatically terminating at the end of the list:
+
+    iipsrv.fcgi < request_list.txt
+
+Debugging using memory testing tools, such as valgrind (https://valgrind.org/), can be performed by starting
+iipsrv on the command-line through the testing tool. For example:
+
+    valgrind iipsrv.fcgi --bind 0.0.0.0:9000
+
+This can work in conjunction with debugging mode or together with a web server in normal FCGI-mode. In this case
+the web server must be setup to proxy forward FCGI requests to the address and port specified when starting iipsrv.
+
+
+
 ------------------------------------------------------------------------------------
 Please refer to the project site https://iipimage.sourceforge.io for further details
 
