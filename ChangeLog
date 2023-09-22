@@ -1,3 +1,8 @@
+22/09/2023:
+	- Removed the max size limit from IIIF info.json sizes array. This now provides the full list of resolution sizes
+	  with the maxWidth and maxHeight variables specifying the maximum available export size.
+
+
 21/09/2023:
 	- Major update of debug mode to allow requests to be made directly on the command line using standard input with
 	  output sent directly to a file without the need for a web server or FCGI. Debug mode activated when DEBUG
