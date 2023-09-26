@@ -522,9 +522,10 @@ additionally be set at compile time to generate additional detailed logging from
 
 It is also possible to test iipsrv without the use of FCGI or a web server. In this case, you will need to
 compile iipsrv with DEBUG defined for the pre-processor. This can be done during the ./configure stage before
-building using make:
+building using make either manually by setting adding -DDEBUG to CXXFLAGS or automatically through the
+--enable-debug-mode option:
 
-    CXXFLAGS="-DDEBUG" ./configure
+    ./configure --enable-debug-mode
     make
 
 The resulting binary can be started on the command line and will accept any supported imaging protocol requests

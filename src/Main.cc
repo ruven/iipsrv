@@ -570,6 +570,7 @@ int main( int argc, char *argv[] )
   while( FCGX_Accept_r( &request ) >= 0 ){
 
     FCGIWriter writer( request.out );
+    request_string.clear();
 
 #endif
 

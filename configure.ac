@@ -71,14 +71,14 @@ AC_LANG_POP([C++])
 #************************************************************
 # Enable debugging
 
-AC_ARG_ENABLE([debug],
-     [  --enable-debug          turn on debugging],
-     [case "${enableval}" in
-       yes) debug=true ;;
-       no)  debug=false ;;
-       *) AC_MSG_ERROR([bad value ${enableval} for --enable-debug]) ;;
-     esac],[debug=false])
-AM_CONDITIONAL([DEBUG], [test x$debug = xtrue])
+AC_ARG_ENABLE([debug-mode],
+              [  --enable-debug-mode     enable debugging mode (no FCGI)],
+              [AC_DEFINE(DEBUG)
+	       AC_DEFINE(KAKADU_DEBUG)
+               AC_DEFINE(OPENJPEG_DEBUG)
+               DEBUG=true
+	       AC_MSG_RESULT([configure: enabling debug mode])]
+)
 
 
 
@@ -193,7 +193,7 @@ fi
 
 WEBP=false
 AC_ARG_ENABLE( webp,
-    [  --disable-webp           disable WebP])
+    [  --disable-webp          disable WebP])
 
 
 if test "x$enable_webp" == "xno"; then
@@ -468,5 +468,8 @@ Options Enabled:
  OpenMP      :  ${OPENMP}
  Loggers     :  ${LOGGING}
  PNG Output  :  ${PNG}
- WebP Output :  ${WEBP}
-])
+ WebP Output :  ${WEBP}])
+
+if [test "x${DEBUG}" = xtrue]; then
+  AC_MSG_RESULT([ Debug mode  :  activated])
+fi

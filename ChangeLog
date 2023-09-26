@@ -1,3 +1,8 @@
+26/09/2023:
+	- Fix to bug introduced by debug mode change: request_string needs to be cleared at top of FCGI while loop.
+	- Added --enable-debug-mode option to configure script.
+
+
 22/09/2023:
 	- Removed the max size limit from IIIF info.json sizes array. This now provides the full list of resolution sizes
 	  with the maxWidth and maxHeight variables specifying the maximum available export size.
