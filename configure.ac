@@ -1,6 +1,8 @@
 # Process this file with autoconf to produce a configure script.
 
-AC_INIT( [iipsrv], [1.2], [ruven@users.sourceforge.net] )
+AC_INIT( [iipsrv], [1.2], [ruven@users.sourceforge.net], [iipsrv], [https://iipimage.sourceforge.io] )
+AC_MSG_RESULT([Configuring iipsrv ...
+])
 AC_CONFIG_MACRO_DIR([m4])
 AM_INIT_AUTOMAKE
 
@@ -10,22 +12,21 @@ AC_PREFIX_DEFAULT( `pwd` )
 
 # Checks for programs.
 AC_PROG_CXX
-AC_PROG_AWK
 AC_PROG_CC
-AC_PROG_CPP
 AC_PROG_INSTALL
 AC_PROG_LN_S
 AC_PROG_MAKE_SET
-AM_PROG_CC_C_O
 
 AC_HEADER_STDBOOL
 AC_C_INLINE
 AC_TYPE_SIZE_T
+AC_TYPE_UINT8_T
+AC_TYPE_UINT32_T
 
 LT_INIT
 
 
-# Checks for header files.
+# Checks for header specific files.
 AC_CHECK_HEADERS(glob.h)
 AC_CHECK_HEADERS(time.h)
 AC_CHECK_HEADERS(sys/time.h)
@@ -33,11 +34,6 @@ AC_CHECK_HEADERS(syslog.h, [LOGGING="file, syslog"], [LOGGING="file"])
 AC_FUNC_MALLOC
 AC_CHECK_LIB(m, log2, AC_DEFINE(HAVE_LOG2))
 AC_CHECK_FUNCS([setenv])
-
-AC_LANG_SAVE
-AC_LANG_CPLUSPLUS
-AC_CHECK_HEADERS(ext/pool_allocator.h)
-AC_LANG_RESTORE
 
 
 # For our windows build
@@ -49,6 +45,9 @@ AC_SYS_LARGEFILE
 # Check for C99 isfinite function
 AX_CXX_HAVE_ISFINITE
 
+# Pthread support
+ACX_PTHREAD
+
 # Check for OpenMP
 AC_OPENMP
 OPENMP=false
@@ -58,12 +57,14 @@ AS_IF([test "x$enable_openmp" != "xyes"], [
  OPENMP=true
 ])
 
+
 # Check for C++ chrono timers and availability of various hash map implementations
 AC_LANG_PUSH([C++])
-AC_CHECK_HEADER([chrono], [AC_DEFINE(HAVE_STL_CHRONO)])
-AC_CHECK_HEADER([unordered_map], [AC_DEFINE(HAVE_UNORDERED_MAP)])
-AC_CHECK_HEADER([tr1/unordered_map], [AC_DEFINE(HAVE_TR1_UNORDERED_MAP)])
-AC_CHECK_HEADER([ext/hash_map], [AC_DEFINE(HAVE_EXT_HASH_MAP)])
+AC_CHECK_HEADERS(ext/pool_allocator.h)
+AC_CHECK_HEADERS([chrono])
+AC_CHECK_HEADERS([unordered_map])
+AC_CHECK_HEADERS([tr1/unordered_map])
+AC_CHECK_HEADERS([ext/hash_map])
 AX_CXX_COMPILE_STDCXX(11)
 AC_LANG_POP([C++])
 
@@ -150,6 +151,7 @@ AC_CHECK_LIB( fcgi, FCGI_Accept,
 		AC_MSG_RESULT([configure: unable to find system libfcgi - using bundled version]);
 			LIBFCGI_INCLUDES="-I../fcgi/include -I../fcgi";
 			LIBFCGI_LIBS="../fcgi/libfcgi/libfcgi.a";
+			BUILD_FCGI=true;
 			AM_CONDITIONAL([BUNDLED_FCGI], [true])
 )
 
@@ -402,13 +404,12 @@ fi
 #     FCGI library configure
 #************************************************************
 
-AC_CHECK_LIB([nsl],       [gethostbyname])
-AC_CHECK_LIB([socket],    [socket])
-ACX_PTHREAD([THREADED=threaded${EXEEXT}])
-AC_SUBST([THREADED])
-FCGI_COMMON_CHECKS
-AC_REPLACE_FUNCS([strerror])
-
+if [test "x${BUILD_FCGI}" = xtrue]; then
+	AC_CHECK_LIB([nsl],       [gethostbyname])
+	AC_CHECK_LIB([socket],    [socket])
+	FCGI_COMMON_CHECKS
+	AC_REPLACE_FUNCS([strerror])
+fi
 
 
 SYSTEM=unix
@@ -428,7 +429,7 @@ AC_OUTPUT
 # Print out option status
 AC_MSG_RESULT([
 Options Enabled:
----------------
+--------------------------------
  Memcached   :  ${MEMCACHED}
  JPEG2000    :  ${JPEG2000_CODEC}
  OpenMP      :  ${OPENMP}
@@ -439,3 +440,6 @@ Options Enabled:
 if [test "x${DEBUG}" = xtrue]; then
   AC_MSG_RESULT([ Debug mode  :  activated])
 fi
+
+AC_MSG_RESULT([--------------------------------
+])

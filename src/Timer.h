@@ -1,6 +1,6 @@
 /*  IIPImage server :: Timer class
 
-    Copyright (C) 2005-2022 Ruven Pillay.
+    Copyright (C) 2005-2023 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -27,7 +27,7 @@
 #endif
 
 // Use the STL chrono classes if available
-#ifdef HAVE_STL_CHRONO
+#ifdef HAVE_CHRONO
 #include <chrono>
 #endif
 
@@ -42,7 +42,7 @@ class Timer {
 
  private:
 
-#ifdef HAVE_STL_CHRONO
+#ifdef HAVE_CHRONO
   /// Our start time based on the high_resolution_clock
   std::chrono::time_point<std::chrono::high_resolution_clock> start_t;
 #else
@@ -71,7 +71,7 @@ public:
   /// Set our time
   /** Initialise with our start time */
   void start() {
-#ifdef HAVE_STL_CHRONO
+#ifdef HAVE_CHRONO
     start_t = std::chrono::high_resolution_clock::now();
 #else
     tz.tz_minuteswest = 0;
@@ -86,7 +86,7 @@ public:
 
   /// Return time since we were initialised in microseconds 
   long getTime() {
-#ifdef HAVE_STL_CHRONO
+#ifdef HAVE_CHRONO
     auto d = std::chrono::duration_cast<std::chrono::microseconds>( std::chrono::high_resolution_clock::now() - start_t );
     return d.count();
 #else

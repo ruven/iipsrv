@@ -7,7 +7,7 @@
     Culture of the Czech Republic.
 
 
-    Copyright (C) 2010-2022 Ruven Pillay.
+    Copyright (C) 2010-2023 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -94,7 +94,7 @@ void Watermark::apply( void* data, unsigned int width, unsigned int height, unsi
   if( !_isSet || (_probability==0) || (_opacity==0) ) return;
 
   // Get random number as a float between 0 and 1
-  float random = (float) rand() / RAND_MAX;
+  float random = (float)( rand() / RAND_MAX );
  
   // Only apply if our random number is less than our given probability
   if( random < _probability ){
@@ -102,13 +102,13 @@ void Watermark::apply( void* data, unsigned int width, unsigned int height, unsi
     // Vary watermark position randomly within the tile depending on available space
     unsigned int xoffset = 0;
     if( width > _width ){
-      random = (float) rand() / RAND_MAX;
+      random = (float)( rand() / RAND_MAX );
       xoffset = random * (width - _width);
     }
 
     unsigned int yoffset = 0;
     if( height > _height ){
-      random = (float) rand() / RAND_MAX;
+      random = (float)( rand() / RAND_MAX );
       yoffset = random * (height - _height);
     }
 
