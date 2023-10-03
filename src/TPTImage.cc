@@ -395,7 +395,11 @@ RawTile TPTImage::getTile( int x, int y, unsigned int res, int layers, unsigned 
 
     // If we have an image stack within our TIFF, change to the appropriate directory
     if( (int)cd != x ){
-      if( !TIFFSetDirectory( tiff, x ) ) throw file_error( "TPTImage :: TIFFSetDirectory() failed for stack " + x );
+      if( !TIFFSetDirectory( tiff, x ) ){
+	ostringstream error;
+	error << "TPTImage :: TIFFSetDirectory() failed for stack " << x;
+	throw file_error( error.str() );
+      }
       cd = x;
     }
 
@@ -408,7 +412,9 @@ RawTile TPTImage::getTile( int x, int y, unsigned int res, int layers, unsigned 
     // Change to the appropriate SubIFD directory if necessary
     if( (vipsres < (int)subifds.size()) && (subifds[vipsres] > 0) ){
       if( !TIFFSetSubDirectory( tiff, subifds[vipsres] ) ){
-	throw file_error( "TPTImage :: TIFFSetSubDirectory() failed for SubIFD offset " + subifds[vipsres] );
+	ostringstream error;
+	error << "TPTImage :: TIFFSetSubDirectory() failed for SubIFD offset " << subifds[vipsres];
+	throw file_error( error.str() );
       }
     }
   }
@@ -416,7 +422,9 @@ RawTile TPTImage::getTile( int x, int y, unsigned int res, int layers, unsigned 
   else {
     if( vipsres != (int)cd ){
       if( !TIFFSetDirectory( tiff, resolution_ids[vipsres] ) ){
-	throw file_error( "TPTImage :: TIFFSetDirectory() failed for resolution " + vipsres );
+	ostringstream error;
+	error << "TPTImage :: TIFFSetDirectory() failed for resolution " << vipsres;
+	throw file_error( error.str() );
       }
     }
   }

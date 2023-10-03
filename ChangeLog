@@ -1,5 +1,6 @@
 03/10/2023:
 	- Cleanup of autoconf C++ checks and added conditional building of FCGI
+	- Fixes for compilation errors on Mac OS X / clang
 
 
 26/09/2023:
