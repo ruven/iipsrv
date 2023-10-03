@@ -25,6 +25,7 @@
 #include <cstring>
 #include <string>
 #include <cstdlib>
+#include <cstdint>
 #include <ctime>
 
 #if !( (__cplusplus >= 201103L) || ((defined(_MSC_VER) && _MSC_VER >= 1900)) )
