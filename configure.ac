@@ -39,10 +39,6 @@ AC_LANG_CPLUSPLUS
 AC_CHECK_HEADERS(ext/pool_allocator.h)
 AC_LANG_RESTORE
 
-# Checks for various hash map implementations
-AC_CXX_HEADER_UNORDERED_MAP
-AC_HEADER_TR1_UNORDERED_MAP
-AX_CXX_HAVE_EXT_HASH_MAP
 
 # For our windows build
 AC_CHECK_HEADERS(windows.h)
@@ -62,9 +58,12 @@ AS_IF([test "x$enable_openmp" != "xyes"], [
  OPENMP=true
 ])
 
-# Check for C++11 chrono timers
+# Check for C++ chrono timers and availability of various hash map implementations
 AC_LANG_PUSH([C++])
 AC_CHECK_HEADER([chrono], [AC_DEFINE(HAVE_STL_CHRONO)])
+AC_CHECK_HEADER([unordered_map], [AC_DEFINE(HAVE_UNORDERED_MAP)])
+AC_CHECK_HEADER([tr1/unordered_map], [AC_DEFINE(HAVE_TR1_UNORDERED_MAP)])
+AC_CHECK_HEADER([ext/hash_map], [AC_DEFINE(HAVE_EXT_HASH_MAP)])
 AC_LANG_POP([C++])
 
 
@@ -145,16 +144,17 @@ AC_ARG_WITH( fcgi-lib,
 
 AC_CHECK_LIB( fcgi, FCGI_Accept,
 		AC_MSG_RESULT([configure: using system libfcgi]);
-			LIBFCGI_LIBS="-lfcgi",
+			LIBFCGI_LIBS="-lfcgi";
+			AM_CONDITIONAL([BUNDLED_FCGI], [false]),
 		AC_MSG_RESULT([configure: unable to find system libfcgi - using bundled version]);
 			LIBFCGI_INCLUDES="-I../fcgi/include -I../fcgi";
-			LIBFCGI_LIBS="../fcgi/libfcgi/libfcgi.a"
+			LIBFCGI_LIBS="../fcgi/libfcgi/libfcgi.a";
+			AM_CONDITIONAL([BUNDLED_FCGI], [true])
 )
 
 AC_SUBST(LIBFCGI_INCLUDES)
 AC_SUBST(LIBFCGI_LDFLAGS)
 AC_SUBST(LIBFCGI_LIBS)
-
 
 
 
@@ -401,52 +401,17 @@ fi
 #     FCGI library configure
 #************************************************************
 
-AC_LANG([C++])
-
-# autoconf defaults CXX to 'g++', so its unclear whether it exists/works
-AC_MSG_CHECKING([whether $CXX works])
-AC_TRY_COMPILE([#include <iostream>],
-               [std::cout << "ok";],
-               [AC_MSG_RESULT(yes)
-                LIBFCGIXX=libfcgi++.la
-                ECHO_CPP=echo-cpp${EXEEXT}
-                AC_MSG_CHECKING([whether cin has a streambuf assignment operator])
-                AC_TRY_COMPILE([#include <iostream>],
-                               [cin = static_cast<streambuf *>(0);],
-                               [AC_MSG_RESULT(yes)
-                                AC_DEFINE([HAVE_IOSTREAM_WITHASSIGN_STREAMBUF],  [1],
-                                          [Define if cin/cout/cerr has a streambuf assignment operator])],
-                               [AC_MSG_RESULT(no)])
-                AC_MSG_CHECKING([whether char_type is defined in the context of streambuf])
-                AC_TRY_COMPILE([#include <iostream>],
-                               [class fcgi_streambuf : public std::streambuf { char_type ct; }],
-                               [AC_MSG_RESULT(yes)
-                                AC_DEFINE([HAVE_STREAMBUF_CHAR_TYPE], [1],
-                                          [Define if char_type is defined in the context of streambuf])],
-                               [AC_MSG_RESULT(no)])],
-               [AC_MSG_RESULT(no)])
-AC_SUBST(LIBFCGIXX)
-AC_SUBST(ECHO_CPP)
-
-AC_LANG([C])
-
 AC_CHECK_LIB([nsl],       [gethostbyname])
 AC_CHECK_LIB([socket],    [socket])
-
-
 ACX_PTHREAD([THREADED=threaded${EXEEXT}])
 AC_SUBST([THREADED])
-
-
 FCGI_COMMON_CHECKS
-
 AC_REPLACE_FUNCS([strerror])
+
 
 
 SYSTEM=unix
 AC_SUBST([SYSTEM])
-
-AC_PROG_CC_WARNINGS
 
 AC_SUBST(LIBS)
 

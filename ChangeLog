@@ -1,3 +1,7 @@
+03/10/2023:
+	- Cleanup of autoconf C++ checks and added conditional building of FCGI
+
+
 26/09/2023:
 	- Fix to bug introduced by debug mode change: request_string needs to be cleared at top of FCGI while loop.
 	- Added --enable-debug-mode option to configure script.
