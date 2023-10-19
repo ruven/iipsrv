@@ -333,6 +333,10 @@ int main( int argc, char *argv[] )
   unsigned int iiif_version = Environment::getIIIFVersion();
 
 
+  // Set our IIIF multi-page delimiter
+  IIIF::delimiter = Environment::getIIIFDelimiter();
+
+
   // Create our image processing engine
   Transform processor;
 
@@ -367,6 +371,9 @@ int main( int argc, char *argv[] )
     logfile << "Setting HTTP Cache-Control header to '" << cache_control << "'" << endl;
     logfile << "Setting 3D file sequence name pattern to '" << filename_pattern << "'" << endl;
     logfile << "Setting default IIIF Image API version to " << iiif_version << endl;
+    if( IIIF::delimiter.size() ){
+      logfile << "Setting default IIIF multi-page delimiter to '" << IIIF::delimiter << "'" << endl;
+    }
     if( !cors.empty() ) logfile << "Setting Cross Origin Resource Sharing to '" << cors << "'" << endl;
     if( !base_url.empty() ) logfile << "Setting base URL to '" << base_url << "'" << endl;
     if( max_layers != 0 ){

@@ -246,6 +246,9 @@ recovery, 2 for 'resilient' mode with maximum recovery from codestream errors. S
 IIIF_VERSION: Set the major IIIF Image API version. Values should be a single digit. For example: 2 for versions 2 or 2.1 etc.
 3 for IIIF version 3.x. If not set, defaults to version IIIF 3.x
 
+IIIF_DELIMITER: Set delimiter to enable page or slice selection for a multi-page or image stack for IIIF requests.
+Delimiter can be a single character or an arbitrary string. Disabled by default.
+
 DECODER_MODULES: Comma separated list of external modules for decoding 
 other image formats. This is only necessary if you have activated 
 --enable-modules for ./configure and written your own image format 

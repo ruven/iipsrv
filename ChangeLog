@@ -1,3 +1,8 @@
+19/10/2023:
+	- Added new IIIF_DELIMITER configuration parameter to enable page or stack slice selection. Now disabled
+	  by default unless IIIF_DELIMITER is set. Resolves: https://github.com/ruven/iipsrv/issues/261
+
+
 03/10/2023:
 	- Cleanup of autoconf C++ checks and added conditional building of FCGI
 	- Fixes for compilation errors on Mac OS X / clang
@@ -39,7 +44,7 @@
 19/06/2023:
 	- Harmonized iipsrv identity string between JPEG and PNG.
 	- Added ability to choose a particular page or slice in an image stack when using IIIF by using
-	  a comma delimitter after the file name. For example: /image.tif,5/full/500/0/default.jpg (6th page)
+	  a comma delimiter after the file name. For example: /image.tif,5/full/500/0/default.jpg (6th page)
 
 
 05/06/2023:

@@ -49,6 +49,7 @@
 #define EMBED_ICC true
 #define KAKADU_READMODE 0
 #define IIIF_VERSION 3
+#define IIIF_DELIMITER ""
 
 
 #include <string>
@@ -342,6 +343,12 @@ class Environment {
     return version;
   }
 
+
+  static std::string getIIIFDelimiter(){
+    const char* envpara = getenv( "IIIF_DELIMITER" );
+    if( envpara ) return std::string( envpara );
+    else return IIIF_DELIMITER;
+  }
 
 };
 

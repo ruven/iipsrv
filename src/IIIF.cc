@@ -47,6 +47,11 @@
 
 using namespace std;
 
+
+// Need to initialize static member
+string IIIF::delimiter = "";
+
+
 // The request is in the form {identifier}/{region}/{size}/{rotation}/{quality}{.format}
 //     eg. filename.tif/full/full/0/native.jpg
 // or in the form {identifier}/info.json
@@ -121,11 +126,12 @@ void IIIF::run( Session* session, const string& src )
     return;
   }
 
+  // Re-usable string position variable
+  size_t pos;
+
   // Extract any meta-identifier in the file name that may refer to a page within an image stack or multi-page image
   // These consist of a semi-colon and a page or stack index of the form <image>;<index> For example: image.tif;3
-  const char delimitter = ',';
-  if( filename.find_last_of( delimitter ) != string::npos ){
-    size_t pos = filename.find_last_of( delimitter );
+  if( IIIF::delimiter.size() && ( (pos=filename.rfind(IIIF::delimiter)) != string::npos ) ){
     int page = atoi( filename.substr(pos+1).c_str() );
     session->view->xangle = page;
     filename = filename.substr(0,pos);
@@ -158,7 +164,7 @@ void IIIF::run( Session* session, const string& src )
 
   // Check whether the client has requested a specific IIIF version within the HTTP Accept header
   //  - first look for the protocol prefix
-  size_t pos = session->headers["HTTP_ACCEPT"].find( IIIF_PROTOCOL );
+  pos = session->headers["HTTP_ACCEPT"].find( IIIF_PROTOCOL );
   if( pos != string::npos ){
     // The Accept header should contain a versioned context string of the form http://iiif.io/api/image/3/context.json
     string profile = session->headers["HTTP_ACCEPT"].substr( pos, string(IIIF_PROTOCOL).size()+15 );
