@@ -7,4 +7,4 @@ endif
 
 SUBDIRS = $(FCGI_SRC) src man
 
-EXTRA_DIST = TODO COPYING.FCGI doc windows
+EXTRA_DIST = COPYING.FCGI doc windows docker

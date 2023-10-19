@@ -1,0 +1,116 @@
+Docker Instructions
+===================
+
+Several Docker builds are provided. The default Dockerfile uses the light-weight Alpine Linux base layer to
+compile and run the latest development version of iipsrv. The Lighttpd web server is also installed and
+configured to provide a fully functional installation. Images are read by default from the /images/ directory,
+which can be shared from the host system. The Docker build exports ports 80 (HTTP) and 9000 (FCGI).
+
+The Dockerfile for an identical container, but using a Debian base layer instead is available in Dockerfile.debian.
+
+A multi-platform build file for the latest release version of iipsrv is available in the file Dockerfile.release,
+which uses the official Alpine iipsrv package and which is used to create the docker images available from
+Docker Hub: https://hub.docker.com/r/iipsrv/iipsrv
+
+If you simply want to have a fully configured instance of iipsrv running, just download the official iipsrv
+Docker Hub image:
+
+    docker pull iipsrv/iipsrv
+
+
+Building the iipsrv Docker Container
+------------------------------------
+
+If you wish to build an image yourself, use one of the provided Docker files.
+
+To build the default Alpine docker image with the latest iipsrv Github sources (image size ~345MB):
+
+    docker image build -t iipsrv:edge ./
+
+To build the alternative Debian-based docker image with the latest iipsrv Github sources (image size ~520MB):
+
+    docker image build -t iipsrv-debian:edge -f Dockerfile.debian ./
+
+To build the Alpine-based stable release for a particular platform (note the trailing slash) (image size: 27MB):
+
+    docker image build -t iipsrv:stable --build-arg ARCH=amd64/ -f Dockerfile.release ./
+
+
+Starting the iipsrv Docker Container
+------------------------------------
+
+To start an instance of iipsrv, use the docker run command. The following example binds host port 9000
+to port 9000 within the container, binds host port 8080 to the container's web server (port 80) and
+makes /home/images on the host machine visible at /images/ within the container:
+
+    docker run -it -p 9000:9000 -p 8080:80 -v /home/images/:/images --rm iipsrv/iipsrv
+
+Change /home/images/ to wherever your images are stored and change iipsrv/iipsrv to iipsrv:edge etc if you have
+built the image yourself.
+
+If you don't require direct access to the FCGI port from outside the container, remove the "-p 9000:9000" parameter.
+If you wish to proxy forward from a web server outside the container to the instance of iipsrv within the container,
+configure your proxy to the host's IP address and port 9000. Remove the "-p 8080:80" if you don't need direct access
+to the container's web server.
+
+This will start an instance of both lighttpd and iipsrv and display the output of the iipsrv log to standard out.
+To stop and exit the container, use Control-C. Note that the --rm parameter destroys the container on exit - remove
+this if you wish to restart the same container later.
+
+
+Using the Container
+-------------------
+
+Once started, it's possible to connect to the container and make requests using any of iipsrv's supported APIs.
+The container provides a standard iipsrv service at /fcgi-bin/iipsrv.fcgi as well as an IIIF endpoint at
+/iiif/. 
+
+For example, to make an IIIF request to obtain an image (image.tif) resized to 500px in width:
+
+    http://<host>:8080/iiif/image.tif/full/500,/0/default.jpg
+
+The equivalent IIP request:
+
+    http://<host>:8080/fcgi-bin/iipsrv.fcgi?FIF=image.tif&WID=500&CVT=JPEG
+
+<host> should be either localhost if Docker is runnning on the same machine or the IP address of the Docker host.
+
+
+Setting Parameters
+------------------
+
+The default iipsrv startup parameters are:
+
+    HOST=0.0.0.0
+    PORT=9000
+    LOGFILE=/dev/stdout
+    VERBOSITY=6
+    URI_MAP="iiif=>IIIF"
+    FILESYSTEM_PREFIX="/images/"
+
+It's possible to change these at run-time by using the -e docker parameter. See
+https://iipimage.sourceforge.io/documentation/iipsrv for more details of the available startup parameters.
+For example, to change the level of logging:
+
+    docker run -it -p 9000:9000 -p 9999:80 -v /home/images/:/images --rm -e VERBOSITY=1 iipsrv:edge
+
+
+Multi-platform Builds
+---------------------
+
+The official iipsrv release builds available on Docker Hub are built using the Dockerfile.release file and the buildx multi-platform build command.
+
+First create a builder configuration:
+
+    docker buildx create --use --platform=linux/arm/v6,linux/arm/v7,linux/arm64,linux/386,linux/amd64,linux/ppc64le,linux/s390x,linux/riscv64 --name multi-platform-builder
+
+Then build for all availble Alpine architectures:
+
+    docker buildx build --platform linux/arm/v6,linux/arm/v7,linux/arm64,linux/386,linux/amd64,linux/ppc64le,linux/s390x,linux/riscv64 --tag iipsrv/iipsrv:latest -f Dockerfile.release .
+
+
+------------------------------------------------------------------------------------
+Please refer to the project site https://iipimage.sourceforge.io for further details
+
+------------------------------------------------------------------------------------
+(c) 2000-2023 Ruven Pillay <ruven@users.sourceforge.net>
