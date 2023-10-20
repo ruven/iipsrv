@@ -63,7 +63,7 @@ Using the Container
 
 Once started, it's possible to connect to the container and make requests using any of iipsrv's supported APIs.
 The container provides a standard iipsrv service at /fcgi-bin/iipsrv.fcgi as well as an IIIF endpoint at
-/iiif/. 
+/iiif/.
 
 For example, to make an IIIF request to obtain an image (image.tif) resized to 500px in width:
 
