@@ -1,0 +1,6 @@
+Init and configuration scripts for OpenRC-based init systems
+
+Copy and rename the files to the following locations:
+
+iipsrv.initd -> /etc/init.d/iipsrv
+iipsrv.confd -> /etc/conf.d/iipsrv

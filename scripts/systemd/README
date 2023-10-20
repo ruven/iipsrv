@@ -1,0 +1,39 @@
+Service and configuration scripts for Systemd-based init systems
+================================================================
+
+Installation
+------------
+
+Copy the files to the following locations:
+
+Service script:
+iipsrv.service -> /lib/systemd/system/iipsrv.service
+
+Environment variables for iipsrv that can be modified:
+iipsrv.conf -> /etc/default/iipsrv
+
+
+Starting iipsrv
+---------------
+
+% systemctl start iipsrv
+
+To view the latest systemd messages concerning iipsrv:
+
+% journalctl -eu iipsrv
+
+
+Modifying the scripts
+---------------------
+
+If you wish to modify the behaviour of service script without changing the file itself,
+create a drop-in by creating the directory: /etc/systemd/system/iipsrv.service.d/
+and adding a file "00-iipsrv.conf" to it containing the changes.
+
+For example, to change the user and group under which iipsrv runs to "daemon",
+add this to your 00-iipsrv.conf drop-in:
+
+[Service]
+User=daemon
+Group=daemon
+

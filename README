@@ -8,11 +8,14 @@ IIPImage - High Resolution Streaming Image Server
 [![Coverity Scan](https://img.shields.io/coverity/scan/3997.svg)](https://scan.coverity.com/projects/ruven-iipsrv)
 [![CodeFactor](https://www.codefactor.io/repository/github/ruven/iipsrv/badge/master)](https://www.codefactor.io/repository/github/ruven/iipsrv/overview/master)
 
+
+
 ABOUT
 -----
 IIPImage is an advanced high-performance feature-rich image server system for web-based streamed viewing and zooming of ultra high-resolution 
 images. It is designed to be fast and bandwidth-efficient with low processor and memory requirements. The system can comfortably handle gigapixel size images as 
 well as advanced image features such as 8, 16 and 32 bits per channel, CIELAB colorimetric images and scientific imagery such as multispectral images, image sequences and 3D surface topologies.
+
 
 
 FEATURES
@@ -32,12 +35,6 @@ FEATURES
 * Memcached support
 
 
-DOCUMENTATION
--------------
-Detailed class descriptions (generated using doxygen) are available in the
-doc subdirectory
-
-
 
 LICENCE
 -------
@@ -48,20 +45,97 @@ http://www.gnu.org/licenses/gpl.html for more details.
 
 If you use IIPImage on a public site and remove the IIP link logo from the 
 client, you must provide a link on your site back to the IIPImage site - 
-http://iipimage.sf.net
-
-This distribution includes version 2.4.0 of the FCGI development libraries.
-See COPYING.FCGI for licensing information for these libraries.
+https://iipimage.sourceforge.io
 
 
 
-REQUIREMENTS
-------------
-Requirements: libtiff, zlib and the IJG JPEG development libraries.
-Optional: libmemcached (for Memcached), libpng( for PNG output), libwebp (for WebP output) and Kakadu or OpenJPEG (for JPEG2000 input).
+BUILDING
+--------
 
-Plus, of course, an fcgi-enabled web server. The server has been successfully
-tested on the following servers:
+Building iipsrv requires a C++ compiler and several development libraries.
+
+### LIBRARY REQUIREMENTS
+
+#### Required Libraries:
+- [libtiff](https://libtiff.gitlab.io/libtiff/) development files
+- libjpeg compatible JPEG development files such as [libjpeg](http://ijg.org/) or [libjpeg-turbo](https://libjpeg-turbo.org/)
+- [libfcgi](https://fastcgi-archives.github.io/) - the latest version of the FCGI development library is bundled with the iipsrv distribution. If no system FCGI library is detected, the bundled version will be used. Use the `--with-fcgi-incl=<path>` and `--with-fcgi-lib=<path>` configure script option if this library is installed in a non-standard location. See COPYING.FCGI for licensing information for these libraries.
+
+#### Optional Libraries:
+- [Kakadu](https://kakadusoftware.com/) for JPEG2000 input support. Note, however, that this is not open source and you will
+need to purchase a license for the source code. In order to use, first build the Kakadu SDK as per the instructions supplied with the SDK. Then, supply the following parameters to the ./configure command: `--with-kakadu=/path/to/kakadu/distribution`
+- [OpenJPEG](http://www.openjpeg.org/) for JPEG2000 input support. OpenJPEG will be disabled if Kakadu support has been enabled. Use the `--with-openjpeg=<path>` configure option if this library is installed in a non-standard location.
+- [libpng](http://libpng.org/pub/png/) for PNG output support
+- [libwebp](https://developers.google.com/speed/webp) for WebP output support
+- [libmemcached](https://libmemcached.org) for [Memcached](https://www.memcached.org), a high-performance, distributed memory object caching system. If enabled, IIPImage will cache results using this distributed cache, giving IIPImage added speed and scalability.
+
+
+### UNIX / Linux / Mac OSX
+
+On UNIX, Linux and Mac OS X based systems, iipsrv can be built using the standard autoconf configure / make build process.
+
+First download iipsrv, then unpack it and change your working directory to be the iipsrv source code location. For example:
+
+    tar jxvf iipsrv-<version>.tar.bz2
+    cd iipsrv-<version>
+
+If you are building from a git clone rather than from a release package, you must first generate the configure
+script and autoconf build environment using the provided `autogen.sh` script. This step is not necessary for release
+versions.
+
+    ./autogen.sh
+
+If you are using a release package, just run configure:
+
+    ./configure
+
+Optional libraries are activated by default if found by configure. To manually disable, use the `--disable-<option>` flag. For example `--disable-openjpeg` will disable OpenJPEG support. 
+
+To see the full list of available configuration options:
+
+    ./configure --help
+
+Now compile using make:
+
+    make
+
+The resulting executable is `iipsrv.fcgi` in the `src/` sub-directory.
+
+
+### Windows
+
+For building on Windows, Visual Studio build files are available in the `windows/` sub-directory. These use [vcpkg](https://vcpkg.io/) for dependency management.
+
+To install all required and optional dependencies using vcpkg:
+
+    .\vcpkg.exe install tiff openjpeg fastcgi libpng libwebp --triplet x64-windows
+
+Make these available to Visual Studio:
+
+    .\vcpkg.exe integrate install
+    
+Now open the provided iipsrv project with Visual Studio and build. See https://iipimage.sourceforge.io/documentation/server/windows for full details.
+
+
+
+DEVELOPMENT DOCUMENTATION
+-------------------------
+Detailed class descriptions (generated using [doxygen](https://www.doxygen.nl/)) are available in the
+doc sub-directory
+
+
+
+RUNNING IIPSRV
+--------------
+The IIPImage server can be started in a number of ways.
+
+- Directly on the command line or through an FCGI process manager such as spawn-fcgi
+- Through a Linux/UNIX system startup service, such as an init.d script, systemd or supervisor service
+- Started and managed by the web server itself (only Apache and Lighttpd can **start** iipsrv)
+
+Both the command line / process manager and system startup script options will start an iipsrv process, which will listen on the specified port or socket for **FCGI** requests. iipsrv currently does **not** handle HTTP requests and so, you will need an FCGI-aware web server front-end in order to handle HTTP and communicate using FCGI to iipsrv.
+
+Most HTTP web servers are FCGI-compatible and are able to connect to a running iipsrv instance. The following web servers have been successfully tested with iipsrv:
 - [Apache](https://httpd.apache.org)
 - [Lighttpd](https://www.lighttpd.net)
 - [IIS](https://www.iis.net)
@@ -69,79 +143,250 @@ tested on the following servers:
 - [MyServer](http://www.myserverproject.net)
 - Java Application Servers (Tomcat, JBoss)
 
-Example server configurations are shown below.
+Apache, Lighttpd and IIS can additionally start and manage the iipsrv process.
+
+
+### Starting iipsrv on the Command Line
+
+iipsrv can be started directly on the command line using the `--bind` parameter in order to listen on the specified port or socket. For example:
+
+    export VERBOSITY=5
+    iipsrv.fcgi --bind 0.0.0.0:9000
+
+where the argument given to bind is the socket on which to listen to **FCGI** requests. The socket can be a network (IP address and port) or UNIX file socket. Note that configuration parameters need to be exported as environment variables. See the CONFIGURATION section for more details.
+
+There is additionally a --backlog parameter that is optional and sets the socket backlog value. The backlog value specifies the number of requests can be queued and, therefore, increases the number of concurrent connections that iipsrv can handle and is set to 2048 by default. For example:
+
+    iipsrv.fcgi --bind 192.168.0.1:9000 --backlog 1024
+
+Note that the backlog parameter must be specified after the bind parameter and argument. Note also that this value may be limited by the operating system. On Linux kernels < 2.4.25 and Mac OS X, the backlog limit is hard-coded to 128, so any value above this will be limited to 128 by the OS. If you do provide a backlog value, verify whether the setting ``/proc/sys/net/core/somaxconn`` should be updated.
+
+iipsrv can also be started using lighttpd's spawn-fcgi. The process can be bound to an IP address and port for backend load-balancing configurations and multiple processes can be forked. For example:
+
+    spawn-fcgi -f iipsrv.fcgi -a 0.0.0.0 -p 9000
+
+
+### Starting iipsrv using an Init Script or Service
+
+OpenRC and Systemd scripts and configuration files for Linux are provided in the `script/` sub-directory. To use these, copy and rename the iipsrv.fcgi executable to just `iipsrv` and place in `/usr/sbin/`. See the accompanying README files for more details.
+
+
+### Starting and Managing iipsrv through a Web Server
+
+Apache and Lighttpd are able to start and manage the iipsrv process themselves. First install the iipsrv.fcgi executable in a suitable location. For example: `/var/www/fcgi-bin/iipsrv.fcgi`.
+
+
+#### Apache
+
+There are 2 Apache modules available that are able to start and manage an FCGI executable: `mod_fcgid` and `mod_fastcgi`
+
+##### Apache - mod_fcgid
+
+Make sure the module is installed and loaded:
+
+    LoadModule fcgid_module /path/to/apachemodules/mod_fcgid.so
+
+Example configuration. Note that there is no need to explicitly start the server:
+
+```
+-------------------------------------------------------------------
+# Create a directory for the iipsrv binary
+ScriptAlias /fcgi-bin/ "/var/www/fcgi-bin/"
+
+# Set the options on that directory
+<Directory "/var/www/fcgi-bin/">
+   AllowOverride None
+   Options None
+
+# Syntax for access is different in Apache 2.4 - uncomment appropriate version
+# Apache 2.2
+#   Order allow,deny
+#   Allow from all
+
+# Apache 2.4
+   Require all granted
+
+   # Set the module handler
+   AddHandler fcgid-script .fcgi
+</Directory>
+
+# Set our environment variables for the IIP server
+FcgidInitialEnv VERBOSITY "5"
+FcgidInitialEnv LOGFILE "/tmp/iipsrv.log"
+FcgidInitialEnv MAX_IMAGE_CACHE_SIZE "10"
+FcgidInitialEnv JPEG_QUALITY "50"
+FcgidInitialEnv MAX_CVT "3000"
+
+# Define the idle timeout as unlimited and the number of
+# processes we want
+FcgidIdleTimeout 0
+FcgidMaxProcessesPerClass 1
+
+-------------------------------------------------------------------
+```
+
+Note that on CentOS, FcgidIPCDir is configured by default to `/var/log/httpd/fcgidsock`, which may not be writable by Apache. If this is the case, specify another location for FcgidIPCDir, which is writable, such as `/tmp/fcgidsock`
+
+
+##### Apache - mod_fastcgi
+
+Example configuration if using the mod_fastcgi module:
+
+```
+--------------------------------------------------------------------
+# Create a directory for the iipsrv binary
+ScriptAlias /fcgi-bin/ "/var/www/fcgi-bin/"
+
+# Set the options on that directory
+<Directory "/var/www/fcgi-bin">
+   AllowOverride None
+   Options None
+
+# Syntax for access is different in Apache 2.4 - uncomment appropriate version
+# Apache 2.2
+#   Order allow,deny
+#   Allow from all
+
+# Apache 2.4
+   Require all granted
+
+</Directory>
+
+# Set the module handler
+AddHandler fastcgi-script fcg fcgi fpl
+
+# Initialise some variables for the FCGI server
+FastCgiServer /var/www/fcgi-bin/iipsrv.fcgi \
+-initial-env LOGFILE=/tmp/iipsrv.log \
+-initial-env VERBOSITY=2 \
+-initial-env MAX_IMAGE_CACHE_SIZE=10 \
+-initial-env FILENAME_PATTERN=_pyr_ \
+-initial-env JPEG_QUALITY=50 \
+-initial-env MAX_CVT=3000 \
+-listen-queue-depth 2048 \
+-processes 1
+--------------------------------------------------------------------
+```
+
+#### Lighttpd
+
+Lighttpd example extract:
+
+```
+--------------------------------------------------------------------
+fastcgi.server = ( "/fcgi-bin/iipsrv.fcgi" =>
+  (( "host" => "0.0.0.0",
+     "port" => 9000,
+     "check-local" => "disable",
+     "min-procs" => 1,
+     "max-procs" => 1,
+     "bin-path" => "/var/www/fcgi-bin/iipsrv.fcgi",
+     "bin-environment" => (
+        "LOGFILE" => "/tmp/iipsrv.log",
+        "VERBOSITY" => "5",
+        "MAX_IMAGE_CACHE_SIZE" => "10",
+        "FILENAME_PATTERN" => "_pyr_",
+        "JPEG_QUALITY" => "50",
+        "MAX_CVT" => "3000"
+      )
+  ))
+)
+--------------------------------------------------------------------
+```
 
 
 
-BUILDING
---------
-The standard autoconf build process should work fine. If you want to allow
-dynamic loading of 3rd party image decoders, use the configure option
---enable-modules. There is a version of the FCGI development library included
-in this distribution. The configure script will use this bundled version
-unless it detects one already installed. Alternatively, you may specify the
-path using --with-fcgi-incl=<path> and --with-fcgi-lib=<path>.
+CONNECTING A WEB SERVER TO A RUNNING IIPSRV INSTANCE
+----------------------------------------------------
 
-If this is an SVN or Git development version, first generate the autoconfigure
-environment using autogen.sh:
+### Apache
 
-    ./autogen.sh
+As seen in the previous section, Apache can start and manage an iipsrv process. But if you want to start iipsrv using an system service or have run iipsrv on a remote machine, Apache can be configured to connect to an already running instance.
 
-Otherwise for release versions, use configure directly:
+To do this, make sure mod_proxy and mod_proxy_fcgi are loaded and add the following lines to Apache's configuration (change the IP address to that of the remote machine if iipsrv is hosted on a different server):
 
-    ./configure
-    make
+    ProxyPass "/fcgi-bin/iipsrv.fcgi" "fcgi://0.0.0.0:9000/"
+    ProxyPass "/iiif" "fcgi://0.0.0.0:9000/"
+
+Note that this will also start a clean IIIF URL service at `/iiif'. (See the URI_MAP configuration parameter in the Configuration section for more details).
 
 
-OPTIONAL LIBRARIES: MEMCACHED
------------------------------
-IIPImage is able to use Memcached (http://www.memcached.org), a high-performance,
-distributed memory object caching system. If enabled, IIPImage will cache
-results using Memcached, giving IIPImage added speed and scalability. To use
-this, you will need to install the library (and development files) of
-libmemcached (http://libmemcached.org). This will be automatically detected
-during the build process. 
+### Lighttpd
+
+    fastcgi.server = (
+      "/fcgi-bin/iipsrv.fcgi" => (
+            ("host"=>"0.0.0.0", "port"=>9000, "check-local"=>"disable")
+      ),
+      "/iiif" => (
+            ("host"=>"0.0.0.0", "port"=>9000, "check-local"=>"disable")
+      )
+    )
 
 
+### NginX
 
-OPTIONAL LIBRARIES: KAKADU
---------------------------
-IIPImage is able to decode JPEG2000 images via the Kakadu SDK
-(http://www.kakadusoftware.com). This is, however, not open source and you will
-need to purchase a license for the source code. In order to use, first build
-the Kakadu SDK as per the instructions supplied with the SDK. Then, supply the
-following parameters to the ./configure command
+NginX cannot start or manage iipsrv itself, but it can connect to an existing instance. To set up nginx with iipsrv add a directive such as this to your nginx configuration, which will forward requests to /fcgi-bin/iipsrv.fcgi to a 
+running iipsrv process on port 9000. Change the IP address and port to match your installation.
 
-    --with-kakadu=/path/to/kakadu/distribution
+```
+location /fcgi-bin/iipsrv.fcgi {
+	fastcgi_pass    0.0.0.0:9000;
+	fastcgi_param   PATH_INFO $fastcgi_script_name;
+        fastcgi_param   REQUEST_METHOD $request_method;
+        fastcgi_param   QUERY_STRING $query_string;
+        fastcgi_param   CONTENT_TYPE $content_type;
+        fastcgi_param   CONTENT_LENGTH $content_length;
+        fastcgi_param   SERVER_PROTOCOL $server_protocol;
+        fastcgi_param   REQUEST_URI $request_uri;
+        fastcgi_param   HTTPS $https if_not_empty;
+}
+```
+
+Nginx can also handle load balancing to multiple iipsrv instances, which can be hosted on the same machine on multiple ports or on different hosts. For a multiple host configuration, declare the load balancing like this:
+
+```
+upstream iip {
+	server 192.168.0.1:9000;
+	server 192.168.0.2:9000;
+	server 192.168.0.3:9000;
+	server 192.168.0.4:9000;
+}
+```
+
+and change the fastcgi_pass parameter in the above location configuration to point to this instead of a fixed address:
+
+    fastcgi_pass       iip;
 
 
+### Java Application Servers (Tomcat, Jetty, JBoss etc)
 
-OPTIONAL LIBRARIES: OPENJPEG
-----------------------------
+IIPImage can also be used with Java Application Servers such as Apache Tomcat, JBoss and Jetty. Simply add 
+the JFastCGI jar file to your webapp and add the following to your web.xml configuration file in order to 
+re-route FCGI requests to the IIPImage server on the specified port.
 
-IIPImage is able to decode JPEG2000 images via the open source OpenJPEG 
-library (http://www.openjpeg.org/). Activated if OpenJPEG development
-files found in system path or path provided via
+```
+<!-- Gateway Servlet to IIPImage FCGI server -->
 
-    --with-openjpeg=/path/to/openjpeg/distribution
+<servlet>
+  <servlet-name>fcgi</servlet-name>
+  <servlet-class>net.jr.fastcgi.FastCGIServlet</servlet-class>
+  <init-param>>
+    <param-name>server-address</param-name>
+    <param-value>0.0.0.0:9000</param-value>
+  </init-param>
+</servlet>
 
-OpenJPEG will be disabled if Kakadu support has been requested or --disable-openjpeg used.
-
-
-
-INSTALLATION
-------------
-Simply copy the executable called iipsrv.fcgi in the src subdirectory into
-the web server fcgi directory. If one does not exist, simply create one, called,
-for example, fcgi-bin. The web server will need to be configured to use this
-executable.
+<servlet-mapping>
+  <servlet-name>fcgi</servlet-name>
+  <url-pattern>/fcgi-bin/iipsrv.fcgi</url-pattern>
+</servlet-mapping>
+```
 
 
 
 CONFIGURATION
 -------------
-There are several startup variables that can be passed to the server.
-They are all optional.
+There are several startup variables that can be passed to the server. These need to be passed as environment variables when starting iipsrv on the command line or through a system service script. All variables are optional:
 
 LOGFILE: the server will log its output to the file specified, if it can.
 Version 1.1 and later of iipsrv also supports logging to syslog if “syslog”
@@ -256,7 +501,6 @@ handler(s).
 
 
 
-
 IMAGE PATHS
 -----------
 The images paths given to the server via the FIF variable must be
@@ -265,253 +509,6 @@ and not paths relative to the web server document root location.
 Images do not, therefore, need to be directly accessible by the
 client via the web server. Make sure the server process owner is
 able to access and read the images!
-
-
-
-EXAMPLE SERVER CONFIGURATIONS
------------------------------
-
-### Apache and mod_fastcgi
-
-httpd.conf example extract:
-
-```
---------------------------------------------------------------------
-# Create a directory for the iipsrv binary
-ScriptAlias /fcgi-bin/ "/usr/local/httpd/fcgi-bin/"
-
-# Set the options on that directory
-<Directory "/usr/local/httpd/fcgi-bin">
-   AllowOverride None
-   Options None
-
-# Syntax for access is different in Apache 2.4 - uncomment appropriate version
-# Apache 2.2
-#   Order allow,deny
-#   Allow from all
-
-# Apache 2.4
-   Require all granted
-
-</Directory>
-
-# Set the module handler
-AddHandler fastcgi-script fcg fcgi fpl
-
-# Initialise some variables for the FCGI server
-FastCgiServer /usr/local/httpd/fcgi-bin/iipsrv.fcgi \
--initial-env LOGFILE=/tmp/iipsrv.log \
--initial-env VERBOSITY=2 \
--initial-env MAX_IMAGE_CACHE_SIZE=10 \
--initial-env FILENAME_PATTERN=_pyr_ \
--initial-env JPEG_QUALITY=50 \
--initial-env MAX_CVT=3000 \
--listen-queue-depth 2048 \
--processes 1
---------------------------------------------------------------------
-```
-
-
-
-### Apache and mod_fcgid
-
-mod_fcgid is a binary compatible replacement for mod_fastcgi. It works in the 
-same way, but is configured differently. Load the module like this:
-
-
-    LoadModule fcgid_module /path/to/apachemodules/mod_fcgid.so
-
-
-Here is an example configuration. Note that mod_fcgid does not have a 
-FastCgiServer directive and there is no need to explicitly start the server:
-
-```
--------------------------------------------------------------------
-# Create a directory for the iipsrv binary
-ScriptAlias /fcgi-bin/ "/var/www/localhost/fcgi-bin/"
-
-# Set the options on that directory
-<Directory "/var/www/localhost/fcgi-bin/">
-   AllowOverride None
-   Options None
-
-# Syntax for access is different in Apache 2.4 - uncomment appropriate version
-# Apache 2.2
-#   Order allow,deny
-#   Allow from all
-
-# Apache 2.4
-   Require all granted
-
-   # Set the module handler
-   AddHandler fcgid-script .fcgi
-</Directory>
-
-# Set our environment variables for the IIP server
-FcgidInitialEnv VERBOSITY "5"
-FcgidInitialEnv LOGFILE "/tmp/iipsrv.log"
-FcgidInitialEnv MAX_IMAGE_CACHE_SIZE "10"
-FcgidInitialEnv JPEG_QUALITY "50"
-FcgidInitialEnv MAX_CVT "3000"
-
-# Define the idle timeout as unlimited and the number of
-# processes we want
-FcgidIdleTimeout 0
-FcgidMaxProcessesPerClass 1
-
--------------------------------------------------------------------
-```
-
-Note that on CentOS, FcgidIPCDir is configured by default to 
-/var/log/httpd/fcgidsock, which may not be writable by Apache. If this is the case, 
-specify another location for FcgidIPCDir, which is writable, such as /tmp/fcgidsock
-
-
-### Lighttpd
-lighttpd.conf example extract:
-
-```
---------------------------------------------------------------------
-fastcgi.server = ( "/fcgi-bin/iipsrv.fcgi" =>
-  (( "host" => "127.0.0.1",
-     "port" => 9000,
-     "check-local" => "disable",
-     "min-procs" => 1,
-     "max-procs" => 1,
-     "bin-path" => "/var/www/localhost/fcgi-bin/iipsrv.fcgi",
-     "bin-environment" => (
-        "LOGFILE" => "/tmp/iipsrv.log",
-        "VERBOSITY" => "5",
-        "MAX_IMAGE_CACHE_SIZE" => "10",
-        "FILENAME_PATTERN" => "_pyr_",
-        "JPEG_QUALITY" => "50",
-        "MAX_CVT" => "3000"
-      )
-  ))
-)
---------------------------------------------------------------------
-```
-
-### NginX
-
-iipsrv can also be used with NginX. The one drawback with regards to iipsrv is that it cannot automatically spawn FCGI processes, so you will need to use 
-nginx together with spawn-fcgi or start iipsrv from the command line.
-
-To set up nginx with iipsrv add a directive such as this to your nginx configuration, which will forward requests to /fcgi-bin/iipsrv.fcgi to a 
-running iipsrv process on port 9000.
-
-```
-location /fcgi-bin/iipsrv.fcgi {
-	fastcgi_pass    localhost:9000;
-	fastcgi_param   PATH_INFO $fastcgi_script_name;
-        fastcgi_param   REQUEST_METHOD $request_method;
-        fastcgi_param   QUERY_STRING $query_string;
-        fastcgi_param   CONTENT_TYPE $content_type;
-        fastcgi_param   CONTENT_LENGTH $content_length;
-        fastcgi_param   SERVER_PROTOCOL $server_protocol;
-        fastcgi_param   REQUEST_URI $request_uri;
-        fastcgi_param   HTTPS $https if_not_empty;
-}
-```
-
-Nginx can also handle load balancing to multiple iipsrv instances, which can be hosted on the same machine on multiple ports or on different hosts. 
-For a multiple host configuration, declare the load balancing like this:
-
-```
-upstream iip {
-	server 192.168.0.1:9000;
-	server 192.168.0.2:9000;
-	server 192.168.0.3:9000;
-	server 192.168.0.4:9000;
-}
-```
-
-and change the fastcgi_pass parameter in the above location configuration to point to this instead of a fixed address:
-
-    fastcgi_pass       iip;
-
-
-### spawn-fcgi
-
-iipsrv can also be used with lighttpd's spawn-fcgi without the need for a 
-full web server. Simply spawn the iipsrv process on the command line. The 
-process can be bound to an IP address and port for backend load-balancing 
-configurations. For example:
-
-    spawn-fcgi -f src/iipsrv.fcgi -a 192.168.0.1 -p 9000
-
-
-### MyServer:
-Simply run the MyServer configuration and in the MIME section, choose the .fcgi extension
-and select:
-```
---------------------------------------------------------------------
-MIME Type: application octet-stream
-Action: Execute self contained FastCGI
-Manager: NONE 
---------------------------------------------------------------------
-```
-
-
-### Java Application Servers (Tomcat, Jetty, JBoss etc)
-
-IIPImage can also be used with Java Application Servers such as Apache Tomcat, JBoss and Jetty. Simply add 
-the JFastCGI jar file to your webapp and add the following to your web.xml configuration file in order to 
-re-route FCGI requests to the IIPImage server on the specified port.
-
-```
-<!-- Gateway Servlet to IIPImage FCGI server -->
-
-<servlet>
-  <servlet-name>fcgi</servlet-name>
-  <servlet-class>net.jr.fastcgi.FastCGIServlet</servlet-class>
-  <init-param>>
-    <param-name>server-address</param-name>
-   <param-value>127.0.0.1:6667</param-value>
-  </init-param>
-</servlet>
-
-<servlet-mapping>
-  <servlet-name>fcgi</servlet-name>
-  <url-pattern>/cgi-bin/iipsrv.fcgi</url-pattern>
-</servlet-mapping>
-```
-
-You then need to start an instance of the server on the requested port (6667 in this example) using 
-spawn-cgi (see spawn-cgi section above) or on the command line (see below).
-
-
-### Command Line
-
-It is also possible to start iipsrv directly on the command line using the --bind parameter.
-For example:
-
-    iipsrv.fcgi --bind 192.168.0.1:9000
-
-where the argument given to bind is the socket on which to listen to FCGI
-requests. Note that these are *not* HTTP requests and iipsrv will still require a web server front-end.
-
-There is additionally a --backlog parameter that is optional and sets the socket backlog value. The backlog value specifies the number of requests can be queued and, 
-therefore, increases the number of concurrent connections that iipsrv can handle and is set to 2048 by default. For example:
-
-    iipsrv.fcgi --bind 192.168.0.1:9000 --backlog 1024
-
-Note that the backlog parameter must be specified after the bind parameter and argument.  Note also that this value may be limited by the operating system. On Linux kernels 
-< 2.4.25 and Mac OS X, the backlog limit is hard-coded to 128, so any value above this will be limited to 128 by the OS. If you do provide a backlog value, verify whether 
-the setting /proc/sys/net/core/somaxconn should be updated.
-
-Your web server should, therefore, be configured to use this address for FastCGI.
-For example with lighttpd:
-
-    fastcgi.server = (
-      "/fcgi-bin/iipsrv.fcgi" => (
-            ("host"=>"192.168.0.1", "port"=>9000, "check-local"=>"disable")
-      )
-    )
-
-For Apache, load mod_proxy and mod_proxy_fcgi and add the following line to Apache's configuration:
-
-    ProxyPass "/fcgi-bin/iipsrv.fcgi" "fcgi://192.168.0.1:9000/"
 
 
 
