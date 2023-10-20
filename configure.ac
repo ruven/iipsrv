@@ -27,13 +27,19 @@ LT_INIT
 
 
 # Checks for header specific files.
-AC_CHECK_HEADERS(glob.h)
 AC_CHECK_HEADERS(time.h)
 AC_CHECK_HEADERS(sys/time.h)
 AC_CHECK_HEADERS(syslog.h, [LOGGING="file, syslog"], [LOGGING="file"])
 AC_FUNC_MALLOC
 AC_CHECK_LIB(m, log2, AC_DEFINE(HAVE_LOG2))
 AC_CHECK_FUNCS([setenv])
+
+AC_ARG_ENABLE([glob],[  --disable-glob          disable globbing])
+if test "x$enable_glob" == "xno"; then
+  AC_MSG_RESULT([configure: glob support disabled])
+else
+  AC_CHECK_HEADERS(glob.h)
+fi
 
 
 # For our windows build
@@ -100,19 +106,25 @@ AC_SEARCH_LIBS(gzopen, z)
 #************************************************************
 # Check for libmemcached
 
-AC_CHECK_HEADER( libmemcached/memcached.h,
+AC_ARG_ENABLE([libmemcached],[  --disable-libmemcached  disable libmemcached support])
+if test "x$enable_libmemcached" == "xno"; then
+  MEMCACHED=false
+  AC_MSG_RESULT([configure: libmemcached support disabled])
+else
+  AC_CHECK_HEADER( libmemcached/memcached.h,
 	AC_SEARCH_LIBS( memcached_create,
 		memcached,
 		MEMCACHED=true,
 		MEMCACHED=false,
 		-lpthread ),
 	MEMCACHED=false
-)
-if test "x${MEMCACHED}" = xtrue; then
+  )
+
+  if test "x${MEMCACHED}" = xtrue; then
 	AC_DEFINE(HAVE_MEMCACHED)
 	LIBS="$LIBS -lpthread"
+  fi
 fi
-
 
 #************************************************************
 # Check for libtiff
@@ -171,7 +183,7 @@ AC_ARG_ENABLE( png,
 
 
 if test "x$enable_png" == "xno"; then
-   AC_MSG_RESULT([disabling PNG support])
+   AC_MSG_RESULT([configure: disabling PNG support])
    AM_CONDITIONAL([ENABLE_PNG], [false])
 else
    AC_CHECK_HEADER( png.h,
@@ -200,7 +212,7 @@ AC_ARG_ENABLE( webp,
 
 
 if test "x$enable_webp" == "xno"; then
-   AC_MSG_RESULT([disabling WebP support])
+   AC_MSG_RESULT([configure: disabling WebP support])
    AM_CONDITIONAL([ENABLE_WEBP], [false])
 else
    AC_CHECK_HEADER( webp/encode.h, [WEBP=true], [WEBP=false] )
