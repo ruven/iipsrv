@@ -1,6 +1,12 @@
 Init and configuration scripts for OpenRC-based init systems
+============================================================
 
-Copy and rename the files to the following locations:
+Copy and rename (remove the .fcgi suffix) the iipsrv executable to /usr/sbin/ directory:
 
-iipsrv.initd -> /etc/init.d/iipsrv
-iipsrv.confd -> /etc/conf.d/iipsrv
+    src/iipsrv.fcgi -> /usr/sbin/iipsrv
+
+Copy and rename the OpenRC init and conf files to the following locations:
+
+    iipsrv.initd -> /etc/init.d/iipsrv
+    iipsrv.confd -> /etc/conf.d/iipsrv
+
