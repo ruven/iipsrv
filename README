@@ -92,6 +92,16 @@ Now compile using make:
 
 The resulting executable is `iipsrv.fcgi` in the `src/` sub-directory.
 
+To install iipsrv to a system folder:
+
+    make install
+
+This will install `iipsrv` (without the .fcgi suffix) in the `sbin` directory for use, for example, with a service script. By default, this is `/usr/local/sbin/iipsrv`. Use configure's --prefix parameter to change the destination directory. For example:
+
+   ./configure --prefix=/usr
+   make
+   sudo make install
+
 
 ### Building on Windows
 

@@ -5,6 +5,5 @@
 #
 
 SUBDIRS = libfcgi
-#include #examples cgi-fcgi
 
 include_HEADERS = fcgi_config.h

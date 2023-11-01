@@ -15,9 +15,9 @@ INCLUDE_FILES = $(INCLUDEDIR)/fastcgi.h     \
 noinst_LIBRARIES   = libfcgi.a
 
 libfcgi_a_SOURCES = $(INCLUDE_FILES)  \
-                     fcgiapp.c         \
-                     fcgi_stdio.c      \
-                     os_@SYSTEM@.c
+                     fcgiapp.c        \
+                     fcgi_stdio.c     \
+                     os_unix.c
 libfcgi_a_CC      = @PTHREAD_CC@
 libfcgi_a_CFLAGS  = @PTHREAD_CFLAGS@
 

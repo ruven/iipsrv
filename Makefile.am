@@ -7,4 +7,4 @@ endif
 
 SUBDIRS = $(FCGI_SRC) src man
 
-EXTRA_DIST = doc windows docker scripts
+EXTRA_DIST = fcgi doc windows docker scripts

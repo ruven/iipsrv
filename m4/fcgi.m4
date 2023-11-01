@@ -56,10 +56,7 @@ AC_DEFUN([FCGI_COMMON_CHECKS], [
     #  hpux 9.04 compiler does and so does Stratus FTX (uses HP's compiler)
     #--------------------------------------------------------------------
     AC_MSG_CHECKING([whether va_arg(arg, long double) crashes the compiler])
-    AC_TRY_COMPILE([#include <stdarg.h>],
-       [long double lDblArg; va_list arg; lDblArg = va_arg(arg, long double);],
-       AC_MSG_RESULT([no]),
-       [AC_MSG_RESULT([yes])
+    AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <stdarg.h>]], [[long double lDblArg; va_list arg; lDblArg = va_arg(arg, long double);]])],[AC_MSG_RESULT(no)],[AC_MSG_RESULT([yes])
 	AC_DEFINE([HAVE_VA_ARG_LONG_DOUBLE_BUG], [1],
 	      [Define if va_arg(arg, long double) crashes the compiler])])
 
