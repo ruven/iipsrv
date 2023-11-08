@@ -48,7 +48,8 @@
 using namespace std;
 
 
-// Need to initialize static member
+// Need to initialize static members
+unsigned int IIIF::version;
 string IIIF::delimiter = "";
 
 
@@ -160,7 +161,7 @@ void IIIF::run( Session* session, const string& src )
   session->view->setMaxResolutions( numResolutions );
 
   // Set a default IIIF version
-  int iiif_version = session->codecOptions["IIIF_VERSION"];
+  int iiif_version = IIIF::version;
 
   // Check whether the client has requested a specific IIIF version within the HTTP Accept header
   //  - first look for the protocol prefix

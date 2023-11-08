@@ -53,7 +53,7 @@ Building iipsrv requires a C++ compiler and several development libraries.
 #### Required Libraries:
 - [libtiff](https://libtiff.gitlab.io/libtiff/) development files
 - libjpeg compatible JPEG development files such as [libjpeg](http://ijg.org/) or [libjpeg-turbo](https://libjpeg-turbo.org/)
-- [libfcgi](https://fastcgi-archives.github.io/) - the latest version of the FCGI development library is bundled with the iipsrv distribution. If no system FCGI library is detected, the bundled version will be used. Use the `--with-fcgi-incl=<path>` and `--with-fcgi-lib=<path>` configure script option if this library is installed in a non-standard location. See COPYING.FCGI for licensing information for these libraries.
+- [libfcgi](https://fastcgi-archives.github.io/) - the latest version of the FCGI development library is bundled with the iipsrv distribution. If no system FCGI library is detected, the bundled version will be used. See fcgi/COPYING.FCGI for licensing information for these libraries.
 
 #### Optional Libraries:
 - [Kakadu](https://kakadusoftware.com/) for JPEG2000 input support. Note, however, that this is not open source and you will need to purchase a license for the source code. In order to use, first build the Kakadu SDK as per the instructions supplied with the SDK. Then, supply the following parameters to the ./configure command: `--with-kakadu=/path/to/kakadu/distribution`
@@ -76,7 +76,7 @@ If you are building from a git clone rather than from a release package, you mus
 
     ./autogen.sh
 
-If you are using a release package, just run configure:
+Now run the configure script:
 
     ./configure
 
@@ -96,11 +96,11 @@ To install iipsrv to a system folder:
 
     make install
 
-This will install `iipsrv` (without the .fcgi suffix) in the `sbin` directory for use, for example, with a service script. By default, this is `/usr/local/sbin/iipsrv`. Use configure's --prefix parameter to change the destination directory. For example:
+This will install `iipsrv` (note without the .fcgi suffix) in the system `sbin` directory for use, for example, with a service script. By default, this is `/usr/local/sbin/iipsrv`. Use configure's --prefix parameter to change the destination directory. For example:
 
-   ./configure --prefix=/usr
-   make
-   sudo make install
+    ./configure --prefix=/usr
+    make
+    sudo make install
 
 
 ### Building on Windows
@@ -391,6 +391,8 @@ Version 1.1 and later of iipsrv also supports logging to syslog if “syslog” 
 VERBOSITY: 0 means no logging, 1 is minimal logging, 2 lots of debugging stuff, 3 even more debugging stuff and 10 a very large amount indeed ;-)
 
 MAX_IMAGE_CACHE_SIZE: Max image cache size to be held in RAM in MB. This is a cache of the compressed JPEG image tiles requested by the client. The default is 10MB.
+
+MAX_IMAGE_METADATA_CACHE_SIZE: Max number of items in metadata cache size. This is a cache of key image metadata (dimensions, tile size, bit depth ...) from an image file. The cache avoids the need to read image file header for each request. Default is 1000. If set to -1, the cache size is unlimited.
 
 FILESYSTEM_PREFIX: This is a prefix automatically added by the server to the beginning of each file system path. This can be useful for security reasons to limit access to certain sub-directories. For example, with a prefix of "/home/images/" set on the server, a request by a client for "image.tif" will point to the path "/home/images/image.tif".  Any reverse directory path component such as ../ is also filtered out. No default value.
 

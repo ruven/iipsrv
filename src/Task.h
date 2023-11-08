@@ -223,6 +223,11 @@ class ROT : public Task {
 /// FIF Command
 class FIF : public Task {
  public:
+  /// Store some necessary environment variables
+  static long max_metadata_cache_size;
+  static std::string filesystem_prefix;
+  static std::string filesystem_suffix;
+  static std::string filename_pattern;
   void run( Session* session, const std::string& argument );
 };
 
@@ -354,7 +359,13 @@ class DeepZoom : public Task {
 /// IIIF Command
 class IIIF : public Task {
  public:
+
+  /// Default IIIF version
+  static unsigned int version;
+
+  /// Delimiter for multi-page or image stacks
   static std::string delimiter;
+
   void run( Session* session, const std::string& argument );
 };
 

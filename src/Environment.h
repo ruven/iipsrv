@@ -27,6 +27,7 @@
 #define VERBOSITY 1
 #define LOGFILE "/tmp/iipsrv.log"
 #define MAX_IMAGE_CACHE_SIZE 10.0
+#define MAX_METADATA_CACHE_SIZE 1000
 #define FILENAME_PATTERN "_pyr_"
 #define JPEG_QUALITY 75
 #define PNG_QUALITY 1
@@ -58,7 +59,6 @@
 /// Class to obtain environment variables
 class Environment {
 
-
  public:
 
   static int getVerbosity(){
@@ -87,6 +87,16 @@ class Environment {
       max_image_cache_size = atof( envpara );
     }
     return max_image_cache_size;
+  }
+
+
+  static long getMaxMetadataCacheSize(){
+    long max_metadata_cache_size = MAX_METADATA_CACHE_SIZE;
+    const char* envpara = getenv( "MAX_METADATA_CACHE_SIZE" );
+    if( envpara ){
+      max_metadata_cache_size = atol( envpara );
+    }
+    return max_metadata_cache_size;
   }
 
 
@@ -177,7 +187,6 @@ class Environment {
       filesystem_prefix = std::string( envpara );
     }
     else filesystem_prefix = FILESYSTEM_PREFIX;
-
     return filesystem_prefix;
   }
 

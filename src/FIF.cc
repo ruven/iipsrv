@@ -33,12 +33,15 @@
 #include "OpenJPEGImage.h"
 #endif
 
-#define MAXIMAGECACHE 1000  // Max number of items in image cache
-
-
 
 using namespace std;
 
+
+// Initialize our static members
+long FIF::max_metadata_cache_size = 0;
+string FIF::filesystem_prefix;
+string FIF::filesystem_suffix;
+string FIF::filename_pattern;
 
 
 void FIF::run( Session* session, const string& src ){
@@ -69,12 +72,6 @@ void FIF::run( Session* session, const string& src ){
   // Create our IIPImage object
   IIPImage test;
 
-  // Get our image pattern variable
-  string filesystem_prefix = Environment::getFileSystemPrefix();
-  string filesystem_suffix = Environment::getFileSystemSuffix();
-
-  // Get our image pattern variable
-  string filename_pattern = Environment::getFileNamePattern();
 
   // Timestamp of cached image
   time_t timestamp = 0;
@@ -83,43 +80,53 @@ void FIF::run( Session* session, const string& src ){
   // Put the image setup into a try block as object creation can throw an exception
   try{
 
-    // Check whether cache is empty
-    if( session->imageCache->empty() ){
-      if( session->loglevel >= 1 ) *(session->logfile) << "FIF :: Image cache initialization" << endl;
+    // Check whether we are using a metadata cache
+    if( FIF::max_metadata_cache_size == 0 ){
       test = IIPImage( argument );
-      test.setFileNamePattern( filename_pattern );
-      test.setFileSystemPrefix( filesystem_prefix );
-      test.setFileSystemSuffix( filesystem_suffix );
+      test.setFileNamePattern( FIF::filename_pattern );
+      test.setFileSystemPrefix( FIF::filesystem_prefix );
+      test.setFileSystemSuffix( FIF::filesystem_suffix );
       test.Initialise();
     }
-    // If not, look up our object
     else{
+
       // Cache Hit
       if( session->imageCache->find(argument) != session->imageCache->end() ){
 	test = (*session->imageCache)[ argument ];
 	timestamp = test.timestamp;       // Record timestamp if we have a cached image
 	if( session->loglevel >= 2 ){
-	  *(session->logfile) << "FIF :: Image cache hit. Number of elements: " << session->imageCache->size() << endl;
+	  *(session->logfile) << "FIF :: Image metadata cache hit" << endl;
 	}
       }
+
       // Cache Miss
       else{
-	if( session->loglevel >= 2 ) *(session->logfile) << "FIF :: Image cache miss" << endl;
+	if( session->loglevel >= 2 ){
+	  *(session->logfile) << "FIF :: Image metadata cache ";
+	  if( session->imageCache->empty() ) *(session->logfile) << "initialization" << endl;
+	  else *(session->logfile) << "miss" << endl;
+	}
 	test = IIPImage( argument );
-	test.setFileNamePattern( filename_pattern );
-	test.setFileSystemPrefix( filesystem_prefix );
-	test.setFileSystemSuffix( filesystem_suffix );
+	test.setFileNamePattern( FIF::filename_pattern );
+	test.setFileSystemPrefix( FIF::filesystem_prefix );
+	test.setFileSystemSuffix( FIF::filesystem_suffix );
 	test.Initialise();
-	// Delete items if our list of images is too long.
-	if( session->imageCache->size() >= MAXIMAGECACHE ) session->imageCache->erase( session->imageCache->begin() );
+
+	// Delete items if our metadata cache becomes too large - unless we have set cache size to -1 (unlimited)
+	if( FIF::max_metadata_cache_size > 0 ){
+	  while( session->imageCache->size() >= (unsigned long) FIF::max_metadata_cache_size ){
+	    session->imageCache->erase( session->imageCache->begin() );
+	  }
+	}
+
       }
     }
 
 
 
-    /***************************************************************
-      Test for different image types - only TIFF is native for now
-    ***************************************************************/
+    /*****************************************************
+      Test for supported image formats: TIFF or JPEG2000
+    ******************************************************/
 
     ImageFormat format = test.getImageFormat();
 
@@ -143,43 +150,15 @@ void FIF::run( Session* session, const string& src ){
 #endif
     else throw string( "Unsupported image type: " + argument );
 
-    /* Disable module loading for now!
-    else{
-
-#ifdef ENABLE_DL
-
-      // Check our map list for the requested type
-      if( moduleList.empty() ){
-	throw string( "Unsupported image type: " + imtype );
-      }
-      else{
-
-	map<string, string> :: iterator mod_it  = moduleList.find( imtype );
-
-	if( mod_it == moduleList.end() ){
-	  throw string( "Unsupported image type: " + imtype );
-	}
-	else{
-	  // Construct our dynamic loading image decoder
-	  session->image = new DSOImage( test );
-	  (*session->image)->Load( (*mod_it).second );
-
-	  if( session->loglevel >= 2 ){
-	    *(session->logfile) << "FIF :: Image type: '" << imtype
-	                        << "' requested ... using handler "
-				<< (*session->image)->getDescription() << endl;
-	  }
-	}
-      }
-#else
-      throw string( "Unsupported image type: " + imtype );
-#endif
-    }
-    */
-
 
     // Open image and update timestamp
+    Timer function_timer;
+    if( session->loglevel >= 3 ) function_timer.start();
     (*session->image)->openImage();
+    if( session->loglevel >= 3 ){
+      *(session->logfile) << "FIF :: Image opened in " << function_timer.getTime() << " microseconds" << endl;
+    }
+
 
     // Check timestamp consistency. If cached timestamp is different, update metadata
     if( timestamp>0 && (timestamp != (*session->image)->timestamp) ){
@@ -206,6 +185,9 @@ void FIF::run( Session* session, const string& src ){
       char strt[64];
       strftime( strt, 64, "%a, %d %b %Y %H:%M:%S GMT", t );
 
+      if( FIF::max_metadata_cache_size != 0 ){
+	*(session->logfile) << "FIF :: Image metadata cache size: " << session->imageCache->size() << endl;
+      }
       *(session->logfile) << "FIF :: Image dimensions are " << (*session->image)->getImageWidth()
 			  << " x " << (*session->image)->getImageHeight() << endl
 			  << "FIF :: Image contains " << (*session->image)->channels

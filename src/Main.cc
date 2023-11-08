@@ -174,7 +174,6 @@ int main( int argc, char *argv[] )
 
   //  Check for a verbosity env variable and open an appendable logfile
   //  if we want logging ie loglevel >= 0
-
   loglevel = Environment::getVerbosity();
 
   if( loglevel >= 1 ){
@@ -262,12 +261,24 @@ int main( int argc, char *argv[] )
 
   // Set our maximum image cache size
   float max_image_cache_size = Environment::getMaxImageCacheSize();
+
+
+  // Get our maximum metadata cache size
+  FIF::max_metadata_cache_size = Environment::getMaxMetadataCacheSize();
   imageCacheMapType imageCache;
   ic = &imageCache;
 
 
   // Get our image pattern variable
-  string filename_pattern = Environment::getFileNamePattern();
+  FIF::filename_pattern = Environment::getFileNamePattern();
+
+
+  // Get the filesystem prefix if any
+  FIF::filesystem_prefix = Environment::getFileSystemPrefix();;
+
+
+  // Get the filesystem suffix if any
+  FIF::filesystem_suffix = Environment::getFileSystemSuffix();
 
 
   // Get our default quality variable
@@ -288,14 +299,6 @@ int main( int argc, char *argv[] )
 
   // Get the default number of quality layers to decode
   int max_layers = Environment::getMaxLayers();
-
-
-  // Get the filesystem prefix if any
-  string filesystem_prefix = Environment::getFileSystemPrefix();
-
-
-  // Get the filesystem suffix if any
-  string filesystem_suffix = Environment::getFileSystemSuffix();
 
 
   // Set up our watermark object
@@ -330,7 +333,7 @@ int main( int argc, char *argv[] )
 
 
   // Set our IIIF version
-  unsigned int iiif_version = Environment::getIIIFVersion();
+  IIIF::version = Environment::getIIIFVersion();
 
 
   // Set our IIIF multi-page delimiter
@@ -357,9 +360,14 @@ int main( int argc, char *argv[] )
 
   // Print out some information
   if( loglevel >= 1 ){
-    logfile << "Setting maximum image cache size to " << max_image_cache_size << "MB" << endl;
-    logfile << "Setting filesystem prefix to '" << filesystem_prefix << "'" << endl;
-    logfile << "Setting filesystem suffix to '" << filesystem_suffix << "'" << endl;
+    logfile << "Setting maximum image tile data cache size to " << max_image_cache_size << "MB" << endl;
+
+    logfile << "Setting maximum image metadata cache size to ";
+    if( FIF::max_metadata_cache_size == -1 ) logfile << "-1 (unlimited) images" << endl;
+    else logfile << FIF::max_metadata_cache_size << " images" << endl;
+
+    logfile << "Setting filesystem prefix to '" << FIF::filesystem_prefix << "'" << endl;
+    logfile << "Setting filesystem suffix to '" << FIF::filesystem_suffix << "'" << endl;
     logfile << "Setting default JPEG quality to " << jpeg_quality << endl;
 #ifdef HAVE_PNG
     logfile << "Setting default PNG compression level to " << png_quality << endl;
@@ -369,8 +377,8 @@ int main( int argc, char *argv[] )
 #endif
     logfile << "Setting maximum CVT size to " << max_CVT << endl;
     logfile << "Setting HTTP Cache-Control header to '" << cache_control << "'" << endl;
-    logfile << "Setting 3D file sequence name pattern to '" << filename_pattern << "'" << endl;
-    logfile << "Setting default IIIF Image API version to " << iiif_version << endl;
+    logfile << "Setting 3D file sequence name pattern to '" << FIF::filename_pattern << "'" << endl;
+    logfile << "Setting default IIIF Image API version to " << IIIF::version << endl;
     if( IIIF::delimiter.size() ){
       logfile << "Setting default IIIF multi-page delimiter to '" << IIIF::delimiter << "'" << endl;
     }
@@ -635,7 +643,6 @@ int main( int argc, char *argv[] )
       session.watermark = &watermark;
       session.headers.clear();
       session.processor = &processor;
-      session.codecOptions["IIIF_VERSION"] = iiif_version;
 #ifdef HAVE_KAKADU
       session.codecOptions["KAKADU_READMODE"] = kdu_readmode;
 #endif

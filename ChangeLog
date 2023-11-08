@@ -1,3 +1,10 @@
+08/11/2023:
+	- Added MAX_METADATA_CACHE_SIZE startup parameter to allow control over the size of the cache containing
+	  image header metadata.
+	- Environment getenv() calls now no longer made directly from FIF class, but only once and set using
+	  static member variables.
+
+
 01/11/2023:
 	- Further update of configure.ac and complete re-write of libtiff and libjpeg m4 autoconf scripts.
 	  This fixes error with clang16 and eliminates all autoconf warnings. make install now also works
