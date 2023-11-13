@@ -1,3 +1,7 @@
+13/11/2023:
+	- Rationalized, renamed and changed standard enums to C++11 enum classes to allow types to be scoped
+
+
 08/11/2023:
 	- Added MAX_METADATA_CACHE_SIZE startup parameter to allow control over the size of the cache containing
 	  image header metadata.

@@ -49,12 +49,12 @@ void CVT::send( Session* session ){
 
   // Set up our output format handler
   Compressor *compressor = NULL;
-  if( session->view->output_format == JPEG ) compressor = session->jpeg;
+  if( session->view->output_format == ImageEncoding::JPEG ) compressor = session->jpeg;
 #ifdef HAVE_PNG
-  else if( session->view->output_format == PNG ) compressor = session->png;
+  else if( session->view->output_format == ImageEncoding::PNG ) compressor = session->png;
 #endif
 #ifdef HAVE_WEBP
-  else if( session->view->output_format == WEBP ) compressor = session->webp;
+  else if( session->view->output_format == ImageEncoding::WEBP ) compressor = session->webp;
 #endif
   else return;
 
@@ -193,13 +193,13 @@ void CVT::send( Session* session ){
   // First calculate histogram if we have asked for either binarization,
   //  histogram equalization or contrast stretching
   if( session->view->requireHistogram() && (*session->image)->histogram.empty() &&
-      (*session->image)->getColourSpace() != BINARY ){
+      (*session->image)->getColorSpace() != ColorSpace::BINARY ){
 
     if( session->loglevel >= 5 ) function_timer.start();
 
     // Retrieve an uncompressed version of our smallest tile
     // which should be sufficient for calculating the histogram
-    RawTile thumbnail = tilemanager.getTile( 0, 0, 0, session->view->yangle, session->view->getLayers(), UNCOMPRESSED );
+    RawTile thumbnail = tilemanager.getTile( 0, 0, 0, session->view->yangle, session->view->getLayers(), ImageEncoding::RAW );
 
     // Calculate histogram
     (*session->image)->histogram =
@@ -231,7 +231,7 @@ void CVT::send( Session* session ){
 
 
   // Convert CIELAB to sRGB
-  if( (*session->image)->getColourSpace() == CIELAB ){
+  if( (*session->image)->getColorSpace() == ColorSpace::CIELAB ){
     if( session->loglevel >= 5 ) function_timer.start();
     session->processor->LAB2sRGB( complete_image );
     if( session->loglevel >= 5 ){
@@ -242,7 +242,7 @@ void CVT::send( Session* session ){
 
 
   // Only use our floating point image processing pipeline if necessary
-  if( complete_image.sampleType == FLOATINGPOINT || session->view->floatProcessing() ){
+  if( complete_image.sampleType == SampleType::FLOATINGPOINT || session->view->floatProcessing() ){
 
     // Make a copy of our max and min as we may change these
     vector <float> min = (*session->image)->min;
@@ -260,7 +260,7 @@ void CVT::send( Session* session ){
       while( (*session->image)->histogram[n1] == 0 ) --n1;
 
       // Histogram has been calculated using 8 bits, so scale up to native bit depth
-      if( complete_image.bpc > 8 && complete_image.sampleType == FIXEDPOINT ){
+      if( complete_image.bpc > 8 && complete_image.sampleType == SampleType::FIXEDPOINT ){
 	n0 = n0 << (complete_image.bpc-8);
 	n1 = n1 << (complete_image.bpc-8);
       }
@@ -411,9 +411,9 @@ void CVT::send( Session* session ){
 
   // Reduce to 1 or 3 bands if we have an alpha channel or a multi-band image and have requested a JPEG tile
   // For PNG and WebP, strip extra bands if we have more than 4 present
-  if( ( (session->view->output_format == JPEG) && (complete_image.channels == 2 || complete_image.channels > 3) ) ||
-      ( (session->view->output_format == PNG) && (complete_image.channels > 4) ) ||
-      ( (session->view->output_format == WEBP) && (complete_image.channels > 4) ) ){
+  if( ( (session->view->output_format == ImageEncoding::JPEG) && (complete_image.channels == 2 || complete_image.channels > 3) ) ||
+      ( (session->view->output_format == ImageEncoding::PNG)  && (complete_image.channels  > 4) ) ||
+      ( (session->view->output_format == ImageEncoding::WEBP) && (complete_image.channels  > 4) ) ){
 
     int output_channels = (complete_image.channels==2)? 1 : 3;
     if( session->loglevel >= 5 ) function_timer.start();
@@ -429,7 +429,7 @@ void CVT::send( Session* session ){
 
 
   // Convert to greyscale if requested
-  if( (*session->image)->getColourSpace() == sRGB && session->view->colourspace == GREYSCALE ){
+  if( (*session->image)->getColorSpace() == ColorSpace::sRGB && session->view->colorspace == ColorSpace::GREYSCALE ){
 
     if( session->loglevel >= 5 ) function_timer.start();
 
@@ -443,7 +443,7 @@ void CVT::send( Session* session ){
 
 
   // Convert to binary (bi-level) if requested
-  if( (*session->image)->getColourSpace() != BINARY && session->view->colourspace == BINARY ){
+  if( (*session->image)->getColorSpace() != ColorSpace::BINARY && session->view->colorspace == ColorSpace::BINARY ){
 
     if( session->loglevel >= 5 ) function_timer.start();
 

@@ -28,19 +28,16 @@
 #include <cstdint>
 #include <ctime>
 
-#if !( (__cplusplus >= 201103L) || ((defined(_MSC_VER) && _MSC_VER >= 1900)) )
-#include <stdint.h>          // Required for C++98
-#endif
 
 
 /// Colour spaces - GREYSCALE, sRGB and CIELAB
-enum ColourSpaces { NONE, GREYSCALE, sRGB, CIELAB, BINARY };
+enum class ColorSpace { NONE, GREYSCALE, sRGB, CIELAB, BINARY };
 
-/// Compression Types
-enum CompressionType { UNCOMPRESSED, JPEG, DEFLATE, PNG, WEBP };
+/// File format / encoding / compression types
+enum class ImageEncoding { UNSUPPORTED, RAW, TIFF, JPEG2000, JPEG, DEFLATE, PNG, WEBP };
 
-/// Sample Types
-enum SampleType { FIXEDPOINT, FLOATINGPOINT };
+/// Sample types
+enum class SampleType { FIXEDPOINT, FLOATINGPOINT };
 
 
 
@@ -68,7 +65,7 @@ class RawTile {
   SampleType sampleType;
 
   /// Compression type
-  CompressionType compressionType;
+  ImageEncoding compressionType;
 
   /// Compression rate or quality
   int quality;
@@ -119,8 +116,8 @@ class RawTile {
       height( h ),
       channels( c ),
       bpc( b ),
-      sampleType( FIXEDPOINT ),
-      compressionType( UNCOMPRESSED ),
+      sampleType( SampleType::FIXEDPOINT ),
+      compressionType( ImageEncoding::RAW ),
       quality( 0 ),
       timestamp( 0 ),
       tileNum( tn ),
@@ -215,7 +212,7 @@ class RawTile {
 
     switch( bpc ){
       case 32:
-	if( sampleType == FLOATINGPOINT ) data = new float[size/4];
+	if( sampleType == SampleType::FLOATINGPOINT ) data = new float[size/4];
 	else data = new int[size/4];
 	break;
       case 16:
@@ -238,7 +235,7 @@ class RawTile {
     if( buffer ){
       switch( bpc ){
         case 32:
-	  if( sampleType == FLOATINGPOINT ) delete[] (float*) buffer;
+	  if( sampleType == SampleType::FLOATINGPOINT ) delete[] (float*) buffer;
 	  else delete[] (unsigned int*) buffer;
 	  break;
         case 16:
@@ -422,5 +419,6 @@ class RawTile {
 #endif
 
 };
+
 
 #endif

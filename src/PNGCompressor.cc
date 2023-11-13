@@ -367,7 +367,7 @@ unsigned int PNGCompressor::Compress( RawTile& rawtile )
   delete[] dest.output;
 
   // Set the tile compression type
-  rawtile.compressionType = PNG;
+  rawtile.compressionType = ImageEncoding::PNG;
   rawtile.quality = Q;
 
   // Return the size of the data we have compressed

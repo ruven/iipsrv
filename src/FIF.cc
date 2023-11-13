@@ -128,14 +128,14 @@ void FIF::run( Session* session, const string& src ){
       Test for supported image formats: TIFF or JPEG2000
     ******************************************************/
 
-    ImageFormat format = test.getImageFormat();
+    ImageEncoding format = test.getImageFormat();
 
-    if( format == TIF ){
+    if( format == ImageEncoding::TIFF ){
       if( session->loglevel >= 2 ) *(session->logfile) << "FIF :: TIFF image detected" << endl;
       *session->image = new TPTImage( test );
     }
 #if defined(HAVE_KAKADU) || defined(HAVE_OPENJPEG)
-    else if( format == JPEG2000 ){
+    else if( format == ImageEncoding::JPEG2000 ){
       if( session->loglevel >= 2 )
         *(session->logfile) << "FIF :: JPEG2000 image detected" << endl;
 #if defined(HAVE_KAKADU)

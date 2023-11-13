@@ -156,7 +156,7 @@ class Compressor {
 
   /// Get compression type
   /** @return compressionType */
-  virtual CompressionType getCompressionType() const { return UNCOMPRESSED; };
+  virtual ImageEncoding getImageEncoding() const { return ImageEncoding::RAW; };
 
 };
 

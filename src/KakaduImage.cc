@@ -331,17 +331,17 @@ void KakaduImage::loadImageInfo( int seq, int ang )
 
   // Set our colour space - we let Kakadu automatically handle CIELAB->sRGB conversion for the time being
   if( channels == 1 ){
-    colourspace = (bpc==1)? BINARY : GREYSCALE;
+    colorspace = (bpc==1)? ColorSpace::BINARY : ColorSpace::GREYSCALE;
   }
   else{
     jp2_colour_space cs = j2k_colour.get_space();
-    if( cs == JP2_sRGB_SPACE || cs == JP2_iccRGB_SPACE || cs == JP2_esRGB_SPACE || cs == JP2_CIELab_SPACE ) colourspace = sRGB;
-    //else if ( cs == JP2_CIELab_SPACE ) colourspace = CIELAB;
+    if( cs == JP2_sRGB_SPACE || cs == JP2_iccRGB_SPACE || cs == JP2_esRGB_SPACE || cs == JP2_CIELab_SPACE ) colorspace = ColorSpace::sRGB;
+    //else if ( cs == JP2_CIELab_SPACE ) colorspace = CIELAB;
     else {
 #ifdef KAKADU_DEBUG
     	logfile << "WARNING : colour space not found, setting sRGB colour space value" << endl;
 #endif
-    	colourspace = sRGB;
+    	colorspace = ColorSpace::sRGB;
     }
   }
 

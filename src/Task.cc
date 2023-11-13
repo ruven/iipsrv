@@ -249,23 +249,23 @@ void CVT::run( Session* session, const string& src ){
   transform( argument.begin(), argument.end(), argument.begin(), ::tolower );
 
   if( argument == "jpeg" || argument == "jpg" ){
-    session->view->output_format = JPEG;
+    session->view->output_format = ImageEncoding::JPEG;
     if( session->loglevel >= 3 ) *(session->logfile) << "CVT :: JPEG output" << endl;
   }
 #ifdef HAVE_PNG
   else if( argument == "png" ){
-    session->view->output_format = PNG;
+    session->view->output_format = ImageEncoding::PNG;
     if( session->loglevel >= 3 ) *(session->logfile) << "CVT :: PNG output" << endl;
   }
 #endif
   #ifdef HAVE_WEBP
   else if( argument == "webp" ){
-    session->view->output_format = WEBP;
+    session->view->output_format = ImageEncoding::WEBP;
     if( session->loglevel >= 3 ) *(session->logfile) << "CVT :: WebP output" << endl;
   }
 #endif
   else{
-    session->view->output_format = JPEG;
+    session->view->output_format = ImageEncoding::JPEG;
     if( session->loglevel >= 1 ) *(session->logfile) << "CVT :: Unsupported request: '" << argument << "'. Sending JPEG" << endl;
   }
 
@@ -565,8 +565,8 @@ void COL::run( Session* session, const string& argument ){
   if( session->loglevel >= 2 ) *(session->logfile) << "COL handler reached" << endl;
   if( session->loglevel >= 3 ) *(session->logfile) << "COL :: requested color transform to " << ctype << endl;
 
-  if( ctype == "grey" || ctype == "gray" ) session->view->colourspace = GREYSCALE;
-  else if( ctype == "binary" ) session->view->colourspace = BINARY;
+  if( ctype == "grey" || ctype == "gray" ) session->view->colorspace = ColorSpace::GREYSCALE;
+  else if( ctype == "binary" ) session->view->colorspace = ColorSpace::BINARY;
   
 }
 

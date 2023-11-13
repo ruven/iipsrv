@@ -110,7 +110,7 @@ void SPECTRA::run( Session* session, const std::string& argument ){
 
     int n = *i;
 
-    RawTile rawtile = tilemanager.getTile( resolution, tile, n, session->view->yangle, session->view->getLayers(), UNCOMPRESSED );
+    RawTile rawtile = tilemanager.getTile( resolution, tile, n, session->view->yangle, session->view->getLayers(), ImageEncoding::RAW );
 
     // Make sure our x,y coordinates are within the tile dimensions
     if( x >= (int)rawtile.width || y >= (int)rawtile.height ){
@@ -140,7 +140,7 @@ void SPECTRA::run( Session* session, const std::string& argument ){
       reflectance = static_cast<float>((float)((unsigned short*)ptr)[index]) / 65535.0;
     }
     else if( rawtile.bpc == 32 ){
-      if( rawtile.sampleType == FIXEDPOINT ) {
+      if( rawtile.sampleType == SampleType::FIXEDPOINT ) {
         ptr = (unsigned int*) rawtile.data;
         reflectance = static_cast<float>((float)((unsigned int*)ptr)[index]);
       }

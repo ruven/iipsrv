@@ -124,7 +124,7 @@ void TPTImage::loadImageInfo( int seq, int ang )
   // We have to do this conversion explicitly to avoid problems on Mac OS X
   channels = (unsigned int) samplesperpixel;
   bpc = (unsigned int) bitspersample;
-  sampleType = (sampleformat==3) ? FLOATINGPOINT : FIXEDPOINT;
+  sampleType = (sampleformat==3) ? SampleType::FLOATINGPOINT : SampleType::FIXEDPOINT;
 
   // Check for the no. of resolutions in the pyramidal image
   current_dir = TIFFCurrentDirectory( tiff );
@@ -240,22 +240,22 @@ void TPTImage::loadImageInfo( int seq, int ang )
 
 
   // Handle various colour spaces
-  if( colour == PHOTOMETRIC_CIELAB ) colourspace = CIELAB;
+  if( colour == PHOTOMETRIC_CIELAB ) colorspace = ColorSpace::CIELAB;
   else if( colour == PHOTOMETRIC_MINISBLACK ){
-    colourspace = (bpc==1)? BINARY : GREYSCALE;
+    colorspace = (bpc==1)? ColorSpace::BINARY : ColorSpace::GREYSCALE;
   }
   else if( colour == PHOTOMETRIC_PALETTE ){
     // Watch out for colourmapped images. These are stored as 1 sample per pixel,
     // but are decoded to 3 channels by libtiff, so declare them as sRGB
-    colourspace = sRGB;
+    colorspace = ColorSpace::sRGB;
     channels = 3;
   }
   else if( colour == PHOTOMETRIC_YCBCR ){
     // JPEG encoded tiles can be subsampled YCbCr encoded. Ask to decode these to RGB
     TIFFSetField( tiff, TIFFTAG_JPEGCOLORMODE, JPEGCOLORMODE_RGB );
-    colourspace = sRGB;
+    colorspace = ColorSpace::sRGB;
   }
-  else colourspace = sRGB;
+  else colorspace = ColorSpace::sRGB;
 
 
   // Get the max and min values for our data (important for float data)
@@ -303,8 +303,8 @@ void TPTImage::loadImageInfo( int seq, int ang )
       if( bpc <= 8 ) smaxvalue[i] = 255.0;
       else if( bpc == 12 ) smaxvalue[i] = 4095.0;
       else if( bpc == 16 ) smaxvalue[i] = 65535.0;
-      else if( bpc == 32 && sampleType == FIXEDPOINT ) smaxvalue[i] = 4294967295.0;
-      else if( bpc == 32 && sampleType == FLOATINGPOINT ) smaxvalue[i] = 1.0;  // Set dummy value for float
+      else if( bpc == 32 && sampleType == SampleType::FIXEDPOINT ) smaxvalue[i] = 4294967295.0;
+      else if( bpc == 32 && sampleType == SampleType::FLOATINGPOINT ) smaxvalue[i] = 1.0;  // Set dummy value for float
     }
     min.push_back( (float)sminvalue[i] );
     max.push_back( (float)smaxvalue[i] );
@@ -439,7 +439,7 @@ RawTile TPTImage::getTile( int x, int y, unsigned int res, int layers, unsigned 
 
 
   // Get the size of this tile, the size of the current resolution,
-  //   the number of samples and the colourspace.
+  //   the number of samples and the colorspace.
   //  TIFFGetField( tiff, TIFFTAG_TILEWIDTH, &tw );
   //  TIFFGetField( tiff, TIFFTAG_TILELENGTH, &th );
   TIFFGetField( tiff, TIFFTAG_IMAGEWIDTH, &im_width );
@@ -483,22 +483,22 @@ RawTile TPTImage::getTile( int x, int y, unsigned int res, int layers, unsigned 
 
 
   // Handle various colour spaces
-  if( colour == PHOTOMETRIC_CIELAB ) colourspace = CIELAB;
+  if( colour == PHOTOMETRIC_CIELAB ) colorspace = ColorSpace::CIELAB;
   else if( colour == PHOTOMETRIC_MINISBLACK ){
-    colourspace = (bpc==1)? BINARY : GREYSCALE;
+    colorspace = (bpc==1)? ColorSpace::BINARY : ColorSpace::GREYSCALE;
   }
   else if( colour == PHOTOMETRIC_PALETTE ){
     // Watch out for colourmapped images. There are stored as 1 sample per pixel,
     // but are decoded to 3 channels by libtiff, so declare them as sRGB
-    colourspace = GREYSCALE;
+    colorspace = ColorSpace::GREYSCALE;
     channels = 1;
   }
   else if( colour == PHOTOMETRIC_YCBCR ){
     // JPEG encoded tiles can be subsampled YCbCr encoded. Ask to decode these to RGB
     TIFFSetField( tiff, TIFFTAG_JPEGCOLORMODE, JPEGCOLORMODE_RGB );
-    colourspace = sRGB;
+    colorspace = ColorSpace::sRGB;
   }
-  else colourspace = sRGB;
+  else colorspace = ColorSpace::sRGB;
 
 
   // Initialize our RawTile object

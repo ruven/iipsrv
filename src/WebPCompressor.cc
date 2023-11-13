@@ -186,7 +186,7 @@ unsigned int WebPCompressor::Compress( RawTile& rawtile ){
 
   // Return our compressed tile
   rawtile.quality = this->Q;
-  rawtile.compressionType = WEBP;
+  rawtile.compressionType = ImageEncoding::WEBP;
   return rawtile.dataLength;
 }
 

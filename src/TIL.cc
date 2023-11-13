@@ -129,7 +129,7 @@ void TIL::run( Session* session, const std::string& a ){
       // Get our tile using our tile manager
       TileManager tilemanager( session->tileCache, *session->image, session->watermark, session->jpeg, session->logfile, session->loglevel );
       RawTile rawtile = tilemanager.getTile( resolution, n, session->view->xangle,
-					     session->view->yangle, session->view->getLayers(), JPEG );
+					     session->view->yangle, session->view->getLayers(), ImageEncoding::JPEG );
 
       int len = rawtile.dataLength;
 

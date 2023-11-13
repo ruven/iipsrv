@@ -25,7 +25,7 @@
 
 
 #include "IIPImage.h"
-#include <tiff.h>
+//#include <tiff.h>
 #include <tiffio.h>
 
 

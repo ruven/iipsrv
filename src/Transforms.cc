@@ -72,7 +72,7 @@ void Transform::normalize( RawTile& in, const vector<float>& max, const vector<f
   unsigned short* usptr;
   unsigned char* ucptr;
 
-  if( in.bpc == 32 && in.sampleType == FLOATINGPOINT ) {
+  if( in.bpc == 32 && in.sampleType == SampleType::FLOATINGPOINT ) {
     normdata = (float*)in.data;
   }
   else {
@@ -87,7 +87,7 @@ void Transform::normalize( RawTile& in, const vector<float>& max, const vector<f
     float invdiffc = fabs(diffc) > 1e-30? 1./diffc : 1e30;
 
     // Normalize our data
-    if( in.bpc == 32 && in.sampleType == FLOATINGPOINT ) {
+    if( in.bpc == 32 && in.sampleType == SampleType::FLOATINGPOINT ) {
       fptr = (float*)in.data;
       // Loop through our pixels for floating point pixels
 #if defined(__ICC) || defined(__INTEL_COMPILER)
@@ -99,7 +99,7 @@ void Transform::normalize( RawTile& in, const vector<float>& max, const vector<f
         normdata[n] = isfinite(fptr[n])? (fptr[n] - minc) * invdiffc : 0.0f;
       }
     }
-    else if( in.bpc == 32 && in.sampleType == FIXEDPOINT ) {
+    else if( in.bpc == 32 && in.sampleType == SampleType::FIXEDPOINT ) {
       uiptr = (unsigned int*)in.data;
       // Loop through our pixels for unsigned int pixels
 #if defined(__ICC) || defined(__INTEL_COMPILER)
@@ -138,7 +138,7 @@ void Transform::normalize( RawTile& in, const vector<float>& max, const vector<f
   }
 
   // Delete our original buffers, unless we already had floats
-  if( in.bpc == 32 && in.sampleType == FIXEDPOINT ){
+  if( in.bpc == 32 && in.sampleType == SampleType::FIXEDPOINT ){
     delete[] (unsigned int*) in.data;
   }
   else if( in.bpc == 16 ){
@@ -151,7 +151,7 @@ void Transform::normalize( RawTile& in, const vector<float>& max, const vector<f
   // Assign our new buffer and modify some info
   in.data = normdata;
   in.bpc = 32;
-  in.sampleType = FLOATINGPOINT;
+  in.sampleType = SampleType::FLOATINGPOINT;
   in.dataLength = (uint32_t) np * (in.bpc/8);
   in.capacity = in.dataLength;
 
@@ -637,13 +637,13 @@ void Transform::interpolate_bilinear( RawTile& in, unsigned int resampled_width,
 void Transform::scale_to_8bit( RawTile& in ){
 
   // Skip floating point data and data already in 8 bit form
-  if( in.bpc == 8 || in.sampleType == FLOATINGPOINT ) return;
+  if( in.bpc == 8 || in.sampleType == SampleType::FLOATINGPOINT ) return;
 
   uint32_t np = (uint32_t) in.width * in.height * in.channels;
   unsigned char* buffer = new unsigned char[np];
 
   // 32 bit fixed point integer
-  if( in.bpc == 32 && in.sampleType == FIXEDPOINT ){
+  if( in.bpc == 32 && in.sampleType == SampleType::FIXEDPOINT ){
 #if defined(__ICC) || defined(__INTEL_COMPILER)
 #pragma ivdep
 #elif defined(_OPENMP)
@@ -671,7 +671,7 @@ void Transform::scale_to_8bit( RawTile& in ){
   // Replace original buffer with new 8 bit data
   in.data = buffer;
   in.bpc = 8;
-  in.sampleType = FIXEDPOINT;
+  in.sampleType = SampleType::FIXEDPOINT;
   in.dataLength = np;
   in.capacity = np;
 }
@@ -684,7 +684,8 @@ void Transform::contrast( RawTile& in, float contrast ){
   uint32_t np = (uint32_t) in.width * in.height * in.channels;
   unsigned char* buffer = new unsigned char[np];
   float* infptr = (float*)in.data;
-  const float max8 = 255.0;    // Max pixel value for 8 bit data
+  const float max8 = 255.0;     // Max pixel value for 8 bit data
+  float cmax = max8 * contrast; // Set variable to avoid loop multiplication
 
 #if defined(__ICC) || defined(__INTEL_COMPILER)
 #pragma ivdep
@@ -692,7 +693,7 @@ void Transform::contrast( RawTile& in, float contrast ){
 #pragma omp parallel for if( in.width*in.height > PARALLEL_THRESHOLD )
 #endif
   for( uint32_t n=0; n<np; n++ ){
-    float v = infptr[n] * max8 * contrast;
+    float v = infptr[n] * cmax;
     buffer[n] = (unsigned char)( (v<max8) ? (v<0.0? 0.0f : v) : max8 );
   }
 
@@ -700,7 +701,7 @@ void Transform::contrast( RawTile& in, float contrast ){
   delete[] (float*) in.data;
   in.data = buffer;
   in.bpc = 8;
-  in.sampleType = FIXEDPOINT;
+  in.sampleType = SampleType::FIXEDPOINT;
   in.dataLength = np;
   in.capacity = np;
 }

@@ -140,7 +140,7 @@ class JPEGCompressor: public Compressor{
   inline const char* getSuffix() const { return "jpg"; }
 
   /// Get compression type
-  inline CompressionType getCompressionType() const { return JPEG; };
+  inline ImageEncoding getImageEncoding() const { return ImageEncoding::JPEG; };
 
 };
 

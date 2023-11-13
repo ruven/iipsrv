@@ -583,12 +583,12 @@ void IIIF::run( Session* session, const string& src )
         format = quality.substr( pos + 1, string::npos );
         quality.erase( pos, string::npos );
 
-	if( format == "jpg" ) session->view->output_format = JPEG;
+	if( format == "jpg" ) session->view->output_format = ImageEncoding::JPEG;
 #ifdef HAVE_PNG
-	else if( format == "png" ) session->view->output_format = PNG;
+	else if( format == "png" ) session->view->output_format = ImageEncoding::PNG;
 #endif
 #ifdef HAVE_WEBP
-	else if( format == "webp" ) session->view->output_format = WEBP;
+	else if( format == "webp" ) session->view->output_format = ImageEncoding::WEBP;
 #endif
 	else throw invalid_argument( "IIIF :: unsupported output format" );
       }
@@ -599,10 +599,10 @@ void IIIF::run( Session* session, const string& src )
         // Do nothing
       }
       else if ( quality == "grey" || quality == "gray" ){
-        session->view->colourspace = GREYSCALE;
+        session->view->colorspace = ColorSpace::GREYSCALE;
       }
       else if ( quality == "bitonal" ){
-        session->view->colourspace = BINARY;
+        session->view->colorspace = ColorSpace::BINARY;
       }
       else{
         throw invalid_argument( "unsupported quality parameter - must be one of native, color or grey" );

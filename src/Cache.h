@@ -260,7 +260,7 @@ class Cache {
    *  @param q compression quality
    *  @return pointer to data or NULL on error
    */
-  RawTile* getTile( const std::string& f, int r, int t, int h, int v, CompressionType c, int q ) {
+  RawTile* getTile( const std::string& f, int r, int t, int h, int v, ImageEncoding c, int q ) {
 
     if( maxSize == 0 ) return NULL;
 
@@ -281,13 +281,13 @@ class Cache {
    *  @param t tile number
    *  @param h horizontal sequence number
    *  @param v vertical sequence number
-   *  @param c compression type
+   *  @param c ImageEncoding type
    *  @param q compression quality
    *  @return string
    */
-  std::string getIndex( const std::string& f, int r, int t, int h, int v, CompressionType c, int q ) const {
+  std::string getIndex( const std::string& f, int r, int t, int h, int v, ImageEncoding c, int q ) const {
     char tmp[1024];
-    snprintf( tmp, 1024, "%s:%d:%d:%d:%d:%d:%d", f.c_str(), r, t, h, v, c, q );
+    snprintf( tmp, 1024, "%s:%d:%d:%d:%d:%d:%d", f.c_str(), r, t, h, v, (int)c, q );
     return std::string( tmp );
   }
 

@@ -74,14 +74,14 @@ void JTL::send( Session* session, int resolution, int tile ){
 
 
   // Determine which output encoding to use
-  CompressionType ct = session->view->output_format;
+  ImageEncoding ct = session->view->output_format;
   Compressor *compressor;
-  if( session->view->output_format == JPEG ) compressor = session->jpeg;
+  if( session->view->output_format == ImageEncoding::JPEG ) compressor = session->jpeg;
 #ifdef HAVE_PNG
-  else if( session->view->output_format == PNG ) compressor = session->png;
+  else if( session->view->output_format == ImageEncoding::PNG ) compressor = session->png;
 #endif
 #ifdef HAVE_WEBP
-  else if( session->view->output_format == WEBP ) compressor = session->webp;
+  else if( session->view->output_format == ImageEncoding::WEBP ) compressor = session->webp;
 #endif
   else compressor = session->jpeg;
 
@@ -97,7 +97,7 @@ void JTL::send( Session* session, int resolution, int tile ){
 
     // Retrieve an uncompressed version of our smallest tile
     // which should be sufficient for calculating the histogram
-    RawTile thumbnail = tilemanager.getTile( 0, 0, 0, session->view->yangle, session->view->getLayers(), UNCOMPRESSED );
+    RawTile thumbnail = tilemanager.getTile( 0, 0, 0, session->view->yangle, session->view->getLayers(), ImageEncoding::RAW );
 
     // Calculate histogram
     (*session->image)->histogram =
@@ -117,13 +117,13 @@ void JTL::send( Session* session, int resolution, int tile ){
 
 
   // Request uncompressed tile if raw pixel data is required for processing
-  if( (*session->image)->getNumBitsPerPixel() > 8 || (*session->image)->getColourSpace() == CIELAB
+  if( (*session->image)->getNumBitsPerPixel() > 8 || (*session->image)->getColorSpace() == ColorSpace::CIELAB
       || (*session->image)->getNumChannels() == 2 || (*session->image)->getNumChannels() > 3
-      || ( (session->view->colourspace==GREYSCALE || session->view->colourspace==BINARY) && (*session->image)->getNumChannels()==3 &&
-	   (*session->image)->getNumBitsPerPixel()==8 )
+      || ( (session->view->colorspace==ColorSpace::GREYSCALE || session->view->colorspace==ColorSpace::BINARY) &&
+	   (*session->image)->getNumChannels()==3 && (*session->image)->getNumBitsPerPixel()==8 )
       || session->view->floatProcessing() || session->view->equalization
       || session->view->getRotation() != 0.0 || session->view->flip != 0
-      ) ct = UNCOMPRESSED;
+      ) ct = ImageEncoding::RAW;
 
 
   // Set the physical output resolution for this particular view and zoom level
@@ -166,7 +166,7 @@ void JTL::send( Session* session, int resolution, int tile ){
 
 
   // Convert CIELAB to sRGB
-  if( (*session->image)->getColourSpace() == CIELAB ){
+  if( (*session->image)->getColorSpace() == ColorSpace::CIELAB ){
 
     if( session->loglevel >= 4 ){
       *(session->logfile) << "JTL :: Converting from CIELAB->sRGB";
@@ -180,7 +180,7 @@ void JTL::send( Session* session, int resolution, int tile ){
 
 
   // Only use our floating point image processing pipeline if necessary
-  if( rawtile.sampleType == FLOATINGPOINT || session->view->floatProcessing() ){
+  if( rawtile.sampleType == SampleType::FLOATINGPOINT || session->view->floatProcessing() ){
 
     // Make a copy of our max and min as we may change these
     vector <float> min = (*session->image)->min;
@@ -198,7 +198,7 @@ void JTL::send( Session* session, int resolution, int tile ){
       while( (*session->image)->histogram[n1] == 0 ) --n1;
 
       // Histogram has been calculated using 8 bits, so scale up to native bit depth
-      if( rawtile.bpc > 8 && rawtile.sampleType == FIXEDPOINT ){
+      if( rawtile.bpc > 8 && rawtile.sampleType == SampleType::FIXEDPOINT ){
 	n0 = n0 << (rawtile.bpc-8);
 	n1 = n1 << (rawtile.bpc-8);
       }
@@ -323,9 +323,9 @@ void JTL::send( Session* session, int resolution, int tile ){
 
   // Reduce to 1 or 3 bands if we have an alpha channel or a multi-band image and have requested a JPEG tile
   // For PNG and WebP, strip extra bands if we have more than 4 present
-  if( ( (session->view->output_format == JPEG) && (rawtile.channels == 2 || rawtile.channels > 3) ) ||
-      ( (session->view->output_format == PNG) && (rawtile.channels > 4) ) ||
-      ( (session->view->output_format == WEBP) && (rawtile.channels > 4) ) ){
+  if( ( (session->view->output_format == ImageEncoding::JPEG) && (rawtile.channels == 2 || rawtile.channels > 3) ) ||
+      ( (session->view->output_format == ImageEncoding::PNG)  && (rawtile.channels  > 4) ) ||
+      ( (session->view->output_format == ImageEncoding::WEBP) && (rawtile.channels  > 4) ) ){
 
     unsigned int bands = (rawtile.channels==2) ? 1 : 3;
     if( session->loglevel >= 4 ){
@@ -340,7 +340,7 @@ void JTL::send( Session* session, int resolution, int tile ){
 
 
   // Convert to greyscale if requested
-  if( (*session->image)->getColourSpace() == sRGB && session->view->colourspace == GREYSCALE ){
+  if( (*session->image)->getColorSpace() == ColorSpace::sRGB && session->view->colorspace == ColorSpace::GREYSCALE ){
     if( session->loglevel >= 4 ){
       *(session->logfile) << "JTL :: Converting to greyscale";
       function_timer.start();
@@ -353,7 +353,7 @@ void JTL::send( Session* session, int resolution, int tile ){
 
 
   // Convert to binary (bi-level) if requested
-  if( (*session->image)->getColourSpace() != BINARY && session->view->colourspace == BINARY ){
+  if( (*session->image)->getColorSpace() != ColorSpace::BINARY && session->view->colorspace == ColorSpace::BINARY ){
     if( session->loglevel >= 4 ){
       *(session->logfile) << "JTL :: Converting to binary with threshold ";
       function_timer.start();
@@ -411,9 +411,9 @@ void JTL::send( Session* session, int resolution, int tile ){
 
 
   // Compress to requested output format
-  if( rawtile.compressionType == UNCOMPRESSED ){
+  if( rawtile.compressionType == ImageEncoding::RAW ){
     if( session->loglevel >= 4 ){
-      *(session->logfile) << "JTL :: Encoding UNCOMPRESSED tile";
+      *(session->logfile) << "JTL :: ImageEncoding RAW tile";
       function_timer.start();
     }
     len = compressor->Compress( rawtile );

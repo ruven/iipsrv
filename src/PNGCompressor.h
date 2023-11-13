@@ -144,7 +144,7 @@ class PNGCompressor : public Compressor {
   inline const char* getSuffix() const { return "png"; }
 
   /// Get compression type
-  inline CompressionType getCompressionType() const { return PNG; };
+  inline ImageEncoding getImageEncoding() const { return ImageEncoding::PNG; };
 
 
   /// Get the current compression level

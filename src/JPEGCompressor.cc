@@ -457,7 +457,7 @@ unsigned int JPEGCompressor::Compress( RawTile& rawtile )
 
   // Set the tile compression parameters
   rawtile.dataLength = dataLength;
-  rawtile.compressionType = JPEG;
+  rawtile.compressionType = ImageEncoding::JPEG;
   rawtile.quality = Q;
 
 

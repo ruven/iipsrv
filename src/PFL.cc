@@ -188,7 +188,7 @@ void PFL::run( Session* session, const std::string& argument ){
 	intensity = (float)((unsigned short*)ptr)[j];
       }
       else if( rawtile.bpc == 32 ){
-	if( rawtile.sampleType == FIXEDPOINT ){
+	if( rawtile.sampleType == SampleType::FIXEDPOINT ){
 	  ptr = (unsigned int*) rawtile.data;
 	  intensity = (float)((unsigned int*)ptr)[j];
 	}
@@ -201,7 +201,7 @@ void PFL::run( Session* session, const std::string& argument ){
       // Scale our value if we have defined a scale
       intensity = (scale == 1.0) ? intensity : intensity * scale;
 
-      if( rawtile.sampleType == FLOATINGPOINT ) profile << fixed << setprecision(9);
+      if( rawtile.sampleType == SampleType::FLOATINGPOINT ) profile << fixed << setprecision(9);
       profile << intensity;
       if( j < length-1 ) profile << ",";
 

@@ -64,10 +64,10 @@ class TileManager{
    *  @param xangle horizontal sequence number
    *  @param yangle vertical sequence number
    *  @param number of quality layers within image to decode
-   *  @param c CompressionType
+   *  @param c Compression
    *  @return RawTile
    */
-  RawTile getNewTile( int resolution, int tile, int xangle, int yangle, int layers, CompressionType c );
+  RawTile getNewTile( int resolution, int tile, int xangle, int yangle, int layers, ImageEncoding c );
 
 
  public:
@@ -103,17 +103,17 @@ class TileManager{
    *  @param xangle horizontal sequence number
    *  @param yangle vertical sequence number
    *  @param layers number of quality layers within image to decode
-   *  @param c CompressionType
+   *  @param c Compression
    *  @return RawTile
    */
-  RawTile getTile( int resolution, int tile, int xangle, int yangle, int layers, CompressionType c );
+  RawTile getTile( int resolution, int tile, int xangle, int yangle, int layers, ImageEncoding c );
 
 
 
   /// Generate a complete region
   /**
    *  Build up an arbitrary region by extracting tiles from the cache by using getTile function.
-   *  Data returned as uncompressed data.
+   *  Data returned as uncompressed raw data.
    *  @param res resolution number
    *  @param xangle horizontal sequence number
    *  @param yangle vertical sequence number

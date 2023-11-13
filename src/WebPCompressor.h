@@ -124,7 +124,7 @@ class WebPCompressor : public Compressor {
   inline const char* getSuffix() const { return "webp"; }
 
   /// Get compression type
-  inline CompressionType getCompressionType() const { return WEBP; };
+  inline ImageEncoding getImageEncoding() const { return ImageEncoding::WEBP; };
 
 
   /// Get the current compression level

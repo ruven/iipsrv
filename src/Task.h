@@ -251,7 +251,7 @@ class PTL : public JTL {
  public:
   void run( Session* session, const std::string& argument ){
     // Set our encoding format and call JTL::run
-    session->view->output_format = PNG;
+    session->view->output_format = ImageEncoding::PNG;
     JTL::run( session, argument );
   };
 };
@@ -262,7 +262,7 @@ class WTL : public JTL {
 public:
   void run( Session* session, const std::string& argument ){
     // Set our encoding format and call JTL::run
-    session->view->output_format = WEBP;
+    session->view->output_format = ImageEncoding::WEBP;
     JTL::run( session, argument );
   };
 };

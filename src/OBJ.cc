@@ -320,11 +320,11 @@ void OBJ::colorspace( std::string arg ){
   const char *planes = "3 0 1 2";
   int calibrated = 0;
   int colourspace;
-  if( (*session->image)->getColourSpace() == CIELAB ){
+  if( (*session->image)->getColorSpace() == ColorSpace::CIELAB ){
     colourspace = 4;
     calibrated = 1;
   }
-  else if( (*session->image)->getColourSpace() == GREYSCALE ){
+  else if( (*session->image)->getColorSpace() == ColorSpace::GREYSCALE ){
     colourspace = 1;
     planes = "1 0";
   }

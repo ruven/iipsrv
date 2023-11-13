@@ -71,13 +71,13 @@ class View{
   bool inverted;                              /// Whether to invert colormap
   int max_layers;			      /// Maximum number of quality layers allowed
   int layers;			              /// Number of quality layers
-  ColourSpaces colourspace;                   /// Requested colourspace
+  ColorSpace colorspace;                      /// Requested colorspace
   std::vector< std::vector<float> > ctw;      /// Colour twist matrix
   int flip;                                   /// Flip (1=horizontal, 2=vertical)
   bool maintain_aspect;                       /// Indicate whether aspect ratio should be maintained
   bool allow_upscaling;                       /// Indicate whether images may be served larger than the source file
   bool embed_icc;                             /// Indicate whether we should embed ICC profiles
-  CompressionType output_format;              /// Requested output format
+  ImageEncoding output_format;                     /// Requested output format
   float contrast;                             /// Contrast adjustment requested by CNT command
   float gamma;                                /// Gamma adjustment requested by GAM command
   std::vector<float> convolution;             /// Convolution matrix
@@ -101,9 +101,9 @@ class View{
     rotation = 0.0; flip = 0;
     maintain_aspect = true;
     allow_upscaling = true;
-    colourspace = NONE;
+    colorspace = ColorSpace::NONE;
     embed_icc = true;
-    output_format = JPEG;
+    output_format = ImageEncoding::JPEG;
     equalization = false;
     minmax = false;
   };
@@ -145,7 +145,7 @@ class View{
    */
   bool embedICC(){
     // Disable if colour-mapping, twist, hill-shading or greyscale conversion applied
-    if( cmapped || shaded || ctw.size() || colourspace==GREYSCALE ) return false;
+    if( cmapped || shaded || ctw.size() || colorspace==ColorSpace::GREYSCALE ) return false;
     return embed_icc;
   };
 
@@ -273,7 +273,7 @@ class View{
 
   /// Whether we require a histogram
   bool requireHistogram(){
-    if( equalization || colourspace==BINARY || contrast==-1 ) return true;
+    if( equalization || colorspace==ColorSpace::BINARY || contrast==-1 ) return true;
     else return false;
   }
 

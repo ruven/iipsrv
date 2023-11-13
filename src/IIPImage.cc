@@ -77,7 +77,7 @@ void IIPImage::swap( IIPImage& first, IIPImage& second ) // nothrow
   std::swap( first.channels, second.channels );
   std::swap( first.sampleType, second.sampleType );
   std::swap( first.quality_layers, second.quality_layers );
-  std::swap( first.colourspace, second.colourspace );
+  std::swap( first.colorspace, second.colorspace );
   std::swap( first.isSet, second.isSet );
   std::swap( first.currentX, second.currentX );
   std::swap( first.currentY, second.currentY );
@@ -137,13 +137,13 @@ void IIPImage::testImageType()
     static const unsigned char bbigtiff[4] = {0x49,0x49,0x2B,0x00}; // Big Endian BigTIFF
 
     // Compare our header sequence to our magic byte signatures
-    if( memcmp( header, j2k, 10 ) == 0 ) format = JPEG2000;
+    if( memcmp( header, j2k, 10 ) == 0 ) format = ImageEncoding::JPEG2000;
     else if( memcmp( header, stdtiff, 3 ) == 0
 	     || memcmp( header, lsbtiff, 4 ) == 0 || memcmp( header, msbtiff, 4 ) == 0
 	     || memcmp( header, lbigtiff, 4 ) == 0 || memcmp( header, bbigtiff, 4 ) == 0 ){
-      format = TIF;
+      format = ImageEncoding::TIFF;
     }
-    else format = UNSUPPORTED;
+    else format = ImageEncoding::UNSUPPORTED;
 
   }
   else{
@@ -174,9 +174,9 @@ void IIPImage::testImageType()
     int len = tmp.length();
 
     suffix = tmp.substr( dot + 1, len );
-    if( suffix == "jp2" || suffix == "jpx" || suffix == "j2k" ) format = JPEG2000;
-    else if( suffix == "tif" || suffix == "tiff" ) format = TIF;
-    else format = UNSUPPORTED;
+    if( suffix == "jp2" || suffix == "jpx" || suffix == "j2k" ) format = ImageEncoding::JPEG2000;
+    else if( suffix == "tif" || suffix == "tiff" ) format = ImageEncoding::TIFF;
+    else format = ImageEncoding::UNSUPPORTED;
 
     updateTimestamp( tmp );
 

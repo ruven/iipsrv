@@ -229,9 +229,9 @@ void OpenJPEGImage::loadImageInfo( int seq, int ang )
 
   // Need to assign basic colorspace information
   if( channels == 1 ){
-    colourspace = (bpc==1)? BINARY : GREYSCALE;
+    colorspace = (bpc==1)? ColorSpace::BINARY : ColorSpace::GREYSCALE;
   }
-  else if( channels == 3 ) colourspace = sRGB;
+  else if( channels == 3 ) colorspace = ColorSpace::sRGB;
 
   // Color space details
   string cs;
@@ -260,7 +260,7 @@ void OpenJPEGImage::loadImageInfo( int seq, int ang )
 #ifdef OPENJPEG_DEBUG
   logfile << "OpenJPEG :: " << bpc << " bit data" << endl
 	  << "OpenJPEG :: " << channels << " channels" << endl
- 	  << "OpenJPEG :: colour space: " << cs << endl
+	  << "OpenJPEG :: color space: " << cs << endl
 	  << "OpenJPEG :: " << quality_layers << " quality layers detected" << endl;
 #endif
 

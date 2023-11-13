@@ -48,13 +48,6 @@ class file_error : public std::runtime_error {
 };
 
 
-// Supported image formats
-enum ImageFormat { TIF, JPEG2000, UNSUPPORTED };
-
-
-// Multi-resolution pyramid type
-enum PyramidType { NORMAL, SUBIFD };
-
 
 // Structure for storing basic information on image stacks
 // - for now just stores stack name and scaling factor
@@ -107,6 +100,9 @@ class IIPImage {
 
  protected:
 
+  /// Multi-resolution pyramid type - used currently only to distinguish TIFF types
+  enum PyramidType { NORMAL, SUBIFD };
+
   /// The list of available horizontal angles (for image sequences)
   std::list <int> horizontalAnglesList;
 
@@ -120,7 +116,7 @@ class IIPImage {
   unsigned int virtual_levels;
 
   /// Return the image format e.g. tif
-  ImageFormat format;
+  ImageEncoding format;
 
   /// Define how pyramid is structured
   PyramidType pyramid;
@@ -128,7 +124,9 @@ class IIPImage {
   /// Whether we have an image stack consisting of multiple images within a single file
   std::list <Stack> stack;
 
+  /// List of IFD offsets for each resolution
   std::vector <uint32_t> resolution_ids;
+
 
  public:
 
@@ -138,8 +136,8 @@ class IIPImage {
   /// The tile dimensions for each resolution
   std::vector <unsigned int> tile_widths, tile_heights;
 
-  /// The colour space of the image
-  ColourSpaces colourspace;
+  /// The color space of the image
+  ColorSpace colorspace;
 
   /// Native physical resolution in both X and Y
   float dpi_x, dpi_y;
@@ -191,16 +189,16 @@ class IIPImage {
   IIPImage() :
     isFile( false ),
     virtual_levels( 0 ),
-    format( UNSUPPORTED ),
+    format( ImageEncoding::UNSUPPORTED ),
     pyramid( NORMAL ),
-    colourspace( NONE ),
+    colorspace( ColorSpace::NONE ),
     dpi_x( 0 ),
     dpi_y( 0 ),
     dpi_units( 0 ),
     numResolutions( 0 ),
     bpc( 0 ),
     channels( 0 ),
-    sampleType( FIXEDPOINT ),
+    sampleType( SampleType::FIXEDPOINT ),
     quality_layers( 0 ),
     isSet( false ),
     currentX( 0 ),
@@ -214,16 +212,16 @@ class IIPImage {
     imagePath( s ),
     isFile( false ),
     virtual_levels( 0 ),
-    format( UNSUPPORTED ),
+    format( ImageEncoding::UNSUPPORTED ),
     pyramid( NORMAL ),
-    colourspace( NONE ),
+    colorspace( ColorSpace::NONE ),
     dpi_x( 0 ),
     dpi_y( 0 ),
     dpi_units( 0 ),
     numResolutions( 0 ),
     bpc( 0 ),
     channels( 0 ),
-    sampleType( FIXEDPOINT ),
+    sampleType( SampleType::FIXEDPOINT ),
     quality_layers( 0 ),
     isSet( false ),
     currentX( 0 ),
@@ -252,7 +250,7 @@ class IIPImage {
     image_heights( image.image_heights ),
     tile_widths( image.tile_widths ),
     tile_heights( image.tile_heights ),
-    colourspace( image.colourspace ),
+    colorspace( image.colorspace ),
     dpi_x( image.dpi_x ),
     dpi_y( image.dpi_y ),
     dpi_units( image.dpi_units ),
@@ -298,7 +296,7 @@ class IIPImage {
   const std::string getFileName( int x, int y );
 
   /// Get the image format
-  ImageFormat getImageFormat() const { return format; };
+  ImageEncoding getImageFormat() const { return format; };
 
   /// Get the image timestamp
   /** @param s file path
@@ -377,8 +375,8 @@ class IIPImage {
     return tile_heights[n];
   };
 
-  /// Return the colour space for this image
-  ColourSpaces getColourSpace() const { return colourspace; };
+  /// Return the color space for this image
+  ColorSpace getColorSpace() const { return colorspace; };
 
   /// Return whether image is a single-file image stack
   bool isStack() const {
