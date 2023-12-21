@@ -108,8 +108,9 @@ class TPTImage : public IIPImage {
       @param r resolution
       @param l quality layers
       @param t tile number
+      @param e requested image encoding
    */
-  RawTile getTile( int x, int y, unsigned int r, int l, unsigned int t );
+  RawTile getTile( int x, int y, unsigned int r, int l, unsigned int t, ImageEncoding e = ImageEncoding::RAW );
 
 };
 

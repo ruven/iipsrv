@@ -441,7 +441,7 @@ void KakaduImage::closeImage()
 
 
 // Get an individual tile
-RawTile KakaduImage::getTile( int seq, int ang, unsigned int res, int layers, unsigned int tile )
+RawTile KakaduImage::getTile( int seq, int ang, unsigned int res, int layers, unsigned int tile, ImageEncoding e )
 {
 
   // Scale up our output bit depth to the nearest factor of 8

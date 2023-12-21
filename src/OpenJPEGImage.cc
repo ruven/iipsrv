@@ -287,7 +287,7 @@ void OpenJPEGImage::loadImageInfo( int seq, int ang )
 
 
 // Get an individual tile
-RawTile OpenJPEGImage::getTile( int seq, int ang, unsigned int res, int layers, unsigned int tile )
+RawTile OpenJPEGImage::getTile( int seq, int ang, unsigned int res, int layers, unsigned int tile, ImageEncoding e )
 {
 
   // Scale up our output bit depth to the nearest factor of 8

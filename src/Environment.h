@@ -48,6 +48,7 @@
 #define ALLOW_UPSCALING true
 #define URI_MAP ""
 #define EMBED_ICC true
+#define CODEC_PASSTHROUGH true
 #define KAKADU_READMODE 0
 #define IIIF_VERSION 3
 #define IIIF_DELIMITER ""
@@ -326,6 +327,15 @@ class Environment {
     if( envpara ) embed = atoi( envpara );
     else embed = EMBED_ICC;
     return embed;
+  }
+
+
+  static bool getCodecPassthrough(){
+    const char* envpara = getenv( "CODEC_PASSTHROUGH" );
+    bool codec_passthrough;
+    if( envpara ) codec_passthrough =  atoi( envpara ); // Implicit cast to boolean, all values other than '0' treated as true
+    else codec_passthrough = CODEC_PASSTHROUGH;
+    return codec_passthrough;
   }
 
 

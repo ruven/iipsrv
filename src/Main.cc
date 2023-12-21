@@ -332,6 +332,10 @@ int main( int argc, char *argv[] )
   bool embed_icc = Environment::getEmbedICC();
 
 
+  // Get codec passthrough setting
+  IIPImage::codec_passthrough = Environment::getCodecPassthrough();
+
+
   // Set our IIIF version
   IIIF::version = Environment::getIIIFVersion();
 
@@ -391,6 +395,7 @@ int main( int argc, char *argv[] )
     }
     logfile << "Setting Allow Upscaling to " << (allow_upscaling? "true" : "false") << endl;
     logfile << "Setting ICC profile embedding to " << (embed_icc? "true" : "false") << endl;
+    logfile << "Setting codec passthrough to " << (IIPImage::codec_passthrough? "true" : "false") << endl;
 #ifdef HAVE_KAKADU
     logfile << "Setting up JPEG2000 support via Kakadu SDK" << endl;
     logfile << "Setting Kakadu read-mode to " << ((kdu_readmode==2) ? "resilient" : (kdu_readmode==1) ? "fussy" : "fast") << endl;

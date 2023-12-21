@@ -158,8 +158,9 @@ class KakaduImage : public IIPImage {
       @param r resolution
       @param l number of quality layers to decode
       @param t tile number
+      @param e image encoding
    */
-  RawTile getTile( int x, int y, unsigned int r, int l, unsigned int t );
+  RawTile getTile( int x, int y, unsigned int r, int l, unsigned int t, ImageEncoding e = ImageEncoding::RAW );
 
   /// Overloaded function for returning a region for a given angle and resolution
   /** Return a RawTile object: Overloaded by child class.

@@ -344,11 +344,11 @@ void TPTImage::closeImage()
 
 
 
-RawTile TPTImage::getTile( int x, int y, unsigned int res, int layers, unsigned int tile )
+RawTile TPTImage::getTile( int x, int y, unsigned int res, int layers, unsigned int tile, ImageEncoding requested_encoding )
 {
   uint32_t im_width, im_height, tw, th, ntlx, ntly;
   uint32_t rem_x, rem_y;
-  uint16_t colour, planar;
+  uint16_t colour, planar, compression;
   string filename;
 
 
@@ -448,6 +448,7 @@ RawTile TPTImage::getTile( int x, int y, unsigned int res, int layers, unsigned 
   TIFFGetField( tiff, TIFFTAG_SAMPLESPERPIXEL, &channels );
   TIFFGetField( tiff, TIFFTAG_BITSPERSAMPLE, &bpc );
   TIFFGetField( tiff, TIFFTAG_PLANARCONFIG, &planar );
+  TIFFGetField( tiff, TIFFTAG_COMPRESSION, &compression );
 
   // Get tile size for this resolution - make sure it is tiled
   tw = tile_widths[vipsres];
@@ -511,12 +512,84 @@ RawTile TPTImage::getTile( int x, int y, unsigned int res, int layers, unsigned 
   uint32_t bytes = TIFFTileSize( tiff );
   rawtile.allocate( bytes );
 
-  // Decode and read the tile - dump data directly into RawTile buffer
-  int length = TIFFReadEncodedTile( tiff, (ttile_t) tile, (tdata_t) rawtile.data, (tsize_t) bytes );
-  if( length == -1 ){
-    throw file_error( "TPTImage :: TIFFReadEncodedTile() failed for " + getFileName( x, y ) );
+
+  // If codec pass-through is disabled or the tile needs reprocessing (cropping or change of bit depth),
+  //  make sure we decode the tile to raw pixel format
+  if( (IIPImage::codec_passthrough == false) ||
+      (tw != tile_widths[vipsres] || th != tile_heights[vipsres]) ||
+      (bpc==1 && channels==1) ){
+    requested_encoding == ImageEncoding::RAW;
   }
-  rawtile.dataLength = length;
+
+
+  // Get raw pre-encoded tile if our request matches the tile encoding - only currently makes sense for JPEG and WEBP
+  if( requested_encoding == ImageEncoding::JPEG && compression == COMPRESSION_JPEG ){
+
+    /* TIFF JPEG uses the JPEGTABLES field to store quantization and Huffman tables with image data stored
+       separately in each tile.
+       The JPEGTABLES tag data begins with a JPEG SOI marker (0XFF,0xD8), followed by the tables themselves
+       and ending with an EOI marker (0xFF,0xD9).
+       The tile data consists of image data preceeded by an SOI marker.
+       To reconstruct a full JPEG image, the table and tile data need to be concatenated, but with the final
+       EOI marker from the table tag and the initial SOI marker from the tile data removed
+    */
+
+    unsigned char* jpeg_tables;
+    uint16_t count = 0;
+
+    if( ( TIFFGetField( tiff, TIFFTAG_JPEGTABLES, &count, &jpeg_tables ) != 0 ) && ( count > 4 ) ){
+
+      // Store last 2 bytes of the JPEG table data itself for use later - skip over the final 2 byte EOI marker
+      unsigned char table_end[2];
+      table_end[0] = ((unsigned char*)jpeg_tables)[count-4];
+      table_end[1] = ((unsigned char*)jpeg_tables)[count-3];
+
+      // Copy tables to our RawTile buffer - ignore the final 2 byte EOI marker
+      memcpy( rawtile.data, jpeg_tables, count-2 );
+
+      // Note starting position before we add image data - rewind by extra 2 bytes as we want to temporarily
+      // overwrite the end of the table data with the SOI which preceeds the image data in the tile stream
+      int pos = count - 4;
+
+      int length = TIFFReadRawTile( tiff, (ttile_t) tile, (tdata_t) &(((unsigned char*)rawtile.data)[pos]), -1 );
+      if( length == -1 ){
+	throw file_error( "TPTImage :: TIFFReadRawTile() failed for JPEG-encoded tile for " + getFileName( x, y ) );
+      }
+
+      // Overwrite superfluous SOI marker from tile with previously saved end of JPEG tables
+      ((unsigned char*)rawtile.data)[pos]=table_end[0];
+      ((unsigned char*)rawtile.data)[pos+1]=table_end[1];
+
+      rawtile.dataLength = pos + length;
+      rawtile.compressionType = ImageEncoding::JPEG;
+    }
+    else{
+      // Throw error if no JPEG tables present
+      throw file_error( "TPTImage :: Empty TIFFTAG_JPEGTABLES tag for JPEG-encoded tile for " + getFileName( x, y ) );
+    }
+  }
+
+#ifdef COMPRESSION_WEBP
+  else if( requested_encoding == ImageEncoding::WEBP && compression == COMPRESSION_WEBP ){
+    int length = TIFFReadRawTile( tiff, (ttile_t) tile, (tdata_t) rawtile.data, -1 );
+    if( length == -1 ){
+      throw file_error( "TPTImage :: TIFFReadRawTile() failed for WebP-encoded tile for " + getFileName( x, y ) );
+    }
+    rawtile.dataLength = length;
+    rawtile.compressionType = ImageEncoding::WEBP;
+  }
+#endif
+
+  // Decode the tile into raw pixel data - dump data directly into RawTile buffer
+  else{
+
+    int length = TIFFReadEncodedTile( tiff, (ttile_t) tile, (tdata_t) rawtile.data, (tsize_t) bytes );
+    if( length == -1 ){
+      throw file_error( "TPTImage :: TIFFReadEncodedTile() failed for " + getFileName( x, y ) );
+    }
+    rawtile.dataLength = length;
+    rawtile.compressionType = ImageEncoding::RAW;
+  }
 
   // For non-interleaved channels (separate image planes), each color channel is stored as a separate image, which is stored consecutively.
   // A color image will, therefore, have 3x the number of tiles. For now just handle the first plane and classify the image as greyscale.
@@ -561,8 +634,10 @@ RawTile TPTImage::getTile( int x, int y, unsigned int res, int layers, unsigned 
     rawtile.bpc = 8;
   }
 
+
   // Crop our tile if necessary
   if( tw != tile_widths[vipsres] || th != tile_heights[vipsres] ) rawtile.crop( tw, th );
+
 
   return rawtile;
 

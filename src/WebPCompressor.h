@@ -127,15 +127,13 @@ class WebPCompressor : public Compressor {
   inline ImageEncoding getImageEncoding() const { return ImageEncoding::WEBP; };
 
 
-  /// Get the current compression level
-  /** @return compresson level */
-  inline int getQuality() const { return Q; }
-
-
   /// Set the compression level
   /** @param compression level: 0-100 with (0 = highest compression)
    */
   inline void setQuality( int quality ){
+
+    // Flag that user has manually changed quality level
+    default_quality = false;
 
     // WebP quality ranges from 0 (best compression - smallest size) to 100 (worst compression - largest size)
     this->Q = quality;

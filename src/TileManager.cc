@@ -33,9 +33,12 @@ using namespace std;
 
 RawTile TileManager::getNewTile( int resolution, int tile, int xangle, int yangle, int layers, ImageEncoding ctype ){
 
-  // Get a raw tile from the IIPImage image object
+  // If user has overriden quality factor, decode to raw format to allow us to re-encode
+  ImageEncoding source_encoding = (compressor->defaultQuality() == true) ? ctype : ImageEncoding::RAW;
+
+  // Get a tile from the IIPImage image object
   if( loglevel >= 2 ) insert_timer.start();
-  RawTile ttt = image->getTile( xangle, yangle, resolution, layers, tile );
+  RawTile ttt = image->getTile( xangle, yangle, resolution, layers, tile, source_encoding );
   if( loglevel >= 2 ) *logfile << "TileManager :: Tile decoding time: " << insert_timer.getTime()
 			       << " microseconds" << endl;
 
@@ -51,55 +54,57 @@ RawTile TileManager::getNewTile( int resolution, int tile, int xangle, int yangl
   }
 
 
-  // Add our raw tile directly into our cache
-  if( ctype == ImageEncoding::RAW ){
-    // Add to our tile cache
-    if( loglevel >= 4 ) insert_timer.start();
-    tileCache->insert( ttt );
-    if( loglevel >= 4 ) *logfile << "TileManager :: Tile cache insertion time: " << insert_timer.getTime()
-				 << " microseconds" << endl;
-    return ttt;
+  // If our tile is already correctly encoded, no need to re-encode
+  if( ttt.compressionType == ctype ){
+     if( loglevel >= 3 ) *logfile << "TileManager :: Returning pre-encoded tile" << endl;
   }
+  // Encode our tile
+  else{
+
+    switch( ctype ){
+
+      case ImageEncoding::RAW:
+	// Nothing to do
+	break;
 
 
-  switch( ctype ){
+      case ImageEncoding::JPEG:
+	// Do our JPEG compression iff we have an 8 bit per channel image
+	if( ttt.bpc == 8 && (ttt.channels==1 || ttt.channels==3) ){
+	  if( loglevel >= 4 ) compression_timer.start();
+	  compressor->Compress( ttt );
+	  if( loglevel >= 4 ) *logfile << "TileManager :: JPEG compression time: "
+				       << compression_timer.getTime() << " microseconds" << endl;
+	}
+	break;
 
-   case ImageEncoding::JPEG:
-    // Do our JPEG compression iff we have an 8 bit per channel image
-    if( ttt.bpc == 8 && (ttt.channels==1 || ttt.channels==3) ){
-      if( loglevel >= 4 ) compression_timer.start();
-      compressor->Compress( ttt );
-      if( loglevel >= 4 ) *logfile << "TileManager :: JPEG compression time: "
-				   << compression_timer.getTime() << " microseconds" << endl;
+
+      case ImageEncoding::PNG:
+	if( loglevel >= 4 ) compression_timer.start();
+	compressor->Compress( ttt );
+	if( loglevel >= 4 ) *logfile << "TileManager :: PNG compression time: "
+				     << compression_timer.getTime() << " microseconds" << endl;
+	break;
+
+
+      case ImageEncoding::WEBP:
+	if( loglevel >= 4 ) compression_timer.start();
+	compressor->Compress( ttt );
+	if( loglevel >= 4 ) *logfile << "TileManager :: WebP compression time: "
+				     << compression_timer.getTime() << " microseconds" << endl;
+	break;
+
+
+      case ImageEncoding::DEFLATE:
+	// No deflate for the time being ;-)
+	if( loglevel >= 4 ) *logfile << "TileManager :: DEFLATE compression requested: Not currently available" << endl;
+	break;
+
+
+      default:
+	break;
+
     }
-    break;
-
-
-   case ImageEncoding::PNG:
-    if( loglevel >= 4 ) compression_timer.start();
-    compressor->Compress( ttt );
-    if( loglevel >= 4 ) *logfile << "TileManager :: PNG compression time: "
-				 << compression_timer.getTime() << " microseconds" << endl;
-    break;
-
-
-    case ImageEncoding::WEBP:
-      if( loglevel >= 4 ) compression_timer.start();
-      compressor->Compress( ttt );
-      if( loglevel >= 4 ) *logfile << "TileManager :: WebP compression time: "
-				   << compression_timer.getTime() << " microseconds" << endl;
-      break;
-
-
-    case ImageEncoding::DEFLATE:
-    // No deflate for the time being ;-)
-    if( loglevel >= 4 ) *logfile << "TileManager :: DEFLATE compression requested: Not currently available" << endl;
-    break;
-
-
-   default:
-     break;
-
   }
 
 

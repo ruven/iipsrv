@@ -413,7 +413,7 @@ void JTL::send( Session* session, int resolution, int tile ){
   // Compress to requested output format
   if( rawtile.compressionType == ImageEncoding::RAW ){
     if( session->loglevel >= 4 ){
-      *(session->logfile) << "JTL :: ImageEncoding RAW tile";
+      *(session->logfile) << "JTL :: Compressing raw tile data";
       function_timer.start();
     }
     len = compressor->Compress( rawtile );

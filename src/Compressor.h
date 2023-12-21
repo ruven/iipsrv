@@ -36,6 +36,9 @@ class Compressor {
   /// Quality or compression level for all image types
   int Q;
 
+  /// Whether compression level is default or has been set manually
+  bool default_quality;
+
   /// Pointer to the header data for the output image
   unsigned char *header;
 
@@ -68,6 +71,7 @@ class Compressor {
   /** @param compressionLevel default compression level for codec */
   Compressor( int compressionLevel ) :
     Q( compressionLevel ),
+    default_quality( true ),
     header( NULL ),
     header_size( 0 ),
     dpi_x( 0 ),
@@ -80,6 +84,10 @@ class Compressor {
 
   /// Get the current quality level
   inline int getQuality() const { return Q; }
+
+
+  /// Check whether we are using the default or whether user has requested a specific quality level
+  inline bool defaultQuality() const { return default_quality; }
 
 
   /// Set the physical output resolution

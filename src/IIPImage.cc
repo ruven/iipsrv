@@ -42,8 +42,9 @@ using namespace std;
 
 
 
-// Static initialization
+// Static initialization - logging and codec pass-through flag
 bool IIPImage::logging = false;
+bool IIPImage::codec_passthrough = true;
 
 
 

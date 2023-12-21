@@ -182,6 +182,9 @@ class IIPImage {
   /// Our logging stream - declared statically
   static bool logging;
 
+  /// Whether codec pass-through mode is enabled
+  static bool codec_passthrough;
+
 
  public:
 
@@ -431,8 +434,9 @@ class IIPImage {
       @param r resolution
       @param l quality layers
       @param t tile number
+      @param e image encoding
    */
-  virtual RawTile getTile( int h, int v, unsigned int r, int l, unsigned int t ) { return RawTile(); };
+  virtual RawTile getTile( int h, int v, unsigned int r, int l, unsigned int t, ImageEncoding e = ImageEncoding::RAW ) { return RawTile(); };
 
 
   /// Return a region for a given angle and resolution

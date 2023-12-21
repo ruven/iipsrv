@@ -1,3 +1,11 @@
+21/12/2023:
+	- Added CODEC_PASSTHROUGH mode, which allows TIFF image tiles that are already in the requested output
+	  format to be used without going through a decode->encode process. This provides a significant speed
+	  improvement for tile requests. Feature is active by default and disabled if any image processing is
+	  required on image, if the user has made a request to change the quality level or if a composite region
+	  is requested. Note that no ICC profile or other metadata is added to the image
+
+
 13/11/2023:
 	- Rationalized, renamed and changed standard enums to C++11 enum classes to allow types to be scoped
 

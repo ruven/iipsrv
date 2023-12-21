@@ -90,14 +90,15 @@ class JPEGCompressor: public Compressor{
   /// Set the compression quality
   /** @param factor Quality factor (0-100) */
   inline void setQuality( int factor ) {
+
+    // Flag that user has manually changed quality level
+    default_quality = false;
+
     if( factor < 0 ) Q = 0;
     else if( factor > 100 ) Q = 100;
     else Q = factor;
   };
 
-
-  /// Get the current quality level
-  inline int getQuality() const { return Q; }
 
 
   /// Initialise strip based compression

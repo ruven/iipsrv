@@ -77,7 +77,7 @@ class View{
   bool maintain_aspect;                       /// Indicate whether aspect ratio should be maintained
   bool allow_upscaling;                       /// Indicate whether images may be served larger than the source file
   bool embed_icc;                             /// Indicate whether we should embed ICC profiles
-  ImageEncoding output_format;                     /// Requested output format
+  ImageEncoding output_format;                /// Requested output format
   float contrast;                             /// Contrast adjustment requested by CNT command
   float gamma;                                /// Gamma adjustment requested by GAM command
   std::vector<float> convolution;             /// Convolution matrix

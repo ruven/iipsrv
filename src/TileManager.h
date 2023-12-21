@@ -64,10 +64,10 @@ class TileManager{
    *  @param xangle horizontal sequence number
    *  @param yangle vertical sequence number
    *  @param number of quality layers within image to decode
-   *  @param c Compression
+   *  @param e tile encoding
    *  @return RawTile
    */
-  RawTile getNewTile( int resolution, int tile, int xangle, int yangle, int layers, ImageEncoding c );
+  RawTile getNewTile( int resolution, int tile, int xangle, int yangle, int layers, ImageEncoding e );
 
 
  public:

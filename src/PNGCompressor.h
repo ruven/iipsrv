@@ -147,16 +147,14 @@ class PNGCompressor : public Compressor {
   inline ImageEncoding getImageEncoding() const { return ImageEncoding::PNG; };
 
 
-  /// Get the current compression level
-  /** @return Deflate compresson level */
-  inline int getQuality() const { return Q; }
-
-
   /// Set the compression level
   /** @param quality Deflate compression level: 0-9 with (0 = no compression)
       Note that compression to 1 (Z_BEST_SPEED) results in a ~3x slowdown wrt to no compression
    */
   inline void setQuality( int quality ){
+
+    // Flag that user has manually changed quality level
+    default_quality = false;
 
     // Deflate compression level
     if( quality < 0 ) Q = 0;
