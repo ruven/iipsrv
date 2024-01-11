@@ -518,7 +518,7 @@ RawTile TPTImage::getTile( int x, int y, unsigned int res, int layers, unsigned 
   if( (IIPImage::codec_passthrough == false) ||
       (tw != tile_widths[vipsres] || th != tile_heights[vipsres]) ||
       (bpc==1 && channels==1) ){
-    requested_encoding == ImageEncoding::RAW;
+    requested_encoding = ImageEncoding::RAW;
   }
 
 
