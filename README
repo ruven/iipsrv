@@ -451,6 +451,10 @@ IIIF_VERSION: Set the major IIIF Image API version. Values should be a single di
 IIIF_DELIMITER: Set delimiter to enable page or slice selection for a multi-page or image stack for IIIF requests.
 Delimiter can be a single character or an arbitrary string. Disabled by default.
 
+IIIF_EXTRA_INFO: Add extra arbitrary field to all IIIF info.json files. Must be a string containing a valid JSON key, value line. Key and value quotes should be escaped if necessary and no trailing comma should be added. For example, to add a preferredFormats field: IIIF_EXTRA_INFO='"preferredFormats": ["webp"]'
+
+COPYRIGHT: Specify a global copyright or rights statement if this is not available in the image metadata itself
+
 DECODER_MODULES: Comma separated list of external modules for decoding other image formats. This is only necessary if you have activated --enable-modules for ./configure and written your own image format handler(s).
 
 

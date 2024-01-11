@@ -1,7 +1,7 @@
 /*
     IIP FCGI server module - Main loop.
 
-    Copyright (C) 2000-2023 Ruven Pillay
+    Copyright (C) 2000-2024 Ruven Pillay
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -344,6 +344,14 @@ int main( int argc, char *argv[] )
   IIIF::delimiter = Environment::getIIIFDelimiter();
 
 
+  // Add extra IIIF info JSON fields
+  IIIF::extra_info = Environment::getIIIFExtraInfo();
+
+
+  // Set global rights/copyright
+  string copyright = Environment::getCopyright();
+
+
   // Create our image processing engine
   Transform processor;
 
@@ -396,6 +404,7 @@ int main( int argc, char *argv[] )
     logfile << "Setting Allow Upscaling to " << (allow_upscaling? "true" : "false") << endl;
     logfile << "Setting ICC profile embedding to " << (embed_icc? "true" : "false") << endl;
     logfile << "Setting codec passthrough to " << (IIPImage::codec_passthrough? "true" : "false") << endl;
+    if( !copyright.empty() ) logfile << "Setting default rights/copyright statement to '" << copyright << "'" << endl;
 #ifdef HAVE_KAKADU
     logfile << "Setting up JPEG2000 support via Kakadu SDK" << endl;
     logfile << "Setting Kakadu read-mode to " << ((kdu_readmode==2) ? "resilient" : (kdu_readmode==1) ? "fussy" : "fast") << endl;
@@ -756,7 +765,8 @@ int main( int argc, char *argv[] )
 
       // Store some key session information not necessarily found in HTTP headers
       session.headers["QUERY_STRING"] = request_string;
-      session.headers["BASE_URL"] = base_url;
+      if( !base_url.empty() ) session.headers["BASE_URL"] = base_url;
+      if( !copyright.empty() ) session.headers["COPYRIGHT"] = copyright;
 
 
 #ifdef HAVE_MEMCACHED

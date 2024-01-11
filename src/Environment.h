@@ -1,7 +1,7 @@
 /*
     IIP Environment Variable Class
 
-    Copyright (C) 2006-2023 Ruven Pillay.
+    Copyright (C) 2006-2024 Ruven Pillay
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -52,6 +52,8 @@
 #define KAKADU_READMODE 0
 #define IIIF_VERSION 3
 #define IIIF_DELIMITER ""
+#define IIIF_EXTRA_INFO ""
+#define COPYRIGHT ""
 
 
 #include <string>
@@ -367,6 +369,20 @@ class Environment {
     const char* envpara = getenv( "IIIF_DELIMITER" );
     if( envpara ) return std::string( envpara );
     else return IIIF_DELIMITER;
+  }
+
+
+  static std::string getIIIFExtraInfo(){
+    const char* envpara = getenv( "IIIF_EXTRA_INFO" );
+    if( envpara ) return std::string( envpara );
+    else return IIIF_EXTRA_INFO;
+  }
+
+
+  static std::string getCopyright(){
+    const char* envpara = getenv( "COPYRIGHT" );
+    if( envpara ) return std::string( envpara );
+    else return COPYRIGHT;
   }
 
 };

@@ -1,7 +1,7 @@
 /*
     IIP Generic Task Class
 
-    Copyright (C) 2006-2023 Ruven Pillay
+    Copyright (C) 2006-2024 Ruven Pillay
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -365,6 +365,9 @@ class IIIF : public Task {
 
   /// Delimiter for multi-page or image stacks
   static std::string delimiter;
+
+  /// Extra fields for info.json
+  static std::string extra_info;
 
   void run( Session* session, const std::string& argument );
 };

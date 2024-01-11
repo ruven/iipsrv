@@ -1,3 +1,11 @@
+11/01/2024:
+	- Added COPYRIGHT startup variable, which allows a global copyright or rights statement to be added.
+	  The IIIF image info.json file now adds a rights (IIIF v3) or license (v1/2) field with rights information
+	  from the image itself if available or if not from any global setting.
+	- Added IIIF_EXTRA_INFO startup variable, which allows an arbitrary field to be added to all IIIF info.json
+	  files. Can be used, for example, to add a preferredFormats or other JSON field.
+
+
 10/01/2024:
 	- Set quality when using pass-through mode to allow cache to sort correctly
 

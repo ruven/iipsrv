@@ -2,7 +2,7 @@
 
     IIIF Request Command Handler Class Member Function
 
-    Copyright (C) 2014-2023 Ruven Pillay
+    Copyright (C) 2014-2024 Ruven Pillay
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -51,6 +51,7 @@ using namespace std;
 // Need to initialize static members
 unsigned int IIIF::version;
 string IIIF::delimiter = "";
+string IIIF::extra_info = "";
 
 
 // The request is in the form {identifier}/{region}/{size}/{rotation}/{quality}{.format}
@@ -224,6 +225,10 @@ void IIIF::run( Session* session, const string& src )
     char iiif_context[48];
     snprintf( iiif_context, 48, IIIF_CONTEXT, iiif_version );
 
+    // Get rights field if set either in image metadata or globally
+    string rights = (*session->image)->metadata["rights"];
+    if( rights.empty() ) rights = session->headers["COPYRIGHT"];
+
 
     infoStringStream << "{" << endl
                      << "  \"@context\" : \"" << iiif_context << "\"," << endl
@@ -270,6 +275,12 @@ void IIIF::run( Session* session, const string& src )
 		       << "  \"extraFormats\": [\"webp\"]," << endl
 #endif
 		       << "  \"extraFeatures\": [\"regionByPct\",\"sizeByForcedWh\",\"sizeByWh\",\"sizeAboveFull\",\"sizeUpscaling\",\"rotationBy90s\",\"mirroring\"]";
+
+      if( !rights.empty() ){
+	infoStringStream << "," << endl
+			 << "  \"rights\": \"" << rights << "\"";
+      }
+
     }
     // Profile for IIIF versions 1 and 2
     else {
@@ -282,6 +293,17 @@ void IIIF::run( Session* session, const string& src )
 		       << "       \"maxWidth\" : " << max << "," << endl
 		       << "       \"maxHeight\" : " << max << "\n     }" << endl
 		       << "  ]";
+
+      if( !rights.empty() ){
+	infoStringStream << "," << endl
+			 << "  \"license\": \"" << rights << "\"";
+      }
+    }
+
+    // Add any extra info fields
+    if( IIIF::extra_info.size() > 0 ){
+      infoStringStream << "," << endl
+		       << "  " << IIIF::extra_info;
     }
 
     // Add physical dimensions service if DPI resolution exists
