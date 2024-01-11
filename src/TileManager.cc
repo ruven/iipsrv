@@ -4,7 +4,7 @@
 
 /*  IIP Server: Tile Cache Handler
 
-    Copyright (C) 2005-2023 Ruven Pillay.
+    Copyright (C) 2005-2024 Ruven Pillay
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -55,7 +55,9 @@ RawTile TileManager::getNewTile( int resolution, int tile, int xangle, int yangl
 
 
   // If our tile is already correctly encoded, no need to re-encode
-  if( ttt.compressionType == ctype ){
+  if( (ttt.compressionType == ctype) && (ctype != ImageEncoding::RAW) ){
+     // Need to set quality to allow cache to sort correctly
+     ttt.quality = compressor->getQuality();
      if( loglevel >= 3 ) *logfile << "TileManager :: Returning pre-encoded tile" << endl;
   }
   // Encode our tile

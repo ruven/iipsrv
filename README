@@ -444,6 +444,8 @@ OMP_NUM_THREADS: Set the number of OpenMP threads to be used by the iipsrv image
 
 KAKADU_READMODE: Set the Kakadu JPEG2000 read-mode. 0 for 'fast' mode with minimal error checking (default), 1 for 'fussy' mode with no error recovery, 2 for 'resilient' mode with maximum recovery from codestream errors. See the Kakadu documentation for further details.
 
+CODEC_PASSTHROUGH: Enable pre-encoded tiles to be sent directly to the client without re-encoding or processing if the requested output encoding matches the encoding used within the source image. Enabled only for tile requests that map to a single tile in the source image and that do not specify or require any image processing or manually set the encoding quality level. Only works for TIFF with either JPEG or WebP-encoded tiles. Set to 1 to activate or 0 to disactivate. Default is 1 (activated)
+
 IIIF_VERSION: Set the major IIIF Image API version. Values should be a single digit. For example: 2 for versions 2 or 2.1 etc. 3 for IIIF version 3.x. If not set, defaults to version IIIF 3.x
 
 IIIF_DELIMITER: Set delimiter to enable page or slice selection for a multi-page or image stack for IIIF requests.
@@ -499,4 +501,4 @@ This can work in conjunction with debugging mode or together with a web server i
 Please refer to the project site https://iipimage.sourceforge.io for further details
 
 ------------------------------------------------------------------------------------
-(c) 2000-2023 Ruven Pillay <ruven@users.sourceforge.net>
+(c) 2000-2024 Ruven Pillay <ruven@users.sourceforge.net>

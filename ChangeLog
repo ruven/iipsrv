@@ -1,3 +1,7 @@
+10/01/2024:
+	- Set quality when using pass-through mode to allow cache to sort correctly
+
+
 21/12/2023:
 	- Added CODEC_PASSTHROUGH mode, which allows TIFF image tiles that are already in the requested output
 	  format to be used without going through a decode->encode process. This provides a significant speed
