@@ -1,3 +1,7 @@
+15/01/2024:
+	- Fix to IIIF size calculation for region requests that go beyond the boundaries of the image
+
+
 11/01/2024:
 	- Added COPYRIGHT startup variable, which allows a global copyright or rights statement to be added.
 	  The IIIF image info.json file now adds a rights (IIIF v3) or license (v1/2) field with rights information

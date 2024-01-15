@@ -408,6 +408,10 @@ void IIIF::run( Session* session, const string& src )
 	region[2] = region[2] / wd;
 	region[3] = region[3] / hd;
 
+	// Sanity check of region sizes
+	if( region[0] + region[2] > 1.0 ) region[2] = 1.0 - region[0];
+	if( region[1] + region[3] > 1.0 ) region[3] = 1.0 - region[1];
+
         // Incorrect region request
         if ( region[2] <= 0.0 || region[3] <= 0.0 || regionIzer.hasMoreTokens() || n < 4 ){
           throw invalid_argument( "IIIF: incorrect region format: " + regionString );
@@ -438,7 +442,7 @@ void IIIF::run( Session* session, const string& src )
       string sizeString = izer.nextToken();
       transform( sizeString.begin(), sizeString.end(), sizeString.begin(), ::tolower );
 
-      // Calculate the width and height of our region
+      // Calculate the width and height of our region at full resolution
       requested_width = region[2] * width;   // view->getViewWidth not trustworthy yet (no resolution set)
       requested_height = region[3] * height;
 
@@ -474,9 +478,8 @@ void IIIF::run( Session* session, const string& src )
 
         // !w,h request (do not break aspect ratio) - remove the !, store the info and continue usual parsing
         if ( sizeString.substr(0, 1) == "!" ) sizeString.erase(0, 1);
-        // Otherwise tell our view to break aspect ratio
+        // Otherwise tell our view it can break aspect ratio
         else session->view->maintain_aspect = false;
-
 
         size_t pos = sizeString.find_first_of(",");
 
