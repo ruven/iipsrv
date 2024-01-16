@@ -148,8 +148,8 @@ class Environment {
     int quality;
     if( envpara ){
       quality = atoi( envpara );
-      if( quality > 100 ) quality = 900;
-      if( quality < 0 ) quality = 0;
+      if( quality > 100 ) quality = 100;
+      if( quality < -1 ) quality = -1;  // Allow -1 = lossless
     }
     else quality = WEBP_QUALITY;
 

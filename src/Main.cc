@@ -385,7 +385,9 @@ int main( int argc, char *argv[] )
     logfile << "Setting default PNG compression level to " << png_quality << endl;
 #endif
 #ifdef HAVE_WEBP
-    logfile << "Setting default WebP compression level to " << webp_quality << endl;
+    logfile << "Setting default WebP compression level to ";
+    if( webp_quality == -1 ) logfile << "lossless" << endl;
+    else logfile << webp_quality << endl;
 #endif
     logfile << "Setting maximum CVT size to " << max_CVT << endl;
     logfile << "Setting HTTP Cache-Control header to '" << cache_control << "'" << endl;

@@ -1,7 +1,7 @@
 /*  WebP Compressor Class:
     Handles alpha channels, ICC profiles and XMP metadata
 
-    Copyright (C) 2022-2023 Ruven Pillay
+    Copyright (C) 2022-2024 Ruven Pillay
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -65,7 +65,15 @@ class WebPCompressor : public Compressor {
     WebPConfigInit( &config );
     config.method = 0;         // Fastest encoding
     config.thread_level = 1;   // Enable threading
-    config.quality = this->Q;  // WebP's quality range is 0-100
+
+    // Update our WebP config structure depending on whether lossless or lossy compression requested
+    if( compressionLevel == -1 ){
+      // -1 indicates lossless
+      config.lossless = 1;
+      config.quality = 0;      // Zero means fastest for lossless
+    }
+    // WebP's lossy quality range is 0-100
+    else config.quality = this->Q;
 
     // Create our muxer object
     mux = WebPMuxNew();
@@ -138,12 +146,18 @@ class WebPCompressor : public Compressor {
     // WebP quality ranges from 0 (best compression - smallest size) to 100 (worst compression - largest size)
     this->Q = quality;
 
-    // WebP compression level
-    if( Q < 0 ) Q = 0;
+    // Limit to WebP quality range - negative values indicate lossless
+    if( this->Q < 1 ) Q = -1;
     else if( Q > 100 ) Q = 100;
 
-    // Update our WebP config structure
-    config.quality = Q;
+    // Update our WebP config structure depending on whether lossless or lossy compression requested
+    if( this->Q == -1 ){
+      // -1 indicates lossless
+      config.lossless = 1;
+      config.quality = 0;      // Zero means fastest for lossless
+    }
+    // WebP's lossy quality range is 0-100
+    else config.quality = this->Q;
   }
 
 
