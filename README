@@ -402,7 +402,7 @@ JPEG_QUALITY: The default JPEG quality factor for compression when the client do
 
 PNG_QUALITY: The default PNG quality factor for compression when the client does not specify one. The value should be between 1 (highest level of compression) and 9 (highest image quality). The default is 1.
 
-WEBP_QUALITY: The default WebP quality factor for compression when the client does not specify one. The value should be between 0 (highest level of compression) and 100 (highest image quality). The default is 50.
+WEBP_QUALITY: The default WebP quality factor for compression when the client does not specify one. For lossy compression the value should be between 0 (highest level of compression) and 100 (highest image quality). For lossless compression, set this to -1. The default is lossy compression with a quality factor of 50.
 
 MAX_CVT: Limits the maximum output image dimensions (in pixels) allowable for dynamic image export via the CVT command or for IIIF requests. This prevents huge requests from overloading the server. The default is 5000. If set to -1, no limit is set.
 
