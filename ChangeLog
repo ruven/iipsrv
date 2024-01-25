@@ -1,3 +1,7 @@
+25/01/2024:
+	- Fix to calculation of DPI in pixels/m when returned in IIP OBJ request
+
+
 16/01/2024:
 	- Added ability to specify lossless WebP compression by specifying a quality factor of -1
 

@@ -397,10 +397,10 @@ class IIPImage {
   };
 
   /// Return physical resolution (DPI) in pixels/meter horizontally
-  float getHorizontalDPI() const { return (dpi_units==2) ? dpi_x*10.0 : ( (dpi_units==1) ? dpi_x*25.4 : dpi_x ); };
+  float getHorizontalDPI() const { return (dpi_units==2) ? dpi_x*100.0 : ( (dpi_units==1) ? dpi_x/0.0254 : dpi_x ); };
 
   /// Return physical resolution (DPI) in pixels/meter vertically
-  float getVerticalDPI() const { return (dpi_units==2) ? dpi_y*10.0 : ( (dpi_units==1) ? dpi_y*25.4 : dpi_y ); };
+  float getVerticalDPI() const { return (dpi_units==2) ? dpi_y*100.0 : ( (dpi_units==1) ? dpi_y/0.0254 : dpi_y ); };
 
   /// Return whether this image type directly handles region decoding
   virtual bool regionDecoding(){ return false; };
