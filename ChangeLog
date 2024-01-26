@@ -1,3 +1,8 @@
+26/01/2024:
+	- Disable pass-through for TIFF-JPEGs where YCbCr sub-sampling has been defined with an RGB color space -
+	  these require the full JFIF format rather than the abreviated JPEG within the TIFF
+
+
 25/01/2024:
 	- Fix to calculation of DPI in pixels/m when returned in IIP OBJ request
 

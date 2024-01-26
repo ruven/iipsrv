@@ -2,7 +2,7 @@
 
 /*  IIP Server: Tiled Pyramidal TIFF handler
 
-    Copyright (C) 2000-2023 Ruven Pillay.
+    Copyright (C) 2000-2024 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -519,6 +519,16 @@ RawTile TPTImage::getTile( int x, int y, unsigned int res, int layers, unsigned 
       (tw != tile_widths[vipsres] || th != tile_heights[vipsres]) ||
       (bpc==1 && channels==1) ){
     requested_encoding = ImageEncoding::RAW;
+  }
+
+  // Also disable pass-through for TIFF-JPEGs where YCbCr sub-sampling has been defined with an RGB color space - these
+  // require the full JFIF format rather than the abreviated JPEG within the TIFF
+  if( requested_encoding == ImageEncoding::JPEG && compression == COMPRESSION_JPEG ){
+    uint16_t subsampling[2];
+    if( (TIFFGetField( tiff, TIFFTAG_YCBCRSUBSAMPLING, &subsampling[0], &subsampling[1] ) != 0) && (colour == PHOTOMETRIC_RGB) ){
+      if( IIPImage::logging ) logfile << "TPTImage :: Sub-sampled RGB JPEG-encoded TIFF: tile decoded to RAW" << endl;
+      requested_encoding = ImageEncoding::RAW;
+    }
   }
 
 
