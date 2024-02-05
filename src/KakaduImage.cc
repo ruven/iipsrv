@@ -7,7 +7,7 @@
     Culture of the Czech Republic.
 
 
-    Copyright (C) 2009-2023 IIPImage.
+    Copyright (C) 2009-2024 IIPImage.
     Author: Ruven Pillay
 
     This program is free software; you can redistribute it and/or modify
@@ -375,8 +375,7 @@ void KakaduImage::loadImageInfo( int seq, int ang )
   // For bilevel images, force channels to 1 as we sometimes come across such images which claim 3 channels
   if( bpc == 1 ) channels = 1;
 
-  // Get the max and min values for our data type
-  //double sminvalue[4], smaxvalue[4];
+  // Get the max and min values for our data type - only handle 8 and 16 bit for now
   for( unsigned int i=0; i<channels; i++ ){
     min.push_back( 0.0 );
     if( bpc > 8 && bpc <= 16 ) max.push_back( 65535.0 );
@@ -431,8 +430,8 @@ void KakaduImage::closeImage()
   if( codestream.exists() ) codestream.destroy();
 
   // Close our JP2 family and JPX files
-  src.close();
-  jpx_input.close();
+  if( src.exists() ) src.close();
+  if( jpx_input.exists() ) jpx_input.close();
 
 #ifdef KAKADU_DEBUG
   logfile << "Kakadu :: closeImage() :: " << timer.getTime() << " microseconds" << endl;
@@ -820,7 +819,12 @@ void KakaduImage::process( unsigned int res, int layers, int xoffset, int yoffse
   }
   catch (...){
     // Shut down our decompressor, delete our buffers, destroy our threads and codestream before rethrowing the exception
+#if defined(KDU_MAJOR_VERSION) && (KDU_MAJOR_VERSION >= 8 || ((KDU_MAJOR_VERSION >= 7) && (KDU_MINOR_VERSION >= 5)))
+    // Note that from Kakadu 7.5 onwards, we need to use reset() rather than finish() in case of an exception
+    decompressor.reset( true );
+#else
     decompressor.finish();
+#endif
     if( env.exists() ) env.destroy();
     delete_buffer( stripe_buffer );
     delete_buffer( buffer );

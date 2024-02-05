@@ -1,5 +1,7 @@
 05/02/2024:
 	- Added JPEG2000 codec version information to logging.
+	- Change to exception handling with Kakadu to avoid crash with mal-formed JPEG2000 streams. Fixes
+	  https://github.com/ruven/iipsrv/issues/264.
 
 
 26/01/2024:
