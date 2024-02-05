@@ -1,6 +1,6 @@
 /*  IIP Server: OpenJPEG JPEG2000 handler
 
-    Copyright (C) 2019-2023 Ruven Pillay.
+    Copyright (C) 2019-2024 Ruven Pillay.
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -131,6 +131,12 @@ class OpenJPEGImage : public IIPImage {
     @return         a RawTile object
   */
   RawTile getRegion( int ha, int va, unsigned int res, int layers, int x, int y, unsigned int w, unsigned int h );
+
+
+  /// Get codec version
+  /** @return codec version */
+  static const char* getCodecVersion(){ return opj_version(); };
+
 
 };
 

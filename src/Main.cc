@@ -46,6 +46,9 @@
 #ifdef HAVE_KAKADU
 #include "KakaduImage.h"
 #endif
+#ifdef HAVE_OPENJPEG
+#include "OpenJPEGImage.h"
+#endif
 
 #ifdef HAVE_MEMCACHED
 //#ifdef WIN32
@@ -408,10 +411,10 @@ int main( int argc, char *argv[] )
     logfile << "Setting codec passthrough to " << (IIPImage::codec_passthrough? "true" : "false") << endl;
     if( !copyright.empty() ) logfile << "Setting default rights/copyright statement to '" << copyright << "'" << endl;
 #ifdef HAVE_KAKADU
-    logfile << "Setting up JPEG2000 support via Kakadu SDK" << endl;
+    logfile << "Setting up JPEG2000 support via Kakadu SDK " << KakaduImage::getCodecVersion() << endl;
     logfile << "Setting Kakadu read-mode to " << ((kdu_readmode==2) ? "resilient" : (kdu_readmode==1) ? "fussy" : "fast") << endl;
 #elif defined(HAVE_OPENJPEG)
-    logfile << "Setting up JPEG2000 support via OpenJPEG" << endl;
+    logfile << "Setting up JPEG2000 support via OpenJPEG " << OpenJPEGImage::getCodecVersion() << endl;
 #endif
     logfile << "Setting image processing engine to " << processor.getDescription() << endl;
 #ifdef _OPENMP

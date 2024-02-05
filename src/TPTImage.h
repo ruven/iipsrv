@@ -2,7 +2,7 @@
 
 /*  IIPImage Tiled Pyramidal TIFF Class
 
-    Copyright (C) 2000-2023 Ruven Pillay.
+    Copyright (C) 2000-2024 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -25,7 +25,6 @@
 
 
 #include "IIPImage.h"
-//#include <tiff.h>
 #include <tiffio.h>
 
 

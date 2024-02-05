@@ -227,7 +227,7 @@ JPEG2000_CODEC=false
 # First check for Kakadu
 
 AC_ARG_WITH( kakadu,
-   [  --with-kakadu=DIR             location of Kakadu source files (Kakadu will disable OpenJPEG support) ],
+   [  --with-kakadu=DIR       location of Kakadu source files (Kakadu will disable OpenJPEG support) ],
    kakadu_path=$withval)
 
 if test -n "$kakadu_path"; then
@@ -309,7 +309,7 @@ AC_ARG_ENABLE(openjpeg,
     [  --disable-openjpeg      disable OpenJPEG] )
 
 AC_ARG_WITH( openjpeg,
-   [  --with-openjpeg=DIR           location of OpenJPEG source files],
+   [  --with-openjpeg=DIR     location of OpenJPEG source files],
    openjpeg_path=$withval )
 
 

@@ -2,7 +2,7 @@
 
 /*  IIP fcgi server module
 
-    Copyright (C) 2000-2023 Ruven Pillay.
+    Copyright (C) 2000-2024 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -464,6 +464,11 @@ class IIPImage {
 
   /// Setup logging for codec library errors and warnings
   static void setupLogging(){;};
+
+
+  /// Get codec version
+  /** @return codec version */
+  static const char* getCodecVersion(){ return "0.0.0"; };
 
 
   /// Comparison equality operator

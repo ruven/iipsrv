@@ -9,7 +9,7 @@
     Culture of the Czech Republic.
 
 
-    Copyright (C) 2009-2022 IIPImage.
+    Copyright (C) 2009-2023 IIPImage.
     Author: Ruven Pillay
 
     This program is free software; you can redistribute it and/or modify
@@ -135,6 +135,11 @@ class KakaduImage : public IIPImage {
 
   /// Overloaded static function for seting up logging for codec library
   static void setupLogging();
+
+
+  /// Get codec version
+  /** @return codec version */
+  static const char* getCodecVersion(){ return kdu_get_core_version(); };
 
 
   /// Overloaded function for opening a TIFF image
