@@ -1,7 +1,7 @@
 /*
     IIP CVT Command Handler Class Member Function
 
-    Copyright (C) 2006-2023 Ruven Pillay.
+    Copyright (C) 2006-2024 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -99,14 +99,6 @@ void CVT::send( Session* session ){
     view_width = session->view->getViewWidth();
     view_height = session->view->getViewHeight();
 
-    // Make sure our region fits within the image
-    if( view_width + view_left > im_width ) view_width = im_width - view_left;
-    if( view_height + view_top > im_height ) view_height = im_height - view_top;
-
-    // Make sure we don't have zero size dimensions
-    if( view_width == 0 ) view_width = session->view->getMinSize();
-    if( view_height == 0 ) view_height = session->view->getMinSize();
-
     resampled_width = session->view->getRequestWidth();
     resampled_height = session->view->getRequestHeight();
 
@@ -136,12 +128,13 @@ void CVT::send( Session* session ){
   // If we have requested that the aspect ratio be maintained, make sure the final image fits *within* the requested size.
   // Don't adjust images if we have less than 0.1% difference as this is often due to rounding in resolution levels
   if( session->view->maintain_aspect ){
-    float ratio = ((float)resampled_width/(float)view_width) / ((float)resampled_height/(float)view_height);
-    if( ratio < 1.001 ){
-      resampled_height = (unsigned int) round((((float)resampled_width/(float)view_width) * (float)view_height));
+    vector<float> size = session->view->getViewSize();
+    float ratio = ((float)resampled_width/size[0]) / ((float)resampled_height/size[1]);
+    if( ratio < 0.999 ){
+      resampled_height = (unsigned int) round( ((float)resampled_width/size[0]) * size[1] );
     }
     else if( ratio > 1.001 ){
-      resampled_width = (unsigned int) round((((float)resampled_height/(float)view_height) * (float)view_width));
+      resampled_width = (unsigned int) round( ((float)resampled_height/size[1]) * size[0] );
     }
   }
 

@@ -1,7 +1,7 @@
 /*
     Image View and Transform Parameters
 
-    Copyright (C) 2003-2022 Ruven Pillay.
+    Copyright (C) 2003-2024 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -207,6 +207,14 @@ class View{
   /// Set the height co-ordinate of the viewport
   /** @param h height resolution independent co-ordinate */
   void setViewHeight( float h );
+
+
+  /// Return the view dimensions scaled to the full resolution of the image
+  /** @return size view dimensions on the full resolution canvas packed into a vector */
+  std::vector<float> getViewSize(){
+    std::vector<float> size = { width*view_width, height*view_height };
+    return size;
+  };
 
 
   /// Set the source image pixel size

@@ -1,7 +1,7 @@
 /*
     View Member Functions
 
-    Copyright (C) 2004-2023 Ruven Pillay.
+    Copyright (C) 2004-2024 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -204,6 +204,7 @@ unsigned int View::getViewWidth(){
   if( left > res_width ) left = res_width;   // As we use round(), possible to have sizes > than existing resolution size
   if( (w + left) > res_width ) w = res_width - left;                   // Need to use width of current resolution
   if( w < min_size ) w = min_size;
+
   return w;
 }
 
@@ -218,6 +219,7 @@ unsigned int View::getViewHeight(){
   if( top > res_height ) top = res_height;   // As we use round(), possible to have sizes > than existing resolution size
   if( (h + top) > res_height ) h = res_height - top;                   // Need to use height of current resolution
   if( h < min_size ) h = min_size;
+
   return (unsigned int) h;
 }
 

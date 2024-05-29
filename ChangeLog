@@ -1,3 +1,9 @@
+29/05/2024:
+	- Modification to IIIF region "square" parameter to correctly center the cropped image region.
+	- Fix to aspect ratio calculation within CVT.cc to always perform calculation on full resolution scale
+	  to avoid rounding issues when calculating at lower resolution levels.
+
+
 05/02/2024:
 	- Added JPEG2000 codec version information to logging.
 	- Change to exception handling with Kakadu to avoid crash with mal-formed JPEG2000 streams. Fixes
