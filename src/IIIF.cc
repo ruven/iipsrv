@@ -364,12 +364,12 @@ void IIIF::run( Session* session, const string& src )
       // Square region export using centered crop - avaialble in IIIF version 3
       else if (regionString == "square" ){
         if ( height > width ){
-	  region[1] = (1.0-region[3]) / 2.0;
 	  region[3] = (float)width / (float)height;
+	  region[1] = (1.0-region[3]) / 2.0;
         }
 	else if ( width > height ){
-	  region[0] = (1.0-region[2]) / 2.0;
 	  region[2] = (float)height / (float)width;
+	  region[0] = (1.0-region[2]) / 2.0;
         }
 	// No need for default else clause if image is already perfectly square
       }
