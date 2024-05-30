@@ -25,17 +25,20 @@ jobs:
 
 
   macos:
-    runs-on: macos-13
+    runs-on: macos-latest
 
     steps:
     - uses: actions/checkout@v3
 
     - name: Install dependencies
-      run: brew install automake libtool fcgi libtiff openjpeg libmemcached libpng webp
+      run: brew install automake libtool fcgi libtiff openjpeg libmemcached libpng webp libomp
 
     - name: Configure
       run: |
         ./autogen.sh
+        export CFLAGS="-I/opt/homebrew/include"
+        export CPPFLAGS=${CFLAGS}
+        export LDFLAGS="-L/opt/homebrew/lib"
         ./configure
 
     - name: Compile
