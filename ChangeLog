@@ -1,3 +1,7 @@
+29/06/2024:
+	- Updated autoconf tiff m4 to search for tiffio.h rather than just tiff.h when using TIFFOpen().
+
+
 29/05/2024:
 	- Modification to IIIF region "square" parameter to correctly center the cropped image region.
 	- Fix to aspect ratio calculation within CVT.cc to always perform calculation on full resolution scale

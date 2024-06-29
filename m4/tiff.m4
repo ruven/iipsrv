@@ -6,7 +6,7 @@ dnl
 
 AC_DEFUN([AX_CHECK_LIBTIFF], [
 
-	AC_CHECK_HEADER([tiff.h],
+	AC_CHECK_HEADER([tiffio.h],
 			[AC_CHECK_LIB(
 				[tiff],
 				[TIFFOpen],
