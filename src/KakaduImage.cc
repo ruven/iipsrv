@@ -326,7 +326,7 @@ void KakaduImage::loadImageInfo( int seq, int ang )
   // Extract any ICC profile and add it to our metadata map
   int icc_length = 0;
   const char* icc = (const char*) j2k_colour.get_icc_profile( &icc_length );
-  if( icc_length > 0 ) metadata["icc"] = string( icc, icc_length );
+  if( icc_length > 0 ) metadata.insert( {"icc",string(icc,icc_length)} );
 
 
   // Set our colour space - we let Kakadu automatically handle CIELAB->sRGB conversion for the time being
@@ -408,7 +408,7 @@ void KakaduImage::loadImageInfo( int seq, int ang )
       kdu_byte *buffer = new kdu_byte[xmp_size];
       int nb = box.read( &buffer[0], xmp_size );
       // Store this as XMP data
-      if( nb > 0 ) metadata["xmp"] = string( (const char*) buffer, nb );
+      if( nb > 0 ) metadata.insert( {"xmp",string((const char*)buffer,nb)} );
       delete[] buffer;
     }
   }

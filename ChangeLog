@@ -1,5 +1,6 @@
 29/06/2024:
 	- Updated autoconf tiff m4 to search for tiffio.h rather than just tiff.h when using TIFFOpen().
+	- Switched metadata assignment within input image classes to use more efficient map insert() syntax.
 
 
 29/05/2024:

@@ -314,21 +314,21 @@ void TPTImage::loadImageInfo( int seq, int ang )
   delete[] default_max;
 
   // Also get some basic metadata
-  if( TIFFGetField( tiff, TIFFTAG_ARTIST, &tmp ) ) metadata["creator"] = tmp;
-  if( TIFFGetField( tiff, TIFFTAG_COPYRIGHT, &tmp ) ) metadata["rights"] = tmp;
-  if( TIFFGetField( tiff, TIFFTAG_DATETIME, &tmp ) ) metadata["date"] = tmp;
-  if( TIFFGetField( tiff, TIFFTAG_IMAGEDESCRIPTION, &tmp ) ) metadata["description"] = tmp;
-  if( TIFFGetField( tiff, TIFFTAG_DOCUMENTNAME, &tmp ) ) metadata["title"] = tmp;
-  if( TIFFGetField( tiff, TIFFTAG_PAGENAME, &tmp ) ) metadata["pagename"] = tmp;
-  if( TIFFGetField( tiff, TIFFTAG_SOFTWARE, &tmp ) ) metadata["software"] = tmp;
-  if( TIFFGetField( tiff, TIFFTAG_MAKE, &tmp ) ) metadata["make"] = tmp;
-  if( TIFFGetField( tiff, TIFFTAG_MODEL, &tmp ) ) metadata["model"] = tmp;
-  if( TIFFGetField( tiff, TIFFTAG_XMLPACKET, &count, &tmp ) ) metadata["xmp"] = string(tmp,count);
-  if( TIFFGetField( tiff, TIFFTAG_ICCPROFILE, &count, &tmp ) ) metadata["icc"] = string(tmp,count);
+  if( TIFFGetField( tiff, TIFFTAG_ARTIST, &tmp ) ) metadata.insert( {"creator",tmp} );
+  if( TIFFGetField( tiff, TIFFTAG_COPYRIGHT, &tmp ) ) metadata.insert( {"rights",tmp} );
+  if( TIFFGetField( tiff, TIFFTAG_DATETIME, &tmp ) ) metadata.insert( {"date",tmp} );
+  if( TIFFGetField( tiff, TIFFTAG_IMAGEDESCRIPTION, &tmp ) ) metadata.insert( {"description",tmp} );
+  if( TIFFGetField( tiff, TIFFTAG_DOCUMENTNAME, &tmp ) ) metadata.insert( {"title",tmp} );
+  if( TIFFGetField( tiff, TIFFTAG_PAGENAME, &tmp ) ) metadata.insert( {"pagename",tmp} );
+  if( TIFFGetField( tiff, TIFFTAG_SOFTWARE, &tmp ) ) metadata.insert( {"software",tmp} );
+  if( TIFFGetField( tiff, TIFFTAG_MAKE, &tmp ) ) metadata.insert( {"make",tmp} );
+  if( TIFFGetField( tiff, TIFFTAG_MODEL, &tmp ) ) metadata.insert( {"model",tmp} );
+  if( TIFFGetField( tiff, TIFFTAG_XMLPACKET, &count, &tmp ) ) metadata.insert( {"xmp",string(tmp,count)} );
+  if( TIFFGetField( tiff, TIFFTAG_ICCPROFILE, &count, &tmp ) ) metadata.insert( {"icc",string(tmp,count)} );
   if( TIFFGetField( tiff, TIFFTAG_STONITS, &scale ) ){
     char buffer[32];
     snprintf( buffer, sizeof(buffer), "%g", scale );
-    metadata["scale"] = buffer;
+    metadata.insert( {"scale",buffer} );
   }
 }
 

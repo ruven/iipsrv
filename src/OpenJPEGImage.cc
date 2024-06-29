@@ -1,6 +1,6 @@
 /*  IIPImage Server: OpenJPEG JPEG2000 handler
 
-    Copyright (C) 2019-2023 Ruven Pillay.
+    Copyright (C) 2019-2024 Ruven Pillay.
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -478,7 +478,7 @@ void OpenJPEGImage::process( unsigned int res, int layers, int xoffset, int yoff
   // Extract any ICC profile - unfortunately, can only get ICC profile after decoding
   int icc_length = _image->icc_profile_len;
   const char* icc = (const char*) _image->icc_profile_buf;
-  if( icc_length > 0 ) metadata["icc"] = string( icc, icc_length );
+  if( icc_length > 0 ) metadata.insert( {"icc",string(icc,icc_length)} );
 #ifdef OPENJPEG_DEBUG
   if( icc_length > 0 ){
     logfile << "OpenJPEG :: ICC profile detected with size " << icc_length << endl;
