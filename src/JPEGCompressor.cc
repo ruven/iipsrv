@@ -1,6 +1,6 @@
 /*  JPEG class wrapper to ijg jpeg library
 
-    Copyright (C) 2000-2023 Ruven Pillay.
+    Copyright (C) 2000-2024 Ruven Pillay
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -228,10 +228,8 @@ void JPEGCompressor::InitCompression( const RawTile& rawtile, unsigned int strip
   cinfo.in_color_space = ( channels == 3 ? JCS_RGB : JCS_GRAYSCALE );
   jpeg_set_defaults( &cinfo );
 
-  // Set our physical output resolution (JPEG only supports integers)
-  cinfo.X_density = round( dpi_x );
-  cinfo.Y_density = round( dpi_y );
-  cinfo.density_unit = dpi_units;
+  // Add DPI
+  writeResolution();
 
   // Set compression point quality (highest, but possibly slower depending
   //  on hardware) - must do this after we've set the defaults!
@@ -402,10 +400,8 @@ unsigned int JPEGCompressor::Compress( RawTile& rawtile )
   cinfo.in_color_space = ( channels == 3 ? JCS_RGB : JCS_GRAYSCALE );
   jpeg_set_defaults( &cinfo );
 
-  // Set our physical output resolution (JPEG only supports integers)
-  if( dpi_x ) cinfo.X_density = round( dpi_x );
-  if( dpi_y ) cinfo.Y_density = round( dpi_y );
-  if( dpi_x || dpi_y ) cinfo.density_unit = dpi_units;
+  // Add DPI
+  writeResolution();
   
   // Set compression quality (fastest, but possibly slower depending
   //  on hardware) - must do this after we've set the defaults!
@@ -468,6 +464,17 @@ unsigned int JPEGCompressor::Compress( RawTile& rawtile )
 
 
 
+// Write DPI information
+void JPEGCompressor::writeResolution()
+{
+  // Set our physical output resolution (JPEG only supports integers)
+  if( dpi_x ) cinfo.X_density = round( dpi_x );
+  if( dpi_y ) cinfo.Y_density = round( dpi_y );
+  if( dpi_x || dpi_y ) cinfo.density_unit = dpi_units;
+}
+
+
+
 // Write ICC profile into JPEG header if profile has been set
 // Function *must* be called AFTER calling jpeg_start_compress() and BEFORE
 // the first call to jpeg_write_scanlines().
@@ -478,13 +485,12 @@ unsigned int JPEGCompressor::Compress( RawTile& rawtile )
 // See the copyright notice in COPYING.ijg for details
 void JPEGCompressor::writeICCProfile()
 {
+  // Skip if profile embedding disabled
+  if( !embedICC || icc.empty() ) return;
+
   unsigned int num_markers;     // total number of markers we'll write
   int cur_marker = 1;           // per spec, counting starts at 1
   unsigned int length;          // number of bytes to write in this marker
-
-  // Skip if our profile has zero size or is too big
-  //  if( icc.size() == 0 || icc.size() > MAX_DATA_BYTES_IN_MARKER ) return;
-  if( icc.empty() ) return;
 
   unsigned int icc_data_len = icc.size();
   const char* icc_data_ptr = icc.c_str();
@@ -542,7 +548,7 @@ void JPEGCompressor::writeICCProfile()
 void JPEGCompressor::writeXMPMetadata()
 {
   // Make sure our XMP data has a valid size (namespace prefix is 29 bytes)
-  if( xmp.empty() || xmp.size()>(65536-XMP_PREFIX_SIZE) ) return;
+  if( !embedXMP || xmp.empty() || xmp.size()>(65536-XMP_PREFIX_SIZE) ) return;
 
   // The XMP data in a JPEG stream needs to be prefixed with a zero-terminated ID string
   // ref http://www.adobe.com/content/dam/Adobe/en/devnet/xmp/pdfs/cs6/XMPSpecificationPart3.pdf (pp13-14)

@@ -174,7 +174,7 @@ class IIPImage {
   std::vector<unsigned int> histogram;
 
   /// STL map to hold string metadata
-  std::map <const std::string, std::string> metadata;
+  std::map <const std::string, const std::string> metadata;
 
   /// Image modification timestamp
   time_t timestamp;

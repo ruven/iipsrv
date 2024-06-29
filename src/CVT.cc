@@ -502,6 +502,10 @@ void CVT::send( Session* session ){
   }
 
 
+  // Add metadata
+  compressor->setMetadata( (*session->image)->metadata );
+
+
   // Set the physical output resolution for this particular view and zoom level
   if( (*session->image)->dpi_x > 0 && (*session->image)->dpi_y > 0 ){
     float dpi_x = (*session->image)->dpi_x * (float) im_width / (float) (*session->image)->getImageWidth();
@@ -513,14 +517,14 @@ void CVT::send( Session* session ){
     }
   }
 
-  // Set ICC profile if of a reasonable size
+  // Embed ICC profile if of a reasonable size
   if( session->view->embedICC() && ((*session->image)->getMetadata("icc").size()>0) ){
     if( (*session->image)->getMetadata("icc").size() < 65536 ){
       if( session->loglevel >= 3 ){
 	*(session->logfile) << "CVT :: Embedding ICC profile with size "
 			    << (*session->image)->getMetadata("icc").size() << " bytes" << endl;
       }
-      compressor->setICCProfile( (*session->image)->getMetadata("icc") );
+      compressor->embedICCProfile( true );
     }
     else{
       if( session->loglevel >= 3 ){
@@ -530,13 +534,13 @@ void CVT::send( Session* session ){
     }
   }
 
-  // Add XMP metadata if this exists
+  // Always embed XMP metadata in CVT function
   if( (*session->image)->getMetadata("xmp").size() > 0 ){
     if( session->loglevel >= 3 ){
       *(session->logfile) << "CVT :: Embedding XMP metadata with size "
 			  << (*session->image)->getMetadata("xmp").size() << " bytes" << endl;
     }
-    compressor->setXMPMetadata( (*session->image)->getMetadata("xmp") );
+    compressor->embedXMPMetadata( true );
   }
 
 

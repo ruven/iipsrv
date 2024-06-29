@@ -112,9 +112,8 @@ void OBJ::run( Session* s, const std::string& a )
     stringstream json;
     json << "{ ";
 
-    map <const string, string> metadata = (*session->image)->metadata;
-    map<const string,string> :: const_iterator i;
-    for( i = metadata.begin(); i != metadata.end(); i++ ){
+    map <const string, const string> :: const_iterator i;
+    for( i = (*session->image)->metadata.begin(); i != (*session->image)->metadata.end(); i++ ){
       if( i->first == "icc" || i->first == "xmp" ) continue;
       if( (i->second).length() ) json << endl << "\t\"" << i->first << "\": \"" << i->second << "\",";
     }

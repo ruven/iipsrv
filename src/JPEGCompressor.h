@@ -1,6 +1,6 @@
 /*  JPEG class wrapper to ijg libjpeg library
 
-    Copyright (C) 2000-2023 Ruven Pillay.
+    Copyright (C) 2000-2024 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -73,6 +73,9 @@ class JPEGCompressor: public Compressor{
   iip_destination_mgr dest_mgr;
   iip_dest_ptr dest;
 
+  /// Write DPI
+  void writeResolution();
+
   /// Write ICC profile
   void writeICCProfile();
 
@@ -127,12 +130,6 @@ class JPEGCompressor: public Compressor{
   /// Compress an entire buffer of image data at once in one command
   /** @param t tile of image data */
   unsigned int Compress( RawTile& t );
-
-  /// Return the JPEG header size
-  inline unsigned int getHeaderSize() const { return header_size; }
-
-  /// Return a pointer to the header itself
-  inline unsigned char* getHeader() { return header; }
 
   /// Return the JPEG mime type
   inline const char* getMimeType() const { return "image/jpeg"; }

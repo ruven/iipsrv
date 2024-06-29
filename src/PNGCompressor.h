@@ -1,7 +1,7 @@
 /*  IIP PNG Compressor Class:
     Handles alpha channels, 8 or 16 bit data, ICC profiles and XMP metadata
 
-    Copyright (C) 2012-2023 Ruven Pillay
+    Copyright (C) 2012-2024 Ruven Pillay
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -68,6 +68,12 @@ class PNGCompressor : public Compressor {
   // The Compressor class Q parameter stores the zlib compression level (0-9)
   int filterType;             ///< PNG compression filter type - see png.h
   
+  /// Write metadata
+  void writeMetadata();
+
+  /// Write DPI
+  void writeResolution();
+
   /// Write ICC profile
   void writeICCProfile();
 
@@ -130,12 +136,6 @@ class PNGCompressor : public Compressor {
    */
   unsigned int Compress( RawTile& t );
 
-
-  /// Return the PNG header size
-  inline unsigned int getHeaderSize() const { return header_size; }
-
-  /// Return a pointer to the header itself
-  inline unsigned char* getHeader() { return header; }
 
   /// Return the PNG mime type
   inline const char* getMimeType() const { return "image/png"; }

@@ -141,14 +141,19 @@ void JTL::send( Session* session, int resolution, int tile ){
   }
 
 
+  // Add metadata
+  compressor->setMetadata( (*session->image)->metadata );
+
+
   // Embed ICC profile
-  if( session->view->embedICC() && ((*session->image)->getMetadata("icc").size()>0) ){
+  if( session->view->embedICC() && (*session->image)->metadata["icc"].size() > 0 ){
     if( session->loglevel >= 3 ){
       *(session->logfile) << "JTL :: Embedding ICC profile with size "
 			  << (*session->image)->getMetadata("icc").size() << " bytes" << endl;
     }
-    compressor->setICCProfile( (*session->image)->getMetadata("icc") );
+    compressor->embedICCProfile( true );
   }
+
 
 
   RawTile rawtile = tilemanager.getTile( resolution, tile, session->view->xangle,

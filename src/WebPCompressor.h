@@ -119,12 +119,6 @@ class WebPCompressor : public Compressor {
   unsigned int Compress( RawTile& t );
 
 
-  /// Return the WebP header size
-  inline unsigned int getHeaderSize() const { return header_size; }
-
-  /// Return a pointer to the header itself
-  inline unsigned char* getHeader() { return header; }
-
   /// Return the WebP mime type
   inline const char* getMimeType() const { return "image/webp"; }
 

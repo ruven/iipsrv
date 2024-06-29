@@ -1,7 +1,7 @@
 /*  IIP WebP Compressor Class:
     Handles alpha channels, ICC profiles and XMP metadata
 
-    Copyright (C) 2022 Ruven Pillay
+    Copyright (C) 2022-2024 Ruven Pillay
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -195,12 +195,12 @@ unsigned int WebPCompressor::Compress( RawTile& rawtile ){
 /// Write ICC profile
 void WebPCompressor::writeICCProfile()
 {
-  unsigned int len = icc.size();
-  if( len == 0 ) return;
+  // Skip if profile embedding disabled or no profile exists
+  if( !embedICC || icc.empty() ) return;
 
   WebPData chunk;
   chunk.bytes = (const uint8_t*) icc.c_str();
-  chunk.size = len;
+  chunk.size = icc.size();
 
   if( WebPMuxSetChunk( mux, "ICCP", &chunk, 0 ) != WEBP_MUX_OK ){
     throw string( "WebPCompressor :: Error setting ICC profile chunk" );
@@ -212,12 +212,12 @@ void WebPCompressor::writeICCProfile()
 /// Write XMP metadata
 void WebPCompressor::writeXMPMetadata()
 {
-  unsigned int len = xmp.size();
-  if( len == 0 ) return;
+  // Skip if XMP embedding disabled or no XMP chunk exists
+  if( !embedXMP || xmp.empty() ) return;
 
   WebPData chunk;
   chunk.bytes = (const uint8_t*) xmp.c_str();
-  chunk.size = len;
+  chunk.size = xmp.size();
 
   if( WebPMuxSetChunk( mux, "XMP ", &chunk, 0 ) != WEBP_MUX_OK ){
     throw string( "WebPCompressor :: Error setting XMP chunk" );

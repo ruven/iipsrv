@@ -1,6 +1,6 @@
 /*  PNG class wrapper to libpng library
 
-    Copyright (C) 2012-2021 Ruven Pillay
+    Copyright (C) 2012-2024 Ruven Pillay
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -25,6 +25,14 @@ using namespace std;
 
 // Minimum buffer size for output data
 #define MX 65536
+
+
+// Handle libpng versions that don't have itxt support
+#ifdef PNG_WRITE_iTXt_SUPPORTED
+#define iTXt_COMPRESSION PNG_ITXT_COMPRESSION_NONE
+#else
+#define iTXt_COMPRESSION PNG_TEXT_COMPRESSION_NONE
+#endif
 
 
 // ICC profile definitions
@@ -149,32 +157,10 @@ void PNGCompressor::InitCompression( const RawTile& rawtile, unsigned int strip_
   png_set_filter( dest.png_ptr, 0, filterType );
 
 
-  // Set physical resolution - convert from inches or cm to meters
-  if( dpi_x || dpi_y ){
-    png_uint_32 res_x = (dpi_units==2) ? dpi_x*10 : ( (dpi_units==1) ? dpi_x*25.4 : dpi_x );
-    png_uint_32 res_y = (dpi_units==2) ? dpi_y*10 : ( (dpi_units==1) ? dpi_y*25.4 : dpi_y );
-    png_set_pHYs( dest.png_ptr, dest.info_ptr, res_x, res_y, ((dpi_units==0) ? PNG_RESOLUTION_UNKNOWN : PNG_RESOLUTION_METER) );
-  }
+  // Add metadata
+  writeMetadata();
 
 
-  // Set some text metadata
-  png_text text;
-  text.compression = PNG_TEXT_COMPRESSION_NONE;
-  text.key = (png_charp) "Software";
-  text.text = (png_charp) "iipsrv/" VERSION;
-  text.text_length = 7 + strlen(VERSION);
-  png_textp text_ptr[1];
-  text_ptr[0] = &text;
-  png_set_text( dest.png_ptr, dest.info_ptr, *text_ptr, 1 );
-
-
-  // Add any ICC profile
-  writeICCProfile();
-
-  // Add XMP metadata
-  writeXMPMetadata();
-
-  
   // Write out the encoded header
   png_write_info( dest.png_ptr, dest.info_ptr );
 
@@ -302,30 +288,11 @@ unsigned int PNGCompressor::Compress( RawTile& rawtile )
   png_set_compression_level( dest.png_ptr, Q );
   png_set_filter( dest.png_ptr, 0, filterType );
 
-  // Set physical resolution - convert from inches or cm to meters
-  if( dpi_x || dpi_y ){
-    png_uint_32 res_x = (dpi_units==2) ? dpi_x*10 : ( (dpi_units==1) ? dpi_x*25.4 : dpi_x );
-    png_uint_32 res_y = (dpi_units==2) ? dpi_y*10 : ( (dpi_units==1) ? dpi_y*25.4 : dpi_y );
-    png_set_pHYs( dest.png_ptr, dest.info_ptr, res_x, res_y, ((dpi_units==0) ? PNG_RESOLUTION_UNKNOWN : PNG_RESOLUTION_METER) );
-  }
+
+  // Write metadata
+  writeMetadata();
 
 
-  // Set some text metadata
-  png_text text;
-  text.compression = PNG_TEXT_COMPRESSION_NONE;
-  text.key = (png_charp) "Software";
-  text.text = (png_charp) "iipsrv/" VERSION;
-  text.text_length = 7 + strlen(VERSION);
-  png_textp text_ptr[1];
-  text_ptr[0] = &text;
-  png_set_text( dest.png_ptr, dest.info_ptr, *text_ptr, 1 );
-
-
-  // Write our ICC profile
-  writeICCProfile();
-
-  writeXMPMetadata();
-  
   // Write out the encoded header
   png_write_info( dest.png_ptr, dest.info_ptr );
 
@@ -377,28 +344,94 @@ unsigned int PNGCompressor::Compress( RawTile& rawtile )
 
 
 
-void PNGCompressor::writeXMPMetadata(){
+void PNGCompressor::writeMetadata()
+{
+  // Set some basic text metadata
+  std::map<const std::string, const std::string> :: const_iterator it;
+  png_text text[6];
+  int n = 0;
 
-  unsigned int len = xmp.size();
-  if( len == 0 ) return;
+  text[n].compression = PNG_TEXT_COMPRESSION_NONE;
+  text[n].key = (png_charp) "Software";
+  text[n].text = (png_charp) "iipsrv/" VERSION;
+  text[n].text_length = 7 + strlen(VERSION);
+  n++;
 
-  png_text text;
-  text.key = (png_charp) XMP_PREFIX;
-  text.text = (png_charp) xmp.c_str();
-  text.compression = PNG_TEXT_COMPRESSION_NONE;
-  text.text_length = len;
+  it = metadata.find("title");
+  if( it != metadata.end() ){
+    text[n].compression = iTXt_COMPRESSION;
+    text[n].key = (png_charp) "Title";
+    text[n].text = (png_charp) it->second.c_str();
+    text[n].text_length = it->second.size();
+    n++;
+  }
 
-  // Write out our XMP chunk
-  png_set_text( dest.png_ptr, dest.info_ptr, &text, 1 );
+  it = metadata.find("creator");
+  if( it != metadata.end() ){
+    text[n].compression = iTXt_COMPRESSION;
+    text[n].key = (png_charp) "Author";
+    text[n].text = (png_charp) it->second.c_str();
+    text[n].text_length = it->second.size();
+    n++;
+  }
 
+  it = metadata.find("description");
+  if( it != metadata.end() ){
+    text[n].compression = iTXt_COMPRESSION;
+    text[n].key = (png_charp) "Description";
+    text[n].text = (png_charp) it->second.c_str();
+    text[n].text_length = it->second.size();
+    n++;
+  }
+
+  it = metadata.find("rights");
+  if( it != metadata.end() ){
+    text[n].compression = iTXt_COMPRESSION;
+    text[n].key = (png_charp) "Copyright";
+    text[n].text = (png_charp) it->second.c_str();
+    text[n].text_length = it->second.size();
+    n++;
+  }
+
+  it = metadata.find("date");
+  if( it != metadata.end() ){
+    text[n].compression = PNG_TEXT_COMPRESSION_NONE;
+    text[n].key = (png_charp) "Creation Time";
+    text[n].text = (png_charp) it->second.c_str();
+    text[n].text_length = it->second.size();
+    n++;
+  }
+
+  png_set_text( dest.png_ptr, dest.info_ptr, text, n );
+
+  // Write DPI
+  writeResolution();
+
+  // Write our ICC profile
+  writeICCProfile();
+
+  // Write XMP chunk
+  writeXMPMetadata();
 }
 
 
 
-void PNGCompressor::writeICCProfile(){
+void PNGCompressor::writeResolution()
+{
+  // Set physical resolution - convert from inches or cm to meters
+  if( dpi_x || dpi_y ){
+    png_uint_32 res_x = (dpi_units==2) ? dpi_x*10 : ( (dpi_units==1) ? dpi_x*25.4 : dpi_x );
+    png_uint_32 res_y = (dpi_units==2) ? dpi_y*10 : ( (dpi_units==1) ? dpi_y*25.4 : dpi_y );
+    png_set_pHYs( dest.png_ptr, dest.info_ptr, res_x, res_y, ((dpi_units==0) ? PNG_RESOLUTION_UNKNOWN : PNG_RESOLUTION_METER) );
+  }
+}
 
-  unsigned int len = icc.size();
-  if( len == 0 ) return;
+
+
+void PNGCompressor::writeICCProfile()
+{
+  // Skip if profile embedding disabled or no profile exists
+  if( !embedICC || icc.empty() ) return;
 
   const char* icc_data_ptr = icc.c_str();
 
@@ -420,6 +453,24 @@ void PNGCompressor::writeICCProfile(){
 #endif
 
   // Write out ICC profile
-  png_set_iCCP( dest.png_ptr, dest.info_ptr, ICC_PROFILE_NAME, PNG_COMPRESSION_TYPE_BASE, icc_profile_buf_png, len );
+  png_set_iCCP( dest.png_ptr, dest.info_ptr, ICC_PROFILE_NAME, PNG_COMPRESSION_TYPE_BASE, icc_profile_buf_png, icc.size() );
+
+}
+
+
+
+void PNGCompressor::writeXMPMetadata()
+{
+  // Skip if XMP embedding disabled or no XMP chunk exists
+  if( !embedXMP || xmp.empty() ) return;
+
+  png_text text;
+  text.key = (png_charp) XMP_PREFIX;
+  text.text = (png_charp) xmp.c_str();
+  text.compression = PNG_TEXT_COMPRESSION_NONE;
+  text.text_length = xmp.size();
+
+  // Write out our XMP chunk
+  png_set_text( dest.png_ptr, dest.info_ptr, &text, 1 );
 
 }

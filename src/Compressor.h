@@ -1,6 +1,6 @@
 /*  Generic compressor class - extended by JPEG and PNG Compressor classes
 
-    Copyright (C) 2017-2023 Ruven Pillay
+    Copyright (C) 2017-2024 Ruven Pillay
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -23,9 +23,8 @@
 
 
 
-#include <string>
 #include "RawTile.h"
-
+#include <map>
 
 
 /// Base class for IIP output images
@@ -52,11 +51,22 @@ class Compressor {
   /** Units can be 0 for unknown, 1 for dots/inch or 2 for dots/cm */
   int dpi_units;
 
+  /// Metadata
+  std::map <const std::string, const std::string> metadata;
+
   /// ICC Profile
+  bool embedICC;
   std::string icc;
 
   /// XMP metadata
+  bool embedXMP;
   std::string xmp;
+
+  /// Write metadata
+  virtual void writeMetadata() {};
+
+  /// Write DPI
+  virtual void writeResolution() {};
 
   /// Write ICC profile
   virtual void writeICCProfile() {};
@@ -76,10 +86,22 @@ class Compressor {
     header_size( 0 ),
     dpi_x( 0 ),
     dpi_y( 0 ),
-    dpi_units( 0 ) {};
+    dpi_units( 0 ),
+    embedICC( false ),
+    embedXMP( false ) {};
 
 
   virtual ~Compressor() {};
+
+
+  /// Return the image header size
+  /** @return header size in bytes */
+  unsigned int getHeaderSize() const { return header_size; };
+
+
+  /// Return a pointer to the image header itself
+  /** @return binary header blob */
+  unsigned char* getHeader() { return header; };
 
 
   /// Get the current quality level
@@ -94,24 +116,38 @@ class Compressor {
   inline void setResolution( float x, float y, int units ){ dpi_x = x; dpi_y = y; dpi_units = units; };
 
 
-  /// Set the ICC profile
-  /** @param profile ICC profile string */
-  inline void setICCProfile( const std::string& profile ){ icc = profile; }
+  /// Embed ICC profile
+  /** @param embed Whether ICC profile should be embedded */
+  inline void embedICCProfile( const bool embed ){ this->embedICC = embed; }
 
 
-  /// Set XMP metadata
-  /** @param x XMP metadata string */
-  inline void setXMPMetadata( const std::string& x ){ xmp = x; }
+  /// Embed XMP metadata
+  /** @param embed Whether XMP metadata should be embedded */
+  inline void embedXMPMetadata( const bool embed ){ this->embedXMP = embed; }
 
 
-  /// Return the image header size
-  /** @return header size in bytes */
-  virtual unsigned int getHeaderSize() const { return 0; };
+  /// Set general metadata
+  /** @param metadata Metadata list */
+  inline void setMetadata( const std::map <const std::string, const std::string>& metadata )
+  {
+    this->metadata = std::map <const std::string, const std::string>( metadata );
 
+    // Extract ICC profile if it exists and remove from list
+    std::map<const std::string, const std::string> :: const_iterator it;
+    it = this->metadata.find("icc");
+    if( it != this->metadata.end() ){
+      icc = it->second;
+      this->metadata.erase( it );
+    }
 
-  /// Return a pointer to the image header itself
-  /** @return binary header blob */
-  virtual unsigned char* getHeader() { return NULL; };
+    // Extract XMP chunk if it exists and remove from list
+    it = this->metadata.find("xmp");
+    if( it != this->metadata.end() ){
+      xmp = it->second;
+      this->metadata.erase( it );
+    }
+  };
+
 
 
   /// Initialise strip based compression
@@ -145,11 +181,6 @@ class Compressor {
       @return number of bytes used
    */
   virtual unsigned int Compress( RawTile& t ) { return 0; };
-
-
-  /// Add metadata to the image header
-  /** @param m metadata */
-  virtual void addXMPMetadata( const std::string& m ) {};
 
 
   /// Get mime type
