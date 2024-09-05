@@ -23,7 +23,7 @@
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>IIPIMAGE</RootNamespace>
     <ProjectName>iipsrv</ProjectName>
-    <WindowsTargetPlatformVersion>10.0.19041.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
@@ -116,7 +116,7 @@
       <Optimization>Full</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;HAVE_OPENJPEG;VERSION="1.2";_USE_MATH_DEFINES;HAVE_TIME_H;HAVE_STL_CHRONO;HAVE_UNORDERED_MAP;HAVE_WEBP;_BASETSD_H;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;HAVE_OPENJPEG;VERSION="1.2";_USE_MATH_DEFINES;HAVE_TIME_H;HAVE_STL_CHRONO;HAVE_UNORDERED_MAP;HAVE_WEBP;HAVE_AVIF;_BASETSD_H;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>$(ProjectDir)\..\dependencies\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
       <OmitFramePointers>true</OmitFramePointers>
@@ -126,6 +126,8 @@
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <FloatingPointModel>Fast</FloatingPointModel>
       <DebugInformationFormat>None</DebugInformationFormat>
+      <DiagnosticsFormat>Classic</DiagnosticsFormat>
+      <OpenMPSupport>false</OpenMPSupport>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -153,7 +155,7 @@
       <Optimization>Disabled</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;HAVE_OPENJPEG;VERSION="1.2";_USE_MATH_DEFINES;HAVE_TIME_H;HAVE_STL_CHRONO;HAVE_UNORDERED_MAP;HAVE_WEBP;_BASETSD_H;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;HAVE_OPENJPEG;VERSION="1.2";_USE_MATH_DEFINES;HAVE_TIME_H;HAVE_STL_CHRONO;HAVE_UNORDERED_MAP;HAVE_WEBP;HAVE_AVIF;_BASETSD_H;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>$(ProjectDir)\..\dependencies\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
       <OmitFramePointers>false</OmitFramePointers>
@@ -189,7 +191,7 @@
       <Optimization>Full</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;HAVE_OPENJPEG;HAVE_PNG;VERSION="1.2";HAVE_TIME_H;HAVE_STL_CHRONO;HAVE_UNORDERED_MAP;HAVE_WEBP;_BASETSD_H;_USE_MATH_DEFINES;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;HAVE_OPENJPEG;HAVE_PNG;VERSION="1.2";HAVE_TIME_H;HAVE_STL_CHRONO;HAVE_UNORDERED_MAP;HAVE_WEBP;HAVE_AVIF;_BASETSD_H;_USE_MATH_DEFINES;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>$(ProjectDir)\..\dependencies\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
       <OmitFramePointers>true</OmitFramePointers>
@@ -199,6 +201,9 @@
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <FloatingPointModel>Fast</FloatingPointModel>
       <DebugInformationFormat>None</DebugInformationFormat>
+      <OpenMPSupport>false</OpenMPSupport>
+      <LanguageStandard_C>stdc11</LanguageStandard_C>
+      <DiagnosticsFormat>Classic</DiagnosticsFormat>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -219,7 +224,7 @@
       <Optimization>Disabled</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;HAVE_OPENJPEG;HAVE_PNG;VERSION="1.2";HAVE_TIME_H;HAVE_STL_CHRONO;HAVE_UNORDERED_MAP;HAVE_WEBP;_BASETSD_H;_USE_MATH_DEFINES;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;HAVE_OPENJPEG;HAVE_PNG;VERSION="1.2";HAVE_TIME_H;HAVE_STL_CHRONO;HAVE_UNORDERED_MAP;HAVE_WEBP;HAVE_AVIF;_BASETSD_H;_USE_MATH_DEFINES;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>$(ProjectDir)\..\dependencies\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
       <OmitFramePointers>false</OmitFramePointers>
@@ -244,6 +249,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\src\AVIFCompressor.cc" />
     <ClCompile Include="..\..\src\CVT.cc" />
     <ClCompile Include="..\..\src\DeepZoom.cc" />
     <ClCompile Include="..\..\src\DSOImage.cc" />
@@ -272,6 +278,7 @@
     <ClCompile Include="..\Time.cc" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\src\AVIFCompressor.h" />
     <ClInclude Include="..\..\src\Cache.h" />
     <ClInclude Include="..\..\src\DSOImage.h" />
     <ClInclude Include="..\..\src\Environment.h" />

@@ -25,7 +25,7 @@ steps:
     cd vcpkg
     call .\bootstrap-vcpkg.bat
     call .\vcpkg integrate install
-    call .\vcpkg install tiff openjpeg fastcgi libpng libwebp --triplet x64-windows
+    call .\vcpkg install tiff openjpeg fastcgi libpng libwebp libavif[aom] --triplet x64-windows
   displayName: Install dependencies using vcpkg
 
 - task: MSBuild@1

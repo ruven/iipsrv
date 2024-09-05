@@ -22,11 +22,12 @@ FEATURES
 * High performance with inbuilt configurable cache
 * Support for extremely large images: tera-pixel and multi gigapixel support
 * TIFF and JPEG2000 input support
-* JPEG, PNG and WebP output support: export of whole or regions of images at any size
+* JPEG, PNG, WebP and AVIF output support: export of whole or regions of images at any size
 * Supports IIP, Zoomify, DeepZoom and IIIF API's
 * 1, 8, 16 and 32 bit image support including 32 bit floating point support
 * CIELAB support with automatic CIELAB->sRGB color space conversion
 * Multispectral and hyperspectral image support
+* Support for XMP metadata and ICC profiles
 * Image stacks and image sequence support
 * Dynamic hillshading of 3D surface topologies
 * Dynamic watermarking
@@ -60,6 +61,7 @@ Building iipsrv requires a C++ compiler and several development libraries.
 - [OpenJPEG](http://www.openjpeg.org/) for JPEG2000 input support. OpenJPEG will be disabled if Kakadu support has been enabled. Use the `--with-openjpeg=<path>` configure option if this library is installed in a non-standard location
 - [libpng](http://libpng.org/pub/png/) for PNG output support
 - [libwebp](https://developers.google.com/speed/webp) for WebP output support
+- [libavif](https://github.com/AOMediaCodec/libavif) for AVIF output support
 - [libmemcached](https://libmemcached.org) for [Memcached](https://www.memcached.org), a high-performance, distributed memory object caching system. If enabled, IIPImage will cache results using this distributed cache, giving IIPImage added speed and scalability
 
 
@@ -109,7 +111,7 @@ For building on Windows, Visual Studio build files are available in the `windows
 
 To install all required and optional dependencies using vcpkg:
 
-    .\vcpkg.exe install tiff openjpeg fastcgi libpng libwebp --triplet x64-windows
+    .\vcpkg.exe install tiff openjpeg fastcgi libpng libwebp libavif[aom] --triplet x64-windows
 
 Make these available to Visual Studio:
 
