@@ -1,3 +1,8 @@
+05/09/2024:
+	- Added convenience function to Rawtile class to duplicate bands for encoders that cannot natively handle
+	  single band monochrome images: simplifies WebP encoding.
+
+
 29/06/2024:
 	- Updated autoconf tiff m4 to search for tiffio.h rather than just tiff.h when using TIFFOpen().
 	- Switched metadata assignment within input image classes to use more efficient map insert() syntax.

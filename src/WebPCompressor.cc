@@ -33,6 +33,7 @@ void WebPCompressor::InitCompression( const RawTile& rawtile, unsigned int strip
   tile.width = rawtile.width;
   tile.height = rawtile.height;
   tile.channels = rawtile.channels;
+  tile.bpc = rawtile.bpc;
   tile.data = rawtile.data;
   tile.dataLength = rawtile.dataLength;
   tile.memoryManaged = 0;   // We don't want the RawTile destructor to free this memory
@@ -84,24 +85,11 @@ unsigned int WebPCompressor::Finish( unsigned char* output ){
 /// Compress a single tile of data
 unsigned int WebPCompressor::Compress( RawTile& rawtile ){
 
-  // Import data from our RawTile structure
-  unsigned char* tmp = NULL;
-  const uint8_t* rgb = (uint8_t*) rawtile.data;
-
   // WebP cannot handle greyscale, so duplicate our data to 3 bands
-  if( rawtile.channels == 1 ){
-    unsigned int len = rawtile.width*rawtile.height;
-    tmp = new unsigned char[len*3];
-    unsigned int n = 0;
-    for( unsigned int i=0; i<len; i++ ){
-      tmp[n++] = rgb[i];
-      tmp[n++] = rgb[i];
-      tmp[n++] = rgb[i];
-    }
-    rgb = (uint8_t*) tmp;
-    rawtile.channels = 3;
-  }
+  if( rawtile.channels == 1 ) rawtile.triplicate();
 
+  // Import data from our RawTile structure
+  const uint8_t* rgb = (uint8_t*) rawtile.data;
 
   // Create WebP input data structure
   WebPPicture pic;
@@ -129,9 +117,7 @@ unsigned int WebPCompressor::Compress( RawTile& rawtile ){
     }
   }
 
-  // Delete any temporary buffer
-  if( tmp ) delete[] tmp;
-  
+
   // Encode our image buffer
   WebPEncode( &config, &pic );
 
@@ -172,6 +158,7 @@ unsigned int WebPCompressor::Compress( RawTile& rawtile ){
     rawtile.data = new unsigned char[size];
     rawtile.capacity = size;
   }
+
 
   // Copy our data back into our rawtile buffer
   memcpy( rawtile.data, buffer, size );

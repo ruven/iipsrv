@@ -2,7 +2,7 @@
 
 /*  IIPImage Server
 
-    Copyright (C) 2000-2023 Ruven Pillay.
+    Copyright (C) 2000-2024 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -271,7 +271,7 @@ class RawTile {
     unsigned char* src_ptr = (unsigned char*) buffer;
     unsigned char* dst_ptr = (unsigned char*) data;
 
-    // Copy one scanline at a time
+    // Copy one entire scanline at a time
     unsigned int dlen = w * channels * (bpc/8);
     unsigned int slen = width * channels * (bpc/8);
 
@@ -289,6 +289,44 @@ class RawTile {
     dataLength = len;
     width = w;
     height = h;
+  };
+
+
+
+  /// Expand monochrome 1 band image to 3 by duplicating channels 
+  void triplicate() {
+
+    if( channels != 1 ) return;
+
+    // Keep track of original data buffer and whether we manage it
+    void* buffer = data;
+    int mm = memoryManaged;
+
+    // Create a new buffer with the new size - make sure we update channel number first
+    channels = 3;
+    allocate();
+
+    // Loop through each pixel and duplicate
+    unsigned int len = width * height;
+    uint32_t n = 0;
+    for( uint32_t i=0; i<len; i++ ){
+      for( uint8_t k=0; k<3; k++ ){
+	if( bpc == 32 ){
+	  if( sampleType == SampleType::FLOATINGPOINT ) ((float*) data)[n+k] = ((float*) buffer)[i];
+	  else               ((unsigned   int*) data)[n+k] = ((unsigned   int*) buffer)[i];
+	}
+	else if( bpc == 16 ) ((unsigned short*) data)[n+k] = ((unsigned short*) buffer)[i];
+	else                 ((unsigned  char*) data)[n+k] = ((unsigned  char*) buffer)[i];
+      }
+      n += 3;
+    }
+
+    // Delete original memory buffer
+    if( mm ) deallocate( buffer );
+
+    // Set the new tile dimensions and data storage size
+    capacity = len;   // Need to set this manually as deallocate sets this to zero
+    dataLength = len;
   };
 
 
