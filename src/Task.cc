@@ -1,7 +1,7 @@
 /*
     IIP Command Handler Member Functions
 
-    Copyright (C) 2006-2022 Ruven Pillay.
+    Copyright (C) 2006-2024 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -57,6 +57,9 @@ Task* Task::factory( const string& t ){
 #ifdef HAVE_WEBP
   else if( type == "wtl" ) return new WTL;
 #endif
+#ifdef HAVE_AVIF
+  else if( type == "atl" ) return new ATL;
+#endif
   else if( type == "jtl" ) return new JTL;
   else if( type == "jtls" ) return new JTLS;
   else if( type == "icc" ) return new ICC;
@@ -94,10 +97,10 @@ void QLT::run( Session* session, const string& argument ){
     int factor = atoi( argument.c_str() );
 
     // Check the value is realistic
-    if( factor < 0 || factor > 100 ){
+    if( factor < -1 || factor > 100 ){
       if( session->loglevel >= 2 ){
 	*(session->logfile) << "QLT :: Quality factor of " << argument
-			    << " out of bounds. Must be 0-100 for JPEG and 0-9 for PNG" << endl;
+			    << " out of bounds. Must be 0-100 for JPEG, WebP or AVIF and 0-9 for PNG" << endl;
       }
     }
 
@@ -107,6 +110,9 @@ void QLT::run( Session* session, const string& argument ){
 #endif
 #ifdef HAVE_WEBP
     session->webp->setQuality( factor );
+#endif
+#ifdef HAVE_AVIF
+    session->avif->setQuality( factor );
 #endif
 
     if( session->loglevel >= 2 ) *(session->logfile) << "QLT :: Requested quality is " << factor << endl;
@@ -258,10 +264,16 @@ void CVT::run( Session* session, const string& src ){
     if( session->loglevel >= 3 ) *(session->logfile) << "CVT :: PNG output" << endl;
   }
 #endif
-  #ifdef HAVE_WEBP
+#ifdef HAVE_WEBP
   else if( argument == "webp" ){
     session->view->output_format = ImageEncoding::WEBP;
     if( session->loglevel >= 3 ) *(session->logfile) << "CVT :: WebP output" << endl;
+  }
+#endif
+#ifdef HAVE_AVIF
+  else if( argument == "avif" ){
+    session->view->output_format = ImageEncoding::AVIF;
+    if( session->loglevel >= 3 ) *(session->logfile) << "CVT :: AVIF output" << endl;
   }
 #endif
   else{

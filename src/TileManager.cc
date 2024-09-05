@@ -97,6 +97,14 @@ RawTile TileManager::getNewTile( int resolution, int tile, int xangle, int yangl
 	break;
 
 
+      case ImageEncoding::AVIF:
+	if( loglevel >= 4 ) compression_timer.start();
+	compressor->Compress( ttt );
+	if( loglevel >= 4 ) *logfile << "TileManager :: AVIF compression time: "
+				     << compression_timer.getTime() << " microseconds" << endl;
+	break;
+
+
       case ImageEncoding::DEFLATE:
 	// No deflate for the time being ;-)
 	if( loglevel >= 4 ) *logfile << "TileManager :: DEFLATE compression requested: Not currently available" << endl;
@@ -107,6 +115,7 @@ RawTile TileManager::getNewTile( int resolution, int tile, int xangle, int yangl
 	break;
 
     }
+
   }
 
 
@@ -164,6 +173,14 @@ RawTile TileManager::getTile( int resolution, int tile, int xangle, int yangle, 
       break;
 
 
+    case ImageEncoding::AVIF:
+      if( (rawtile = tileCache->getTile( image->getImagePath(), resolution, tile,
+					 xangle, yangle, ImageEncoding::AVIF, compressor->getQuality() )) ) break;
+      if( (rawtile = tileCache->getTile( image->getImagePath(), resolution, tile,
+					 xangle, yangle, ImageEncoding::RAW, 0 )) ) break;
+      break;
+
+
     case ImageEncoding::RAW:
       if( (rawtile = tileCache->getTile( image->getImagePath(), resolution, tile,
 					 xangle, yangle, ImageEncoding::RAW, 0 )) ) break;
@@ -183,6 +200,7 @@ RawTile TileManager::getTile( int resolution, int tile, int xangle, int yangle, 
       case ImageEncoding::JPEG: compName = "JPEG"; break;
       case ImageEncoding::PNG: compName = "PNG"; break;
       case ImageEncoding::WEBP: compName = "WebP"; break;
+      case ImageEncoding::AVIF: compName = "AVIF"; break;
       case ImageEncoding::DEFLATE: compName = "DEFLATE"; break;
       case ImageEncoding::RAW: compName = "RAW"; break;
       default: break;
@@ -231,7 +249,7 @@ RawTile TileManager::getTile( int resolution, int tile, int xangle, int yangle, 
   // PNG compression can have 8 or 16 bits and alpha channels
   if( (rawtile->compressionType == ImageEncoding::RAW) &&
       ( ( ctype==ImageEncoding::JPEG && rawtile->bpc==8 && (rawtile->channels==1 || rawtile->channels==3) ) ||
-	ctype==ImageEncoding::PNG || ctype==ImageEncoding::WEBP ) ){
+	ctype==ImageEncoding::PNG || ctype==ImageEncoding::WEBP || ctype==ImageEncoding::AVIF ) ){
 
     // Rawtile is a pointer to the cache data, so we need to create a copy of it in case we compress it
     RawTile ttt( *rawtile );

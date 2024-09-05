@@ -34,7 +34,7 @@
 enum class ColorSpace { NONE, GREYSCALE, sRGB, CIELAB, BINARY };
 
 /// File format / encoding / compression types
-enum class ImageEncoding { UNSUPPORTED, RAW, TIFF, JPEG2000, JPEG, DEFLATE, PNG, WEBP };
+enum class ImageEncoding { UNSUPPORTED, RAW, TIFF, JPEG2000, JPEG, DEFLATE, PNG, WEBP, AVIF };
 
 /// Sample types
 enum class SampleType { FIXEDPOINT, FLOATINGPOINT };

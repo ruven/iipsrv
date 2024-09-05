@@ -196,6 +196,7 @@ void IIIF::run( Session* session, const string& src )
     string host = session->headers["BASE_URL"];
     if ( host.length() > 0 ){
       string query = (session->headers["QUERY_STRING"]);
+      // Strip off the "IIIF=" query prefix
       query = query.substr( 5, query.length() - suffix.length() - 6 );
       id = host + query;
     }
@@ -271,9 +272,21 @@ void IIIF::run( Session* session, const string& src )
 		       << "  \"maxWidth\" : " << max << "," << endl
 		       << "  \"maxHeight\" : " << max << "," << endl
 		       << "  \"extraQualities\": [\"color\",\"gray\",\"bitonal\"]," << endl
+
+#if defined(HAVE_WEBP) || defined(HAVE_AVIF)
+		       << "  \"extraFormats\": ["
 #ifdef HAVE_WEBP
-		       << "  \"extraFormats\": [\"webp\"]," << endl
+		       << "\"webp\""
 #endif
+#if defined(HAVE_WEBP) && defined(HAVE_AVIF)
+		       << ","
+#endif
+#ifdef HAVE_AVIF
+		       << "\"avif\""
+#endif
+		       << "],"
+#endif
+
 		       << "  \"extraFeatures\": [\"regionByPct\",\"sizeByForcedWh\",\"sizeByWh\",\"sizeAboveFull\",\"sizeUpscaling\",\"rotationBy90s\",\"mirroring\"]";
 
       if( !rights.empty() ){
@@ -287,7 +300,7 @@ void IIIF::run( Session* session, const string& src )
       infoStringStream << "  \"@id\" : \"" << iiif_id << "\"," << endl
 		       << "  \"profile\" : [" << endl
 		       << "     \"" << IIIF_PROTOCOL << "/" << iiif_version << "/" << IIIF_PROFILE << ".json\"," << endl
-		       << "     { \"formats\" : [ \"jpg\", \"png\", \"webp\" ]," << endl
+		       << "     { \"formats\" : [ \"jpg\", \"png\", \"webp\", \"avif\" ]," << endl
 		       << "       \"qualities\" : [\"native\",\"color\",\"gray\",\"bitonal\"]," << endl
 		       << "       \"supports\" : [\"regionByPct\",\"regionSquare\",\"sizeByForcedWh\",\"sizeByWh\",\"sizeAboveFull\",\"sizeUpscaling\",\"rotationBy90s\",\"mirroring\"]," << endl
 		       << "       \"maxWidth\" : " << max << "," << endl
@@ -614,6 +627,9 @@ void IIIF::run( Session* session, const string& src )
 #endif
 #ifdef HAVE_WEBP
 	else if( format == "webp" ) session->view->output_format = ImageEncoding::WEBP;
+#endif
+#ifdef HAVE_AVIF
+	else if( format == "avif" ) session->view->output_format = ImageEncoding::AVIF;
 #endif
 	else throw invalid_argument( "IIIF :: unsupported output format" );
       }

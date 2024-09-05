@@ -33,6 +33,9 @@
 #ifdef HAVE_WEBP
 #include "WebPCompressor.h"
 #endif
+#ifdef HAVE_AVIF
+#include "AVIFCompressor.h"
+#endif
 #include "Cache.h"
 #include "Timer.h"
 #include "Watermark.h"

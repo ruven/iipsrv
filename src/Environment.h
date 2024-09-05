@@ -32,6 +32,8 @@
 #define JPEG_QUALITY 75
 #define PNG_QUALITY 1
 #define WEBP_QUALITY 50
+#define AVIF_QUALITY 50
+#define AVIF_CODEC 0  // 0 = auto, 1 = aom, 2 = rav2e, 3 = svt
 #define MAX_CVT 5000
 #define MAX_LAYERS 0
 #define FILESYSTEM_PREFIX ""
@@ -154,6 +156,32 @@ class Environment {
     else quality = WEBP_QUALITY;
 
     return quality;
+  }
+
+
+  static int getAVIFQuality(){
+    const char* envpara = getenv( "AVIF_QUALITY" );
+    int quality;
+    if( envpara ){
+      quality = atoi( envpara );
+      if( quality > 100 ) quality = 100;
+      if( quality < -1 ) quality = -1;  // Allow -1 = lossless
+    }
+    else quality = AVIF_QUALITY;
+
+    return quality;
+  }
+
+
+  static unsigned int getAVIFCodec(){
+    unsigned int codec;
+    const char* envpara = getenv( "AVIF_CODEC" );
+    if( envpara ){
+      codec = atoi( envpara );
+      if( codec > 3 ) codec = 0;
+    }
+    else codec = AVIF_CODEC;
+    return codec;
   }
 
 

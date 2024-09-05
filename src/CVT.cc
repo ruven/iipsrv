@@ -56,6 +56,9 @@ void CVT::send( Session* session ){
 #ifdef HAVE_WEBP
   else if( session->view->output_format == ImageEncoding::WEBP ) compressor = session->webp;
 #endif
+#ifdef HAVE_AVIF
+  else if( session->view->output_format == ImageEncoding::AVIF ) compressor = session->avif;
+#endif
   else return;
 
 
@@ -406,7 +409,8 @@ void CVT::send( Session* session ){
   // For PNG and WebP, strip extra bands if we have more than 4 present
   if( ( (session->view->output_format == ImageEncoding::JPEG) && (complete_image.channels == 2 || complete_image.channels > 3) ) ||
       ( (session->view->output_format == ImageEncoding::PNG)  && (complete_image.channels  > 4) ) ||
-      ( (session->view->output_format == ImageEncoding::WEBP) && (complete_image.channels  > 4) ) ){
+      ( (session->view->output_format == ImageEncoding::WEBP) && (complete_image.channels  > 4) ) ||
+      ( (session->view->output_format == ImageEncoding::AVIF) && (complete_image.channels  > 4) ) ){
 
     int output_channels = (complete_image.channels==2)? 1 : 3;
     if( session->loglevel >= 5 ) function_timer.start();

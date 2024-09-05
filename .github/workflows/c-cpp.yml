@@ -13,7 +13,7 @@ jobs:
     - uses: actions/checkout@v3
 
     - name: Install dependencies
-      run:  sudo apt-get update && sudo apt-get install libtiff-dev libpng-dev libturbojpeg-dev libwebp-dev libmemcached-dev libopenjp2-7-dev
+      run:  sudo apt-get update && sudo apt-get install libtiff-dev libpng-dev libturbojpeg-dev libwebp-dev libavif-dev libmemcached-dev libopenjp2-7-dev
 
     - name: Configure
       run: |
@@ -31,7 +31,7 @@ jobs:
     - uses: actions/checkout@v3
 
     - name: Install dependencies
-      run: brew install automake libtool fcgi libtiff openjpeg libmemcached libpng webp libomp
+      run: brew install automake libtool fcgi libtiff openjpeg libmemcached libpng webp libavif libomp
 
     - name: Configure
       run: |

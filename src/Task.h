@@ -1,5 +1,5 @@
 /*
-    IIP Generic Task Class
+    IIP Session & Generic Task Classes
 
     Copyright (C) 2006-2024 Ruven Pillay
 
@@ -26,7 +26,6 @@
 
 #include "IIPImage.h"
 #include "IIPResponse.h"
-#include "JPEGCompressor.h"
 #include "View.h"
 #include "TileManager.h"
 #include "Timer.h"
@@ -35,16 +34,6 @@
 #include "Watermark.h"
 #include "Transforms.h"
 #include "Logger.h"
-#ifdef HAVE_PNG
-#include "PNGCompressor.h"
-#endif
-#ifdef HAVE_WEBP
-#include "WebPCompressor.h"
-#endif
-
-
-// Define our http header cache max age (24 hours)
-#define MAX_AGE 86400
 
 
 
@@ -62,8 +51,6 @@ typedef HASHMAP <std::string,IIPImage> imageCacheMapType;
 
 
 
-
-
 /// Structure to hold our session data
 struct Session {
   IIPImage **image;
@@ -73,6 +60,9 @@ struct Session {
 #endif
 #ifdef HAVE_WEBP
   WebPCompressor* webp;
+#endif
+#ifdef HAVE_AVIF
+  AVIFCompressor* avif;
 #endif
   View* view;
   IIPResponse* response;
@@ -263,6 +253,17 @@ public:
   void run( Session* session, const std::string& argument ){
     // Set our encoding format and call JTL::run
     session->view->output_format = ImageEncoding::WEBP;
+    JTL::run( session, argument );
+  };
+};
+
+
+/// WebP Tile Command
+class ATL : public JTL {
+public:
+  void run( Session* session, const std::string& argument ){
+    // Set our encoding format and call JTL::run
+    session->view->output_format = ImageEncoding::AVIF;
     JTL::run( session, argument );
   };
 };

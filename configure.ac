@@ -75,6 +75,7 @@ AC_CHECK_HEADERS([chrono])
 AC_CHECK_HEADERS([unordered_map])
 AC_CHECK_HEADERS([tr1/unordered_map])
 AC_CHECK_HEADERS([ext/hash_map])
+AC_CHECK_HEADER([thread], [AC_DEFINE(HAVE_STL_THREAD)])
 AX_CXX_COMPILE_STDCXX(11)
 AC_LANG_POP([C++])
 
@@ -189,6 +190,31 @@ else
 
 fi
 
+
+#************************************************************
+#     Check for AVIF support
+#************************************************************
+
+AVIF=false
+AC_ARG_ENABLE( avif,
+    [  --disable-avif          disable AVIF])
+
+
+if test "x$enable_avuf" == "xno"; then
+   AC_MSG_RESULT([configure: disabling AVIF support])
+   AM_CONDITIONAL([ENABLE_AVIF], [false])
+else
+   AC_CHECK_HEADER( [avif/avif.h], [AVIF=true], [AVIF=false] )
+   AC_SEARCH_LIBS( [avifEncoderAddImage], [avif], [AVIF=true], [AVIF=false] )
+
+   if test "x${AVIF}" = xtrue; then
+      AM_CONDITIONAL([ENABLE_AVIF], [true])
+      AC_DEFINE(HAVE_AVIF)
+   else
+      AM_CONDITIONAL([ENABLE_AVIF], [false])
+   fi
+
+fi
 
 
 #************************************************************
@@ -422,8 +448,9 @@ Options Enabled:
  JPEG2000    :  ${JPEG2000_CODEC}
  OpenMP      :  ${OPENMP}
  Loggers     :  ${LOGGING}
- PNG Output  :  ${PNG}
- WebP Output :  ${WEBP}])
+ PNG  Output :  ${PNG}
+ WebP Output :  ${WEBP}
+ AVIF Output :  ${AVIF}])
 
 if [test "x${DEBUG}" = xtrue]; then
   AC_MSG_RESULT([ Debug mode  :  activated])

@@ -21,6 +21,10 @@ if ENABLE_WEBP
 iipsrv_fcgi_LDADD += WebPCompressor.o
 endif
 
+if ENABLE_AVIF
+iipsrv_fcgi_LDADD += AVIFCompressor.o
+endif
+
 if ENABLE_MODULES
 iipsrv_fcgi_LDADD += DSOImage.o
 endif
@@ -29,7 +33,8 @@ EXTRA_iipsrv_fcgi_SOURCES = Main.cc DSOImage.h DSOImage.cc \
 			KakaduImage.h KakaduImage.cc \
 			OpenJPEGImage.h OpenJPEGImage.cc \
 			PNGCompressor.h PNGCompressor.cc \
-			WebPCompressor.h WebPCompressor.cc
+			WebPCompressor.h WebPCompressor.cc \
+			AVIFCompressor.h AVIFCompressor.cc
 
 iipsrv_fcgi_SOURCES = \
 			IIPImage.h \

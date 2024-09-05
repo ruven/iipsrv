@@ -296,6 +296,14 @@ int main( int argc, char *argv[] )
   int webp_quality = Environment::getWebPQuality();
 
 
+  // Get our default AVIF compression level
+  int avif_quality = Environment::getAVIFQuality();
+
+
+  // Get our requested AVIF codec
+  unsigned int avif_codec = Environment::getAVIFCodec();
+
+
   // Get our max CVT size
   int max_CVT = Environment::getMaxCVT();
 
@@ -391,6 +399,12 @@ int main( int argc, char *argv[] )
     logfile << "Setting default WebP compression level to ";
     if( webp_quality == -1 ) logfile << "lossless" << endl;
     else logfile << webp_quality << endl;
+#endif
+#ifdef HAVE_AVIF
+    logfile << "Setting default AVIF compression level to ";
+    if( webp_quality == -1 ) logfile << "lossless" << endl;
+    else logfile << avif_quality << endl;
+    logfile << "Setting AVIF codec to " << AVIFCompressor::getCodecName( avif_codec ) << endl;
 #endif
     logfile << "Setting maximum CVT size to " << max_CVT << endl;
     logfile << "Setting HTTP Cache-Control header to '" << cache_control << "'" << endl;
@@ -623,7 +637,10 @@ int main( int argc, char *argv[] )
 #ifdef HAVE_WEBP
     WebPCompressor webp( webp_quality );
 #endif
-
+#ifdef HAVE_AVIF
+    AVIFCompressor avif( avif_quality );
+    avif.setCodec( avif_codec );
+#endif
 
     // View object for use with the CVT command etc
     View view;
@@ -653,6 +670,9 @@ int main( int argc, char *argv[] )
 #endif
 #ifdef HAVE_WEBP
       session.webp = &webp;
+#endif
+#ifdef HAVE_AVIF
+      session.avif = &avif;
 #endif
       session.loglevel = loglevel;
       session.logfile = &logfile;

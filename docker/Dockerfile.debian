@@ -36,6 +36,7 @@ apt-get install --no-install-recommends -y \
 	make \
 	libpng-dev \
 	libwebp-dev \
+	libavif-dev \
 	libmemcached-dev \
 	lighttpd
 

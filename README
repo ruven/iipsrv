@@ -404,6 +404,10 @@ PNG_QUALITY: The default PNG quality factor for compression when the client does
 
 WEBP_QUALITY: The default WebP quality factor for compression when the client does not specify one. For lossy compression the value should be between 0 (highest level of compression) and 100 (highest image quality). For lossless compression, set this to -1. The default is lossy compression with a quality factor of 50.
 
+AVIF_QUALITY: The default AVIF quality factor for compression when the client does not specify one. For lossy compression the value should be between 0 (highest level of compression) and 100 (highest image quality). For lossless compression, set this to -1. The default is lossy compression with a quality factor of 50.
+
+AVIF_CODEC: The AVIF codec to be used for encoding. Set to 0 for automatic codec selection, 1 for aom, 2 for rav1e and 3 for svt. The default is 0 (automatic codec selection).
+
 MAX_CVT: Limits the maximum output image dimensions (in pixels) allowable for dynamic image export via the CVT command or for IIIF requests. This prevents huge requests from overloading the server. The default is 5000. If set to -1, no limit is set.
 
 ALLOW_UPSCALING: Determines whether an image may be rendered at a size greater than that of the source image. A value of 0 will prevent upscaling.

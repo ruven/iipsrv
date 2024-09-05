@@ -29,6 +29,7 @@ RUN apk add --no-cache \
 	openjpeg-dev \
 	libpng-dev \
 	libwebp-dev \
+	libavif-dev \
 	libmemcached-dev \
 	lighttpd
 

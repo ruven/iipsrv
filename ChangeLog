@@ -1,6 +1,14 @@
 05/09/2024:
 	- Added convenience function to Rawtile class to duplicate bands for encoders that cannot natively handle
 	  single band monochrome images: simplifies WebP encoding.
+	- Added AVIF output support. Both tile and region output are supported for both IIP and IIIF. Individual tiles
+	  can be requested using the ATL paramter which works in the same way as PTL for PNG and JTL for JPEG. CVT
+	  region requests can be made with CVT=avif. AVIF encoder supports alpha channels and 8 bit images only at the
+	  moment (avif supports up to 12 bit). To compile, iipsrv requires the libavif development headers and libraries,
+	  which are automatically detected in ./configure. libavif itself will require at least one encoder codec enabled.
+	  The AVIF_QUALITY startup variable sets the default encoding quality (0=most compression, 100=best quality,
+	  default=50), -1 specifies lossless encoding. The AVIF_CODEC variable allows selection of the libavif codec
+	  (0=auto, 1=aom, 2=rav1e, 3=svt, default=auto). The selected codec needs to have been built and working within libavif.
 
 
 29/06/2024:

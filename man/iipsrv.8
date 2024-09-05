@@ -1,4 +1,4 @@
-.TH IIPSRV 8 "May 2023" "Ruven Pillay"
+.TH IIPSRV 8 "September 2024" "Ruven Pillay"
 .SH NAME
 
 IIPSRV \- IIPImage Image Server
@@ -9,7 +9,7 @@ images. It is designed to be fast and bandwidth-efficient with low processor and
 well as advanced image features such as 8, 16 and 32 bit depths, CIELAB colorimetric images and scientific imagery such as multispectral images.
 Source images can be either TIFF (tiled multi-resolution) or JPEG2000 (if enabled).
 
-The image server can also dynamically export images in JPEG, PNG and WebP format and perform basic image processing, such as contrast adjustment, gamma control, conversion from color to greyscale, color twist, region extraction and arbitrary rescaling. The server can also export spectral point or profile data from multispectral data and apply color maps or perform hillshading rendering.
+The image server can also dynamically export images in JPEG, PNG, WebP and AVIF format and perform basic image processing, such as contrast adjustment, gamma control, conversion from color to greyscale, color twist, region extraction and arbitrary rescaling. The server can also export spectral point or profile data from multispectral data and apply color maps or perform hillshading rendering.
 
 .SH SYNOPSIS
 
@@ -66,7 +66,16 @@ The default is 1.
 .IP WEBP_QUALITY
 The default WebP quality factor for compression when the client does not specify one.
 The value should be between 0 (highest level of compression) and 100 (highest image quality).
+A value of -1 can be used to specify lossless encoding.
 The default is 50.
+.IP AVIF_QUALITY
+The default AVIF quality factor for compression when the client does not specify one.
+The value should be between 0 (highest level of compression) and 100 (highest image quality).
+A value of -1 can be used to specify lossless encoding.
+The default is 50.
+.IP AVIF_CODEC
+The AVIF codec to use for encoding. Integer value. Set 0 for automatic codec selection, 1 for aom, 2 for rav1e, 3 for svt.
+Default is 0 (automatic codec selection)
 .IP MAX_IMAGE_CACHE_SIZE
 Max image cache size to be held in RAM in MB. This is a cache of
 the compressed JPEG image tiles requested by the client. The default
