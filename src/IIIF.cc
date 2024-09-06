@@ -206,11 +206,16 @@ void IIIF::run( Session* session, const string& src )
       string scheme = session->headers["HTTPS"].empty() ? "http://" : "https://";
 
       if (request_uri.empty()){
-        throw invalid_argument( "IIIF: REQUEST_URI was not set in FastCGI request, so the ID parameter cannot be set." );
+        throw invalid_argument( "IIIF: REQUEST_URI was not set in FastCGI request, so the ID parameter cannot be set" );
       }
 
-      request_uri.erase( request_uri.length() - suffix.length() - 1, string::npos );
-      id = scheme + session->headers["HTTP_HOST"] + request_uri;
+      // Need to decode in case URL is encoded
+      URL uri( request_uri );
+      string decoded_uri = uri.decode();
+
+      // Remove the suffix and the preceding "/"
+      decoded_uri.erase( decoded_uri.length() - suffix.length() - 1, string::npos );
+      id = scheme + session->headers["HTTP_HOST"] + decoded_uri;
     }
 
     // Decode and escape any URL-encoded characters from our file name for JSON

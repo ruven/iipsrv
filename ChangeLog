@@ -1,3 +1,7 @@
+06/09/2024:
+	- Added extra URL decoding to ID field for IIIF's info.json. Fixes https://github.com/ruven/iipsrv/issues/270
+
+
 05/09/2024:
 	- Added convenience function to Rawtile class to duplicate bands for encoders that cannot natively handle
 	  single band monochrome images: simplifies WebP encoding.
