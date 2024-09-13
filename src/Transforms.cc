@@ -2,7 +2,7 @@
 
 /*  IIPImage image processing routines
 
-    Copyright (C) 2004-2022 Ruven Pillay.
+    Copyright (C) 2004-2024 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -52,9 +52,9 @@ static bool isfinite( float arg )
 #define PARALLEL_THRESHOLD 65536
 
 
-static const float _sRGB[3][3] = { {  3.240479, -1.537150, -0.498535 },
-				   { -0.969256, 1.875992, 0.041556 },
-				   { 0.055648, -0.204043, 1.057311 } };
+static const float _sRGB[3][3] = { { 3.2406255, -1.537208, -0.4986286},
+				   {-0.9689307,  1.8757561, 0.0415175},
+				   { 0.0557101, -0.2040211, 1.0569959} };
 
 using namespace std;
 

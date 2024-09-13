@@ -1,3 +1,7 @@
+13/09/2024:
+	- Updated XYZ to sRGB conversion matrix to use that in the official IEC 61966-2-1 specification
+
+
 06/09/2024:
 	- Added extra URL decoding to ID field for IIIF's info.json. Fixes https://github.com/ruven/iipsrv/issues/270
 
