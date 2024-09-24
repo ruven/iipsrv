@@ -135,7 +135,7 @@ class OpenJPEGImage : public IIPImage {
 
   /// Get codec version
   /** @return codec version */
-  static const char* getCodecVersion(){ return opj_version(); };
+  static std::string getCodecVersion(){ return opj_version(); };
 
 
 };

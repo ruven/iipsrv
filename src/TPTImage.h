@@ -56,15 +56,18 @@ class TPTImage : public IIPImage {
   /// Constructor
   TPTImage():IIPImage(), tiff( NULL ) {};
 
+
   /// Constructor
   /** @param path image path
    */
   TPTImage( const std::string& path ): IIPImage(path), tiff(NULL), subifd_ifd(0) {};
 
+
   /// Copy Constructor
   /** @param image IIPImage object
    */
   TPTImage( const TPTImage& image ): IIPImage(image), tiff(NULL), subifd_ifd(0) {};
+
 
   /// Assignment Operator
   /** @param image TPTImage object
@@ -78,19 +81,34 @@ class TPTImage : public IIPImage {
     return *this;
   }
 
+
   /// Construct from an IIPImage object
   /** @param image IIPImage object
    */
   TPTImage( const IIPImage& image ): IIPImage(image), tiff(NULL), subifd_ifd(0) {};
 
+
   /// Destructor
   ~TPTImage() { closeImage(); };
+
 
   /// Overloaded static function for seting up logging for codec library
   static void setupLogging();
 
+
+  /// Get codec version
+  /** @return codec version */
+  static std::string getCodecVersion(){
+    std::string version = std::string( TIFFGetVersion() );
+    // Strip off everything after newline
+    version = version.substr( 0, version.find_first_of("\n") );
+    return version;
+  }
+
+
   /// Overloaded function for opening a TIFF image
   void openImage();
+
 
   /// Overloaded function for loading TIFF image information
   /** @param x horizontal sequence angle
@@ -98,8 +116,10 @@ class TPTImage : public IIPImage {
    */
   void loadImageInfo( int x, int y );
 
+
   /// Overloaded function for closing a TIFF image
   void closeImage();
+
 
   /// Overloaded function for getting a particular tile
   /** @param x horizontal sequence angle

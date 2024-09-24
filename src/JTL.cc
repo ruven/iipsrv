@@ -83,7 +83,7 @@ void JTL::send( Session* session, int resolution, int tile ){
 #ifdef HAVE_WEBP
   else if( session->view->output_format == ImageEncoding::WEBP ) compressor = session->webp;
 #endif
-  #ifdef HAVE_AVIF
+#ifdef HAVE_AVIF
   else if( session->view->output_format == ImageEncoding::AVIF ) compressor = session->avif;
 #endif
   else compressor = session->jpeg;

@@ -187,9 +187,9 @@ void OpenJPEGImage::loadImageInfo( int seq, int ang )
   logfile << "OpenJPEG :: Resolution : " << w << "x" << h << endl;
 #endif
 
-  // Loop through each resolution and calculate the image dimensions - 
+  // Loop through each resolution and calculate the image dimensions -
   // We force a similar behaviour to TIFF with resolutions at floor(x/2)
-  // rather than OpenJPEG's default ceil(x/2) 
+  // rather than OpenJPEG's default ceil(x/2)
   for( unsigned int c=1; c<numResolutions; c++ ){
     w = floor( w/2.0 );
     h = floor( h/2.0 );
@@ -274,7 +274,7 @@ void OpenJPEGImage::loadImageInfo( int seq, int ang )
     if( bpc == 16 ) max.push_back( 65535.0 );
     else max.push_back( 255.0 );
   }
-  
+
   // Indicate that our metadata has been read
   isSet = true;
 
@@ -310,7 +310,7 @@ RawTile OpenJPEGImage::getTile( int seq, int ang, unsigned int res, int layers, 
 
   unsigned int tw = tile_widths[0];
   unsigned int th = tile_heights[0];
-  
+
   // Get the width and height for last row and column tiles
   unsigned int rem_x = image_widths[vipsres] % tile_widths[0];
   unsigned int rem_y = image_heights[vipsres] % tile_heights[0];
@@ -339,7 +339,7 @@ RawTile OpenJPEGImage::getTile( int seq, int ang, unsigned int res, int layers, 
   // Calculate the pixel offsets for this tile
   int xoffset = (tile % ntlx) * tile_widths[0];
   int yoffset = (unsigned int) floor((double)(tile/ntlx)) * tile_heights[0];
-  
+
 #ifdef OPENJPEG_DEBUG
   logfile << "OpenJPEG :: Tile size: " << tw << "x" << th << " @" << channels << endl;
 #endif
@@ -372,7 +372,7 @@ RawTile OpenJPEGImage::getRegion( int ha, int va, unsigned int res, int layers, 
   unsigned int obpc = bpc;
   if( bpc <= 16 && bpc > 8 ) obpc = 16;
   else if( bpc <= 8 ) obpc = 8;
-  
+
 #ifdef OPENJPEG_DEBUG
   Timer timer;
   timer.start();
@@ -410,7 +410,7 @@ void OpenJPEGImage::process( unsigned int res, int layers, int xoffset, int yoff
   else if( bpc <= 8 ) obpc = 8;
 
   unsigned int factor = 1;                  // Downsampling factor - set it to default value
-  int vipsres = (numResolutions - 1) - res; // Reverse resolution number
+  int vipsres = getNativeResolution( res ); // Reverse resolution number
 
   // Calculate number of extra resolutions needed that have not been encoded in the image
   if( res < virtual_levels ){
@@ -488,10 +488,10 @@ void OpenJPEGImage::process( unsigned int res, int layers, int xoffset, int yoff
   // Copy our decoded data by looping over all pixels
   size_t n = 0;
 
-  for( unsigned int j=0; j < th; j += factor ){
-    for( unsigned int i = 0; i < tw; i += factor ){
+  for( unsigned int j=0; j<th; j+=factor ){
+    for( unsigned int i=0; i<tw; i+=factor ){
       size_t index = tw*j + i;
-      for( unsigned int k = 0; k < channels; k++ ){
+      for( unsigned int k=0; k<channels; k++ ){
         // Handle 16 and 8 bit data:
 	// OpenJPEG's output data is 32 bit unsigned int, so just mask of the bottom 2 bytes
 	// for 16 bit output or bottom 1 byte for 8 bit

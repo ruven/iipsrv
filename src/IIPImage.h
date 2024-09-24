@@ -468,7 +468,7 @@ class IIPImage {
 
   /// Get codec version
   /** @return codec version */
-  static const char* getCodecVersion(){ return "0.0.0"; };
+  static std::string getCodecVersion(){ return "0.0.0"; };
 
 
   /// Comparison equality operator

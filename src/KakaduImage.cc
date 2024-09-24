@@ -250,9 +250,9 @@ void KakaduImage::loadImageInfo( int seq, int ang )
   logfile << "Kakadu :: Capture Resolution : " << dpi_x << "x" << dpi_y << " pixels/cm" << endl;
 #endif
 
-  // Loop through each resolution and calculate the image dimensions - 
+  // Loop through each resolution and calculate the image dimensions -
   // We calculate ourselves rather than relying on get_dims() to force a similar
-  // behaviour to TIFF with resolutions at floor(x/2) rather than Kakadu's default ceil(x/2) 
+  // behaviour to TIFF with resolutions at floor(x/2) rather than Kakadu's default ceil(x/2)
   for( unsigned int c=1; c<numResolutions; c++ ){
     //    codestream.apply_input_restrictions(0,0,c,1,NULL,KDU_WANT_OUTPUT_COMPONENTS);
     //    kdu_dims layers;

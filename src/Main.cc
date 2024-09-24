@@ -424,6 +424,7 @@ int main( int argc, char *argv[] )
     logfile << "Setting ICC profile embedding to " << (embed_icc? "true" : "false") << endl;
     logfile << "Setting codec passthrough to " << (IIPImage::codec_passthrough? "true" : "false") << endl;
     if( !copyright.empty() ) logfile << "Setting default rights/copyright statement to '" << copyright << "'" << endl;
+    logfile << "Setting up TIFF support via " << TPTImage::getCodecVersion() << endl;
 #ifdef HAVE_KAKADU
     logfile << "Setting up JPEG2000 support via Kakadu SDK " << KakaduImage::getCodecVersion() << endl;
     logfile << "Setting Kakadu read-mode to " << ((kdu_readmode==2) ? "resilient" : (kdu_readmode==1) ? "fussy" : "fast") << endl;

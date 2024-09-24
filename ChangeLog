@@ -1,3 +1,8 @@
+24/09/2024:
+	- Added TIFF codec version reporting in logfile and updated return signature for getCodecVersion() function.
+	  Also code cleanups for OpenJPEGImage and KakaduImage classes.
+
+
 13/09/2024:
 	- Updated XYZ to sRGB conversion matrix to use that in the official IEC 61966-2-1 specification
 
