@@ -83,11 +83,12 @@ AC_LANG_POP([C++])
 # Enable debugging
 AC_ARG_ENABLE([debug-mode],
               [  --enable-debug-mode     enable debugging mode (no FCGI)],
-              [AC_DEFINE(DEBUG)
-	       AC_DEFINE(KAKADU_DEBUG)
-               AC_DEFINE(OPENJPEG_DEBUG)
-               DEBUG=true
-	       AC_MSG_RESULT([configure: enabling debug mode])]
+		AC_DEFINE(DEBUG)
+		AC_DEFINE(KAKADU_DEBUG)
+		AC_DEFINE(OPENJPEG_DEBUG)
+		AC_DEFINE(JPEG_DEBUG)
+		DEBUG=true
+		AC_MSG_RESULT([configure: enabling debug mode])]
 )
 
 

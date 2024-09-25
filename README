@@ -21,7 +21,7 @@ FEATURES
 * Fast lightweight FastCGI server
 * High performance with inbuilt configurable cache
 * Support for extremely large images: tera-pixel and multi gigapixel support
-* TIFF and JPEG2000 input support
+* TIFF, JPEG2000 and JPEG input support
 * JPEG, PNG, WebP and AVIF output support: export of whole or regions of images at any size
 * Supports IIP, Zoomify, DeepZoom and IIIF API's
 * 1, 8, 16 and 32 bit image support including 32 bit floating point support
@@ -469,13 +469,13 @@ IMAGES
 ------
 
 ### Image Input Formats
-Input images must be in either tiled multi-resolution (pyramid) TIFF format or in JPEG2000 format. See https://iipimage.sourceforge.io/documentation/images for details on how to create appropriate images.
+Input images must be in either tiled multi-resolution (pyramid) TIFF format, in JPEG2000 or in JPEG format. See https://iipimage.sourceforge.io/documentation/images for details on how to create appropriate images.
 
 ### Image Input Paths
 The images paths given to the server via the FIF command for the IIP API or in the IIIF, Deepzoom or Zoomify  requests must be absolute paths on the server machine (eg. FIF=/images/test.tif) and not paths relative to the web server document root location. Images do not, therefore, need to be directly accessible through the web server. The FILESYSTEM_PREFIX configuration parameter can be used to avoid overly long image paths. Make sure the iipsrv process owner is able to access and read the images!
 
 ### Output Images
-iipsrv can transcode input images in TIFF or JPEG2000 to JPEG, PNG or WebP format. See the API documentation for details on how to use iipsrv: https://iipimage.sourceforge.io/documentation/protocol
+iipsrv can transcode input images in TIFF, JPEG2000 or JPEG to JPEG, PNG, WebP or AVIF format. See the API documentation for details on how to use iipsrv: https://iipimage.sourceforge.io/documentation/protocol
 
 
 

@@ -1,3 +1,10 @@
+25/09/2024:
+	- Added support for directly reading standard JPEG input images. Implementation uses libjpeg's partial decoding
+	  and DCT-scaling functions to optimize decoding as much as is possible and supports ICC, XMP and EXIF metadata.
+	  Note that JPEG does not support multi-resolution encoding, so decoding will be slower than reading TIFF
+	  or JPEG2000, especially for large images.
+
+
 24/09/2024:
 	- Added TIFF codec version reporting in logfile and updated return signature for getCodecVersion() function.
 	  Also code cleanups for OpenJPEGImage and KakaduImage classes.

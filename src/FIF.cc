@@ -24,6 +24,7 @@
 #include "URL.h"
 #include "Environment.h"
 #include "TPTImage.h"
+#include "JPEGImage.h"
 
 #ifdef HAVE_KAKADU
 #include "KakaduImage.h"
@@ -133,6 +134,10 @@ void FIF::run( Session* session, const string& src ){
     if( format == ImageEncoding::TIFF ){
       if( session->loglevel >= 2 ) *(session->logfile) << "FIF :: TIFF image detected" << endl;
       *session->image = new TPTImage( test );
+    }
+    else if( format == ImageEncoding::JPEG ){
+      if( session->loglevel >= 2 ) *(session->logfile) << "FIF :: JPEG image detected" << endl;
+      *session->image = new JPEGImage( test );
     }
 #if defined(HAVE_KAKADU) || defined(HAVE_OPENJPEG)
     else if( format == ImageEncoding::JPEG2000 ){

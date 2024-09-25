@@ -3,7 +3,7 @@
 
 /*  IIP fcgi server module
 
-    Copyright (C) 2000-2023 Ruven Pillay.
+    Copyright (C) 2000-2024 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -137,8 +137,12 @@ void IIPImage::testImageType()
     static const unsigned char lbigtiff[4] = {0x4D,0x4D,0x00,0x2B}; // Little Endian BigTIFF
     static const unsigned char bbigtiff[4] = {0x49,0x49,0x2B,0x00}; // Big Endian BigTIFF
 
+    // Magic file signature for JPEG
+    static const unsigned char jpeg[3] = {0xFF,0xDA,0xFF};
+
     // Compare our header sequence to our magic byte signatures
     if( memcmp( header, j2k, 10 ) == 0 ) format = ImageEncoding::JPEG2000;
+    else if( memcmp( header, jpeg, 3 ) ) format = ImageEncoding::JPEG;
     else if( memcmp( header, stdtiff, 3 ) == 0
 	     || memcmp( header, lsbtiff, 4 ) == 0 || memcmp( header, msbtiff, 4 ) == 0
 	     || memcmp( header, lbigtiff, 4 ) == 0 || memcmp( header, bbigtiff, 4 ) == 0 ){
