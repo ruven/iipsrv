@@ -16,7 +16,6 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#define JPEG_DEBUG
 
 #include "JPEGImage.h"
 #include "Logger.h"
@@ -132,7 +131,7 @@ void JPEGImage::loadImageInfo( int seq, int ang ){
   Timer timer;
   timer.start();
 #endif
-  
+
   // Save first resolution level
   image_widths.clear();
   image_heights.clear();
@@ -254,7 +253,7 @@ RawTile JPEGImage::getTile( int seq, int ang, unsigned int res, int layers, unsi
 
   unsigned int tw = tile_widths[0];
   unsigned int th = tile_heights[0];
-  
+
   // Get the width and height for last row and column tiles
   unsigned int rem_x = image_widths[vipsres] % tile_widths[0];
   unsigned int rem_y = image_heights[vipsres] % tile_heights[0];
@@ -342,7 +341,7 @@ void JPEGImage::process( unsigned int res, int layers, int xoffset, int yoffset,
   // The libjpeg API can perform efficient scaling on the raw DCT co-efficients.
   // The supported scaling ratios are M/8 with all M from 1 to 16. In other words
   // we can shrink to a max of 1/8.
-  // Note that 1/8 is the 4th resolution level with index=3 (0=1/1, 1=1/2, 2=1/4, 3=1/8) 
+  // Note that 1/8 is the 4th resolution level with index=3 (0=1/1, 1=1/2, 2=1/4, 3=1/8)
   // So calculate which libjpeg scaling to use and what extra scaling, if any, we also need to
   // apply ourselves.
   unsigned int factor = 1;                  // Downsampling factor - set it to default value
@@ -362,7 +361,7 @@ void JPEGImage::process( unsigned int res, int layers, int xoffset, int yoffset,
 #ifdef JPEG_DEBUG
     logfile << "JPEG :: Using sub-resolution at scale 1/8 with position " << x0 << "x" << y0
 	    << " and size " << w0 << "x" << h0 << endl;
-#endif    
+#endif
   }
 
 
@@ -375,7 +374,7 @@ void JPEGImage::process( unsigned int res, int layers, int xoffset, int yoffset,
   // Set libjpeg scaling (limited to 1/8)
   cinfo.scale_num = 1;
   cinfo.scale_denom = 1 << vipsres;
-  
+
   // Start decompression
   jpeg_start_decompress( &cinfo );
 
@@ -406,7 +405,7 @@ void JPEGImage::process( unsigned int res, int layers, int xoffset, int yoffset,
   // Byte width of the line of pixels we want
   unsigned int tile_stride = w0 * cinfo.output_components;
 
-  
+
   // If we have to perform manual re-scaling, create a temporary buffer large enough for the data
   if( factor > 1 ){
     buffer = (unsigned char*) malloc( tile_stride * h0 );
