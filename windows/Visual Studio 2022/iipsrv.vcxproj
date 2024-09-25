@@ -259,6 +259,7 @@
     <ClCompile Include="..\..\src\IIPImage.cc" />
     <ClCompile Include="..\..\src\IIPResponse.cc" />
     <ClCompile Include="..\..\src\JPEGCompressor.cc" />
+    <ClCompile Include="..\..\src\JPEGImage.cc" />
     <ClCompile Include="..\..\src\JTL.cc" />
     <ClCompile Include="..\..\src\Main.cc" />
     <ClCompile Include="..\..\src\OBJ.cc" />
@@ -285,6 +286,7 @@
     <ClInclude Include="..\..\src\IIPImage.h" />
     <ClInclude Include="..\..\src\IIPResponse.h" />
     <ClInclude Include="..\..\src\JPEGCompressor.h" />
+    <ClInclude Include="..\..\src\JPEGImage.h" />
     <ClInclude Include="..\..\src\KakaduImage.h" />
     <ClInclude Include="..\..\src\Memcached.h" />
     <ClInclude Include="..\..\src\OpenJPEGImage.h" />
