@@ -138,11 +138,11 @@ void IIPImage::testImageType()
     static const unsigned char bbigtiff[4] = {0x49,0x49,0x2B,0x00}; // Big Endian BigTIFF
 
     // Magic file signature for JPEG
-    static const unsigned char jpeg[3] = {0xFF,0xDA,0xFF};
+    static const unsigned char jpeg[3] = {0xFF,0xD8,0xFF};
 
     // Compare our header sequence to our magic byte signatures
     if( memcmp( header, j2k, 10 ) == 0 ) format = ImageEncoding::JPEG2000;
-    else if( memcmp( header, jpeg, 3 ) ) format = ImageEncoding::JPEG;
+    else if( memcmp( header, jpeg, 3 ) == 0 ) format = ImageEncoding::JPEG;
     else if( memcmp( header, stdtiff, 3 ) == 0
 	     || memcmp( header, lsbtiff, 4 ) == 0 || memcmp( header, msbtiff, 4 ) == 0
 	     || memcmp( header, lbigtiff, 4 ) == 0 || memcmp( header, bbigtiff, 4 ) == 0 ){
