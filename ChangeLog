@@ -1,3 +1,8 @@
+01/10/2024:
+	- Added check for tile byte size when passing through pre-encoded JPEG tiles for TIFF as these can occasionally
+	  be larger than the byte size of raw data.
+
+
 25/09/2024:
 	- Added support for directly reading standard JPEG input images. Implementation uses libjpeg's partial decoding
 	  and DCT-scaling functions to optimize decoding as much as is possible and supports ICC, XMP and EXIF metadata.
