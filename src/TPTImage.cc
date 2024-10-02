@@ -508,10 +508,6 @@ RawTile TPTImage::getTile( int x, int y, unsigned int res, int layers, unsigned 
   rawtile.timestamp = timestamp;
   rawtile.sampleType = sampleType;
 
-  // Allocate sufficient memory for the tile (width and height may be smaller than padded tile size)
-  uint32_t bytes = TIFFTileSize( tiff );
-  rawtile.allocate( bytes );
-
 
   // If codec pass-through is disabled or the tile needs reprocessing (cropping or change of bit depth),
   //  make sure we decode the tile to raw pixel format
@@ -532,6 +528,28 @@ RawTile TPTImage::getTile( int x, int y, unsigned int res, int layers, unsigned 
   }
 
 
+  // Calculate maximum amount of memory required for the tile when decoded as raw pixels values
+  tsize_t bytes = TIFFTileSize( tiff );
+
+
+  // If we are in pass-through mode, we need to know the exact number of bytes the tile
+  // takes up as this may sometimes be larger than the raw data size
+  if( ( requested_encoding == ImageEncoding::JPEG && compression == COMPRESSION_JPEG )
+#ifdef HAVE_WEB
+      || ( requested_encoding == ImageEncoding::WEBP && compression == COMPRESSION_WEBP )
+#endif
+      ){
+    // Get actual number of bytes for this specific tile from the TILEBYTECOUNTS tag
+    // which returns an array of all tile sizes in current IFD
+    uint64_t *bytecounts;
+    if( !TIFFGetField( tiff, TIFFTAG_TILEBYTECOUNTS, &bytecounts ) ){
+      throw file_error( "TPTImage :: Unable to get byte count for tile " + tile );
+    }
+    bytes = bytecounts[tile];
+    if( IIPImage::logging ) logfile << "TPTImage :: byte count for compressed tile: " << bytes << endl;
+  }
+
+
   // Get raw pre-encoded tile if our request matches the tile encoding - only currently makes sense for JPEG and WEBP
   if( requested_encoding == ImageEncoding::JPEG && compression == COMPRESSION_JPEG ){
 
@@ -549,21 +567,8 @@ RawTile TPTImage::getTile( int x, int y, unsigned int res, int layers, unsigned 
 
     if( ( TIFFGetField( tiff, TIFFTAG_JPEGTABLES, &count, &jpeg_tables ) != 0 ) && ( count > 4 ) ){
 
-      // Get actual number of bytes in this tile as it may be larger than the raw data size
-      uint64_t *bytecounts;
-      if( !TIFFGetField( tiff, TIFFTAG_TILEBYTECOUNTS, &bytecounts ) ){
-	throw file_error( "TPTImage :: Unable to get byte count for tile " + tile );
-      }
-
-      // Total size necessary is byte size for this tile + JPEG tables size
-      uint32_t bytes = bytecounts[tile] + count - 4;
-
-      // If larger, re-allocate sufficient buffer space
-      if( (uint64_t) bytes > rawtile.capacity ){
-	if( IIPImage::logging ) logfile << "TPTImage :: byte count for tile larger than raw data size: " << bytes << endl;
-	rawtile.deallocate( rawtile.data );
-	rawtile.allocate( bytes );
-      }
+      // Allocate enough space for compressed tile data + JPEG tables
+      rawtile.allocate( bytes + count - 4 );
 
       // Store last 2 bytes of the JPEG table data itself for use later - skip over the final 2 byte EOI marker
       unsigned char table_end[2];
@@ -577,7 +582,7 @@ RawTile TPTImage::getTile( int x, int y, unsigned int res, int layers, unsigned 
       // overwrite the end of the table data with the SOI which preceeds the image data in the tile stream
       int pos = count - 4;
 
-      int length = TIFFReadRawTile( tiff, (ttile_t) tile, (tdata_t) &(((unsigned char*)rawtile.data)[pos]), rawtile.capacity );
+      int length = TIFFReadRawTile( tiff, (ttile_t) tile, (tdata_t) &(((unsigned char*)rawtile.data)[pos]), bytes );
       if( length == -1 ){
 	throw file_error( "TPTImage :: TIFFReadRawTile() failed for JPEG-encoded tile for " + getFileName( x, y ) );
       }
@@ -597,7 +602,12 @@ RawTile TPTImage::getTile( int x, int y, unsigned int res, int layers, unsigned 
 
 #ifdef COMPRESSION_WEBP
   else if( requested_encoding == ImageEncoding::WEBP && compression == COMPRESSION_WEBP ){
-    int length = TIFFReadRawTile( tiff, (ttile_t) tile, (tdata_t) rawtile.data, rawtile.capacity );
+
+    // Allocate buffer
+    rawtile.allocate( bytes );
+
+    // Copy compressed tile directly into buffer
+    int length = TIFFReadRawTile( tiff, (ttile_t) tile, (tdata_t) rawtile.data, bytes );
     if( length == -1 ){
       throw file_error( "TPTImage :: TIFFReadRawTile() failed for WebP-encoded tile for " + getFileName( x, y ) );
     }
@@ -609,7 +619,11 @@ RawTile TPTImage::getTile( int x, int y, unsigned int res, int layers, unsigned 
   // Decode the tile into raw pixel data - dump data directly into RawTile buffer
   else{
 
-    int length = TIFFReadEncodedTile( tiff, (ttile_t) tile, (tdata_t) rawtile.data, (tsize_t) bytes );
+    // Allocate buffer
+    rawtile.allocate( bytes );
+
+    // Copy decoded tile into buffer as raw pixel values
+    int length = TIFFReadEncodedTile( tiff, (ttile_t) tile, (tdata_t) rawtile.data, bytes );
     if( length == -1 ){
       throw file_error( "TPTImage :: TIFFReadEncodedTile() failed for " + getFileName( x, y ) );
     }
@@ -617,6 +631,7 @@ RawTile TPTImage::getTile( int x, int y, unsigned int res, int layers, unsigned 
     rawtile.quality = 100;
     rawtile.compressionType = ImageEncoding::RAW;
   }
+
 
   // For non-interleaved channels (separate image planes), each color channel is stored as a separate image, which is stored consecutively.
   // A color image will, therefore, have 3x the number of tiles. For now just handle the first plane and classify the image as greyscale.

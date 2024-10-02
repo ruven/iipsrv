@@ -1,3 +1,8 @@
+02/10/2024:
+	- Re-factoring of tile byte size check to work cleanly for both JPEG and WEBP and to avoid having to sometimes
+	  reallocate memory
+
+
 01/10/2024:
 	- Added check for tile byte size when passing through pre-encoded JPEG tiles for TIFF as these can occasionally
 	  be larger than the byte size of raw data.
