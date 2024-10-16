@@ -62,8 +62,9 @@ unsigned int View::getResolution(){
   unsigned int i;
 
   // Note that we use floor() as that is how our resolutions are calculated
-  if( requested_width ) View::calculateResolution( width, floor((float)requested_width/(float)view_width) );
-  if( requested_height ) View::calculateResolution( height, floor((float)requested_height/(float)view_height) );
+  vector<unsigned int> requested_size = View::getRequestSize();
+  View::calculateResolution( width, floor((float)requested_size[0]/(float)view_width) );
+  View::calculateResolution( height, floor((float)requested_size[1]/(float)view_height) );
 
   res_width = width;
   res_height = height;
@@ -224,45 +225,53 @@ unsigned int View::getViewHeight(){
 }
 
 
-unsigned int View::getRequestWidth(){
+vector<unsigned int> View::getRequestSize(){
 
-  // If our requested width has not been set, but height has, return a width proportional to
-  // this requested height
   unsigned int w = requested_width;
-  if( requested_width == 0 ){
-    if( requested_height != 0 ){
-      w = (unsigned int) round( (float)(getViewWidth()*requested_height) / (float)getViewHeight() );
-    }
-
-    // If no width or height has been set, use the full image size
-    else if( requested_height==0 ) w = width;
-  }
-
-  // Limit our requested width to the maximum export size if we have set a limit
-  if( max_size > 0 && w > (unsigned int) max_size ) w = max_size;
-
-  return w;
-}
-
-
-unsigned int View::getRequestHeight(){
-
-  // If our requested height has not been set, but the width has, return a height proportional to
-  // this requested width
   unsigned int h = requested_height;
-  if( requested_height == 0 ){
-    if( requested_width != 0 ){
-      h = (unsigned int) round( (float)(getViewHeight()*requested_width) / (float)getViewWidth() );
-    }
 
-    // If no width or height has been set, use the full image size
-    else if( requested_width==0 ) h = height;
+  // Calculate aspect ratio
+  float ratio = (view_width * width) / (view_height * height);
+
+  if( requested_width == 0 && requested_height != 0 ){
+    w = (unsigned int) round( (float)requested_height * ratio );
+  }
+  else if( requested_height == 0 && requested_width != 0 ){
+    h = (unsigned int) round( (float)requested_width / ratio );
+  }
+  else if( requested_width == 0 && requested_height == 0 ){
+    w = width;
+    h = height;
+  }
+  // If both width and height are set, restrict image to this bounding box
+  else if( requested_width != 0 && requested_height != 0 && maintain_aspect ){
+    float xscale = requested_width / (view_width*width);
+    float yscale = requested_height / (view_height*height);
+    // Fit to the axis requiring the most scaling (smallest factor)
+    if( xscale > yscale ) w = (unsigned int) (unsigned int) round( (float)requested_height * ratio );
+    else h = (unsigned int) round( (float)requested_width / ratio );
   }
 
-  // Limit our requested height to the maximum export size
-  if( max_size > 0 && h > (unsigned int) max_size ) h = max_size;
 
-  return h;
+  // Limit our requested size to the maximum output size
+  if( max_size > 0 && (w > (unsigned int) max_size || h > (unsigned int) max_size) ){
+    if( w > h ){
+      w = max_size;
+      h = round( (float)requested_width / ratio );
+    }
+    else if( h > w ){
+      h = max_size;
+      w = round( (float)requested_height * ratio );
+    }
+    else{
+      w = max_size;
+      h = max_size;
+    }
+  }
+
+  // Create and return our result
+  std::vector<unsigned int> size = { w, h };
+  return size;
 }
 
 

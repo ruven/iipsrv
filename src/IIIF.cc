@@ -543,7 +543,7 @@ void IIIF::run( Session* session, const string& src )
       // Check for malformed upscaling request
       if( iiif_version >= 3 ){
 	if( session->view->allow_upscaling == false &&
-	    ( requested_width > width || requested_height > height ) ){
+	    ( requested_width > (width*region[2]) || requested_height > (height*region[3]) ) ){
 	  throw invalid_argument( "IIIF: upscaling should be prefixed with ^" );
 	}
       }

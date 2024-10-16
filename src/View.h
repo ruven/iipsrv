@@ -115,12 +115,12 @@ class View{
 
 
   /// Get the maximum allowed output size
-  /* @return maximum output dimension */
+  /** @return maximum output dimension */
   int getMaxSize(){ return max_size; };
 
 
   /// Get the minimum allowed output size
-  /* @return minimum output dimension */
+  /** @return minimum output dimension */
   unsigned int getMinSize(){ return min_size; };
 
 
@@ -130,7 +130,7 @@ class View{
 
 
   /// Get the allow_upscaling flag
-  /* @return true or false */
+  /** @return true or false */
   bool allowUpscaling(){ return allow_upscaling; };
 
 
@@ -155,11 +155,6 @@ class View{
   void setMaxResolutions( unsigned int r ){ max_resolutions = r; resolution=r-1; };
 
 
-  /// Get the size of the requested width
-  /* @return requested width */
-  unsigned int getRequestWidth();
-
-
   /// Set the size of the requested width
   /** @param w requested image width */
   void setRequestWidth( unsigned int w ){
@@ -167,9 +162,9 @@ class View{
   };
 
 
-  /// Get the size of the requested height
-  /* @return requested height */
-  unsigned int getRequestHeight();
+  /// Get requested image size
+  /** @return output size as a vector */
+  std::vector<unsigned int> getRequestSize();
 
 
   /// Set the size of the requested height
@@ -180,12 +175,12 @@ class View{
 
 
   /// Return the resolution level needed for the requested view
-  /* @return requested resolution level */
+  /** @return requested resolution level */
   unsigned int getResolution();
 
 
   /// Return the scaling required in case our requested width or height is in between available resolutions
-  /* @return scaling factor */
+  /** @return scaling factor */
   float getScale();
 
 
@@ -236,31 +231,31 @@ class View{
   int getLayers();
 
   /// Return the image width at our requested resolution
-  /* @return image width */
+  /** @return image width */
   unsigned int getImageWidth(){ return width; };
 
   /// Return the image height at our requested resolution
-  /* @return image height */
+  /** @return image height */
   unsigned int getImageHeight(){ return height; };
 
   /// Return the left pixel of the viewport
-  /* @return position of left of viewport in pixels */
+  /** @return position of left of viewport in pixels */
   unsigned int getViewLeft() ;
 
   /// Return the top pixel of the viewport
-  /* @return position of top of viewport in pixels */
+  /** @return position of top of viewport in pixels */
   unsigned int getViewTop();
 
   /// Return the pixel width of the viewport
-  /* @return width of viewport in pixels */
+  /** @return width of viewport in pixels */
   unsigned int getViewWidth();
 
   /// Return the pixel height of the viewport
-  /* @return height of viewport in pixels */
+  /** @return height of viewport in pixels */
   unsigned int getViewHeight();
 
   /// Indicate whether the viewport has been set
-  /* @return boolean indicating whether viewport specified */
+  /** @return boolean indicating whether viewport specified */
   bool viewPortSet();
 
   /// Set rotation
@@ -268,7 +263,7 @@ class View{
   void setRotation( float r ){ rotation = r; };
 
   /// Get rotation
-  /* @return requested rotation angle in degrees */
+  /** @return requested rotation angle in degrees */
   float getRotation(){ return rotation; };
 
   /// Whether view requires floating point processing
