@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
 
     - name: Install dependencies
       run:  sudo apt-get update && sudo apt-get install libtiff-dev libpng-dev libturbojpeg-dev libwebp-dev libavif-dev libmemcached-dev libopenjp2-7-dev
@@ -28,10 +28,10 @@ jobs:
     runs-on: macos-latest
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
 
     - name: Install dependencies
-      run: brew install automake libtool fcgi libtiff openjpeg libmemcached libpng webp libavif libomp
+      run: brew install automake libtool fcgi openjpeg libmemcached webp libavif libomp
 
     - name: Configure
       run: |
