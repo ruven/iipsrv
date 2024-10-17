@@ -94,6 +94,10 @@ Now compile using make:
 
 The resulting executable is `iipsrv.fcgi` in the `src/` sub-directory.
 
+It's possible to perform an optional run-time test of the compiled iipsrv executable using make:
+
+    make check
+
 To install iipsrv to a system folder:
 
     make install
@@ -392,7 +396,7 @@ Version 1.1 and later of iipsrv also supports logging to syslog if “syslog” 
 
 VERBOSITY: 0 means no logging, 1 is minimal logging, 2 lots of debugging stuff, 3 even more debugging stuff and 10 a very large amount indeed ;-)
 
-MAX_IMAGE_CACHE_SIZE: Max image cache size to be held in RAM in MB. This is a cache of the compressed JPEG image tiles requested by the client. The default is 10MB.
+MAX_IMAGE_CACHE_SIZE: Max image cache size to be held in RAM in MB. This is a cache of the compressed image tiles requested by the client. The default is 10MB.
 
 MAX_IMAGE_METADATA_CACHE_SIZE: Max number of items in metadata cache size. This is a cache of key image metadata (dimensions, tile size, bit depth ...) from an image file. The cache avoids the need to read image file header for each request. Default is 1000. If set to -1, the cache size is unlimited.
 

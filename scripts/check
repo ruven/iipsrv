@@ -1,0 +1,16 @@
+# Simple script to test whether iipsrv can be executed
+
+# Define temporary log file
+export LOGFILE=iipsrv-test.log
+
+# Run in CGI-mode
+./iipsrv.fcgi
+
+# Check whether startup header exists in log file
+if grep -q 'IIPImage' ${LOGFILE}; then
+	rm -f ${LOGFILE}
+	exit 0
+else
+	rm -f ${LOGFILE}
+	exit 1
+fi

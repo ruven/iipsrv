@@ -86,3 +86,6 @@ install-exec-local:
 
 uninstall-local:
 	rm -f "$(DESTDIR)$(sbindir)/iipsrv"
+
+
+TESTS = ../scripts/check

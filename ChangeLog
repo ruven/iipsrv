@@ -1,3 +1,8 @@
+17/10/2024:
+	- Added basic test script for use via "make check" that tests whether iipsrv can be executed and whether it
+	  can create a log file.
+
+
 16/10/2024:
 	- Changes to how the requested width and height are handled by View class as well as how the resolution level
 	  is calculated. Fixes problems with fitting images into bounding boxes and now correctly selects appropriate

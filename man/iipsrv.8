@@ -1,4 +1,4 @@
-.TH IIPSRV 8 "September 2024" "Ruven Pillay"
+.TH IIPSRV 8 "October 2024" "Ruven Pillay"
 .SH NAME
 
 IIPSRV \- IIPImage Image Server
@@ -7,7 +7,7 @@ IIPSRV \- IIPImage Image Server
 IIPImage is an advanced high-performance feature-rich multi-protocol image server for web-based streamed viewing and zooming of ultra high-resolution
 images. It is designed to be fast and bandwidth-efficient with low processor and memory requirements. The system can comfortably handle gigapixel size images as
 well as advanced image features such as 8, 16 and 32 bit depths, CIELAB colorimetric images and scientific imagery such as multispectral images.
-Source images can be either TIFF (tiled multi-resolution) or JPEG2000 (if enabled).
+Source images can be either TIFF (tiled multi-resolution), JPEG or JPEG2000 (if enabled).
 
 The image server can also dynamically export images in JPEG, PNG, WebP and AVIF format and perform basic image processing, such as contrast adjustment, gamma control, conversion from color to greyscale, color twist, region extraction and arbitrary rescaling. The server can also export spectral point or profile data from multispectral data and apply color maps or perform hillshading rendering.
 
@@ -77,9 +77,9 @@ The default is 50.
 The AVIF codec to use for encoding. Integer value. Set 0 for automatic codec selection, 1 for aom, 2 for rav1e, 3 for svt.
 Default is 0 (automatic codec selection)
 .IP MAX_IMAGE_CACHE_SIZE
-Max image cache size to be held in RAM in MB. This is a cache of
-the compressed JPEG image tiles requested by the client. The default
-is 5MB.
+Max image cache size to be held in RAM in MB. This is a cache of the compressed image tiles requested by the client. The default is 10MB.
+.IP MAX_IMAGE_METADATA_CACHE_SIZE
+Max number of items in metadata cache size. This is a cache of key image metadata (dimensions, tile size, bit depth ...) from an image file. The cache avoids the need to read image file header for each request. Default is 1000. If set to -1, the cache size is unlimited.
 .IP FILESYSTEM_PREFIX
 This is a prefix automatically added by the server to the
 beginning of each file system path. This can be useful for security reasons to
@@ -156,9 +156,17 @@ threads are used by default.
 .IP KAKADU_READMODE
 Set the Kakadu JPEG2000 read-mode. 0 for 'fast' mode with minimal error checking (default), 1 for 'fussy' mode with no error recovery,
 2 for 'resilient' mode with maximum recovery from codestream errors. See the Kakadu documentation for further details.
+.IP CODEC_PASSTHROUGH
+Enable pre-encoded tiles to be sent directly to the client without re-encoding or processing if the requested output encoding matches the encoding used within the source image. Enabled only for tile requests that map to a single tile in the source image and that do not specify or require any image processing or manually set the encoding quality level. Only works for TIFF with either JPEG or WebP-encoded tiles. Set to 1 to activate or 0 to disactivate. Default is 1 (activated)
 .IP IIIF_VERSION
 Set the major IIIF Image API version. Values should be a single digit. For example: 2 for versions 2 or 2.1 etc.
 3 for IIIF version 3.x. If not set, defaults to version IIIF 3.x
+.IP IIIF_DELIMITER
+Set delimiter to enable page or slice selection for a multi-page or image stack for IIIF requests. Delimiter can be a single character or an arbitrary string. Disabled by default.
+.IP IIIF_EXTRA_INFO
+Add extra arbitrary field to all IIIF info.json files. Must be a string containing a valid JSON key, value line. Key and value quotes should be escaped if necessary and no trailing comma should be added. For example, to add a preferredFormats field: IIIF_EXTRA_INFO='"preferredFormats": ["webp"]'
+.IP COPYRIGHT
+Specify a global copyright or rights statement if this is not available in the image metadata itself
 
 
 .SH EXAMPLES
