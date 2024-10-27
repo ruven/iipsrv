@@ -52,7 +52,6 @@ typedef struct {
   unsigned int strip_height;         ///< used for stream-based encoding
 
 } iip_destination_mgr;
-typedef iip_destination_mgr * iip_dest_ptr;
 
 
 
@@ -64,14 +63,11 @@ class JPEGCompressor: public Compressor{
   /// the width, height and number of channels per sample for the image
   unsigned int width, height, channels;
 
-  /// Buffer for the image data
-  unsigned char *data;
-
   /// JPEG library objects
   struct jpeg_compress_struct cinfo;
   struct jpeg_error_mgr jerr;
   iip_destination_mgr dest_mgr;
-  iip_dest_ptr dest;
+  iip_destination_mgr* dest;
 
   /// Write DPI
   void writeResolution();
@@ -87,7 +83,9 @@ class JPEGCompressor: public Compressor{
 
   /// Constructor
   /** @param quality JPEG Quality factor (0-100) */
-  JPEGCompressor( int quality ) : Compressor(quality), dest(NULL) {};
+  JPEGCompressor( int quality ) : Compressor(quality), dest(NULL) {
+    dest = &dest_mgr;
+  };
 
 
   /// Set the compression quality
@@ -139,6 +137,11 @@ class JPEGCompressor: public Compressor{
 
   /// Get compression type
   inline ImageEncoding getImageEncoding() const { return ImageEncoding::JPEG; };
+
+  /// Inject metadata into raw JPEG bitstream
+  /** @param r image tile
+   */
+  void injectMetadata( RawTile& r );
 
 };
 

@@ -155,6 +155,12 @@ class WebPCompressor : public Compressor {
   }
 
 
+  /// Inject metadata into raw WebP bitstream
+  /** @param r image tile
+   */
+  void injectMetadata( RawTile& r );
+
+
 };
 
 #endif

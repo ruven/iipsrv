@@ -54,11 +54,19 @@ RawTile TileManager::getNewTile( int resolution, int tile, int xangle, int yangl
   }
 
 
-  // If our tile is already correctly encoded, no need to re-encode
+  // If our tile is already correctly encoded, no need to re-encode, but may need to inject metadata
   if( (ttt.compressionType == ctype) && (ctype != ImageEncoding::RAW) ){
-     // Need to set quality to allow cache to sort correctly
-     ttt.quality = compressor->getQuality();
-     if( loglevel >= 3 ) *logfile << "TileManager :: Returning pre-encoded tile" << endl;
+
+    if( loglevel >= 3 ) *logfile << "TileManager :: Returning pre-encoded tile of size " << ttt.dataLength << " bytes" << endl;
+
+    // Need to set quality to allow cache to sort correctly
+    ttt.quality = compressor->getQuality();
+
+    // Note that injection only implemented for WebP and JPEG
+    if( loglevel >= 4 ) compression_timer.start();
+    compressor->injectMetadata( ttt );
+    if( loglevel >= 4 ) *logfile << "TileManager :: Metadata injection time: "
+				 << compression_timer.getTime() << " microseconds" << endl;
   }
   // Encode our tile
   else{

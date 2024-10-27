@@ -210,3 +210,54 @@ void WebPCompressor::writeXMPMetadata()
     throw string( "WebPCompressor :: Error setting XMP chunk" );
   }
 }
+
+
+
+void WebPCompressor::injectMetadata( RawTile& rawtile )
+{
+  if( (!embedICC && !embedXMP) || (icc.empty() && xmp.empty()) ) return;
+
+  WebPData input;
+  input.bytes = (const uint8_t*) rawtile.data;
+  input.size = rawtile.dataLength;
+
+  // Only add ICC or metadata if we have a raw WebP stream
+  // Bytes 8-16 should be exactly "WEBPVP8 " (lossy) or "WEBPVP8L" (lossless)
+  static const unsigned char lossy_header[8] = {0x57,0x45,0x42,0x50,0x56,0x50,0x38,0x20};
+  static const unsigned char lossless_header[8] = {0x57,0x45,0x42,0x50,0x56,0x50,0x38,0x4c};
+
+  if( (memcmp( &input.bytes[8], lossy_header, 8 ) == 0) ||
+      (memcmp( &input.bytes[8], lossless_header, 8 ) == 0) ){
+
+    WebPData output;
+
+    // Add ICC profile and XMP metadata to our output bitstream
+    writeICCProfile();
+    writeXMPMetadata();
+
+    // Add our raw image bitstream data
+    if( WebPMuxSetImage( mux, &input, 0 ) != WEBP_MUX_OK ){
+      throw string( "WebPCompressor :: WebPMuxSetImage() error" );
+    }
+
+    // Assemble our chunks
+    if( WebPMuxAssemble( mux, &output ) != WEBP_MUX_OK ){
+      throw string( "WebPCompressor :: WebPMuxAssemble() error" );
+    }
+
+    // Allocate the appropriate amount of memory for the final muxed data
+    unsigned char* data = new unsigned char[output.size];
+    rawtile.capacity = output.size;
+
+    // Copy our output data into our rawtile buffer
+    memcpy( data, output.bytes, output.size );
+    rawtile.dataLength = output.size;
+
+    // Assign our buffer
+    if( rawtile.memoryManaged ) delete[] (unsigned char*) rawtile.data;
+
+    // Delete no longer needed memory
+    rawtile.data = data;
+    WebPDataClear( &output );
+  }
+}

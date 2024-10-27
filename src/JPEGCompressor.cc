@@ -19,10 +19,7 @@
 
 
 #include <cmath>
-#include <cstdio>
-
 #include "JPEGCompressor.h"
-
 
 using namespace std;
 
@@ -60,10 +57,9 @@ inline double round(double r) { return (r > 0.0) ? floor(r + 0.5) : ceil(r - 0.5
 
 
 
-/* My version of the JPEG error_exit function. We want to pass control back
+/* IIPImage version of the JPEG error_exit function. We want to pass control back
    to the program, so simply throw an exception
 */
-
 METHODDEF(void) iip_error_exit( j_common_ptr cinfo )
 {
   char buffer[ JMSG_LENGTH_MAX ];
@@ -79,8 +75,12 @@ METHODDEF(void) iip_error_exit( j_common_ptr cinfo )
 }
 
 
-
 extern "C" {
+  /* Hmmm, we have to do this assignment in C due to the strong type checking of C++
+   *  or something like that. So, we use an extern "C" function declared at the top
+   *  of this file and pass our arguments through this. I'm sure there's a better
+   *  way of doing this, but this seems to work :/
+   */
   void setup_error_functions( jpeg_compress_struct *a ){
     a->err->error_exit = iip_error_exit; 
   }
@@ -88,16 +88,13 @@ extern "C" {
 
 
 
-
-/*
- * Initialize destination --- called by jpeg_start_compress
+/* Initialize destination --- called by jpeg_start_compress
  * before any data is actually written.
  */
-
 METHODDEF(void)
 iip_init_destination (j_compress_ptr cinfo)
 {
-  iip_dest_ptr dest = (iip_dest_ptr) cinfo->dest;
+  iip_destination_mgr* dest = (iip_destination_mgr*) cinfo->dest;
 
   // Number of bytes written
   dest->written = 0;
@@ -109,11 +106,10 @@ iip_init_destination (j_compress_ptr cinfo)
 
 
 
-
 METHODDEF(boolean)
 iip_empty_output_buffer( j_compress_ptr cinfo )
 {
-  iip_dest_ptr dest = (iip_dest_ptr) cinfo->dest;
+  iip_destination_mgr* dest = (iip_destination_mgr*) cinfo->dest;
 
   // If we reach here, our output tile buffer must be too small, so reallocate
   unsigned int new_size = dest->source_size*2;
@@ -134,19 +130,16 @@ iip_empty_output_buffer( j_compress_ptr cinfo )
 
 
 
-
-/*
- * Terminate destination --- called by jpeg_finish_compress
+/* Terminate destination --- called by jpeg_finish_compress
  * after all data has been written.  Usually needs to flush buffer.
  *
  * NB: *not* called by jpeg_abort or jpeg_destroy; surrounding
  * application must deal with any cleanup that should happen even
  * for error exit.
  */
-
 void iip_term_destination( j_compress_ptr cinfo )
 {
-  iip_dest_ptr dest = (iip_dest_ptr) cinfo->dest;
+  iip_destination_mgr* dest = (iip_destination_mgr*) cinfo->dest;
 
   // Update the number of bytes written
   dest->written = dest->source_size - dest->pub.free_in_buffer;
@@ -154,20 +147,10 @@ void iip_term_destination( j_compress_ptr cinfo )
 
 
 
-
 void JPEGCompressor::InitCompression( const RawTile& rawtile, unsigned int strip_height )
 {
-  // Do some initialisation
-  dest = &dest_mgr;
-
-  // Set up the correct width and height for this particular tile
-  width = rawtile.width;
-  height = rawtile.height;
-  channels = rawtile.channels;
-
-
   // Make sure we only try to compress images with 1 or 3 channels
-  if( ! ( (channels==1) || (channels==3) )  ){
+  if( ! ( (rawtile.channels==1) || (rawtile.channels==3) ) ){
     throw string( "JPEGCompressor: JPEG can only handle images of either 1 or 3 channels" );
   }
 
@@ -175,41 +158,29 @@ void JPEGCompressor::InitCompression( const RawTile& rawtile, unsigned int strip
   if( rawtile.bpc != 8 ) throw string( "JPEGCompressor: JPEG can only handle 8 bit images" );
 
 
-  // We set up the normal JPEG error routines, then override error_exit.
-  cinfo.err = jpeg_std_error( &jerr );
-
-
-  // Override the error_exit function with our own.
-  // Hmmm, we have to do this assignment in C due to the strong type checking of C++
-  //  or something like that. So, we use an extern "C" function declared at the top
-  //  of this file and pass our arguments through this. I'm sure there's a better
-  //  way of doing this, but this seems to work :/
-
-  //   cinfo.err.error_exit = iip_error_exit;
-  setup_error_functions( &cinfo );
-
-  jpeg_create_compress( &cinfo );
-
-
-  /* The destination object is made permanent so that multiple JPEG images
-   * can be written to the same file without re-executing jpeg_stdio_dest.
-   * This makes it dangerous to use this manager and a different destination
-   * manager serially with the same JPEG object, because their private object
-   * sizes may be different.  Caveat programmer.
-   */
-  if( !cinfo.dest ){
-    // first time for this JPEG object?
-    cinfo.dest = ( struct jpeg_destination_mgr* )
-      ( *cinfo.mem->alloc_small )
-      ( (j_common_ptr) &cinfo, JPOOL_PERMANENT, sizeof( iip_destination_mgr ) );
-  }
-
-
-  dest = (iip_dest_ptr) cinfo.dest;
+  // Initialize our destination manager
   dest->pub.init_destination = iip_init_destination;
   dest->pub.empty_output_buffer = iip_empty_output_buffer;
   dest->pub.term_destination = iip_term_destination;
   dest->strip_height = strip_height;
+
+  // We set up the normal JPEG error routines, then override error_exit. Must be done before calling jpeg_create_compress()
+  cinfo.err = jpeg_std_error( &jerr );
+
+  // Override the error_exit function with our own.
+  setup_error_functions( &cinfo );
+
+  // Create compression object
+  jpeg_create_compress( &cinfo );
+
+  // Assign our destination manager to the cinfo object
+  cinfo.dest = (jpeg_destination_mgr*) dest;
+
+
+  // Set up the correct width and height for this particular tile
+  width = rawtile.width;
+  height = rawtile.height;
+  channels = rawtile.channels;
 
   // Calculate our metadata storage requirements
   unsigned int metadata_size =
@@ -235,6 +206,12 @@ void JPEGCompressor::InitCompression( const RawTile& rawtile, unsigned int strip
   //  on hardware) - must do this after we've set the defaults!
   cinfo.dct_method = JDCT_FASTEST;
 
+  // If our image is already JPEG encoded, then we are transcoding, so disable JFIF
+  // as this won't work with JPEG/RGB encoded bitstreams
+  if( rawtile.compressionType ==  ImageEncoding::JPEG ){
+    cinfo.write_JFIF_header = FALSE;
+  }
+
   jpeg_set_quality( &cinfo, Q, TRUE );
 
   jpeg_start_compress( &cinfo, TRUE );
@@ -257,9 +234,8 @@ void JPEGCompressor::InitCompression( const RawTile& rawtile, unsigned int strip
 
 
 
-/*
-  We use a separate tile_height from the predefined strip_height because
-  the tile height for the final row can be different
+/* We use a separate tile_height from the predefined strip_height because
+   the tile height for the final row can be different
  */
 unsigned int JPEGCompressor::CompressStrip( unsigned char* input, unsigned char* output, unsigned int tile_height )
 {
@@ -324,11 +300,32 @@ unsigned int JPEGCompressor::Finish( unsigned char* output )
 
 unsigned int JPEGCompressor::Compress( RawTile& rawtile )
 {
-  // Do some initialisation
-  data = (unsigned char*) rawtile.data;
-  struct jpeg_error_mgr jerr;
-  iip_destination_mgr dest_mgr;
-  iip_dest_ptr dest = &dest_mgr;
+  // Make sure we only try to compress images with 1 or 3 channels
+  if( ! ( (rawtile.channels==1) || (rawtile.channels==3) ) ){
+    throw string( "JPEGCompressor: JPEG can only handle images of either 1 or 3 channels" );
+  }
+
+  // JPEG can only handle 8 bit data
+  if( rawtile.bpc != 8 ) throw string( "JPEGCompressor: JPEG can only handle 8 bit images" );
+
+
+  // Initialize our destination manager
+  dest->pub.init_destination = iip_init_destination;
+  dest->pub.empty_output_buffer = iip_empty_output_buffer;
+  dest->pub.term_destination = iip_term_destination;
+  dest->strip_height = 0;
+
+  // We set up the normal JPEG error routines, then override error_exit. Must be done before calling jpeg_create_compress()
+  cinfo.err = jpeg_std_error( &jerr );
+
+  // Override the error_exit function with our own.
+  setup_error_functions( &cinfo );
+
+  // Create compression object
+  jpeg_create_compress( &cinfo );
+
+  // Assign our destination manager to the cinfo object
+  cinfo.dest = (jpeg_destination_mgr*) dest;
 
 
   // Set up the correct width and height for this particular tile
@@ -336,51 +333,6 @@ unsigned int JPEGCompressor::Compress( RawTile& rawtile )
   height = rawtile.height;
   channels = rawtile.channels;
 
-
-  // Make sure we only try to compress images with 1 or 3 channels
-  if( ! ( (channels==1) || (channels==3) ) ){
-    throw string( "JPEGCompressor: JPEG can only handle images of either 1 or 3 channels" );
-  }
-
-  // JPEG can only handle 8 bit data
-  if( rawtile.bpc != 8 ) throw string( "JPEGCompressor: JPEG can only handle 8 bit images" );
-
-  // We set up the normal JPEG error routines, then override error_exit.
-  cinfo.err = jpeg_std_error( &jerr );
-
-
-  // Override the error_exit function with our own.
-  // Hmmm, we have to do this assignment in C due to the strong type checking of C++
-  //  or something like that. So, we use an extern "C" function declared at the top
-  //  of this file and pass our arguments through this. I'm sure there's a better
-  //  way of doing this, but this seems to work :/
-
-  //   cinfo.err.error_exit = iip_error_exit;
-  setup_error_functions( &cinfo );
-
-  jpeg_create_compress( &cinfo );
-
-
-  /* The destination object is made permanent so that multiple JPEG images
-   * can be written to the same file without re-executing jpeg_stdio_dest.
-   * This makes it dangerous to use this manager and a different destination
-   * manager serially with the same JPEG object, because their private object
-   * sizes may be different.  Caveat programmer.
-   */
-  if( !cinfo.dest ){
-
-    // first time for this JPEG object?
-    cinfo.dest = ( struct jpeg_destination_mgr* )
-      ( *cinfo.mem->alloc_small )
-      ( (j_common_ptr) &cinfo, JPOOL_PERMANENT, sizeof( iip_destination_mgr ) );
-  }
-
-
-  dest = (iip_dest_ptr) cinfo.dest;
-  dest->pub.init_destination = iip_init_destination;
-  dest->pub.empty_output_buffer = iip_empty_output_buffer;
-  dest->pub.term_destination = iip_term_destination;
-  dest->strip_height = 0;
 
   // Calculate our metadata storage requirements
   unsigned int metadata_size =
@@ -421,11 +373,11 @@ unsigned int JPEGCompressor::Compress( RawTile& rawtile )
   // Add XMP metadata
   writeXMPMetadata();
 
-  // Send the tile data
-  int row_stride = width * channels;
 
   // Compress the image line by line
   JSAMPROW row[1];
+  unsigned char* data = (unsigned char*) rawtile.data;
+  int row_stride = width * channels;
   while( cinfo.next_scanline < cinfo.image_height ){
     row[0] = &data[ cinfo.next_scanline * row_stride ];
     jpeg_write_scanlines( &cinfo, row, 1 );
@@ -560,4 +512,45 @@ void JPEGCompressor::writeXMPMetadata()
 
   // Can't use regular addMetadata, because of the zero term after the namespace id; and the APP1 marker
   jpeg_write_marker( &cinfo, JPEG_APP0+1, (const JOCTET*) xmpstr, XMP_PREFIX_SIZE + xmp.size() );
+}
+
+
+
+void JPEGCompressor::injectMetadata( RawTile& rawtile )
+{
+  if( (!embedICC && !embedXMP) || (icc.empty() && xmp.empty()) ) return;
+
+  // Initialize our compression structure
+  InitCompression( rawtile, 0 );
+
+  // Abort the compression as we only needed it for writing the header
+  jpeg_abort_compress( &cinfo );
+
+  // Destroy our compression structure
+  jpeg_destroy_compress( &cinfo );
+
+  // Skip final 2 bytes from header
+  unsigned int len = getHeaderSize() - 2;
+
+  unsigned int dataLength = len + rawtile.dataLength;
+  unsigned char* buffer = new unsigned char[dataLength];
+
+  // Copy JPEG header bytes
+  memcpy( buffer, getHeader(), len );
+
+  // SOS (Start of Scan) marker
+  unsigned char SOS[2] = {0xFF,0xDA};
+
+  // Replace bitstream's initial SOI (Start of Image) with an SOS marker
+  ((unsigned char*)rawtile.data)[0]=SOS[0];
+  ((unsigned char*)rawtile.data)[1]=SOS[1];
+
+  // Append JPEG bitstream to header
+  memcpy( &buffer[len], rawtile.data, rawtile.dataLength );
+
+  // Delete our original data buffer and re-assign our new buffer
+  if( rawtile.memoryManaged ) delete[] (unsigned char*) rawtile.data;
+  rawtile.data = buffer;
+  rawtile.dataLength = dataLength;
+  rawtile.capacity = dataLength;
 }

@@ -197,6 +197,11 @@ class Compressor {
   /** @return compressionType */
   virtual ImageEncoding getImageEncoding() const { return ImageEncoding::RAW; };
 
+
+  /// Inject metadata into raw bitstream
+  /** @param  t image tile containing raw bitstream */
+  virtual void injectMetadata( RawTile& t ) {};
+
 };
 
 #endif
