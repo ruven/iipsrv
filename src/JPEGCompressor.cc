@@ -55,6 +55,9 @@ inline double round(double r) { return (r > 0.0) ? floor(r + 0.5) : ceil(r - 0.5
 #define XMP_PREFIX "http://ns.adobe.com/xap/1.0/%c%s"
 #define XMP_PREFIX_SIZE 29
 
+// EXIF definitions
+#define EXIF_PREFIX "Exif\0\0"
+#define EXIF_PREFIX_SIZE 6
 
 
 /* IIPImage version of the JPEG error_exit function. We want to pass control back
@@ -82,7 +85,7 @@ extern "C" {
    *  way of doing this, but this seems to work :/
    */
   void setup_error_functions( jpeg_compress_struct *a ){
-    a->err->error_exit = iip_error_exit; 
+    a->err->error_exit = iip_error_exit;
   }
 }
 
@@ -185,7 +188,8 @@ void JPEGCompressor::InitCompression( const RawTile& rawtile, unsigned int strip
   // Calculate our metadata storage requirements
   unsigned int metadata_size =
     (icc.size()>0 ? (icc.size()+ICC_OVERHEAD_LEN) : 0) +
-    (xmp.size()>0 ? (xmp.size()+XMP_PREFIX_SIZE) : 0);
+    (xmp.size()>0 ? (xmp.size()+XMP_PREFIX_SIZE) : 0) +
+    (exif.size()>0 ? (exif.size()+EXIF_PREFIX_SIZE) : 0);
 
   // Allocate enough memory for our header and metadata
   unsigned long output_size = metadata_size + MX;
@@ -225,7 +229,10 @@ void JPEGCompressor::InitCompression( const RawTile& rawtile, unsigned int strip
 
   // Add XMP metadata
   writeXMPMetadata();
-  
+
+  // Add EXIF metadata
+  writeExifMetadata();
+
   // Copy the encoded JPEG header data to a separate buffer
   size_t datacount = dest->source_size - dest->pub.free_in_buffer;
   header_size = datacount;
@@ -337,7 +344,8 @@ unsigned int JPEGCompressor::Compress( RawTile& rawtile )
   // Calculate our metadata storage requirements
   unsigned int metadata_size =
     (icc.size()>0 ? (icc.size()+ICC_OVERHEAD_LEN) : 0) +
-    (xmp.size()>0 ? (xmp.size()+XMP_PREFIX_SIZE) : 0);
+    (xmp.size()>0 ? (xmp.size()+XMP_PREFIX_SIZE) : 0) +
+    (exif.size()>0 ? (exif.size()+EXIF_PREFIX_SIZE) : 0);
 
   // Allocate enough memory for our compressed output data
   // - compressed images at overly high quality factors can be larger than raw data
@@ -372,6 +380,9 @@ unsigned int JPEGCompressor::Compress( RawTile& rawtile )
 
   // Add XMP metadata
   writeXMPMetadata();
+
+  // Add EXIF metadata
+  writeExifMetadata();
 
 
   // Compress the image line by line
@@ -516,9 +527,27 @@ void JPEGCompressor::writeXMPMetadata()
 
 
 
+void JPEGCompressor::writeExifMetadata()
+{
+  // Skip if EXIF embedding is disabled or no EXIF present
+  if( !embedEXIF || exif.empty() ) return;
+
+  size_t len = exif.size();
+
+  // Need to add prefix (need do this with memcpy because of null bytes)
+  char exifstr[65536];
+  memcpy( exifstr, EXIF_PREFIX, EXIF_PREFIX_SIZE );
+  memcpy( exifstr+EXIF_PREFIX_SIZE, exif.c_str(), len );
+
+  // Write out our marker
+  jpeg_write_marker( &cinfo, JPEG_APP0+1, (const JOCTET*) exifstr, len+EXIF_PREFIX_SIZE );
+}
+
+
+
 void JPEGCompressor::injectMetadata( RawTile& rawtile )
 {
-  if( (!embedICC && !embedXMP) || (icc.empty() && xmp.empty()) ) return;
+  if( (!embedICC && !embedXMP &&!embedEXIF) || (icc.empty() && xmp.empty() && exif.empty()) ) return;
 
   // Initialize our compression structure
   InitCompression( rawtile, 0 );

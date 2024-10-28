@@ -78,6 +78,9 @@ class JPEGCompressor: public Compressor{
   /// Write XMP metadata
   void writeXMPMetadata();
 
+  /// Write EXIF metadata
+  void writeExifMetadata();
+
 
  public:
 

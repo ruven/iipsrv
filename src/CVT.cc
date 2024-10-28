@@ -536,6 +536,15 @@ void CVT::send( Session* session ){
     compressor->embedXMPMetadata( true );
   }
 
+  // Always embed EXIF metadata in CVT function
+  if( (*session->image)->getMetadata("exif").size() > 0 ){
+    if( session->loglevel >= 3 ){
+      *(session->logfile) << "CVT :: Embedding EXIF metadata with size "
+			  << (*session->image)->getMetadata("exif").size() << " bytes" << endl;
+    }
+    compressor->embedExifMetadata( true );
+  }
+
 
   // Initialise our output compression object
   compressor->InitCompression( complete_image, resampled_height );

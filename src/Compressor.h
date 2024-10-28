@@ -62,6 +62,10 @@ class Compressor {
   bool embedXMP;
   std::string xmp;
 
+  // EXIF metadata
+  bool embedEXIF;
+  std::string exif;
+
   /// Write metadata
   virtual void writeMetadata() {};
 
@@ -73,6 +77,9 @@ class Compressor {
 
   /// Write XMP metadata
   virtual void writeXMPMetadata() {};
+
+  /// Write EXIF metadata
+  virtual void writeExifMetadata() {};
 
 
  public:
@@ -88,7 +95,8 @@ class Compressor {
     dpi_y( 0 ),
     dpi_units( 0 ),
     embedICC( false ),
-    embedXMP( false ) {};
+    embedXMP( false ),
+    embedEXIF( false ) {};
 
 
   virtual ~Compressor() {};
@@ -125,6 +133,9 @@ class Compressor {
   /** @param embed Whether XMP metadata should be embedded */
   inline void embedXMPMetadata( const bool embed ){ this->embedXMP = embed; }
 
+  /// Embed EXIF metadata
+  /** @param embed Whether EXIF metadata should be embedded */
+  inline void embedExifMetadata( const bool embed ){ this->embedEXIF = embed; }
 
   /// Set general metadata
   /** @param metadata Metadata list */
@@ -146,8 +157,20 @@ class Compressor {
       xmp = it->second;
       this->metadata.erase( it );
     }
+
+    // Extract EXIF chunk if it exists and remove from list
+    it = this->metadata.find("exif");
+    if( it != this->metadata.end() ){
+      exif = it->second;
+      this->metadata.erase( it );
+    }
+
   };
 
+
+  /// Set quality level
+  /** @param quality quality level */
+  virtual void setQuality( int quality ) {};
 
 
   /// Initialise strip based compression

@@ -164,6 +164,7 @@ unsigned int AVIFCompressor::Compress( RawTile& rawtile ){
   // Add ICC profile and XMP metadata to our image
   writeICCProfile();
   writeXMPMetadata();
+  writeExifMetadata();
 
 
   if( (OK=avifEncoderAddImage( encoder, avif, 1, AVIF_ADD_IMAGE_FLAG_SINGLE )) != AVIF_RESULT_OK ){
@@ -235,6 +236,24 @@ void AVIFCompressor::writeXMPMetadata()
 #else  
   if( avifImageSetMetadataXMP( avif, (const uint8_t*) xmp.c_str(), len ) != AVIF_RESULT_OK ){
     throw string( "AVIFCompressor :: Error adding XMP metadata" );
+  }
+#endif
+}
+
+
+
+/// Write EXIF metadata
+void AVIFCompressor::writeExifMetadata()
+{
+  size_t len = exif.size();
+  if( len == 0 ) return;
+
+#if AVIF_VERSION_MAJOR < 1
+  // No return from version < 1
+  avifImageSetMetadataExif( avif, (const uint8_t*) exif.c_str(), len );
+#else
+  if( avifImageSetMetadataExif( avif, (const uint8_t*) exif.c_str(), len ) != AVIF_RESULT_OK ){
+    throw string( "AVIFCompressor :: Error adding EXIF metadata" );
   }
 #endif
 }

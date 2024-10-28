@@ -105,7 +105,8 @@ void PNGCompressor::InitCompression( const RawTile& rawtile, unsigned int strip_
   // Calculate our metadata storage requirements
   unsigned int metadata_size =
     (icc.size()>0 ? (icc.size()+ICC_OVERHEAD_SIZE) : 0) +
-    (xmp.size()>0 ? (xmp.size()+XMP_OVERHEAD_SIZE) : 0);
+    (xmp.size()>0 ? (xmp.size()+XMP_OVERHEAD_SIZE) : 0) +
+    (exif.size()>0 ? exif.size() : 0);
  
   // Allocate enough memory for our header and metadata
   unsigned long output_size = metadata_size + MX;
@@ -243,7 +244,8 @@ unsigned int PNGCompressor::Compress( RawTile& rawtile )
   // Calculate our metadata storage requirements
   unsigned int metadata_size =
     (icc.size()>0 ? (icc.size()+ICC_OVERHEAD_SIZE) : 0) +
-    (xmp.size()>0 ? (xmp.size()+XMP_OVERHEAD_SIZE) : 0);
+    (xmp.size()>0 ? (xmp.size()+XMP_OVERHEAD_SIZE) : 0) +
+    (exif.size()>0) ? exif.size() : 0;
 
   // Allocate enough memory for our compressed output data - make sure there is extra buffering
   // Note that compressed images at overly high quality factors can be larger than raw data
@@ -412,6 +414,9 @@ void PNGCompressor::writeMetadata()
 
   // Write XMP chunk
   writeXMPMetadata();
+
+  // Write EXIF chunk
+  writeExifMetadata();
 }
 
 
@@ -472,5 +477,19 @@ void PNGCompressor::writeXMPMetadata()
 
   // Write out our XMP chunk
   png_set_text( dest.png_ptr, dest.info_ptr, &text, 1 );
+
+}
+
+
+
+void PNGCompressor::writeExifMetadata()
+{
+  // Skip if EXIF embedding is disabled or no EXIF present
+  if( !embedEXIF || exif.empty() ) return;
+
+#ifdef PNG_eXIf_SUPPORTED
+  // Write out EXIF chunk
+  png_set_eXIf_1( dest.png_ptr, dest.info_ptr, exif.size(), (png_bytep) exif.c_str() );
+#endif
 
 }

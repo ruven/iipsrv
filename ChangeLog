@@ -1,3 +1,8 @@
+28/10/2024:
+	- Added EXIF output support for JPEG, WebP and AVIF format writers. Reading of EXIF data is, however, only
+	  currently supported by the JPEG input reader, so no TIFF EXIF input support for the moment.
+
+
 27/10/2024:
 	- Added ability to inject ICC profile and XMP metadata into pre-encoded tiles returned from TIFF images. These
 	  are essentially raw bitstreams with no container. Works for both JPEG and WebP formats.

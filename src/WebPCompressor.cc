@@ -126,12 +126,13 @@ unsigned int WebPCompressor::Compress( RawTile& rawtile ){
   WebPData output;
 
   // Use the WebP muxer only if we need to
-  if( icc.size() > 0 || xmp.size() > 0 ){
+  if( icc.size() > 0 || xmp.size() > 0 || exif.size() > 0 ){
 
     // Add ICC profile and XMP metadata to our output bitstream
     writeICCProfile();
     writeXMPMetadata();
-  
+    writeExifMetadata();
+
     // Add our image data chunk
     WebPData chunk;
     chunk.bytes = writer.mem;
@@ -213,15 +214,32 @@ void WebPCompressor::writeXMPMetadata()
 
 
 
+/// Write EXIF metadata
+void WebPCompressor::writeExifMetadata()
+{
+  // Skip if EXIF embedding disabled or no EXIF chunk exists
+  if( !embedEXIF || exif.empty() ) return;
+
+  WebPData chunk;
+  chunk.bytes = (const uint8_t*) exif.c_str();
+  chunk.size = exif.size();
+
+  if( WebPMuxSetChunk( mux, "EXIF", &chunk, 0 ) != WEBP_MUX_OK ){
+    throw string( "WebPCompressor :: Error setting EXIF chunk" );
+  }
+}
+
+
+
 void WebPCompressor::injectMetadata( RawTile& rawtile )
 {
-  if( (!embedICC && !embedXMP) || (icc.empty() && xmp.empty()) ) return;
+  if( (!embedICC && !embedXMP && !embedEXIF) || (icc.empty() && xmp.empty() && exif.empty()) ) return;
 
   WebPData input;
   input.bytes = (const uint8_t*) rawtile.data;
   input.size = rawtile.dataLength;
 
-  // Only add ICC or metadata if we have a raw WebP stream
+  // Only add ICC or metadata if we have a raw WebP stream:
   // Bytes 8-16 should be exactly "WEBPVP8 " (lossy) or "WEBPVP8L" (lossless)
   static const unsigned char lossy_header[8] = {0x57,0x45,0x42,0x50,0x56,0x50,0x38,0x20};
   static const unsigned char lossless_header[8] = {0x57,0x45,0x42,0x50,0x56,0x50,0x38,0x4c};
@@ -231,9 +249,10 @@ void WebPCompressor::injectMetadata( RawTile& rawtile )
 
     WebPData output;
 
-    // Add ICC profile and XMP metadata to our output bitstream
+    // Add ICC profile, XMP and EXIF metadata to our output bitstream
     writeICCProfile();
     writeXMPMetadata();
+    writeExifMetadata();
 
     // Add our raw image bitstream data
     if( WebPMuxSetImage( mux, &input, 0 ) != WEBP_MUX_OK ){
