@@ -35,7 +35,6 @@ void View::calculateResolution( unsigned int dimension,
   unsigned int d = dimension;
 
   // Make sure we have a minimum size
-  if( requested_size < min_size ) requested_size = min_size;
   unsigned int rs = (requested_size<min_size) ? min_size : requested_size;
 
   // Find the resolution level closest but higher than the requested size
@@ -71,8 +70,8 @@ unsigned int View::getResolution(){
 
   // Calculate the width and height of this resolution
   for( i=1; i < (max_resolutions - resolution); i++ ){
-    res_width = (int) floor(res_width / 2.0);
-    res_height = (int) floor(res_height / 2.0);
+    res_width = (int) floor(res_width/2.0);
+    res_height = (int) floor(res_height/2.0);
   }
 
   // Check if we need to limit to a smaller resolution due to our max size limit
@@ -89,11 +88,10 @@ unsigned int View::getResolution(){
       dimension = (int) (res_height*view_height*scale);
     }
 
-    i = 1;
-    while( resolution > 0 && ( (dimension / i) > (unsigned int) max_size ) ){
-      dimension /= 2;
-      res_width = (int) floor(width / 2.0);
-      res_height = (int) floor(height / 2.0 );
+    while( resolution > 0 && ( dimension > (unsigned int) max_size ) ){
+      dimension = (int) (dimension/2.0);
+      res_width = (int) floor(res_width/2.0);
+      res_height = (int) floor(res_height/2.0);
       resolution--;
     }
   }
@@ -147,9 +145,6 @@ void View::setViewTop( float y ) {
 
 
 void View::setViewWidth( float w ) {
-  // Crop region widths > 100% of image size
-  //if( view_left+w > 1.0 ) w = 1.0-view_left;
-
   // Sanity check
   if( w > 1.0 ) view_width = 1.0;
   else if( w < 0.0 ) view_width = 0.0;
@@ -158,9 +153,6 @@ void View::setViewWidth( float w ) {
 
 
 void View::setViewHeight( float h ) {
-  // Crop region heights > 100% of image size
-  //if( view_height+h > 1.0 ) h = 1.0-view_height;
-
   // Sanity check
   if( h > 1.0 ) view_height = 1.0;
   else if( h < 0.0 ) view_height = 0.0;

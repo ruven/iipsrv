@@ -330,8 +330,10 @@ RawTile TileManager::getRegion( unsigned int res, int seq, int ang, int layers, 
   unsigned int startx, endx, starty, endy, xoffset, yoffset;
 
 
+  // Request for a region within image
   if( ! ( x==0 && y==0 && width==im_width && height==im_height ) ){
-    // Calculate the start tiles
+
+    // Calculate the start tiles and any offset
     startx = (unsigned int) ( x / src_tile_width );
     starty = (unsigned int) ( y / src_tile_height );
     xoffset = x % src_tile_width;
@@ -341,7 +343,7 @@ RawTile TileManager::getRegion( unsigned int res, int seq, int ang, int layers, 
     endy = (unsigned int) ceil( (float)(height + y) / (float)src_tile_height );
 
     if( loglevel >= 3 ){
-      *logfile << "TileManager getRegion :: Total tiles in image: " << ntlx << "x" << ntly << " tiles" << endl
+      *logfile << "TileManager getRegion :: Total tiles in requested resolution: " << ntlx << "x" << ntly << " tiles" << endl
 	       << "TileManager getRegion :: Tile start: " << startx << "," << starty << " with offset: "
 	       << xoffset << "," << yoffset << endl
 	       << "TileManager getRegion :: Tile end: " << endx-1 << "," << endy-1 << endl;
@@ -381,7 +383,7 @@ RawTile TileManager::getRegion( unsigned int res, int seq, int ang, int layers, 
 		 << (i*ntlx) + j << " at resolution " << res << endl;
       }
 
-      // Need to initialize our output region with the actual data types we find in our raw data - these can potentially be different                                         
+      // Need to initialize our output region with the actual data types we find in our raw data - these can potentially be different
       // between images which are in a sequence or image stack. To do that requires knowledge of the contents of the tiles,
       // so we do ii after retrieving our first tile and only once
       if( i==starty && j==startx ){

@@ -1,3 +1,7 @@
+18/11/2024:
+	- Fixed bug in View.cc's getResolution() when a max size has been set. Fixes https://github.com/ruven/iipsrv/issues/274
+
+
 28/10/2024:
 	- Added EXIF output support for JPEG, WebP and AVIF format writers. Reading of EXIF data is, however, only
 	  currently supported by the JPEG input reader, so no TIFF EXIF input support for the moment.
