@@ -249,11 +249,11 @@ vector<unsigned int> View::getRequestSize(){
   if( max_size > 0 && (w > (unsigned int) max_size || h > (unsigned int) max_size) ){
     if( w > h ){
       w = max_size;
-      h = round( (float)requested_width / ratio );
+      h = round( (float) w / ratio );
     }
     else if( h > w ){
       h = max_size;
-      w = round( (float)requested_height * ratio );
+      w = round( (float) h * ratio );
     }
     else{
       w = max_size;

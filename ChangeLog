@@ -1,4 +1,5 @@
 18/11/2024:
+	- Correct bounding box calculation when max size has been set.
 	- Fixed bug in View.cc's getResolution() when a max size has been set. Fixes https://github.com/ruven/iipsrv/issues/274
 
 
