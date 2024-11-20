@@ -41,7 +41,7 @@ extern "C" {
     tiff_mem *memtif = (tiff_mem *) handle;
     
     // Re-allocate extra memory if we don't have enough space
-    if( ((tsize_t) memtif->current + length) > memtif->capacity ){
+    if( (memtif->current + length) > memtif->capacity ){
       memtif->capacity = memtif->capacity + length;
       memtif->buffer = (unsigned char*) realloc( memtif->buffer, memtif->capacity );
     }
@@ -92,11 +92,6 @@ extern "C" {
 
   // Map function - unimplemented
   static void _unmap( thandle_t handle, tdata_t base, toff_t psize ){
-  }
-
-  // Free function - unimplemented as memory handled manually
-  static void _free( tiff_mem *memtif ){
-    return;
   }
 
 }

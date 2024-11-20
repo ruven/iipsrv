@@ -16,7 +16,6 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-
 #include "JPEGImage.h"
 #include "Logger.h"
 #include <cstdio>
@@ -476,8 +475,8 @@ void JPEGImage::process( unsigned int res, int layers, int xoffset, int yoffset,
       }
     }
 
-    // Free any temporary buffer we may have created
-    if( dst_ptr ) free( dst_ptr );
+    // Free temporary buffer we created for when factor > 1
+    if( buffer ) free( buffer );
   }
 
 }

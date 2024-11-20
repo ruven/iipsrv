@@ -314,10 +314,6 @@ if test -n "$kakadu_path"; then
 
 		AC_SUBST(KAKADU_OBJS)
 
-		AC_LANG_PUSH([C++])
-		AC_CHECK_HEADER([thread], [AC_DEFINE(HAVE_STL_THREAD)])
-		AC_LANG_POP([C++])
-
 		AC_CHECK_FUNC([get_nprocs_conf],[AC_DEFINE(NPROCS)])
 	fi
 else

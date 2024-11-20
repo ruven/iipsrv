@@ -33,7 +33,7 @@ typedef struct {
   unsigned char *buffer;   /// Data buffer
   toff_t current;          /// Current byte position within stream
   toff_t end;              /// Last written byte
-  tsize_t capacity;        /// Allocated buffer size
+  toff_t capacity;         /// Allocated buffer size
 } tiff_mem;
 
 typedef tiff_mem* tiff_mem_ptr;

@@ -13,7 +13,7 @@ jobs:
     - uses: actions/checkout@v4
 
     - name: Install dependencies
-      run:  sudo apt-get update && sudo apt-get install libtiff-dev libpng-dev libturbojpeg-dev libwebp-dev libavif-dev libmemcached-dev libopenjp2-7-dev
+      run:  sudo apt-get update && sudo apt-get install libfcgi-dev libtiff-dev libpng-dev libturbojpeg-dev libwebp-dev libavif-dev libmemcached-dev libopenjp2-7-dev
 
     - name: Configure
       run: |

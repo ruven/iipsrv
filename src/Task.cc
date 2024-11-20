@@ -99,7 +99,7 @@ void QLT::run( Session* session, const string& argument ){
   transform( arg.begin(), arg.end(), arg.begin(), ::tolower );
 
   // Check whether we have a compression:quality combination
-  int delimitter = arg.find( ":" );
+  std::string::size_type delimitter = arg.find( ":" );
   if( delimitter != string::npos ){
     string comp = arg.substr( 0, delimitter );
     int                          compression = 0;
