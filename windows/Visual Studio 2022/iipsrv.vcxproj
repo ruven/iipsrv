@@ -269,6 +269,7 @@
     <ClCompile Include="..\..\src\SPECTRA.cc" />
     <ClCompile Include="..\..\src\Task.cc" />
     <ClCompile Include="..\..\src\TIL.cc" />
+    <ClCompile Include="..\..\src\TIFFCompressor.cc" />
     <ClCompile Include="..\..\src\TileManager.cc" />
     <ClCompile Include="..\..\src\TPTImage.cc" />
     <ClCompile Include="..\..\src\Transforms.cc" />
@@ -293,6 +294,7 @@
     <ClInclude Include="..\..\src\PNGCompressor.h" />
     <ClInclude Include="..\..\src\RawTile.h" />
     <ClInclude Include="..\..\src\Task.h" />
+    <ClInclude Include="..\..\src\TIFFCompressor.h" />
     <ClInclude Include="..\..\src\TileManager.h" />
     <ClInclude Include="..\..\src\Timer.h" />
     <ClInclude Include="..\..\src\Tokenizer.h" />
