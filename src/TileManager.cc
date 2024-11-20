@@ -89,6 +89,14 @@ RawTile TileManager::getNewTile( int resolution, int tile, int xangle, int yangl
 	break;
 
 
+      case ImageEncoding::TIFF:
+	if( loglevel >= 4 ) compression_timer.start();
+	compressor->Compress( ttt );
+	if( loglevel >= 4 ) *logfile << "TileManager :: TIFF compression time: "
+				     << compression_timer.getTime() << " microseconds" << endl;
+	break;
+
+
       case ImageEncoding::PNG:
 	if( loglevel >= 4 ) compression_timer.start();
 	compressor->Compress( ttt );
@@ -110,12 +118,6 @@ RawTile TileManager::getNewTile( int resolution, int tile, int xangle, int yangl
 	compressor->Compress( ttt );
 	if( loglevel >= 4 ) *logfile << "TileManager :: AVIF compression time: "
 				     << compression_timer.getTime() << " microseconds" << endl;
-	break;
-
-
-      case ImageEncoding::DEFLATE:
-	// No deflate for the time being ;-)
-	if( loglevel >= 4 ) *logfile << "TileManager :: DEFLATE compression requested: Not currently available" << endl;
 	break;
 
 
@@ -160,6 +162,14 @@ RawTile TileManager::getTile( int resolution, int tile, int xangle, int yangle, 
     case ImageEncoding::JPEG:
       if( (rawtile = tileCache->getTile( image->getImagePath(), resolution, tile,
 					 xangle, yangle, ImageEncoding::JPEG, compressor->getQuality() )) ) break;
+      if( (rawtile = tileCache->getTile( image->getImagePath(), resolution, tile,
+					 xangle, yangle, ImageEncoding::RAW, 0 )) ) break;
+      break;
+
+
+    case ImageEncoding::TIFF:
+      if( (rawtile = tileCache->getTile( image->getImagePath(), resolution, tile,
+					 xangle, yangle, ImageEncoding::TIFF, compressor->getQuality() )) ) break;
       if( (rawtile = tileCache->getTile( image->getImagePath(), resolution, tile,
 					 xangle, yangle, ImageEncoding::RAW, 0 )) ) break;
       break;

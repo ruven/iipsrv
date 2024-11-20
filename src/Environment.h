@@ -34,6 +34,8 @@
 #define WEBP_QUALITY 50
 #define AVIF_QUALITY 50
 #define AVIF_CODEC 0  // 0 = auto, 1 = aom, 2 = rav2e, 3 = svt
+#define TIFF_COMPRESSION 2  // 0=None, 1=LZW, 2=Deflate, 3=JPEG, 4=WebP, 5=ZStandard
+#define TIFF_QUALITY 1
 #define MAX_CVT 5000
 #define MAX_LAYERS 0
 #define FILESYSTEM_PREFIX ""
@@ -46,7 +48,7 @@
 #define INTERPOLATION 1  // 1: Bilinear
 #define CORS "";
 #define BASE_URL "";
-#define CACHE_CONTROL "max-age=86400"; // 24 hours
+#define CACHE_CONTROL "max-age=86400";  // 24 hours
 #define ALLOW_UPSCALING true
 #define URI_MAP ""
 #define EMBED_ICC true
@@ -168,6 +170,34 @@ class Environment {
       if( quality < -1 ) quality = -1;  // Allow -1 = lossless
     }
     else quality = AVIF_QUALITY;
+
+    return quality;
+  }
+
+
+  /// 0: None, 1: LZW, 2: Deflate, 3: JPEG, 4: WebP
+  static int getTIFFCompression(){
+    const char* envpara = getenv( "TIFF_COMPRESSION" );
+    int compression;
+    if( envpara ){
+      compression = atoi( envpara );
+      if( compression < 0 || compression > 4 ) compression = 0;
+    }
+    else compression = TIFF_COMPRESSION;
+
+    return compression;
+  }
+
+
+  static int getTIFFQuality(){
+    const char* envpara = getenv( "TIFF_QUALITY" );
+    int quality;
+    if( envpara ){
+      quality = atoi( envpara );
+      if( quality < 0 ) quality = 0;
+      if( quality > 100 ) quality = 100;
+    }
+    else quality = TIFF_QUALITY;
 
     return quality;
   }

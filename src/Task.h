@@ -55,6 +55,7 @@ typedef HASHMAP <std::string,IIPImage> imageCacheMapType;
 struct Session {
   IIPImage **image;
   JPEGCompressor* jpeg;
+  TIFFCompressor* tiff;
 #ifdef HAVE_PNG
   PNGCompressor* png;
 #endif
@@ -258,12 +259,23 @@ public:
 };
 
 
-/// WebP Tile Command
+/// AVIF Tile Command
 class ATL : public JTL {
 public:
   void run( Session* session, const std::string& argument ){
     // Set our encoding format and call JTL::run
     session->view->output_format = ImageEncoding::AVIF;
+    JTL::run( session, argument );
+  };
+};
+
+
+/// TIFF Tile Command
+class TTL : public JTL {
+public:
+  void run( Session* session, const std::string& argument ){
+    // Set our encoding format and call JTL::run
+    session->view->output_format = ImageEncoding::TIFF;
     JTL::run( session, argument );
   };
 };

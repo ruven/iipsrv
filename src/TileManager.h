@@ -27,6 +27,7 @@
 #include "RawTile.h"
 #include "IIPImage.h"
 #include "JPEGCompressor.h"
+#include "TIFFCompressor.h"
 #ifdef HAVE_PNG
 #include "PNGCompressor.h"
 #endif

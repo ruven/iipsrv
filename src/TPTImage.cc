@@ -546,7 +546,7 @@ RawTile TPTImage::getTile( int x, int y, unsigned int res, int layers, unsigned 
       throw file_error( "TPTImage :: Unable to get byte count for tile " + tile );
     }
     bytes = bytecounts[tile];
-    if( IIPImage::logging ) logfile << "TPTImage :: byte count for compressed tile: " << bytes << endl;
+    if( IIPImage::logging ) logfile << "TPTImage :: Byte count for compressed tile: " << bytes << endl;
   }
 
 

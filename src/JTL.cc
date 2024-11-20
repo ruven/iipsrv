@@ -1,7 +1,7 @@
 /*
     IIP JTL Command Handler Class Member Function: Export a single tile
 
-    Copyright (C) 2006-2023 Ruven Pillay.
+    Copyright (C) 2006-2024 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -77,6 +77,7 @@ void JTL::send( Session* session, int resolution, int tile ){
   ImageEncoding ct = session->view->output_format;
   Compressor *compressor;
   if( session->view->output_format == ImageEncoding::JPEG ) compressor = session->jpeg;
+  else if( session->view->output_format == ImageEncoding::TIFF ) compressor = session->tiff;
 #ifdef HAVE_PNG
   else if( session->view->output_format == ImageEncoding::PNG ) compressor = session->png;
 #endif

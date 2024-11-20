@@ -1,3 +1,11 @@
+20/11/2024:
+	- Added TIFF output support for both regions (CVT=TIFF) and tiles (TTL=<resolution>,<tile number>). TIFF
+	  encoder handles all bit depths, alpha channels, ICC profiles and basic TIFF and XMP metadata.
+	- QLT argument can be used to specify both compression as well as quality using the syntax QLT=<compression>:<quality>.
+	  For example QLT=WebP:50 will enable WebP compression within TIFF with a quality level of 50. Supported compression
+	  schemes are None, LZW, Deflate, Zstd, JPEG and WebP. Default compression is Deflate with level 1 (fastest).
+
+
 18/11/2024:
 	- Correct bounding box calculation when max size has been set.
 	- Fixed bug in View.cc's getResolution() when a max size has been set. Fixes https://github.com/ruven/iipsrv/issues/274

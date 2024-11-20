@@ -50,6 +50,7 @@ void CVT::send( Session* session ){
   // Set up our output format handler
   Compressor *compressor = NULL;
   if( session->view->output_format == ImageEncoding::JPEG ) compressor = session->jpeg;
+  else if( session->view->output_format == ImageEncoding::TIFF ) compressor = session->tiff;
 #ifdef HAVE_PNG
   else if( session->view->output_format == ImageEncoding::PNG ) compressor = session->png;
 #endif

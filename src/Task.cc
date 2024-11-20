@@ -61,6 +61,7 @@ Task* Task::factory( const string& t ){
   else if( type == "atl" ) return new ATL;
 #endif
   else if( type == "jtl" ) return new JTL;
+  else if( type == "ttl" ) return new TTL;
   else if( type == "jtls" ) return new JTLS;
   else if( type == "icc" ) return new ICC;
   else if( type == "cvt" ) return new CVT;
@@ -92,31 +93,57 @@ void Task::checkImage(){
 
 void QLT::run( Session* session, const string& argument ){
 
-  if( argument.length() ){
+  if( argument.empty() ) return;
 
-    int factor = atoi( argument.c_str() );
+  string arg = argument;
+  transform( arg.begin(), arg.end(), arg.begin(), ::tolower );
 
-    // Check the value is realistic
-    if( factor < -1 || factor > 100 ){
-      if( session->loglevel >= 2 ){
-	*(session->logfile) << "QLT :: Quality factor of " << argument
-			    << " out of bounds. Must be 0-100 for JPEG, WebP or AVIF and 0-9 for PNG" << endl;
-      }
+  // Check whether we have a compression:quality combination
+  int delimitter = arg.find( ":" );
+  if( delimitter != string::npos ){
+    string comp = arg.substr( 0, delimitter );
+    int                          compression = 0;
+    if     ( comp == "lzw" )     compression = 1;
+    else if( comp == "deflate" ) compression = 2;
+    else if( comp == "jpeg" )    compression = 3;
+    else if( comp == "webp" )    compression = 4;
+    else if( comp == "zstd" )    compression = 5;
+
+    session->tiff->setCompression( compression );
+    if( session->loglevel >= 2 ){
+      *(session->logfile) << "QLT :: Requested compression is " << TIFFCompressor::getCompressionName(compression) << endl;
     }
 
-    session->jpeg->setQuality( factor );
+    // Strip the compression prefix from our argument
+    arg = arg.substr( delimitter+1, -1 );
+  }
+
+  // Get the quality factor
+  int factor = atoi( arg.c_str() );
+
+  // Check the value is realistic
+  if( factor < 0 || factor > 100 ){
+    if( session->loglevel >= 2 ){
+      *(session->logfile) << "QLT :: Warning: quality factor of " << argument
+			  << " out of bounds. Must be 0-100 for JPEG and WebP and 1-9 for PNG" << endl;
+    }
+  }
+
+  session->tiff->setQuality( factor );
+  session->jpeg->setQuality( factor );
+
 #ifdef HAVE_PNG
-    session->png->setQuality( factor );
+  session->png->setQuality( factor );
 #endif
 #ifdef HAVE_WEBP
-    session->webp->setQuality( factor );
+  session->webp->setQuality( factor );
 #endif
 #ifdef HAVE_AVIF
-    session->avif->setQuality( factor );
+  session->avif->setQuality( factor );
 #endif
 
-    if( session->loglevel >= 2 ) *(session->logfile) << "QLT :: Requested quality is " << factor << endl;
-  }
+  if( session->loglevel >= 2 ) *(session->logfile) << "QLT :: Requested quality is " << factor << endl;
+
 }
 
 
@@ -257,6 +284,10 @@ void CVT::run( Session* session, const string& src ){
   if( argument == "jpeg" || argument == "jpg" ){
     session->view->output_format = ImageEncoding::JPEG;
     if( session->loglevel >= 3 ) *(session->logfile) << "CVT :: JPEG output" << endl;
+  }
+  else if( argument == "tiff" ){
+    session->view->output_format = ImageEncoding::TIFF;
+    if( session->loglevel >= 3 ) *(session->logfile) << "CVT :: TIFF output" << endl;
   }
 #ifdef HAVE_PNG
   else if( argument == "png" ){

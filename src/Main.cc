@@ -305,6 +305,11 @@ int main( int argc, char *argv[] )
   unsigned int avif_codec = Environment::getAVIFCodec();
 
 
+  // Get our default TIFF compression scheme
+  int tiff_compression = Environment::getTIFFCompression();
+  int tiff_quality = Environment::getTIFFQuality();
+
+
   // Get our max CVT size
   int max_CVT = Environment::getMaxCVT();
 
@@ -392,12 +397,14 @@ int main( int argc, char *argv[] )
 
     logfile << "Setting filesystem prefix to '" << FIF::filesystem_prefix << "'" << endl;
     logfile << "Setting filesystem suffix to '" << FIF::filesystem_suffix << "'" << endl;
-    logfile << "Setting default JPEG quality to " << jpeg_quality << endl;
+    logfile << "Setting default TIFF output compression/quality to "
+	    << TIFFCompressor::getCompressionName(tiff_compression) << "/" << tiff_quality << endl;
+    logfile << "Setting default JPEG output quality to " << jpeg_quality << endl;
 #ifdef HAVE_PNG
-    logfile << "Setting default PNG compression level to " << png_quality << endl;
+    logfile << "Setting default PNG output compression level to " << png_quality << endl;
 #endif
 #ifdef HAVE_WEBP
-    logfile << "Setting default WebP compression level to ";
+    logfile << "Setting default WebP output compression level to ";
     if( webp_quality == -1 ) logfile << "lossless" << endl;
     else logfile << webp_quality << endl;
 #endif
@@ -634,6 +641,7 @@ int main( int argc, char *argv[] )
     //  so that we can close the image on exceptions
     IIPImage *image = NULL;
     JPEGCompressor jpeg( jpeg_quality );
+    TIFFCompressor tiff( tiff_compression, tiff_quality );
 #ifdef HAVE_PNG
     PNGCompressor png( png_quality );
 #endif
@@ -668,6 +676,7 @@ int main( int argc, char *argv[] )
       session.response = &response;
       session.view = &view;
       session.jpeg = &jpeg;
+      session.tiff = &tiff;
 #ifdef HAVE_PNG
       session.png = &png;
 #endif

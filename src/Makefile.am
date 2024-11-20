@@ -44,6 +44,8 @@ iipsrv_fcgi_SOURCES = \
 			JPEGImage.h \
 			JPEGImage.cc \
 			Compressor.h \
+			TIFFCompressor.h \
+			TIFFCompressor.cc \
 			JPEGCompressor.h \
 			JPEGCompressor.cc \
 			RawTile.h \
