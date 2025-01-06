@@ -55,8 +55,8 @@ jobs:
 
     # Autobuild attempts to build any compiled languages  (C/C++, C#, or Java).
     # If this step fails, then you should remove it and run the build manually (see below)
-    - name: Autobuild
-      uses: github/codeql-action/autobuild@v3
+    # - name: Autobuild
+    #  uses: github/codeql-action/autobuild@v3
 
     # ℹ️ Command-line programs to run using the OS shell.
     # 📚 See https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#jobsjob_idstepsrun
@@ -67,6 +67,14 @@ jobs:
     # - run: |
     #   echo "Run, Build Application using script"
     #   ./location_of_script_within_repo/buildscript.sh
+
+    - run: |
+        echo "Compile iipsrv"
+        sudo apt-get update && sudo apt-get install libfcgi-dev libtiff-dev libpng-dev libturbojpeg-dev libwebp-dev libavif-dev libmemcached-dev libopenjp2-7-dev
+        ./autogen.sh
+        ./configure
+        make
+
 
     - name: Perform CodeQL Analysis
       uses: github/codeql-action/analyze@v3
