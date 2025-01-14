@@ -1,3 +1,7 @@
+14/01/2025:
+	- Fix to TPTImage string concatenation bug, elimination of type warnings and documentation updates
+
+
 20/11/2024:
 	- Added TIFF output support for both regions (CVT=TIFF) and tiles (TTL=<resolution>,<tile number>). TIFF
 	  encoder handles all bit depths, alpha channels, ICC profiles and basic TIFF and XMP metadata.

@@ -1,4 +1,4 @@
-.TH IIPSRV 8 "October 2024" "Ruven Pillay"
+.TH IIPSRV 8 "January 2025" "Ruven Pillay"
 .SH NAME
 
 IIPSRV \- IIPImage Image Server
@@ -9,7 +9,7 @@ images. It is designed to be fast and bandwidth-efficient with low processor and
 well as advanced image features such as 8, 16 and 32 bit depths, CIELAB colorimetric images and scientific imagery such as multispectral images.
 Source images can be either TIFF (tiled multi-resolution), JPEG or JPEG2000 (if enabled).
 
-The image server can also dynamically export images in JPEG, PNG, WebP and AVIF format and perform basic image processing, such as contrast adjustment, gamma control, conversion from color to greyscale, color twist, region extraction and arbitrary rescaling. The server can also export spectral point or profile data from multispectral data and apply color maps or perform hillshading rendering.
+The image server can also dynamically export images in JPEG, PNG, WebP, AVIF and TIFF format and perform basic image processing, such as contrast adjustment, gamma control, conversion from color to greyscale, color twist, region extraction and arbitrary rescaling. The server can also export spectral point or profile data from multispectral data and apply color maps or perform hillshading rendering.
 
 .SH SYNOPSIS
 
@@ -55,6 +55,10 @@ The level of logging. 0 means no logging, 1 is minimal logging,
 a very large amount indeed. Logging is only enabled if
 .BR LOGFILE
 has also been defined.
+.IP TIFF_COMPRESSION
+The default compression encoder for TIFF output. 0 = None, 1 = LZW, 2 = Deflate, 3 = JPEG, 4 = WebP, 5 = ZStandard. The default is 2 (Deflate).
+.IP TIFF_QUALITY
+The default quality factor for compression when the client does not specify one. When using JPEG or WebP, value should be 0-100. For Deflate 1-9. For ZStandard 1-19. The default is 1.
 .IP JPEG_QUALITY
 The default JPEG quality factor for compression when the client
 does not specify one. The value should be between 1 (highest level

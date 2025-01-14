@@ -2,7 +2,7 @@
 
 /*  IIP Server: Tiled Pyramidal TIFF handler
 
-    Copyright (C) 2000-2024 Ruven Pillay.
+    Copyright (C) 2000-2025 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -543,7 +543,9 @@ RawTile TPTImage::getTile( int x, int y, unsigned int res, int layers, unsigned 
     // which returns an array of all tile sizes in current IFD
     uint64_t *bytecounts;
     if( !TIFFGetField( tiff, TIFFTAG_TILEBYTECOUNTS, &bytecounts ) ){
-      throw file_error( "TPTImage :: Unable to get byte count for tile " + tile );
+      ostringstream error;
+      error << "TPTImage :: Unable to get byte count for tile " << tile;
+      throw file_error( error.str() );
     }
     bytes = bytecounts[tile];
     if( IIPImage::logging ) logfile << "TPTImage :: Byte count for compressed tile: " << bytes << endl;

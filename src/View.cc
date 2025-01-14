@@ -1,7 +1,7 @@
 /*
     View Member Functions
 
-    Copyright (C) 2004-2024 Ruven Pillay.
+    Copyright (C) 2004-2025 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -88,7 +88,7 @@ unsigned int View::getResolution(){
       dimension = (int) (res_height*view_height*scale);
     }
 
-    while( resolution > 0 && ( dimension > (unsigned int) max_size ) ){
+    while( resolution > 0 && ( dimension > max_size ) ){
       dimension = (int) (dimension/2.0);
       res_width = (int) floor(res_width/2.0);
       res_height = (int) floor(res_height/2.0);
