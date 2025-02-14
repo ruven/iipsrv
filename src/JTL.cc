@@ -1,7 +1,7 @@
 /*
     IIP JTL Command Handler Class Member Function: Export a single tile
 
-    Copyright (C) 2006-2024 Ruven Pillay.
+    Copyright (C) 2006-2025 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -149,15 +149,22 @@ void JTL::send( Session* session, int resolution, int tile ){
   compressor->setMetadata( (*session->image)->metadata );
 
 
-  // Embed ICC profile
-  if( session->view->embedICC() && (*session->image)->metadata["icc"].size() > 0 ){
-    if( session->loglevel >= 3 ){
-      *(session->logfile) << "JTL :: Embedding ICC profile with size "
-			  << (*session->image)->getMetadata("icc").size() << " bytes" << endl;
+  // Embed ICC profile if we have one and it is of an acceptable size
+  if( (*session->image)->getMetadata("icc").size() > 0 ){
+    if( session->view->maxICC() == -1 || (*session->image)->getMetadata("icc").size() < (unsigned long) session->view->maxICC() ){
+      if( session->loglevel >= 3 ){
+	*(session->logfile) << "JTL :: Embedding ICC profile with size "
+			    << (*session->image)->getMetadata("icc").size() << " bytes" << endl;
+      }
+      compressor->embedICCProfile( true );
     }
-    compressor->embedICCProfile( true );
+    else{
+      if( session->loglevel >= 3 ){
+	*(session->logfile) << "JTL :: ICC profile with size "
+			    << (*session->image)->getMetadata("icc").size() << " bytes is too large: Not embedding" << endl;
+      }
+    }
   }
-
 
 
   RawTile rawtile = tilemanager.getTile( resolution, tile, session->view->xangle,

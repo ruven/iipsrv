@@ -1,3 +1,10 @@
+14/02/2024:
+	- Harmonizied ICC profile handling between JTL and CVT and replaced EMBED_ICC startup parameter with
+	  more flexible MAX_ICC parameter, which defines the maximum acceptable size for an ICC profile.
+	  Profiles larger than this are stripped out of the output image. If set to -1, profiles are always
+	  added and if set to 0 never.
+
+
 14/01/2025:
 	- Fix to TPTImage string concatenation bug, elimination of type warnings and documentation updates
 

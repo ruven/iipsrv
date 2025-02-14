@@ -451,8 +451,7 @@ URI_MAP: Set a mapping from a URL prefix to a supported protocol. This enables i
 
 CACHE_CONTROL: Set the HTTP Cache-Control header. See http://www.w3.org/Protocols/rfc2616/rfc2616-sec14.html#sec14.9 for a full list of options. If not set, header defaults to "max-age=86400" (24 hours).
 
-EMBED_ICC: Set whether the ICC profile is embedded within the output image.
-0 to strip profile, 1 to embed profile. The default is 1 (embedded profiles).
+MAX_ICC: Set the maximum ICC profile size in bytes that is allowed to be embedded within an output image. This is set by default to 65535 bytes. If set to -1, no limit is set and all profiles are embedded. If set to 0, no profiles are embedded.
 
 OMP_NUM_THREADS: Set the number of OpenMP threads to be used by the iipsrv image processing routines (See OpenMP specification for details). All available processor threads are used by default.
 

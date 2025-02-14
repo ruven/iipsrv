@@ -1,7 +1,7 @@
 /*
     Image View and Transform Parameters
 
-    Copyright (C) 2003-2024 Ruven Pillay.
+    Copyright (C) 2003-2025 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -76,7 +76,7 @@ class View{
   int flip;                                   /// Flip (1=horizontal, 2=vertical)
   bool maintain_aspect;                       /// Indicate whether aspect ratio should be maintained
   bool allow_upscaling;                       /// Indicate whether images may be served larger than the source file
-  bool embed_icc;                             /// Indicate whether we should embed ICC profiles
+  int max_icc;                                /// Maximum ICC profile size we allow to be embedded
   ImageEncoding output_format;                /// Requested output format
   float contrast;                             /// Contrast adjustment requested by CNT command
   float gamma;                                /// Gamma adjustment requested by GAM command
@@ -102,7 +102,7 @@ class View{
     maintain_aspect = true;
     allow_upscaling = true;
     colorspace = ColorSpace::NONE;
-    embed_icc = true;
+    max_icc = -1;
     output_format = ImageEncoding::JPEG;
     equalization = false;
     minmax = false;
@@ -134,20 +134,20 @@ class View{
   bool allowUpscaling(){ return allow_upscaling; };
 
 
-  /// Set the embed_icc flag
-  /** @param embed embed icc profile flag
+  /// Set the maximum ICC profile size we allow to be embedded
+  /** @param max maximum icc profile size
    */
-  void setEmbedICC( bool embed ){ embed_icc = embed; };
+  void setMaxICC( int max ){ max_icc = max; };
 
 
-  /// Get the embed_icc flag - disable in case of certain types of processing
-  /** @return whether ICC profile should be embedded
+  /// Get the maximum ICC profile size we allow to be embedded - disable if certain processing has been carried out
+  /** @return max ICC profile size
    */
-  bool embedICC(){
+  int maxICC(){
     // Disable if colour-mapping, twist, hill-shading or greyscale conversion applied
-    if( cmapped || shaded || ctw.size() || colorspace==ColorSpace::GREYSCALE ) return false;
-    return embed_icc;
-  };
+    if( cmapped || shaded || ctw.size() || colorspace==ColorSpace::GREYSCALE ) return 0;
+    return max_icc;
+  }
 
 
   /// Set the maximum view port dimension

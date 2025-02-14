@@ -1,7 +1,7 @@
 /*
     IIP Environment Variable Class
 
-    Copyright (C) 2006-2024 Ruven Pillay
+    Copyright (C) 2006-2025 Ruven Pillay
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -51,7 +51,7 @@
 #define CACHE_CONTROL "max-age=86400";  // 24 hours
 #define ALLOW_UPSCALING true
 #define URI_MAP ""
-#define EMBED_ICC true
+#define MAX_ICC 65536 // Max ICC profile size of 65k
 #define CODEC_PASSTHROUGH true
 #define KAKADU_READMODE 0
 #define IIIF_VERSION 3
@@ -381,12 +381,14 @@ class Environment {
   }
 
 
-  static unsigned int getEmbedICC(){
-    const char* envpara = getenv( "EMBED_ICC" );
-    bool embed;
-    if( envpara ) embed = atoi( envpara );
-    else embed = EMBED_ICC;
-    return embed;
+  static int getMaxICC(){
+    const char* envpara = getenv( "MAX_ICC" );
+    int max_icc;
+    if( envpara ){
+      max_icc = atoi( envpara );
+    }
+    else max_icc = MAX_ICC;
+    return max_icc;
   }
 
 

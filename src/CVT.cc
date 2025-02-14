@@ -1,7 +1,7 @@
 /*
     IIP CVT Command Handler Class Member Function
 
-    Copyright (C) 2006-2024 Ruven Pillay.
+    Copyright (C) 2006-2025 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -511,9 +511,9 @@ void CVT::send( Session* session ){
     }
   }
 
-  // Embed ICC profile if of a reasonable size
-  if( session->view->embedICC() && ((*session->image)->getMetadata("icc").size()>0) ){
-    if( (*session->image)->getMetadata("icc").size() < 65536 ){
+  // Embed ICC profile if we have one and it is of an acceptable size
+  if( (*session->image)->getMetadata("icc").size() > 0 ){
+    if( session->view->maxICC() == -1 || (*session->image)->getMetadata("icc").size() < (unsigned long) session->view->maxICC() ){
       if( session->loglevel >= 3 ){
 	*(session->logfile) << "CVT :: Embedding ICC profile with size "
 			    << (*session->image)->getMetadata("icc").size() << " bytes" << endl;

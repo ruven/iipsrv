@@ -1,7 +1,7 @@
 /*
     IIP FCGI server module - Main loop.
 
-    Copyright (C) 2000-2024 Ruven Pillay
+    Copyright (C) 2000-2025 Ruven Pillay
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -345,8 +345,8 @@ int main( int argc, char *argv[] )
   bool allow_upscaling = Environment::getAllowUpscaling();
 
 
-  // Get the ICC embedding setting
-  bool embed_icc = Environment::getEmbedICC();
+  // Get the max ICC profile size we allow to be embedded
+  int max_icc = Environment::getMaxICC();
 
 
   // Get codec passthrough setting
@@ -429,7 +429,9 @@ int main( int argc, char *argv[] )
       else logfile << max_layers << endl;
     }
     logfile << "Setting Allow Upscaling to " << (allow_upscaling? "true" : "false") << endl;
-    logfile << "Setting ICC profile embedding to " << (embed_icc? "true" : "false") << endl;
+    logfile << "Setting maximum ICC profile size to ";
+    if( max_icc < 0 ) logfile << "unlimited" << endl;
+    else logfile << max_icc << " bytes" << endl;
     logfile << "Setting codec passthrough to " << (IIPImage::codec_passthrough? "true" : "false") << endl;
     if( !copyright.empty() ) logfile << "Setting default rights/copyright statement to '" << copyright << "'" << endl;
     logfile << "Setting up TIFF support via " << TPTImage::getCodecVersion() << endl;
@@ -658,7 +660,7 @@ int main( int argc, char *argv[] )
     if( max_CVT != 0 ) view.setMaxSize( max_CVT );
     if( max_layers != 0 ) view.setMaxLayers( max_layers );
     view.setAllowUpscaling( allow_upscaling );
-    view.setEmbedICC( embed_icc );
+    view.setMaxICC( max_icc );
 
 
     // Create an IIPResponse object - we use this for the OBJ requests.
