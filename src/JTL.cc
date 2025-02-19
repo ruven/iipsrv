@@ -90,7 +90,7 @@ void JTL::send( Session* session, int resolution, int tile ){
   else compressor = session->jpeg;
 
 
-  TileManager tilemanager( session->tileCache, *session->image, session->watermark, compressor, session->logfile, session->loglevel );
+  TileManager tilemanager( session->tileCache, *session->image, compressor, session->logfile, session->loglevel );
 
 
   // First calculate histogram if we have asked for either binarization,
@@ -127,6 +127,7 @@ void JTL::send( Session* session, int resolution, int tile ){
 	   (*session->image)->getNumChannels()==3 && (*session->image)->getNumBitsPerPixel()==8 )
       || session->view->floatProcessing() || session->view->equalization
       || session->view->getRotation() != 0.0 || session->view->flip != 0
+      || ( session->watermark && (session->watermark)->isSet() )
       ) ct = ImageEncoding::RAW;
 
 
@@ -225,7 +226,7 @@ void JTL::send( Session* session, int resolution, int tile ){
       // Reset our contrast
       session->view->contrast = 1.0;
 
-      if( session->loglevel >= 5 ){
+      if( session->loglevel >= 4 ){
 	*(session->logfile) << "JTL :: Applying contrast stretch for image range of "
 			    << n0 << " - " << n1 << endl;
       }
@@ -398,13 +399,13 @@ void JTL::send( Session* session, int resolution, int tile ){
   // Apply flip
   if( session->view->flip != 0 ){
     Timer flip_timer;
-    if( session->loglevel >= 5 ){
+    if( session->loglevel >= 4 ){
       flip_timer.start();
     }
 
     session->processor->flip( rawtile, session->view->flip  );
 
-    if( session->loglevel >= 5 ){
+    if( session->loglevel >= 4 ){
       *(session->logfile) << "JTL :: Flipping image ";
       if( session->view->flip == 1 ) *(session->logfile) << "horizontally";
       else *(session->logfile) << "vertically";
@@ -424,6 +425,15 @@ void JTL::send( Session* session, int resolution, int tile ){
     if( session->loglevel >= 4 ){
       *(session->logfile) << " in " << function_timer.getTime() << " microseconds" << endl;
     }
+  }
+
+
+  // Apply the watermark if we have one. This should always be applied last
+  if( session->watermark && (session->watermark)->isSet() ){
+    if( session->loglevel >= 4 ) function_timer.start();
+    session->watermark->apply( rawtile.data, rawtile.width, rawtile.height, rawtile.channels, rawtile.bpc );
+    if( session->loglevel >= 4 ) *(session->logfile) << "JTL :: Watermark applied in " << function_timer.getTime()
+				 << " microseconds" << endl;
   }
 
 

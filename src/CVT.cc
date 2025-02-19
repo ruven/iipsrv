@@ -173,7 +173,7 @@ void CVT::send( Session* session ){
 
 
   // Set up our TileManager object
-  TileManager tilemanager( session->tileCache, *session->image, session->watermark, compressor, session->logfile, session->loglevel );
+  TileManager tilemanager( session->tileCache, *session->image, compressor, session->logfile, session->loglevel );
 
 
   // First calculate histogram if we have asked for either binarization,
@@ -493,6 +493,23 @@ void CVT::send( Session* session ){
       *(session->logfile) << "CVT :: Rotating image by " << rotation << " degrees in "
 			  << function_timer.getTime() << " microseconds" << endl;
     }
+  }
+
+
+  // Apply the watermark if we have one. This should always be applied last
+  if( session->watermark && (session->watermark)->isSet() ){
+
+    if( session->loglevel >= 5 ) function_timer.start();
+
+    unsigned int tw = (*session->image)->getTileWidth();
+    unsigned int th = (*session->image)->getTileHeight();
+
+    // Use a watermark block size of 2x the tile size of the image
+    session->watermark->apply( complete_image.data, complete_image.width, complete_image.height,
+			       complete_image.channels, complete_image.bpc, (tw>th ? tw : th)*2 );
+
+    if( session->loglevel >= 5 ) *(session->logfile) << "CVT :: Watermark applied in " << function_timer.getTime()
+						     << " microseconds" << endl;
   }
 
 

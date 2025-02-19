@@ -1,7 +1,7 @@
 /*
     IIP SPECTRA Command Handler Class Member Function
 
-    Copyright (C) 2009-2023 Ruven Pillay.
+    Copyright (C) 2009-2025 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -78,7 +78,7 @@ void SPECTRA::run( Session* session, const std::string& argument ){
   }
   
 
-  TileManager tilemanager( session->tileCache, *session->image, session->watermark, session->jpeg, session->logfile, session->loglevel );
+  TileManager tilemanager( session->tileCache, *session->image, session->jpeg, session->logfile, session->loglevel );
 
   // Use our horizontal views function to get a list of available spectral images
   list <int> views = (*session->image)->getHorizontalViewsList();

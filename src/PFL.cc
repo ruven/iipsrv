@@ -1,7 +1,7 @@
 /*
     IIP Profile Command Handler Class Member Function
 
-    Copyright (C) 2013-2022 Ruven Pillay.
+    Copyright (C) 2013-2025 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -118,7 +118,7 @@ void PFL::run( Session* session, const std::string& argument ){
 
 
   // Create our tilemanager object
-  TileManager tilemanager( session->tileCache, *session->image, session->watermark, session->jpeg, session->logfile, session->loglevel );
+  TileManager tilemanager( session->tileCache, *session->image, session->jpeg, session->logfile, session->loglevel );
 
 
   // Use our horizontal views function to get a list of available spectral images

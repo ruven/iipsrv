@@ -2,7 +2,7 @@
 
 /*  IIP Image Server
 
-    Copyright (C) 2005-2023 Ruven Pillay.
+    Copyright (C) 2005-2025 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -39,7 +39,6 @@
 #endif
 #include "Cache.h"
 #include "Timer.h"
-#include "Watermark.h"
 #include "Logger.h"
 
 
@@ -53,7 +52,6 @@ class TileManager{
   Cache* tileCache;
   Compressor* compressor;
   IIPImage* image;
-  Watermark* watermark;
   Logger* logfile;
   int loglevel;
   Timer compression_timer, tile_timer, insert_timer;
@@ -81,19 +79,16 @@ class TileManager{
   /**
    * @param tc pointer to tile cache object
    * @param im pointer to IIPImage object
-   * @param w  pointer to watermark object
    * @param c  pointer to Compressor object
    * @param s  pointer to Logger object
    * @param l  logging level
    */
-  TileManager( Cache* tc, IIPImage* im, Watermark* w, Compressor* c, Logger* s, int l ){
-    tileCache = tc; 
-    image = im;
-    watermark = w;
-    compressor = c;
-    logfile = s ;
-    loglevel = l;
-  };
+  TileManager( Cache* tc, IIPImage* im, Compressor* c, Logger* s, int l ) :
+    tileCache( tc ),
+    compressor( c ),
+    image( im ),
+    logfile( s ),
+    loglevel( l ) {};
 
 
 

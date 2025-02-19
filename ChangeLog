@@ -1,4 +1,13 @@
-14/02/2024:
+19/02/2025:
+	- Refactor of watermarking code to allow it to be applied to JPEG2000 and JPEG source images when
+	  requesting a region through the CVT function. Watermarking now applied as the very final step after
+	  all other processing carried out and if image dimensions are greater than 2x the tile size of the
+	  source image, the image is divided into blocks and multiple watermarks applied, one per block.
+	  Resolves https://github.com/ruven/iipsrv/issues/255. Implementation partially derived from
+	  https://github.com/ruven/iipsrv/pull/219
+
+
+14/02/2025:
 	- Harmonizied ICC profile handling between JTL and CVT and replaced EMBED_ICC startup parameter with
 	  more flexible MAX_ICC parameter, which defines the maximum acceptable size for an ICC profile.
 	  Profiles larger than this are stripped out of the output image. If set to -1, profiles are always

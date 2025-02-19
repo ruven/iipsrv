@@ -10,7 +10,7 @@
     Culture of the Czech Republic.
 
 
-    Copyright (C) 2010-2013 Ruven Pillay.
+    Copyright (C) 2010-2025 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -73,29 +73,27 @@ class Watermark {
  public:
 
   /// Constructor
-  Watermark(){
-    _isSet=false;
-    _watermark = NULL;
-    _opacity = 0.0;
-    _probability = 0.0;
-  };
+  Watermark() :
+    _isSet( false ),
+    _watermark( NULL ),
+    _opacity( 0.0 ),
+    _probability( 0.0 ) {};
 
   /// Constructor
   /** @param file image file path
       @param opacity opacity applied to watermark
       @param probability probability that watermark will be applied to a particular tile
    */
-  Watermark( const std::string& file, float opacity, float probability ){
-    _image = file;
-    _width = 0;
-    _height = 0;
-    _channels = 0;
-    _bpc = 0;
-    _opacity = opacity;
-    _probability = probability;
-    _isSet = false;
-    _watermark = NULL;
-  };
+  Watermark( const std::string& file, float opacity, float probability ) :
+    _image( file ),
+    _width( 0 ),
+    _height( 0 ),
+    _channels( 0 ),
+    _bpc( 0 ),
+    _opacity( opacity ),
+    _probability( probability ),
+    _isSet( false ),
+    _watermark( NULL ) {};
 
   /// Destructor
   ~Watermark(){
@@ -108,8 +106,10 @@ class Watermark {
       @param height tile height
       @param channels number of channels
       @param bpc bits per channel (8 or 16)
-    */
-  void apply( void* data, unsigned int width, unsigned int height, unsigned int channels, unsigned int bpc );
+      @param block size in pixels of square block size used for watermark tiling (optional).
+             By default image size is used and only a single watermark applied
+   */
+  void apply( void* data, unsigned int width, unsigned int height, unsigned int channels, unsigned int bpc, unsigned int block=0 );
 
   /// Return watermark image path
   std::string getImage(){ return _image; };
