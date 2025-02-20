@@ -74,22 +74,22 @@ class Watermark {
 
   /// Constructor
   Watermark() :
-    _isSet( false ),
-    _watermark( NULL ),
     _opacity( 0.0 ),
-    _probability( 0.0 ) {};
+    _probability( 0.0 ),
+    _isSet( false ),
+    _watermark( NULL ){};
 
   /// Constructor
   /** @param file image file path
       @param opacity opacity applied to watermark
-      @param probability probability that watermark will be applied to a particular tile
+      @param probability probability (in range 0.0 -> 1.0) that watermark will be applied to a particular tile
    */
   Watermark( const std::string& file, float opacity, float probability ) :
-    _image( file ),
     _width( 0 ),
     _height( 0 ),
     _channels( 0 ),
     _bpc( 0 ),
+    _image( file ),
     _opacity( opacity ),
     _probability( probability ),
     _isSet( false ),

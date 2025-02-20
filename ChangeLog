@@ -1,3 +1,7 @@
+20/02/2025:
+	- Re-ordered initializer lists in Watermark class constructor
+
+
 19/02/2025:
 	- Refactor of watermarking code to allow it to be applied to JPEG2000 and JPEG source images when
 	  requesting a region through the CVT function. Watermarking now applied as the very final step after
