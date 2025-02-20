@@ -150,9 +150,10 @@ void JTL::send( Session* session, int resolution, int tile ){
   compressor->setMetadata( (*session->image)->metadata );
 
 
-  // Embed ICC profile if we have one and it is of an acceptable size
-  if( (*session->image)->getMetadata("icc").size() > 0 ){
-    if( session->view->maxICC() == -1 || (*session->image)->getMetadata("icc").size() < (unsigned long) session->view->maxICC() ){
+  // Embed ICC profile if we have one and if embedding has been enabled at start-up
+  if( ( session->view->maxICC() != 0 ) && ( (*session->image)->getMetadata("icc").size() > 0 ) ){
+    // Only embed if profile is of an acceptable size or if acceptable size is unlimited (-1)
+    if( ( session->view->maxICC() == -1 ) || ( (*session->image)->getMetadata("icc").size() < (unsigned long)session->view->maxICC() ) ){
       if( session->loglevel >= 3 ){
 	*(session->logfile) << "JTL :: Embedding ICC profile with size "
 			    << (*session->image)->getMetadata("icc").size() << " bytes" << endl;
