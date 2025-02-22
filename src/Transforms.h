@@ -48,6 +48,13 @@ struct Transform {
   void LAB2sRGB( const float *in, float *out );
 
 
+  /// Private function to convert single pixel of sRGB to CIELAB
+  /** @param in input buffer
+      @param out output buffer
+  */
+  void sRGB2LAB( const float *in, float *out );
+
+
  public:
 
   /// Get description of processing engine
@@ -86,6 +93,11 @@ struct Transform {
   /// Convert from CIELAB to sRGB colour space
   /** @param in tile data to be converted */
   void LAB2sRGB( RawTile& in );
+
+
+  /// Convert from sRGB to CIELAB colour space
+  /** @param in tile data to be converted */
+  void sRGB2LAB( RawTile& in );
 
 
   /// Fast efficient scaling from higher fixed point bit depths to 8 bit

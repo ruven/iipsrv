@@ -41,24 +41,30 @@ static bool isfinite( float arg )
 
 
 
+/* Size threshold for using parallel loops (256x256 pixels)
+ */
+#define PARALLEL_THRESHOLD 65536
+
+
 /* D65 temp 6504.
  */
 #define D65_X0 95.0470
 #define D65_Y0 100.0
 #define D65_Z0 108.8827
 
-/* Size threshold for using parallel loops (256x256 pixels)
- */
-#define PARALLEL_THRESHOLD 65536
-
-
-/* XYZ to sRGB conversion matrix
+/* D65 XYZ <-> sRGB conversion matrices
  */
 static const float XYZ_sRGB[3][3] = { { 3.2406255, -1.537208, -0.4986286},
 				      {-0.9689307,  1.8757561, 0.0415175},
 				      { 0.0557101, -0.2040211, 1.0569959} };
 
+static const float sRGB_XYZ[3][3]  = { { 0.4124564,  0.3575761, 0.1804375},
+				       { 0.2126729,  0.7151522, 0.0721750},
+				       { 0.0193339,  0.1191920, 0.9503041} };
+
+
 using namespace std;
+
 
 
 // Normalization function
@@ -158,7 +164,7 @@ void Transform::normalize( RawTile& in, const vector<float>& max, const vector<f
   in.data = normdata;
   in.bpc = 32;
   in.sampleType = SampleType::FLOATINGPOINT;
-  in.dataLength = (uint32_t) np * (in.bpc/8);
+  in.dataLength = np << 2;
   in.capacity = in.dataLength;
 
 }
@@ -304,6 +310,65 @@ void Transform::LAB2sRGB( const float *in, float *out ){
 
 
 
+// Convert a single pixel from normalized sRGB to CIELAB
+void Transform::sRGB2LAB( const float *in, float *out ){
+
+  float R,G,B;
+  float X,Y,Z;
+  float L,a,b;
+
+  R = in[0];
+  G = in[1];
+  B = in[2];
+
+  // Linearize
+  if( R <= 0.04045 ) R /= 12.92;
+  else R = powf( ( (R+0.055) / 1.055 ), 2.4 );
+
+  if( G <= 0.04045 ) G /= 12.92;
+  else G = powf( ( (G+0.055) / 1.055 ), 2.4 );
+
+  if( B <= 0.04045 ) B /= 12.92;
+  else B = powf( ( (B+0.055) / 1.055 ), 2.4 );
+
+  // Linear RGB needs to be scaled to 100
+  R += 100.0;
+  G *= 100.0;
+  B *= 100.0;
+
+  // Convert from linear RGB to XYZ
+  X = (R * sRGB_XYZ[0][0]) + (G * sRGB_XYZ[0][1]) + (B * sRGB_XYZ[0][2]);
+  Y = (R * sRGB_XYZ[1][0]) + (G * sRGB_XYZ[1][1]) + (B * sRGB_XYZ[1][2]);
+  Z = (R * sRGB_XYZ[2][0]) + (G * sRGB_XYZ[2][1]) + (B * sRGB_XYZ[2][2]);
+
+  // Scale XYZ by illuminant
+  X /= D65_X0;
+  Y /= D65_Y0;
+  Z /= D65_Z0;
+
+  // Convert from XYZ to CIELAB
+  if( X > 0.008856452 ) X = cbrtf(X);
+  else                  X = ( 7.787037037 * X ) + 0.137931034;
+
+  if( Y > 0.008856452 ) Y = cbrtf(Y);
+  else                  Y = ( 7.787037037 * Y ) + 0.137931034;
+
+  if( Z > 0.008856452 ) Z = cbrtf(Z);
+  else                  Z = ( 7.787037037 * Z ) + 0.137931034;
+
+
+  L = ( 116.0 * Y ) - 16.0;
+  a = 500.0 * ( X - Y );
+  b = 200.0 * ( Y - Z );
+
+  // Return our CIELAB values
+  out[0] = L;
+  out[1] = a;
+  out[2] = b;
+}
+
+
+
 // Convert whole image from CIELAB to sRGB. Input data can be in 8 bit, 16 bit or floating point form
 void Transform::LAB2sRGB( RawTile& in ){
 
@@ -355,7 +420,7 @@ void Transform::LAB2sRGB( RawTile& in ){
     }
 
     // Perform color conversion on this pixel
-    LAB2sRGB( &cielab[0], &rgb[0] );
+    LAB2sRGB( cielab, rgb );
 
     output[n]   = rgb[0];
     output[n+1] = rgb[1];
@@ -371,6 +436,36 @@ void Transform::LAB2sRGB( RawTile& in ){
     in.bpc = 32;
     in.sampleType = SampleType::FLOATINGPOINT;
     in.dataLength = np << 2; // Multiply by 4 for float
+  }
+}
+
+
+
+// Convert whole image from sRGB to CIELAB - input should be normalized and in floating point format
+void Transform::sRGB2LAB( RawTile& in ){
+
+  uint32_t np = (uint32_t) in.width * in.height * in.channels;
+
+  // Parallelize code using OpenMP
+#if defined(__ICC) || defined(__INTEL_COMPILER)
+#pragma ivdep
+#elif defined(_OPENMP)
+#pragma omp parallel for
+#endif
+  for( uint32_t n=0; n<np; n+=in.channels ){
+
+    float rgb[3];
+    float cielab[3];
+
+    rgb[0] = ((float*)in.data)[n];
+    rgb[1] = ((float*)in.data)[n+1];
+    rgb[2] = ((float*)in.data)[n+2];
+
+    sRGB2LAB( rgb, cielab );
+
+    ((float*)in.data)[n]   = cielab[0];
+    ((float*)in.data)[n+1] = cielab[1];
+    ((float*)in.data)[n+2] = cielab[2];
   }
 }
 
