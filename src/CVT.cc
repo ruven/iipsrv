@@ -234,6 +234,12 @@ void CVT::send( Session* session ){
     vector <float> min = (*session->image)->min;
     vector <float> max = (*session->image)->max;
 
+    // If we have converted from CIELAB, data will already be normalized and in floating point
+    if( (*session->image)->getColorSpace() == ColorSpace::CIELAB ){
+      min = vector<float>( complete_image.channels, 0.0 );
+      max = vector<float>( complete_image.channels, 1.0 );
+    }
+
     // Change our image max and min if we have asked for a contrast stretch
     if( session->view->contrast == -1 ){
 

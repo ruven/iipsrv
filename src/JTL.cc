@@ -204,6 +204,12 @@ void JTL::send( Session* session, int resolution, int tile ){
     vector <float> min = (*session->image)->min;
     vector <float> max = (*session->image)->max;
 
+    // If we have converted from CIELAB, data will already be normalized and in floating point
+    if( (*session->image)->getColorSpace() == ColorSpace::CIELAB ){
+      min = vector<float>( rawtile.channels, 0.0 );
+      max = vector<float>( rawtile.channels, 1.0 );
+    }
+
     // Change our image max and min if we have asked for a contrast stretch
     if( session->view->contrast == -1 ){
 

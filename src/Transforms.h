@@ -1,7 +1,7 @@
 /*
     Image Transforms
 
-    Copyright (C) 2004-2022 Ruven Pillay.
+    Copyright (C) 2004-2025 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -45,7 +45,7 @@ struct Transform {
   /** @param in input buffer
       @param out output buffer
   */
-  void LAB2sRGB( unsigned char *in, unsigned char *out );
+  void LAB2sRGB( const float *in, float *out );
 
 
  public:

@@ -2,7 +2,7 @@
 
 /*  IIPImage image processing routines
 
-    Copyright (C) 2004-2024 Ruven Pillay.
+    Copyright (C) 2004-2025 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -52,9 +52,11 @@ static bool isfinite( float arg )
 #define PARALLEL_THRESHOLD 65536
 
 
-static const float _sRGB[3][3] = { { 3.2406255, -1.537208, -0.4986286},
-				   {-0.9689307,  1.8757561, 0.0415175},
-				   { 0.0557101, -0.2040211, 1.0569959} };
+/* XYZ to sRGB conversion matrix
+ */
+static const float XYZ_sRGB[3][3] = { { 3.2406255, -1.537208, -0.4986286},
+				      {-0.9689307,  1.8757561, 0.0415175},
+				      { 0.0557101, -0.2040211, 1.0569959} };
 
 using namespace std;
 
@@ -88,6 +90,10 @@ void Transform::normalize( RawTile& in, const vector<float>& max, const vector<f
 
     // Normalize our data
     if( in.bpc == 32 && in.sampleType == SampleType::FLOATINGPOINT ) {
+
+      // Skip if channel data already normalized
+      if( min[c] == 0.0 && max[c] == 1.0 ) continue;
+
       fptr = (float*)in.data;
       // Loop through our pixels for floating point pixels
 #if defined(__ICC) || defined(__INTEL_COMPILER)
@@ -232,27 +238,18 @@ void Transform::shade( RawTile& in, int h_angle, int v_angle ){
 
 
 // Convert a single pixel from CIELAB to sRGB
-void Transform::LAB2sRGB( unsigned char *in, unsigned char *out ){
+void Transform::LAB2sRGB( const float *in, float *out ){
 
-  /* First convert to XYZ
-   */
-  int l;
   float L, a, b;
   float X, Y, Z;
   double cby, tmp;
-  double R, G, B;
+  float R, G, B;
 
-  /* Extract our LAB - packed in TIFF as unsigned char for L
-     and signed char for a/b. We also need to rescale
-     correctly to 0-100 for L and -127 -> +127 for a/b.
-  */
-  L = (float) ( in[0] / 2.55 );
-  l = ( (signed char*)in )[1];
-  a = (float) l;
-  l = ( (signed char*)in )[2];
-  b = (float) l;
+  L = in[0];
+  a = in[1];
+  b = in[2];
 
-
+  // Convert CIELAB to XYZ
   if( L < 8.0 ) {
     Y = (L * D65_Y0) / 903.3;
     cby = 7.787 * (Y / D65_Y0) + 16.0 / 116.0;
@@ -274,55 +271,50 @@ void Transform::LAB2sRGB( unsigned char *in, unsigned char *out ){
   Y /= 100.0;
   Z /= 100.0;
 
-  /* Then convert to sRGB
-   */
-  R = (X * _sRGB[0][0]) + (Y * _sRGB[0][1]) + (Z * _sRGB[0][2]);
-  G = (X * _sRGB[1][0]) + (Y * _sRGB[1][1]) + (Z * _sRGB[1][2]);
-  B = (X * _sRGB[2][0]) + (Y * _sRGB[2][1]) + (Z * _sRGB[2][2]);
+  // Convert from XYZ to sRGB
+  R = (X * XYZ_sRGB[0][0]) + (Y * XYZ_sRGB[0][1]) + (Z * XYZ_sRGB[0][2]);
+  G = (X * XYZ_sRGB[1][0]) + (Y * XYZ_sRGB[1][1]) + (Z * XYZ_sRGB[1][2]);
+  B = (X * XYZ_sRGB[2][0]) + (Y * XYZ_sRGB[2][1]) + (Z * XYZ_sRGB[2][2]);
 
-  /* Clip any -ve values
-   */
+  // Clip any -ve values
   R = (R<0.0 ? 0.0 : R);
   G = (G<0.0 ? 0.0 : G);
   B = (B<0.0 ? 0.0 : B);
 
-  /* We now need to convert these to non-linear display values
-   */
+  // We now need to convert these to non-linear display values
   if( R <= 0.0031308 ) R *= 12.92;
-  else R = 1.055 * pow( R, 1.0/2.4 ) - 0.055;
+  else R = 1.055 * powf( R, 1.0/2.4 ) - 0.055;
 
   if( G <= 0.0031308 ) G *= 12.92;
-  else G = 1.055 * pow( G, 1.0/2.4 ) - 0.055;
+  else G = 1.055 * powf( G, 1.0/2.4 ) - 0.055;
 
   if( B <= 0.0031308 ) B *= 12.92;
-  else B = 1.055 * pow( B, 1.0/2.4 ) - 0.055;
+  else B = 1.055 * powf( B, 1.0/2.4 ) - 0.055;
 
-  /* Scale to 8bit
-   */
-  R *= 255.0;
-  G *= 255.0;
-  B *= 255.0;
+  // Clip to 0.0 - 1.0
+  R = (R>1.0 ? 1.0 : R);
+  G = (G>1.0 ? 1.0 : G);
+  B = (B>1.0 ? 1.0 : B);
 
-  /* Clip to our 8 bit limit
-   */
-  R = (R>255.0 ? 255.0 : R);
-  G = (G>255.0 ? 255.0 : G);
-  B = (B>255.0 ? 255.0 : B);
-
-  /* Return our sRGB values
-   */
-  out[0] = (unsigned char) R;
-  out[1] = (unsigned char) G;
-  out[2] = (unsigned char) B;
-
+  // Return our normalized sRGB values
+  out[0] = R;
+  out[1] = G;
+  out[2] = B;
 }
 
 
 
-// Convert whole tile from CIELAB to sRGB
+// Convert whole image from CIELAB to sRGB. Input data can be in 8 bit, 16 bit or floating point form
 void Transform::LAB2sRGB( RawTile& in ){
 
   uint32_t np = (uint32_t) in.width * in.height * in.channels;
+
+  // Output data should always be floating point
+  float *output;
+
+  // Set up our output buffer depending on input data type. If not already floating point, create new buffer
+  if( in.sampleType == SampleType::FLOATINGPOINT ) output = ((float*)in.data);
+  else output = new float[np];
 
   // Parallelize code using OpenMP
 #if defined(__ICC) || defined(__INTEL_COMPILER)
@@ -331,12 +323,54 @@ void Transform::LAB2sRGB( RawTile& in ){
 #pragma omp parallel for
 #endif
   for( uint32_t n=0; n<np; n+=in.channels ){
-    unsigned char* ptr = (unsigned char*) in.data;
-    unsigned char q[3];
-    LAB2sRGB( &ptr[n], &q[0] );
-    ((unsigned char*)in.data)[n] = q[0];
-    ((unsigned char*)in.data)[n+1] = q[1];
-    ((unsigned char*)in.data)[n+2] = q[2];
+
+    float rgb[3];
+    float cielab[3];
+
+    // 8 and 16 bit TIFF require unpacking
+    if( in.sampleType == SampleType::FIXEDPOINT && in.bpc == 8 ){
+      unsigned char *data = (unsigned char*) in.data;
+      unsigned char *ptr = &data[n];
+      cielab[0] = (float)(ptr[0]) / 2.55;
+      float v = ((signed char*)ptr)[1];
+      cielab[1] = v;
+      v = ((signed char*)ptr)[2];
+      cielab[2] = v;
+    }
+    else if( in.sampleType == SampleType::FIXEDPOINT && in.bpc == 16 ){
+      unsigned short *data = (unsigned short*) in.data;
+      unsigned short *ptr = &data[n];
+      cielab[0] = (ptr[0]>>1) / 327.67;
+      float l = ((short*)ptr)[1] >> 8;
+      cielab[1] = l;
+      l = ((short*)ptr)[2] >> 8;
+      cielab[2] = l;
+    }
+    // Floating point TIFF can be read directly
+    else if( in.sampleType == SampleType::FLOATINGPOINT ){
+      float *data = (float*) in.data;
+      cielab[0] = data[n];
+      cielab[1] = data[n+1];
+      cielab[2] = data[n+2];
+    }
+
+    // Perform color conversion on this pixel
+    LAB2sRGB( &cielab[0], &rgb[0] );
+
+    output[n]   = rgb[0];
+    output[n+1] = rgb[1];
+    output[n+2] = rgb[2];
+  }
+
+  // If input was not floating point, update image metadata
+  if( in.sampleType == SampleType::FIXEDPOINT ){
+    if( in.bpc == 8 ) delete[] (unsigned char*) in.data;
+    else if( in.bpc == 16 ) delete[] (unsigned short*) in.data;
+    in.data = (void*) output;
+    in.memoryManaged = 1;
+    in.bpc = 32;
+    in.sampleType = SampleType::FLOATINGPOINT;
+    in.dataLength = np << 2; // Multiply by 4 for float
   }
 }
 
