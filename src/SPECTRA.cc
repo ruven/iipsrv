@@ -61,7 +61,6 @@ void SPECTRA::run( Session* session, const std::string& argument ){
   int x = atoi( arg.substr(0,delimitter).c_str() );
 
   arg = arg.substr( delimitter + 1, arg.length() );
-  delimitter = arg.find( "," );
   int y = atoi( arg.substr(0,arg.length()).c_str() );
 
   if( session->loglevel >= 5 ){ 

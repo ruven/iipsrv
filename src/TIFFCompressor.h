@@ -42,7 +42,7 @@ typedef tiff_mem* tiff_mem_ptr;
 class TIFFCompressor: public Compressor {
 
  private:
-  unsigned int width, height, channels, bpc;
+  unsigned int height;
   int tiff_compression;
   tiff_mem dest;
   TIFF *tiff;
@@ -75,7 +75,7 @@ class TIFFCompressor: public Compressor {
   /** @param enc compression type
       @param quality compression level
   */
-  TIFFCompressor( int compression, int quality ) : Compressor(quality), tiff(NULL)
+  TIFFCompressor( int compression, int quality ) : Compressor(quality), height(0), tiff(NULL)
   {
     this->setCompression( compression );
 

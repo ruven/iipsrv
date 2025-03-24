@@ -1,3 +1,7 @@
+24/02/2024:
+	- Minor cleanups to improve constructor initialization and remove unused variables
+
+
 22/02/2025:
 	- Updated CIELAB decoding to fully handle 8 and 16 bit as well as floating point images.
 	- Added new sRGB2LAB() function.

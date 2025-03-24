@@ -5,7 +5,7 @@
     * (www.oldmapsonline.org) from Ministry of Culture of the Czech Republic      *
 
 
-    Copyright (C) 2008-2022 Ruven Pillay.
+    Copyright (C) 2008-2025 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -138,9 +138,8 @@ void Zoomify::run( Session* session, const std::string& argument ){
   }
 
 
-  // Get the width and height for the requested resolution
+  // Get the width for the requested resolution
   width = (*session->image)->getImageWidth(numResolutions-resolution-1);
-  height = (*session->image)->getImageHeight(numResolutions-resolution-1);
 
 
   // Get the width of the tiles and calculate the number

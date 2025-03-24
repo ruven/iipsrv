@@ -410,7 +410,7 @@ int main( int argc, char *argv[] )
 #endif
 #ifdef HAVE_AVIF
     logfile << "Setting default AVIF compression level to ";
-    if( webp_quality == -1 ) logfile << "lossless" << endl;
+    if( avif_quality == -1 ) logfile << "lossless" << endl;
     else logfile << avif_quality << endl;
     logfile << "Setting AVIF codec to " << AVIFCompressor::getCodecName( avif_codec ) << endl;
 #endif
