@@ -1,7 +1,7 @@
 /*
     IIP Command Handler Member Functions
 
-    Copyright (C) 2006-2024 Ruven Pillay.
+    Copyright (C) 2006-2025 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -579,7 +579,7 @@ void CTW::run( Session* session, const string& src ){
 	if( session->loglevel >= 1 ) *(session->logfile) << error << endl;
       }
     }
-    session->view->ctw.push_back( row );
+    session->view->ctw.push_back( std::move(row) );
   }
 
   if( session->loglevel >= 3 ){
@@ -706,7 +706,7 @@ void CNV::run( Session* session, const string& src ){
       }
     }
     else {
-      session->view->convolution = kernel;
+      session->view->convolution = std::move(kernel);
     }
   }
 

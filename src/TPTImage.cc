@@ -630,7 +630,6 @@ RawTile TPTImage::getTile( int x, int y, unsigned int res, int layers, unsigned 
       throw file_error( "TPTImage :: TIFFReadEncodedTile() failed for " + getFileName( x, y ) );
     }
     rawtile.dataLength = length;
-    rawtile.quality = 100;
     rawtile.compressionType = ImageEncoding::RAW;
   }
 
@@ -727,7 +726,7 @@ void TPTImage::loadStackInfo()
       horizontalAnglesList.push_back(n++);
       if( TIFFGetField( tiff, TIFFTAG_DOCUMENTNAME, &tmp ) ) s.name = string(tmp);
       if( TIFFGetField( tiff, TIFFTAG_STONITS, &scale ) ) s.scale = (float) scale;
-      stack.push_back( s );
+      stack.push_back( std::move(s) );
     }
   } while( TIFFReadDirectory(tiff) );
 

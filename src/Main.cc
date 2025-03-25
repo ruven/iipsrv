@@ -482,7 +482,7 @@ int main( int argc, char *argv[] )
       if( prtcl == "iip" ) prtcl = "fif";
 
       // Initialize our map
-      if( supported_protocol ) uri_map[prefix] = prtcl;
+      if( supported_protocol ) uri_map[prefix] = std::move(prtcl);
     }
     else if( loglevel > 0 ) logfile << "Malformed URI map: " << uri_map_string << endl;
 
@@ -836,7 +836,7 @@ int main( int argc, char *argv[] )
 	int n = token.find_first_of( "=" );
 	p.first = token.substr( 0, n );
 	p.second = token.substr( n+1, token.length() );
-	if( p.first.length() && p.second.length() ) requests.push_back( p );
+	if( p.first.length() && p.second.length() ) requests.push_back( std::move(p) );
       }
 
 

@@ -1,4 +1,9 @@
-24/02/2024:
+25/03/2025:
+	- Added missing quality level copy to output from TIFF encoding.
+	- Switched STL container element addition to std::move to enable faster move semantics
+
+
+24/02/2025:
 	- Minor cleanups to improve constructor initialization and remove unused variables
 
 

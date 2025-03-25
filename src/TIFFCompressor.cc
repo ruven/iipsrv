@@ -1,7 +1,7 @@
 /*  IIP TIFF Compressor Class:
     Handles 8, 16 or 32 bit data, alpha channels, ICC profiles and XMP metadata
 
-    Copyright (C) 2024 Ruven Pillay
+    Copyright (C) 2024-2025 Ruven Pillay
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -294,9 +294,10 @@ unsigned int TIFFCompressor::Compress( RawTile& rawtile )
   // Free our memory buffer
   free( dest.buffer );
 
-  // Update data size and type
+  // Update data size, encoding type and compression level
   rawtile.dataLength = len;
   rawtile.compressionType = ImageEncoding::TIFF;
+  rawtile.quality = this->Q;
 
   return rawtile.dataLength;
 

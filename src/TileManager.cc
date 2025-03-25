@@ -203,12 +203,13 @@ RawTile TileManager::getTile( int resolution, int tile, int xangle, int yangle, 
   if( loglevel >= 3 ){
     // Define our compression names for logging purposes
     switch( ctype ){
-      case ImageEncoding::JPEG: compName = "JPEG"; break;
-      case ImageEncoding::PNG: compName = "PNG"; break;
-      case ImageEncoding::WEBP: compName = "WebP"; break;
-      case ImageEncoding::AVIF: compName = "AVIF"; break;
+      case ImageEncoding::JPEG:    compName = "JPEG";    break;
+      case ImageEncoding::TIFF:    compName = "TIFF";    break;
+      case ImageEncoding::PNG:     compName = "PNG";     break;
+      case ImageEncoding::WEBP:    compName = "WebP";    break;
+      case ImageEncoding::AVIF:    compName = "AVIF";    break;
       case ImageEncoding::DEFLATE: compName = "DEFLATE"; break;
-      case ImageEncoding::RAW: compName = "RAW"; break;
+      case ImageEncoding::RAW:     compName = "RAW";     break;
       default: break;
     }
   }
@@ -277,7 +278,8 @@ RawTile TileManager::getTile( int resolution, int tile, int xangle, int yangle, 
 
     if( loglevel >= 3 ) *logfile << "TileManager :: Total tile access time: "
 				 << tile_timer.getTime() << " microseconds" << endl;
-    return RawTile( ttt );
+
+    return RawTile( std::move(ttt) );
   }
 
   if( loglevel >= 3 ) *logfile << "TileManager :: Total tile access time: "
