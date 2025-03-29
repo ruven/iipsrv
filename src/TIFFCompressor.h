@@ -1,7 +1,7 @@
 /*  IIP TIFF Compressor Class:
     Handles alpha channels, 8 or 16 bit data, ICC profiles and XMP metadata
 
-    Copyright (C) 2024 Ruven Pillay
+    Copyright (C) 2024-2025 Ruven Pillay
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -28,17 +28,20 @@
 #include <tiffio.h>
 
 
+
 /// Structure to handle memory-based TIFF writing
 typedef struct {
-  unsigned char *buffer;   /// Data buffer
-  toff_t current;          /// Current byte position within stream
-  toff_t end;              /// Last written byte
-  toff_t capacity;         /// Allocated buffer size
+  unsigned char *buffer;   ///< Data buffer
+  toff_t current;          ///< Current byte position within stream
+  toff_t end;              ///< Last written byte
+  toff_t capacity;         ///< Allocated buffer size
 } tiff_mem;
 
 typedef tiff_mem* tiff_mem_ptr;
 
 
+
+/// TIFF encoder class
 class TIFFCompressor: public Compressor {
 
  private:
@@ -72,7 +75,7 @@ class TIFFCompressor: public Compressor {
  public:
 
   /// Constructor
-  /** @param enc compression type
+  /** @param compression compression (encoding) type: 0: None, 1: LZW, 2: Deflate, 3: JPEG, 4: WebP, 5: ZStandard
       @param quality compression level
   */
   TIFFCompressor( int compression, int quality ) : Compressor(quality), height(0), tiff(NULL)
@@ -86,8 +89,9 @@ class TIFFCompressor: public Compressor {
 
 
 
-  /// Set compression type: 0: None, 1: LZW, 2: Deflate, 3: JPEG, 4: WebP
-  /** @param compression compression type */
+  /// Set compression type: 0: None, 1: LZW, 2: Deflate, 3: JPEG, 4: WebP, 5: ZStandard
+  /** @param compression compression type
+   */
   inline void setCompression( int compression )
   {
     if      ( compression == 1 ) this->compression = COMPRESSION_LZW;
@@ -165,7 +169,7 @@ class TIFFCompressor: public Compressor {
 
 
   /// Static utility function to get compression in human-readable form
-  /** @param comp compression code
+  /** @param code compression code
       @return human-readable compression name
   */
   static inline std::string getCompressionName( int code )

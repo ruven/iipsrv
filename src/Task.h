@@ -1,7 +1,7 @@
 /*
     IIP Session & Generic Task Classes
 
-    Copyright (C) 2006-2024 Ruven Pillay
+    Copyright (C) 2006-2025 Ruven Pillay
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -215,10 +215,10 @@ class ROT : public Task {
 class FIF : public Task {
  public:
   /// Store some necessary environment variables
-  static long max_metadata_cache_size;
-  static std::string filesystem_prefix;
-  static std::string filesystem_suffix;
-  static std::string filename_pattern;
+  static long max_metadata_cache_size;          ///< Metadata cache size in bytes
+  static std::string filesystem_prefix;         ///< File system prefix
+  static std::string filesystem_suffix;         ///< File system suffix
+  static std::string filename_pattern;          ///< File name pattern for image sequences
   void run( Session* session, const std::string& argument );
 };
 

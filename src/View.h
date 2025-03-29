@@ -41,15 +41,15 @@ class View{
   // Resolution independent x,y,w,h region viewport in range 0 -> 1.0
   float view_left, view_top, view_width, view_height; /// viewport
 
-  int resolution;                             /// Requested resolution where 0 is smallest available
-  unsigned int max_resolutions;               /// Total available resolutions
-  unsigned int width, height;                 /// Image width and height at full resolution
-  unsigned int res_width, res_height;         /// Width and height at requested resolution
-  unsigned int min_size;                      /// Minimum viewport dimension
-  int max_size;                               /// Maximum viewport dimension
-  unsigned int requested_width;               /// Width requested by WID command
-  unsigned int requested_height;              /// Height requested by HEI command
-  float rotation;                             /// Rotation requested by ROT command
+  int resolution;                             ///< Requested resolution where 0 is smallest available
+  unsigned int max_resolutions;               ///< Total available resolutions
+  unsigned int width, height;                 ///< Image width and height at full resolution
+  unsigned int res_width, res_height;         ///< Width and height at requested resolution
+  unsigned int min_size;                      ///< Minimum viewport dimension
+  int max_size;                               ///< Maximum viewport dimension
+  unsigned int requested_width;               ///< Width requested by WID command
+  unsigned int requested_height;              ///< Height requested by HEI command
+  float rotation;                             ///< Rotation requested by ROT command
 
 
   /// Internal function to calculate the optimal resolution associated with a width
@@ -62,27 +62,27 @@ class View{
 
  public:
 
-  int xangle;                                 /// Horizontal View
-  int yangle;                                 /// Vertical View
-  bool shaded;                                /// Whether to use shading view
-  int shade[3];                               /// Shading incident light angles (x,y,z)
-  bool cmapped;                               /// Whether to modify colormap
-  enum cmap_type cmap;                        /// colormap
-  bool inverted;                              /// Whether to invert colormap
-  int max_layers;			      /// Maximum number of quality layers allowed
-  int layers;			              /// Number of quality layers
-  ColorSpace colorspace;                      /// Requested colorspace
-  std::vector< std::vector<float> > ctw;      /// Colour twist matrix
-  int flip;                                   /// Flip (1=horizontal, 2=vertical)
-  bool maintain_aspect;                       /// Indicate whether aspect ratio should be maintained
-  bool allow_upscaling;                       /// Indicate whether images may be served larger than the source file
-  int max_icc;                                /// Maximum ICC profile size we allow to be embedded
-  ImageEncoding output_format;                /// Requested output format
-  float contrast;                             /// Contrast adjustment requested by CNT command
-  float gamma;                                /// Gamma adjustment requested by GAM command
-  std::vector<float> convolution;             /// Convolution matrix
-  bool equalization;                          /// Whether to perform histogram equalization
-  bool minmax;                                /// Whether to perform contrast stretching using user-defined min/max
+  int xangle;                                 ///< Horizontal View
+  int yangle;                                 ///< Vertical View
+  bool shaded;                                ///< Whether to use shading view
+  int shade[3];                               ///< Shading incident light angles (x,y,z)
+  bool cmapped;                               ///< Whether to modify colormap
+  enum cmap_type cmap;                        ///< colormap
+  bool inverted;                              ///< Whether to invert colormap
+  int max_layers;                             ///< Maximum number of quality layers allowed
+  int layers;                                 ///< Number of quality layers
+  ColorSpace colorspace;                      ///< Requested colorspace
+  std::vector< std::vector<float> > ctw;      ///< Colour twist matrix
+  int flip;                                   ///< Flip (1=horizontal, 2=vertical)
+  bool maintain_aspect;                       ///< Indicate whether aspect ratio should be maintained
+  bool allow_upscaling;                       ///< Indicate whether images may be served larger than the source file
+  int max_icc;                                ///< Maximum ICC profile size we allow to be embedded
+  ImageEncoding output_format;                ///< Requested output format
+  float contrast;                             ///< Contrast adjustment requested by CNT command
+  float gamma;                                ///< Gamma adjustment requested by GAM command
+  std::vector<float> convolution;             ///< Convolution matrix
+  bool equalization;                          ///< Whether to perform histogram equalization
+  bool minmax;                                ///< Whether to perform contrast stretching using user-defined min/max
 
 
   /// Constructor

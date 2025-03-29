@@ -2,7 +2,7 @@
 
 /*  IIP fcgi server module
 
-    Copyright (C) 2000-2024 Ruven Pillay.
+    Copyright (C) 2000-2025 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -49,21 +49,21 @@ class file_error : public std::runtime_error {
 
 
 
-// Structure for storing basic information on image stacks
-// - for now just stores stack name and scaling factor
+/// Structure for storing basic information on image stacks
+/// - for now just stores stack name and scaling factor
 struct Stack {
-  std::string name;
-  float scale;
-  Stack() : scale(1) {};
+  std::string name;         ///< Stack layer name
+  float scale;              ///< Pixel scaling factor
+  Stack() : scale(1) {};    ///< Constructor
 };
 
 
 
-/// Main class to handle the pyramidal image source
+/// Base class to handle the input image sources
 /** Provides functions to open, get various information from an image source
     and get individual tiles. This class is the base class for specific image
     file formats such as Tiled Pyramidal TIFF images via TPTImage.h and
-    JPEG2000 via Kakadu.h
+    JPEG2000 via KakaduImage.h or OpenJPEGImage.h
  */
 
 class IIPImage {

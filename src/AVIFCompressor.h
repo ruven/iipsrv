@@ -1,7 +1,7 @@
 /*  AVIF Compressor Class:
     Handles alpha channels, ICC profiles and XMP metadata
 
-    Copyright (C) 2024 Ruven Pillay
+    Copyright (C) 2024-2025 Ruven Pillay
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -59,7 +59,7 @@ class AVIFCompressor : public Compressor {
  public:
 
   /// Constructor
-  /** @param compressionLevel WebP compression level (range 0-100)
+  /** @param quality WebP compression level (range 0-100)
    */
   AVIFCompressor( int quality ) : Compressor(quality) {};
 
@@ -121,7 +121,7 @@ class AVIFCompressor : public Compressor {
 
 
   /// Set the compression level
-  /** @param compression level: 0-100 with (0 = highest compression). -1 = lossless
+  /** @param quality compression level: 0-100 with (0 = highest compression). -1 = lossless
    */
   inline void setQuality( int quality ){
 

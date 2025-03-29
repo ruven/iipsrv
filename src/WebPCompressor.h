@@ -133,7 +133,7 @@ class WebPCompressor : public Compressor {
 
 
   /// Set the compression level
-  /** @param compression level: 0-100 with (0 = highest compression)
+  /** @param quality compression level: 0-100 with (0 = highest compression)
    */
   inline void setQuality( int quality ){
 

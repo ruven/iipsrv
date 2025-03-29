@@ -1,7 +1,7 @@
 /*
     IIP Response Handler Class
 
-    Copyright (C) 2003-2023 Ruven Pillay.
+    Copyright (C) 2003-2025 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -80,7 +80,9 @@ class IIPResponse{
 
 
   /// Set Content Disposition header
-  /** @param name File name for Content-disposition header */
+  /** @param name file name for Content-disposition header
+      @param type content type (inline by default)
+   */
   void setContentDisposition( const std::string& name, const std::string& type = "inline" ) {
     contentDisposition = "Content-Disposition: " + type + "; filename=\"" + name + "\"";
   }

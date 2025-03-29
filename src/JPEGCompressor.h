@@ -1,6 +1,6 @@
 /*  JPEG class wrapper to ijg libjpeg library
 
-    Copyright (C) 2000-2024 Ruven Pillay.
+    Copyright (C) 2000-2025 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -111,7 +111,6 @@ class JPEGCompressor: public Compressor{
       CompressStrip and finally clean up using Finish
       @param rawtile tile containing the image to be compressed
       @param strip_height pixel height of the strip we want to compress
-      @return header size
    */
   void InitCompression( const RawTile& rawtile, unsigned int strip_height );
 

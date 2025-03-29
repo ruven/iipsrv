@@ -1,6 +1,6 @@
 /*  Generic compressor class - extended by JPEG and PNG Compressor classes
 
-    Copyright (C) 2017-2024 Ruven Pillay
+    Copyright (C) 2017-2025 Ruven Pillay
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -44,27 +44,35 @@ class Compressor {
   /// Size of the header data
   unsigned int header_size;
 
-  /// Physical resolution for X and Y directions
-  float dpi_x, dpi_y;
-
-  /// Resolution units
-  /** Units can be 0 for unknown, 1 for dots/inch or 2 for dots/cm */
+  /// Physical resolution units: 0 for unknown, 1 for dots/inch or 2 for dots/cm
   int dpi_units;
+
+  /// Physical resolution (pixels per physical unit) for X direction
+  float dpi_x;
+
+  /// Physical resolution (pixels per phyisical unit) in Y direction
+  float dpi_y;
 
   /// Metadata
   std::map <const std::string, const std::string> metadata;
 
   /// ICC Profile
-  bool embedICC;
   std::string icc;
 
+  /// Whether ICC profile should be embedded
+  bool embedICC;
+
   /// XMP metadata
-  bool embedXMP;
   std::string xmp;
 
-  // EXIF metadata
-  bool embedEXIF;
+  /// Whether XMP metadata should be embedded
+  bool embedXMP;
+
+  /// EXIF metadata
   std::string exif;
+
+  /// Whether EXIF metadata should be embedded
+  bool embedEXIF;
 
   /// Write metadata
   virtual void writeMetadata() {};
@@ -91,9 +99,9 @@ class Compressor {
     default_quality( true ),
     header( NULL ),
     header_size( 0 ),
+    dpi_units( 0 ),
     dpi_x( 0 ),
     dpi_y( 0 ),
-    dpi_units( 0 ),
     embedICC( false ),
     embedXMP( false ),
     embedEXIF( false ) {};

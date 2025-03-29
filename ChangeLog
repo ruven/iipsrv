@@ -1,3 +1,7 @@
+29/03/2025:
+	- Update to Doxygen code documentation
+
+
 25/03/2025:
 	- Added missing quality level copy to output from TIFF encoding.
 	- Switched STL container element addition to std::move to enable faster move semantics
