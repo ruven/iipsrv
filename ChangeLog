@@ -1,3 +1,7 @@
+02/04/2025:
+	- Fix to use explicit compression types in setQuality() function in TIFFCompressor class
+
+
 29/03/2025:
 	- Update to Doxygen code documentation
 

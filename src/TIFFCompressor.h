@@ -45,8 +45,8 @@ typedef tiff_mem* tiff_mem_ptr;
 class TIFFCompressor: public Compressor {
 
  private:
+
   unsigned int height;
-  int tiff_compression;
   tiff_mem dest;
   TIFF *tiff;
 
@@ -115,13 +115,14 @@ class TIFFCompressor: public Compressor {
 
     // Set max depending on compression type    
     int max;
-    if( compression == 2 ) max = 9;        // Max for deflate is 9
-    else if( compression == 5 ) max = 19;  // Max for zstd is 19
-    else max = 100;                        // Max for JPEG or WebP is 100
+    if( compression == COMPRESSION_ADOBE_DEFLATE ) max = 9;   // Max for deflate is 9
+    else if( compression == COMPRESSION_ZSTD )     max = 19;  // Max for zstd is 19
+    else max = 100;                                           // Max for JPEG or WebP is 100
 
     // Limit quality range
     if     ( Q < 0 )   Q = 0;
     else if( Q > max ) Q = max;
+
   };
 
 
