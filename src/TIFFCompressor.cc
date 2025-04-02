@@ -44,6 +44,7 @@ extern "C" {
     if( (memtif->current + length) > memtif->capacity ){
       memtif->capacity = memtif->capacity + length;
       memtif->buffer = (unsigned char*) realloc( memtif->buffer, memtif->capacity );
+      if( memtif->buffer == NULL ) return 0;
     }
 
     // Copy across and update our position
@@ -181,18 +182,29 @@ void TIFFCompressor::InitCompression( const RawTile &rawtile, unsigned int strip
   tstrip_t nstrips = (tstrip_t)( (rawtile.height / strip_size) + ( (rawtile.height%strip_size==0) ? 0 : 1 ) );
   uint32_t nbytes = rawtile.width * rawtile.channels * (rawtile.bpc/8) * strip_size;
 
-  int index = 0;
+  // Write entire TIFF file as TIFF "strips"
+  size_t index = 0;
   for( tstrip_t n=0; n<nstrips; n++ ){
-    // Write data as TIFF "strips"
+
+    // Final strip may contain fewer bytes
     if( n == nstrips-1 ) nbytes = rawtile.dataLength - index;
+
+    // Make sure we don't run beyond our buffer size
+    if( index + nbytes > dest.capacity ){
+      TIFFClose( tiff );
+      free( dest.buffer );  // Free our memory buffer
+      throw string( "TIFFCompressor :: Insufficient memory allocated to buffer for TIFFWriteEncodedStrip()" );
+    }
+
     if( TIFFWriteEncodedStrip( tiff, n, (tdata_t) &((unsigned char*)rawtile.data)[index], nbytes ) != nbytes ){
       TIFFClose( tiff );
+      free( dest.buffer );  // Free our memory buffer
       throw string( "TIFFCompressor :: TIFFWriteEncodedStrip() error" );
     }
     index += nbytes;
   }
 
-  // Finish encoding
+  // Encoding has fully finished, so close
   TIFFClose( tiff );
 
   height = rawtile.height;

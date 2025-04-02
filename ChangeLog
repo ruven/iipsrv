@@ -1,5 +1,6 @@
 02/04/2025:
-	- Fix to use explicit compression types in setQuality() function in TIFFCompressor class
+	- Fix to use explicit compression types in setQuality() function in TIFFCompressor class.
+	- Add extra error checking and correctly assign dataLength to Rawtile after region creation.
 
 
 29/03/2025:
