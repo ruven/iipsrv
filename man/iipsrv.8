@@ -1,4 +1,4 @@
-.TH IIPSRV 8 "January 2025" "Ruven Pillay"
+.TH IIPSRV 8 "April 2025" "Ruven Pillay"
 .SH NAME
 
 IIPSRV \- IIPImage Image Server
@@ -176,13 +176,13 @@ Specify a global copyright or rights statement if this is not available in the i
 .SH EXAMPLES
 
 .B iipsrv
-will be automatically started by both Apache and Lighttpd. But not by Nginx or Java Application Servers.
+can be automatically started by both Apache and Lighttpd, but not by Nginx or Java Application Servers.
 See the example configuration in the README or included with your distribution for the appropriate syntax.
 Note that Apache has two FCGI modules: mod_fastcgi and mod_fcgid which are configured differently.
 
-You may also wish to run
+It is possible to run
 .B iipsrv
-as a standalone program. To do this, use the following syntax to bind to a particular port and listen for FCGI (not HTTP) requests.
+directly as a standalone program. To do this, use the following syntax to bind to a particular port and listen for FCGI (not HTTP) requests.
 In the following example,
 .B iipsrv
 will bind to port 9000 on the machine's IP address 192.168.0.1:
@@ -210,7 +210,7 @@ program. Set up any parameters via environment variables and run the command as 
 
 % spawn-fcgi -f src/iipsrv.fcgi -a 192.168.0.1 -p 9000
 
-For use in stand alone or spawn-fcgi mode, you will then need to configure your webserver on the same machine or another to direct FCGI protocol requests to this IP address and port.
+For use in stand alone or spawn-fcgi mode, you will then need to configure your web server (which can be on a different machine) to direct FCGI protocol requests to this IP address and port.
 
 For web servers such as Nginx or Java Application Servers such as Tomcat, JBoss or Jetty, which cannot automatically start FCGI processes,
 .B iipsrv

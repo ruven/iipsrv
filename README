@@ -18,13 +18,13 @@ IIPImage is an advanced high-performance feature-rich image server system for we
 
 FEATURES
 --------
-* Fast lightweight FastCGI server
+* Fast lightweight C++ FastCGI server
 * High performance with inbuilt configurable cache
 * Support for extremely large images: tera-pixel and multi gigapixel support
 * TIFF, JPEG2000 and JPEG input support
 * JPEG, PNG, WebP, AVIF and TIFF output support: export of whole or regions of images at any size
 * Supports IIP, Zoomify, DeepZoom and IIIF API's
-* 1, 8, 16 and 32 bit image support including 32 bit floating point support
+* 1, 8, 16 and 32 bit input image support including 32 bit floating point support
 * CIELAB support with automatic CIELAB->sRGB color space conversion
 * Multispectral and hyperspectral image support
 * Support for XMP metadata and ICC profiles
@@ -39,8 +39,6 @@ LICENCE
 -------
 
 iipsrv is released under the GNU General Public License (GPL). See the copyright notice COPYING in this directory for licensing details or go to http://www.gnu.org/licenses/gpl.html for more details.
-
-If you use IIPImage on a public site and remove the IIP link logo from the client, you must provide a link on your site back to the IIPImage site - https://iipimage.sourceforge.io
 
 
 
@@ -127,7 +125,9 @@ Now open the provided iipsrv project with Visual Studio and build. See https://i
 
 DEVELOPMENT DOCUMENTATION
 -------------------------
-Detailed class descriptions (generated using [doxygen](https://www.doxygen.nl/)) are available in the doc sub-directory
+Detailed class descriptions (generated using [doxygen](https://www.doxygen.nl/)) are available in the doc sub-directory. To (re)-generate the HTML documentation:
+
+    doxygen doc/doxygen-html.conf
 
 
 
@@ -482,7 +482,7 @@ Input images must be in either tiled multi-resolution (pyramid) TIFF format, in 
 The images paths given to the server via the FIF command for the IIP API or in the IIIF, Deepzoom or Zoomify  requests must be absolute paths on the server machine (eg. FIF=/images/test.tif) and not paths relative to the web server document root location. Images do not, therefore, need to be directly accessible through the web server. The FILESYSTEM_PREFIX configuration parameter can be used to avoid overly long image paths. Make sure the iipsrv process owner is able to access and read the images!
 
 ### Output Images
-iipsrv can transcode input images in TIFF, JPEG2000 or JPEG to JPEG, PNG, WebP or AVIF format. See the API documentation for details on how to use iipsrv: https://iipimage.sourceforge.io/documentation/protocol
+iipsrv can transcode input images in TIFF, JPEG2000 or JPEG to JPEG, PNG, WebP, AVIF or TIFF format. See the API documentation for details on how to use iipsrv: https://iipimage.sourceforge.io/documentation/protocol
 
 
 
