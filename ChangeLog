@@ -1,3 +1,7 @@
+18/04/2025:
+	- Make sure sizes are correctly rounded when checking for invalid upscaling
+
+
 02/04/2025:
 	- Fix to use explicit compression types in setQuality() function in TIFFCompressor class.
 	- Add extra error checking and correctly assign dataLength to Rawtile after region creation.

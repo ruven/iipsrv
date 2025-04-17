@@ -2,7 +2,7 @@
 
     IIIF Request Command Handler Class Member Function
 
-    Copyright (C) 2014-2024 Ruven Pillay
+    Copyright (C) 2014-2025 Ruven Pillay
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -543,7 +543,7 @@ void IIIF::run( Session* session, const string& src )
       // Check for malformed upscaling request
       if( iiif_version >= 3 ){
 	if( session->view->allow_upscaling == false &&
-	    ( requested_width > (width*region[2]) || requested_height > (height*region[3]) ) ){
+	    ( requested_width > round(width*region[2]) || requested_height > round(height*region[3]) ) ){
 	  throw invalid_argument( "IIIF: upscaling should be prefixed with ^" );
 	}
       }
