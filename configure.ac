@@ -201,7 +201,7 @@ AC_ARG_ENABLE( avif,
     [  --disable-avif          disable AVIF])
 
 
-if test "x$enable_avuf" == "xno"; then
+if test "x$enable_avif" == "xno"; then
    AC_MSG_RESULT([configure: disabling AVIF support])
    AM_CONDITIONAL([ENABLE_AVIF], [false])
 else
