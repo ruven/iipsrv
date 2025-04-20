@@ -1,3 +1,8 @@
+20/04/2025:
+	- Fixed typo in configure.ac.
+	- Added TIFF to IIIF extraFormats field plus other cleanups in info.json.
+
+
 18/04/2025:
 	- Make sure sizes are correctly rounded when checking for invalid upscaling
 

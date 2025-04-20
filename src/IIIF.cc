@@ -268,6 +268,20 @@ void IIIF::run( Session* session, const string& src )
     infoStringStream << " ] }" << endl
                      << "  ]," << endl;
 
+    // Create extraFormats string
+    string extraFormats = "";
+#if defined(HAVE_WEBP) || defined(HAVE_AVIF)
+    extraFormats += ",";
+#ifdef HAVE_WEBP
+    extraFormats += "\"webp\"";
+#endif
+#if defined(HAVE_WEBP) && defined(HAVE_AVIF)
+    extraFormats += ",";
+#endif
+#ifdef HAVE_AVIF
+    extraFormats += "\"avif\"";
+#endif
+#endif
 
     // Profile for IIIF version 3 and above
     if( iiif_version >= 3 ){
@@ -277,22 +291,8 @@ void IIIF::run( Session* session, const string& src )
 		       << "  \"maxWidth\" : " << max << "," << endl
 		       << "  \"maxHeight\" : " << max << "," << endl
 		       << "  \"extraQualities\": [\"color\",\"gray\",\"bitonal\"]," << endl
-
-#if defined(HAVE_WEBP) || defined(HAVE_AVIF)
-		       << "  \"extraFormats\": ["
-#ifdef HAVE_WEBP
-		       << "\"webp\""
-#endif
-#if defined(HAVE_WEBP) && defined(HAVE_AVIF)
-		       << ","
-#endif
-#ifdef HAVE_AVIF
-		       << "\"avif\""
-#endif
-		       << "],"
-#endif
-
-		       << "  \"extraFeatures\": [\"regionByPct\",\"sizeByForcedWh\",\"sizeByWh\",\"sizeAboveFull\",\"sizeUpscaling\",\"rotationBy90s\",\"mirroring\"]";
+		       << "  \"extraFormats\": [\"tif\"" << extraFormats << "]," << endl
+		       << "  \"extraFeatures\": [\"regionByPct\",\"sizeByPct\",\"sizeByConfinedWh\",\"sizeUpscaling\",\"rotationBy90s\",\"mirroring\"]";
 
       if( !rights.empty() ){
 	infoStringStream << "," << endl
@@ -305,9 +305,9 @@ void IIIF::run( Session* session, const string& src )
       infoStringStream << "  \"@id\" : \"" << iiif_id << "\"," << endl
 		       << "  \"profile\" : [" << endl
 		       << "     \"" << IIIF_PROTOCOL << "/" << iiif_version << "/" << IIIF_PROFILE << ".json\"," << endl
-		       << "     { \"formats\" : [ \"jpg\", \"png\", \"webp\", \"avif\" ]," << endl
+		       << "     { \"formats\" : [\"jpg\",\"png\",\"tif\"" << extraFormats << "]," << endl
 		       << "       \"qualities\" : [\"native\",\"color\",\"gray\",\"bitonal\"]," << endl
-		       << "       \"supports\" : [\"regionByPct\",\"regionSquare\",\"sizeByForcedWh\",\"sizeByWh\",\"sizeAboveFull\",\"sizeUpscaling\",\"rotationBy90s\",\"mirroring\"]," << endl
+		       << "       \"supports\" : [\"regionByPct\",\"regionSquare\",\"max\",\"sizeByConfinedWh\",\"sizeByForcedWh\",\"sizeByWh\",\"sizeAboveFull\",\"rotationBy90s\",\"mirroring\"]," << endl
 		       << "       \"maxWidth\" : " << max << "," << endl
 		       << "       \"maxHeight\" : " << max << "\n     }" << endl
 		       << "  ]";
