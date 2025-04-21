@@ -321,6 +321,19 @@ void JTL::send( Session* session, int resolution, int tile ){
     }
 
 
+    // Apply a convolution if requested
+    if( session->view->convolution.size() > 0 ){
+      if( session->loglevel >= 4 ){
+	*(session->logfile) << "JTL :: Applying convolution";
+	function_timer.start();
+      }
+      session->processor->convolution( rawtile, session->view->convolution );
+      if( session->loglevel >= 4 ){
+	*(session->logfile) << " in " << function_timer.getTime() << " microseconds" << endl;
+      }
+    }
+
+
     // Apply any contrast adjustments and/or clip to 8bit from 16 or 32 bit
     float contrast = session->view->contrast;
     if( session->loglevel >= 4 ){

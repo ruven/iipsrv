@@ -1,3 +1,8 @@
+22/04/2025:
+	- Added convolution to JTL tile pipeline and switched convolution implementation to use edge extension
+	  rather than edge wrapping
+
+
 20/04/2025:
 	- Fixed typo in configure.ac.
 	- Added TIFF to IIIF extraFormats field plus other cleanups in info.json.

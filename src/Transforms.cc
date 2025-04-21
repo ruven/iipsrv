@@ -1317,12 +1317,21 @@ void Transform::convolution( RawTile& in, const vector<float>& kernel ){
       for( int c=0; c < in.channels; c++) {
 	uint32_t n = ((y*in.width) + x) * in.channels + c;
         double v = 0;
+
 	for( unsigned int fy=0; fy<side; fy++ ){
-	  // Note that we do wrapping at the edges
-	  long iny = (y + fy - half_side + in.height) % in.height;
+	  // Note that we extend at the edges
+	  // Calculate pixel y location on image
+	  long iny = y + fy - half_side;
+	  if( iny < 0 ) iny = 0;
+	  else if( iny >= in.height ) iny = in.height - 1;
+
           for( unsigned int fx=0; fx<side; fx++ ){
-            long inx = (x + fx - half_side + in.width) % in.width;
-            long i = (inx + (iny * in.width)) * in.channels + c;
+	    // Calculate pixel x location on image
+	    long inx = x + fx - half_side;
+	    if( inx < 0 ) inx = 0;
+	    else if( inx >= in.width ) inx = in.width - 1;
+
+	    long i = (inx + (iny * in.width)) * in.channels + c;
             v += data[i] * kernel[(fy*side) + fx];
           }
         }
