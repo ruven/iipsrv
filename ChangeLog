@@ -1,3 +1,7 @@
+23/04/2025:
+	- Modification to not add 'color' to IIIF extraQualities field in info.json if image is monochrome
+
+
 22/04/2025:
 	- Added convolution to JTL tile pipeline and switched convolution implementation to use edge extension
 	  rather than edge wrapping

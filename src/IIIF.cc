@@ -290,7 +290,8 @@ void IIIF::run( Session* session, const string& src )
 		       << "  \"profile\" : \"" << IIIF_PROFILE << "\"," << endl
 		       << "  \"maxWidth\" : " << max << "," << endl
 		       << "  \"maxHeight\" : " << max << "," << endl
-		       << "  \"extraQualities\": [\"color\",\"gray\",\"bitonal\"]," << endl
+	               // Only add color if have enough channels
+		       << "  \"extraQualities\": [" << ( ((*session->image)->getNumChannels()>=3) ? "\"color\"," : "" ) << "\"gray\",\"bitonal\"]," << endl
 		       << "  \"extraFormats\": [\"tif\"" << extraFormats << "]," << endl
 		       << "  \"extraFeatures\": [\"regionByPct\",\"sizeByPct\",\"sizeByConfinedWh\",\"sizeUpscaling\",\"rotationBy90s\",\"mirroring\"]";
 
