@@ -12,8 +12,9 @@ USER=iipsrv
 GROUP=iipsrv
 
 
-# Parameters to pass directly to iipsrv. See http://iipimage.sourceforge.net/documentation/server
-# for full details. Note that these must be exported:
+# Parameters to pass directly to iipsrv. See https://iipimage.sourceforge.io/documentation/server
+# for full details.
+# Note that these must be *exported*:
 
 # File to which iipsrv should log
 export LOGFILE="/var/log/iipsrv.log"
@@ -25,59 +26,93 @@ export VERBOSITY=1
 export URI_MAP="iiif=>IIIF"
 
 # Max internal cache size for raw tile data in MB
-#MAX_IMAGE_CACHE_SIZE=10
+#export MAX_IMAGE_CACHE_SIZE=10
+
+# Max number of items in metadata cache size. This is a cache of key image metadata (dimensions, tile size, bit depth, ...)
+# -1 = unlimited.
+#export MAX_IMAGE_METADATA_CACHE_SIZE=1000
 
 # Prefix automatically added to each file path
-#FILESYSTEM_PREFIX=
+#export FILESYSTEM_PREFIX=""
 
 # Suffix automatically added to end of each file path
-#FILESYSTEM_SUFFIX
+#export FILESYSTEM_SUFFIX=""
 
 # Default JPEG quality factor
-#JPEG_QUALITY=75
+#export JPEG_QUALITY=75
 
 # Default PNG deflate compression factor
-#PNG_QUALITY=1
+#export PNG_QUALITY=1
 
 # Default WebP quality factor
-#WEBP_QUALITY=50
+#export WEBP_QUALITY=50
+
+# Default AVIF quality factor
+#export AVIF_QUALITY=50
+
+# The default compression encoder for TIFF output
+# 0 = None, 1 = LZW, 2 = Deflate, 3 = JPEG, 4 = WebP, 5 = ZStandard
+#export TIFF_COMPRESSION=2
+
+# The default quality factor for compression when the client does not specify one
+# When using JPEG or WebP, value should be 0-100. For Deflate 1-9. For ZStandard 1-19.
+#export TIFF_QUALITY=1
 
 # Maximum output image dimensions in pixels
-#MAX_CVT=5000
+#export MAX_CVT=5000
 
 # Whether image may be upscaled: 0 = no, 1 = yes
-#ALLOW_UPSCALING=1
+#export ALLOW_UPSCALING=1
 
 # Maximum number of quality layers to decode in supported formats (-1 for all layers)
-#MAX_LAYERS=-1
+#export MAX_LAYERS=-1
 
 # TIFF image to use as watermark
-#WATERMARK=
+#export WATERMARK
 
 # Probability (between 0.0-1.0) that a tile will have watermark applied
-#WATERMARK_PROBABILITY=1.0
+#export WATERMARK_PROBABILITY=1.0
 
 # Opacity (between 0.0-1.0) applied to watermark image
-#WATERMARK_OPACITY=1
+#export WATERMARK_OPACITY=1
 
 #Comma-delimitted list of memcached servers with optional port numbers
-#MEMCACHED_SERVERS=
+#export MEMCACHED_SERVERS=""
 
 #Time in seconds that cache remains fresh
-#MEMCACHED_TIMEOUT=86400
+#export MEMCACHED_TIMEOUT=86400
 
 # Interpolation method to use for rescaling when using image export
 # 0 = nearest neighbout, 1 = bilinear
-#INTERPOLATION=1
+#export INTERPOLATION=1
 
 # Cross Origin Resource Sharing setting. Disabled by default
-#CORS=""
+#export CORS=""
 
 # Set a base URL for use in IIIF requests if using web server rewriting
-#BASE_URL=
+#export BASE_URL=
 
 # Set the HTTP Cache-Control header
-#CACHE_CONTROL="max-age=86400"
+#export CACHE_CONTROL="max-age=86400"
 
 # Pattern following name stem to indicate an image sequence
-#FILENAME_PATTERN="_pyr_"
+#export FILENAME_PATTERN="_pyr_"
+
+# Add extra JSON field to IIIF info.json
+#export IIIF_EXTRA_INFO=""
+
+# Set delimiter to enable page or slice selection for a multi-page or image stack for IIIF requests
+#export IIIF_DELIMITER=""
+
+# Set IIIF API version
+#export IIIF_VERSION=3
+
+# Enable non-standard IIIF image processing extensions for the quality part of the URL syntax
+# 0 = no, 1 = yes
+#export IIIF_EXTENSIONS=0
+
+# Set default copyright or rights information for images that do not provide this in their metadata
+#export COPYRIGHT=""
+
+# Enable pre-encoded tiles to be sent directly to the client without re-encoding or processing
+#CODEC_PASSTHROUGH=1
