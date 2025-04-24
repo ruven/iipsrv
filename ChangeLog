@@ -1,3 +1,8 @@
+24/04/2025:
+	- Inject rights statement from COPYRIGHT into image metadata if this does not already exist to allow
+	  Compressor classes to include this in image output metadata
+
+
 23/04/2025:
 	- Modification to not add 'color' to IIIF extraQualities field in info.json if image is monochrome
 

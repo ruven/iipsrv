@@ -174,6 +174,15 @@ void FIF::run( Session* session, const string& src ){
       (*session->image)->loadImageInfo( (*session->image)->currentX, (*session->image)->currentY );
     }
 
+
+    // Set copyright from global startup parameter if none exists within image itself
+    map<const string, const string> :: const_iterator mit = (*session->image)->metadata.find( "rights" );
+    if( mit == (*session->image)->metadata.end() ){
+      string rights = (session->headers["COPYRIGHT"]);
+      if( !rights.empty() ) (*session->image)->metadata.insert( {"rights",rights} );
+    }
+
+
     // Add this image to our cache, overwriting previous version if it exists
     (*session->imageCache)[argument] = *(*session->image);
 
