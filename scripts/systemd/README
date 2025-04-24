@@ -4,7 +4,7 @@ Service and configuration scripts for Systemd-based init systems
 Installation
 ------------
 
-Install the iipsrv executable to the /use/sbin/ directory:
+Install the iipsrv executable to the /usr/sbin/ directory:
 
     % ./configure --prefix=/usr
     % make
@@ -24,6 +24,16 @@ Starting iipsrv
 ---------------
 
     % systemctl start iipsrv
+
+
+Empty the iipsrv cache
+----------------------
+
+    % systemctl reload iipsrv
+
+
+Logging
+-------
 
 To view the latest systemd messages concerning iipsrv:
 

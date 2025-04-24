@@ -14,6 +14,12 @@ Copy and rename the OpenRC init and conf files to the following locations:
     iipsrv.confd -> /etc/conf.d/iipsrv
 
 
-Start iipsrv using OpenRC:
+Start, stop or restart iipsrv using OpenRC:
 
     % /etc/init.d/iipsrv start
+    % /etc/init.d/iipsrv stop
+    % /etc/init.d/iipsrv restart
+
+Empty iipsrv caches without restarting:
+
+    % /etc/init.d/iipsrv reload
