@@ -52,6 +52,7 @@ using namespace std;
 unsigned int IIIF::version;
 string IIIF::delimiter = "";
 string IIIF::extra_info = "";
+bool IIIF::extensions;
 
 
 // The request is in the form {identifier}/{region}/{size}/{rotation}/{quality}{.format}
@@ -283,6 +284,11 @@ void IIIF::run( Session* session, const string& src )
 #endif
 #endif
 
+    // extraQualities string
+    string extraQualities = ( ((*session->image)->getNumChannels()>=3) ? "\"color\"," : "" ) + string("\"gray\",\"bitonal\"");
+    if( IIIF::extensions ) extraQualities += ",\"negative\",\"stretch\",\"equalization\",\"log\"";
+
+
     // Profile for IIIF version 3 and above
     if( iiif_version >= 3 ){
       infoStringStream << "  \"id\" : \"" << iiif_id << "\"," << endl
@@ -291,7 +297,7 @@ void IIIF::run( Session* session, const string& src )
 		       << "  \"maxWidth\" : " << max << "," << endl
 		       << "  \"maxHeight\" : " << max << "," << endl
 	               // Only add color if have enough channels
-		       << "  \"extraQualities\": [" << ( ((*session->image)->getNumChannels()>=3) ? "\"color\"," : "" ) << "\"gray\",\"bitonal\"]," << endl
+		       << "  \"extraQualities\": [" << extraQualities << "]," << endl
 		       << "  \"extraFormats\": [\"tif\"" << extraFormats << "]," << endl
 		       << "  \"extraFeatures\": [\"regionByPct\",\"sizeByPct\",\"sizeByConfinedWh\",\"sizeUpscaling\",\"rotationBy90s\",\"mirroring\"]";
 
@@ -307,7 +313,7 @@ void IIIF::run( Session* session, const string& src )
 		       << "  \"profile\" : [" << endl
 		       << "     \"" << IIIF_PROTOCOL << "/" << iiif_version << "/" << IIIF_PROFILE << ".json\"," << endl
 		       << "     { \"formats\" : [\"jpg\",\"png\",\"tif\"" << extraFormats << "]," << endl
-		       << "       \"qualities\" : [\"native\",\"color\",\"gray\",\"bitonal\"]," << endl
+		       << "       \"qualities\" : [\"native\"," << extraQualities << "]," << endl
 		       << "       \"supports\" : [\"regionByPct\",\"regionSquare\",\"max\",\"sizeByConfinedWh\",\"sizeByForcedWh\",\"sizeByWh\",\"sizeAboveFull\",\"rotationBy90s\",\"mirroring\"]," << endl
 		       << "       \"maxWidth\" : " << max << "," << endl
 		       << "       \"maxHeight\" : " << max << "\n     }" << endl
@@ -642,33 +648,46 @@ void IIIF::run( Session* session, const string& src )
 
 
       // Quality
-      if ( quality == "native" || quality == "color" || quality == "default" ){
+      if( quality == "native" || quality == "color" || quality == "default" ){
         // Do nothing
       }
-      else if ( quality == "grey" || quality == "gray" ){
+      else if( quality == "grey" || quality == "gray" ){
         session->view->colorspace = ColorSpace::GREYSCALE;
       }
-      else if ( quality == "bitonal" ){
+      else if( quality == "bitonal" ){
         session->view->colorspace = ColorSpace::BINARY;
       }
+      // Include some IIPImage-specific qualities for constrast stretching, inversion (negative) and histogram equalization
+      else if( IIIF::extensions && quality == "stretch" ){
+	session->view->contrast = -1;
+      }
+      else if( IIIF::extensions && quality == "negative" ){
+	session->view->inverted = true;
+      }
+      else if( IIIF::extensions && quality == "equalization" ){
+	session->view->equalization = true;
+      }
+      else if( IIIF::extensions && quality == "log" ){
+	session->view->gamma = -1;
+      }
       else{
-        throw invalid_argument( "unsupported quality parameter - must be one of native, color or grey" );
+        throw invalid_argument( "unsupported quality parameter: " + quality );
       }
 
       numOfTokens++;
 
-      if ( session->loglevel >= 4 ){
+      if( session->loglevel >= 4 ){
         *(session->logfile) << "IIIF :: Requested Quality: " << quality << " with format: " << format << endl;
       }
     }
 
     // Too many parameters
-    if ( izer.hasMoreTokens() ){
+    if( izer.hasMoreTokens() ){
       throw invalid_argument( "IIIF: Query has too many parameters. " IIIF_SYNTAX );
     }
 
     // Not enough parameters
-    if ( numOfTokens < 4 ){
+    if( numOfTokens < 4 ){
       throw invalid_argument( "IIIF: Query has too few parameters. " IIIF_SYNTAX );
     }
 

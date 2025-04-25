@@ -466,6 +466,8 @@ Delimiter can be a single character or an arbitrary string. Disabled by default.
 
 IIIF_EXTRA_INFO: Add extra arbitrary field to all IIIF info.json files. Must be a string containing a valid JSON key, value line. Key and value quotes should be escaped if necessary and no trailing comma should be added. For example, to add a preferredFormats field: IIIF_EXTRA_INFO='"preferredFormats": ["webp"]'
 
+IIIF_EXTENSIONS: Enable extra (non-standard) image processing functionality for the `quality` segment of the IIIF Image API. These allow additional qualities such as `negative`, `stretch`, `equalization` and `log` to be used. This is set to 0 by default (disabled). Set to 1 to enable.
+
 COPYRIGHT: Specify a global copyright or rights statement if this is not available in the image metadata itself
 
 DECODER_MODULES: Comma separated list of external modules for decoding other image formats. This is only necessary if you have activated --enable-modules for ./configure and written your own image format handler(s).

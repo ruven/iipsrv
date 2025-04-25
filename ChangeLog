@@ -1,3 +1,9 @@
+25/04/2025:
+	- Added ability to call extra image processing functionality from IIIF through the 'qualities' segment of
+	  the API. This adds constrast stretching, histogram equalization, image negative and logarithm options.
+	  Disabled by default, but can be actived by setting the IIIF_EXTENSIONS startup parameter to 1 (0 by default).
+
+
 24/04/2025:
 	- Inject rights statement from COPYRIGHT into image metadata if this does not already exist to allow
 	  Compressor classes to include this in image output metadata

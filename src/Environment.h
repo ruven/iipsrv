@@ -57,6 +57,7 @@
 #define IIIF_VERSION 3
 #define IIIF_DELIMITER ""
 #define IIIF_EXTRA_INFO ""
+#define IIIF_EXTENSIONS false
 #define COPYRIGHT ""
 
 
@@ -436,6 +437,15 @@ class Environment {
     const char* envpara = getenv( "IIIF_EXTRA_INFO" );
     if( envpara ) return std::string( envpara );
     else return IIIF_EXTRA_INFO;
+  }
+
+
+  static bool getIIIFExtensions(){
+    const char* envpara = getenv( "IIIF_EXTENSIONS" );
+    bool extensions;
+    if( envpara ) extensions =  atoi( envpara ); // Implicit cast to boolean, all values other than '0' treated as true
+    else extensions = IIIF_EXTENSIONS;
+    return extensions;
   }
 
 

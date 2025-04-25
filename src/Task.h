@@ -382,6 +382,9 @@ class IIIF : public Task {
   /// Extra fields for info.json
   static std::string extra_info;
 
+  /// Whether we allow IIPImage-specific IIIF extensions
+  static bool extensions;
+
   void run( Session* session, const std::string& argument );
 };
 

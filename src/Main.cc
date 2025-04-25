@@ -365,6 +365,10 @@ int main( int argc, char *argv[] )
   IIIF::extra_info = Environment::getIIIFExtraInfo();
 
 
+  // Whether we enable IIPImage-specific extensions to IIIF (for example quality=negative)
+  IIIF::extensions = Environment::getIIIFExtensions();
+
+
   // Set global rights/copyright
   string copyright = Environment::getCopyright();
 
@@ -418,6 +422,7 @@ int main( int argc, char *argv[] )
     logfile << "Setting HTTP Cache-Control header to '" << cache_control << "'" << endl;
     logfile << "Setting 3D file sequence name pattern to '" << FIF::filename_pattern << "'" << endl;
     logfile << "Setting default IIIF Image API version to " << IIIF::version << endl;
+    logfile << "Setting IIIF image processing API extension support to " << (IIIF::extensions ? "true" : "false") << endl;
     if( IIIF::delimiter.size() ){
       logfile << "Setting default IIIF multi-page delimiter to '" << IIIF::delimiter << "'" << endl;
     }
