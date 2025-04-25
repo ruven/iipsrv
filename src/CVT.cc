@@ -477,7 +477,7 @@ void CVT::send( Session* session ){
 
     if( session->loglevel >= 5 ){
       string direction = session->view->flip==1 ? "horizontally" : "vertically";
-      *(session->logfile) << "JTL :: Flipping image " << direction << " in "
+      *(session->logfile) << "CVT :: Flipping image " << direction << " in "
 			  << function_timer.getTime() << " microseconds" << endl;
     }
   }
