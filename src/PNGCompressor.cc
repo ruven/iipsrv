@@ -1,6 +1,6 @@
 /*  PNG class wrapper to libpng library
 
-    Copyright (C) 2012-2024 Ruven Pillay
+    Copyright (C) 2012-2025 Ruven Pillay
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -104,8 +104,8 @@ void PNGCompressor::InitCompression( const RawTile& rawtile, unsigned int strip_
 
   // Calculate our metadata storage requirements
   unsigned int metadata_size =
-    (icc.size()>0 ? (icc.size()+ICC_OVERHEAD_SIZE) : 0) +
-    (xmp.size()>0 ? (xmp.size()+XMP_OVERHEAD_SIZE) : 0) +
+    (icc.size() >0 ? (icc.size()+ICC_OVERHEAD_SIZE) : 0) +
+    (xmp.size() >0 ? (xmp.size()+XMP_OVERHEAD_SIZE) : 0) +
     (exif.size()>0 ? exif.size() : 0);
  
   // Allocate enough memory for our header and metadata
@@ -243,9 +243,9 @@ unsigned int PNGCompressor::Compress( RawTile& rawtile )
 
   // Calculate our metadata storage requirements
   unsigned int metadata_size =
-    (icc.size()>0 ? (icc.size()+ICC_OVERHEAD_SIZE) : 0) +
-    (xmp.size()>0 ? (xmp.size()+XMP_OVERHEAD_SIZE) : 0) +
-    (exif.size()>0) ? exif.size() : 0;
+    (icc.size() >0 ? (icc.size()+ICC_OVERHEAD_SIZE) : 0) +
+    (xmp.size() >0 ? (xmp.size()+XMP_OVERHEAD_SIZE) : 0) +
+    (exif.size()>0 ? exif.size() : 0);
 
   // Allocate enough memory for our compressed output data - make sure there is extra buffering
   // Note that compressed images at overly high quality factors can be larger than raw data

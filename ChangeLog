@@ -1,3 +1,7 @@
+28/04/2025:
+	- Eliminate compilation warning with clang
+
+
 25/04/2025:
 	- Added ability to call extra image processing functionality from IIIF through the 'qualities' segment of
 	  the API. This adds constrast stretching, histogram equalization, image negative and logarithm options.
