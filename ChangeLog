@@ -1,5 +1,7 @@
 28/04/2025:
 	- Eliminate compilation warning with clang
+	- Fixed TPTImage problem with referencing of potentially uninitialized vector for tiled but non-pyramid TIFFs.
+	  Fixes https://github.com/ruven/iipsrv/issues/278
 
 
 25/04/2025:

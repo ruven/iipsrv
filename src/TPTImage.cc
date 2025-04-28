@@ -97,7 +97,6 @@ void TPTImage::loadImageInfo( int seq, int ang )
   double *sminvalue = NULL, *smaxvalue = NULL;
   double scale;
   unsigned int tw, th, w, h;
-  string filename;
   const char *tmp = NULL;
 
   currentX = seq;
@@ -217,7 +216,7 @@ void TPTImage::loadImageInfo( int seq, int ang )
     }
 
     // Check whether this is in fact a stack from an image too small to have SubIFD resolutions
-    if( (image_widths.size() > 0) && (image_widths[0] == image_widths[1]) && (image_heights[0] == image_heights[1]) ){
+    if( (image_widths.size() > 1) && (image_widths[0] == image_widths[1]) && (image_heights[0] == image_heights[1]) ){
       loadStackInfo();
       if( stack.size() > 0 ){
 	// Remove duplicate sizes
