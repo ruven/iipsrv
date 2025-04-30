@@ -390,7 +390,7 @@ void Transform::LAB2sRGB( RawTile& in ){
   for( uint32_t n=0; n<np; n+=in.channels ){
 
     float rgb[3];
-    float cielab[3];
+    float cielab[3] = {0.0,0.0,0.0};
 
     // 8 and 16 bit TIFF require unpacking
     if( in.sampleType == SampleType::FIXEDPOINT && in.bpc == 8 ){

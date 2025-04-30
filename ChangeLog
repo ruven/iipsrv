@@ -1,3 +1,7 @@
+30/04/2025:
+	- Added default initialization of cielab values in Transform::LAB2sRGB() function
+
+
 28/04/2025:
 	- Eliminate compilation warning with clang
 	- Fixed TPTImage problem with referencing of potentially uninitialized vector for tiled but non-pyramid TIFFs.
