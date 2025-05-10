@@ -1,7 +1,7 @@
 /*
     IIP OJB Command Handler Class Member Functions
 
-    Copyright (C) 2006-2023 Ruven Pillay.
+    Copyright (C) 2006-2025 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -44,7 +44,8 @@ void OBJ::run( Session* s, const std::string& a )
   if( session->loglevel >= 2 ) command_timer.start();
 
 
-  if( argument == "iip,1.0" ) iip();
+  // Argument is usually always 'iip,1.0', but just compare the prefix to allow other versions in future
+  if( argument.compare( 0, 4, "iip," ) == 0 ) iip();
   else if( argument == "basic-info" ){
     iip_server();
     max_size();
@@ -148,7 +149,7 @@ void OBJ::run( Session* s, const std::string& a )
 
 
 void OBJ::iip(){
-  session->response->setProtocol( "IIP:1.0" );
+  session->response->setProtocol( "IIP:" + string(VERSION) );
 }
 
 
