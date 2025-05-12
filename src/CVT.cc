@@ -339,7 +339,7 @@ void CVT::send( Session* session ){
 
 
     // Apply convolution
-    if( session->view->convolution.size() > 0 ){
+    if( session->view->convolution.size() ){
 
       if( session->loglevel >= 5 ) function_timer.start();
 

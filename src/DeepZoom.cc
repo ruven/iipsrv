@@ -38,7 +38,7 @@ using namespace std;
 // Windows does not provide a log2 function!
 #if (!defined HAVE_LOG2 && !defined _MSC_VER) || (defined _MSC_VER && _MSC_VER<1900)
 double log2(double max){
-  return log((double)max)/log((double)2);
+  return log(max) / log((double)2);
 }
 #endif
 

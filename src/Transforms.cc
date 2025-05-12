@@ -378,8 +378,8 @@ void Transform::LAB2sRGB( RawTile& in ){
   float *output;
 
   // Set up our output buffer depending on input data type. If not already floating point, create new buffer
-  if( in.sampleType == SampleType::FLOATINGPOINT ) output = ((float*)in.data);
-  else output = new float[np];
+  if( in.sampleType == SampleType::FIXEDPOINT ) output = new float[np];
+  else output = ((float*)in.data);
 
   // Parallelize code using OpenMP
 #if defined(__ICC) || defined(__INTEL_COMPILER)

@@ -322,7 +322,7 @@ void JTL::send( Session* session, int resolution, int tile ){
 
 
     // Apply a convolution if requested
-    if( session->view->convolution.size() > 0 ){
+    if( session->view->convolution.size() ){
       if( session->loglevel >= 4 ){
 	*(session->logfile) << "JTL :: Applying convolution";
 	function_timer.start();
