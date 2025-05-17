@@ -1,7 +1,7 @@
 /*
     IIP Response Handler Class
 
-    Copyright (C) 2003-2023 Ruven Pillay.
+    Copyright (C) 2003-2025 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -36,6 +36,7 @@ IIPResponse::IIPResponse(){
   powered = "X-Powered-By: IIPImage";
   modified = "";
   mimeType = "Content-Type: application/vnd.netfpx";
+  allow = "Allow: GET POST OPTIONS";
   cors = "";
   contentDisposition = "";
   eof = "\r\n";
@@ -154,6 +155,21 @@ string IIPResponse::createHTTPHeader( const string& mimeType, const string& time
   if( !contentDisposition.empty() ) header << contentDisposition << eof;
 
   // Need extra EOF separator
+  header << eof;
+
+  return header.str();
+}
+
+
+string IIPResponse::getHeaderResponse( bool addCORS ){
+
+  stringstream header;
+  header << status << eof
+	 << server << eof
+	 << powered << eof
+	 << allow << eof
+	 << "Content-Length: 0" << eof;
+  if( addCORS && !cors.empty() ) header << cors << eof;
   header << eof;
 
   return header.str();

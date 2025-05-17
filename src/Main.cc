@@ -750,6 +750,10 @@ int main( int argc, char *argv[] )
 	  if( loglevel >=2 ) logfile << "HTTP OPTIONS request" << endl;
 	  throw( 204 );
 	}
+	else if( session.headers["REQUEST_METHOD"] != "GET" && session.headers["REQUEST_METHOD"] != "POST" ){
+	  if( loglevel >=2 ) logfile << "Unsupported HTTP method " << session.headers["REQUEST_METHOD"] << endl;
+	  throw( 405 );
+	}
 
 	// Check for requests sent using POST, PUT or other HTTP methods
 	if( request_string.empty() ){
@@ -934,13 +938,24 @@ int main( int argc, char *argv[] )
      */
     catch( const int& code ){
 
-      string status;
+      string header;
 
       switch( code ){
 
+        case 405:
+	  response.setStatus( "405 Method Not Allowed" );
+	  header = response.getHeaderResponse();
+	  writer.putS( header.c_str() );
+	  writer.flush();
+	  if( loglevel >= 2 ){
+	    logfile << "Sending HTTP 405 Method Not Allowed" << endl;
+	  }
+	  break;
+
         case 304:
-	  status = "Status: 304 Not Modified\r\nServer: iipsrv/" + version + "\r\n\r\n";
-	  writer.putS( status.c_str() );
+	  response.setStatus( "304 Not Modified" );
+	  header = response.getHeaderResponse();
+	  writer.putS( header.c_str() );
 	  writer.flush();
           if( loglevel >= 2 ){
 	    logfile << "Sending HTTP 304 Not Modified" << endl;
@@ -949,9 +964,9 @@ int main( int argc, char *argv[] )
 
         case 204:
 	  // Handle HTTP OPTIONS requests
-	  status = "Status: 204 No Content\r\nServer: iipsrv/" + version + "\r\nX-Powered-By: IIPImage\r\n" +
-	    "Content-Length: 0\r\n" + response.getCORS() + "\r\n\r\n";
-	  writer.putS( status.c_str() );
+	  response.setStatus( "204 No Content" );
+	  header = response.getHeaderResponse( true );
+	  writer.putS( header.c_str() );
 	  writer.flush();
 	  if( loglevel >= 2 ){
 	    logfile << "Returning HTTP 204 No Content" << endl;

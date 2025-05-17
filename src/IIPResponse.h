@@ -51,6 +51,7 @@ class IIPResponse{
   std::string protocol;            // IIP protocol version
   std::string responseBody;        // The main response
   std::string error;               // Error message
+  std::string allow;               // Allow header
   std::string cors;                // CORS (Cross-Origin Resource Sharing) setting
   std::string contentDisposition;  // File name to use for Content Disposition header
   std::string status;              // HTTP status code
@@ -203,10 +204,17 @@ class IIPResponse{
   /** @param mimeType MIME type of output
       @param timeStamp formatted timestamp
       @param contentLength optional Content-Length value
-    */
+      @return formatted HTTP header
+   */
   std::string createHTTPHeader( const std::string& mimeType, const std::string& timeStamp, unsigned int contentLength=0 );
 
-};
 
+  /// Convenience function to generate a header-only response
+  /** @param addCORS whether a CORS header should be added
+      @return formatted HTTP header string
+   */
+  std::string getHeaderResponse( bool addCORS=false );
+
+};
 
 #endif
