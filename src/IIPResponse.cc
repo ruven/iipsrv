@@ -168,6 +168,7 @@ string IIPResponse::getHeaderResponse( bool addCORS ){
 	 << server << eof
 	 << powered << eof
 	 << allow << eof
+	 << cacheControl << eof
 	 << "Content-Length: 0" << eof;
   if( addCORS && !cors.empty() ) header << cors << eof;
   header << eof;
