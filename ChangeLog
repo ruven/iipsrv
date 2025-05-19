@@ -1,3 +1,7 @@
+19/05/2025:
+	- Make sure ICC profile buffer is freed in JPEGImage.cc.
+
+
 17/05/2025:
 	- Added check for unsupported HTTP methods in Main.cc and added convenience function in IIPResponse class
 	  to generate appropriate HTTP headers for 405, 304 and 204 status codes

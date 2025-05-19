@@ -1,6 +1,6 @@
 /*  IIPImage Server: JPEG reader
 
-    Copyright (C) 2024 Ruven Pillay.
+    Copyright (C) 2024-2025 Ruven Pillay.
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -181,6 +181,8 @@ void JPEGImage::loadImageInfo( int seq, int ang ){
   unsigned int icc_length;
   if( jpeg_read_icc_profile ( &cinfo, &icc, &icc_length ) == TRUE ){
     metadata.insert( {"icc", string((const char*)icc,icc_length)} );
+    // Buffer is allocated by libjpeg but not freed - need to free it ourselves
+    free( icc );
 #ifdef JPEG_DEBUG
     logfile << "JPEG :: ICC Profile found with size " << icc_length << endl;
 #endif
