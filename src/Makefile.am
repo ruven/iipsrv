@@ -84,7 +84,7 @@ iipsrv_fcgi_SOURCES = \
 
 # Rename and install/uninstall to /sbin/
 install-exec-local:
-	$(INSTALL_PROGRAM) -m 755 iipsrv.fcgi "$(DESTDIR)$(sbindir)/iipsrv"
+	$(INSTALL_PROGRAM) -D -m 755 iipsrv.fcgi "$(DESTDIR)$(sbindir)/iipsrv"
 
 uninstall-local:
 	rm -f "$(DESTDIR)$(sbindir)/iipsrv"
