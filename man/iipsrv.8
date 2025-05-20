@@ -1,4 +1,4 @@
-.TH IIPSRV 8 "April 2025" "Ruven Pillay"
+.TH IIPSRV 8 "May 2025" "Ruven Pillay"
 .SH NAME
 
 IIPSRV \- IIPImage Image Server
@@ -7,7 +7,7 @@ IIPSRV \- IIPImage Image Server
 IIPImage is an advanced high-performance feature-rich multi-protocol image server for web-based streamed viewing and zooming of ultra high-resolution
 images. It is designed to be fast and bandwidth-efficient with low processor and memory requirements. The system can comfortably handle gigapixel size images as
 well as advanced image features such as 8, 16 and 32 bit depths, CIELAB colorimetric images and scientific imagery such as multispectral images.
-Source images can be either TIFF (tiled multi-resolution), JPEG or JPEG2000 (if enabled).
+Source images can be either TIFF (tiled multi-resolution pyramid), JPEG or JPEG2000.
 
 The image server can also dynamically export images in JPEG, PNG, WebP, AVIF and TIFF format and perform basic image processing, such as contrast adjustment, gamma control, conversion from color to greyscale, color twist, region extraction and arbitrary rescaling. The server can also export spectral point or profile data from multispectral data and apply color maps or perform hillshading rendering.
 
@@ -44,11 +44,13 @@ Alternatively these parameters can be set via environment settings if running di
 .B spawn-fcgi.
 
 .IP LOGFILE
-The log file the module will (attempt) to write to. If no
-value is given, no log will be written. Make sure the server
-process has write access to this directory. Paths with spaces
-in them may not work correctly. Version 1.1 and later of iipsrv
-also supports logging to syslog if "syslog" is given as the value.
+The log file the module will (attempt) to write to. Make sure the
+.B iipsrv
+server process has write access to this directory. Version 1.1 and later of
+.B iipsrv
+also supports logging to
+.B syslog
+if "syslog" is given as the value.
 .IP VERBOSITY
 The level of logging. 0 means no logging, 1 is minimal logging,
 2 lots of debugging stuff and 3 even more debugging stuff and 4
@@ -65,7 +67,7 @@ does not specify one. The value should be between 1 (highest level
 of compression) and 100 (highest image quality). The default is 75.
 .IP PNG_QUALITY
 The default PNG quality factor for compression when the client does not specify one.
-The value should be between 1 (highest level of compression) and 9 (highest image quality).
+The value should be between 1 (faster but lowest level of compression) and 9 (slower but highest level of compression).
 The default is 1.
 .IP WEBP_QUALITY
 The default WebP quality factor for compression when the client does not specify one.
@@ -96,7 +98,7 @@ This  is a suffix added to the end of each file system path. It can be combined
 with FILESYSTEM_PREFIX. It is not used
 in combination with FILENAME_PATTERN. If e.g. this is set to ".tif", an image
 URL such as  "/UUID" will look for "${FILESYSTEM_PREFIX}/UUID.tif". In the IIIF
-info.json document, the image @id will be set without the ".tif" suuffix.
+info.json document, the image @id will be set without the ".tif" suffix.
 .IP MAX_CVT
 The maximum permitted image pixel size returned by the CVT command
 in conjunction with WID or HEI or RGN. The default is 5000. This
@@ -120,13 +122,11 @@ The probability that a particular tile will have a watermark applied to it. 0 me
 .IP WATERMARK_OPACITY
 The opacity (between 0 and 1) applied to the watermark image.
 .IP MEMCACHED_SERVERS
-A comma-delimitted list of memcached servers with optional
-port numbers. For example: localhost,192.168.0.1:8888,192.168.0.2.
+A comma-delimitted list of memcached servers with optional port numbers. For example: localhost,192.168.0.1:8888,192.168.0.2.
 .IP MEMCACHED_TIMEOUT
 Time in seconds that cache remains fresh. Default is 86400 seconds (24 hours).
 .IP FILENAME_PATTERN
-Pattern that follows the name stem for a panoramic image sequence.
-eg: "_pyr_" for
+Pattern that follows the name stem for a panoramic image sequence. eg: "_pyr_" for
 .IR FZ1_pyr_000_090.tif .
 In this example, just supply FZ1 to the FIF command. The "000"
 indicates the vertical angle and "090" the horizontal. This is only
@@ -143,20 +143,20 @@ See http://www.w3.org/TR/cors/ for more details on CORS.
 Set a base URL for use in certain protocol requests if web server rewriting has taken place and the public URL is not the same as that supplied to
 .B iipsrv
 .IP URI_MAP
-Set a mapping from a URL prefix to a supported protocol. This enables iipsrv to
-be able to work without requring full CGI query strings. Map must be of the form
+Set a mapping from a URL prefix to a supported protocol. This enables
+.B iipsrv
+to be able to work without requring full CGI query strings. Map must be of the form
 "prefix=>protocol" where prefix can be either empty or any string prefix and protocol must
 be one of IIP,IIIF,DeepZoom, Zoomify. Used, for example, to map requests of the form
 http://server/iiif/ to the IIIF protocol handler without requiring web server rewriting.
 .IP CACHE_CONTROL
 Set the HTTP Cache-Control header. See http://www.w3.org/Protocols/rfc2616/rfc2616-sec14.html#sec14.9 for a full list of options. If not set, header defaults to "max-age=86400" (24 hours).
-.IP EMBED_ICC
-Set whether the ICC profile is embedded within the output image.
-0 to strip profile, 1 to embed profile. The default is 1 (embedded profiles).
+.IP MAX_ICC
+Set the maximum ICC profile size in bytes that is allowed to be embedded within an output image. This is set by default to 65535 bytes. If set to -1, no limit is set and all profiles are embedded. If set to 0, no profiles are embedded.
 .IP OMP_NUM_THREADS
-Set the number of OpenMP threads to be used by the iipsrv image
-processing routines (See OpenMP specification for details). All available processor
-threads are used by default.
+Set the number of OpenMP threads to be used by the
+.B iipsrv
+image processing routines (See OpenMP specification for details). All available processor threads are used by default.
 .IP KAKADU_READMODE
 Set the Kakadu JPEG2000 read-mode. 0 for 'fast' mode with minimal error checking (default), 1 for 'fussy' mode with no error recovery,
 2 for 'resilient' mode with maximum recovery from codestream errors. See the Kakadu documentation for further details.
@@ -169,6 +169,8 @@ Set the major IIIF Image API version. Values should be a single digit. For examp
 Set delimiter to enable page or slice selection for a multi-page or image stack for IIIF requests. Delimiter can be a single character or an arbitrary string. Disabled by default.
 .IP IIIF_EXTRA_INFO
 Add extra arbitrary field to all IIIF info.json files. Must be a string containing a valid JSON key, value line. Key and value quotes should be escaped if necessary and no trailing comma should be added. For example, to add a preferredFormats field: IIIF_EXTRA_INFO='"preferredFormats": ["webp"]'
+.IP IIIF_EXTENSIONS
+Enable extra (non-standard) image processing functionality for the `quality` segment of the IIIF Image API. These allow additional qualities such as `negative`, `stretch`, `equalization` and `log` to be used. This is set to 0 by default (disabled). Set to 1 to enable.
 .IP COPYRIGHT
 Specify a global copyright or rights statement if this is not available in the image metadata itself
 
@@ -241,7 +243,9 @@ is the most feature rich of the supported protocols and allows access to the mor
 The image paths given to the server must be absolute paths on the server machine (eg. via the FIF variable for the IIP protocol: FIF=/images/test.tif) and
 .I not
 paths relative to the web server document root location. If the FILESYSTEM_PREFIX server directive has been set (see OPTIONS above), then this prefix is automatically pre-pended to all requests
-to generate the absolute image path. Similarly, if FILESYSTEM_SUFFIX has been set, it will be appended to the path. Make sure that the server process owner is able to access and read the images.
+to generate the absolute image path. Similarly, if FILESYSTEM_SUFFIX has been set, it will be appended to the path. Make sure that the
+.B iipsrv
+process owner is able to access and read the images.
 
 Note that images do
 .I not
