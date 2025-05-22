@@ -27,9 +27,6 @@ using namespace std;
 void View::calculateResolution( unsigned int dimension,
 				unsigned int requested_size ){
 
-  // Reset our resolution level to the smallest available
-  resolution = 0;
-
   // Start from the highest resolution
   int j = max_resolutions - 1;
   unsigned int d = dimension;
@@ -50,7 +47,6 @@ void View::calculateResolution( unsigned int dimension,
 
   // Only update value of resolution if our calculated resolution is greater than that has already been set
   if( j > resolution ) resolution = j;
-
 }
 
 
@@ -58,7 +54,8 @@ void View::calculateResolution( unsigned int dimension,
 /// taking into account any maximum size settings
 unsigned int View::getResolution(){
 
-  unsigned int i;
+  // Initialize our resolution to smallest available before calculating
+  resolution = 0;
 
   // Note that we use floor() as that is how our resolutions are calculated
   vector<unsigned int> requested_size = View::getRequestSize();
@@ -69,7 +66,7 @@ unsigned int View::getResolution(){
   res_height = height;
 
   // Calculate the width and height of this resolution
-  for( i=1; i < (max_resolutions - resolution); i++ ){
+  for( unsigned int i=1; i < (max_resolutions - resolution); i++ ){
     res_width = (int) floor(res_width/2.0);
     res_height = (int) floor(res_height/2.0);
   }

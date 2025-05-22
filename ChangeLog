@@ -1,3 +1,7 @@
+22/05/2025:
+	- Fix to incorrect resolution calculation in View.cc
+
+
 19/05/2025:
 	- Make sure ICC profile buffer is freed in JPEGImage.cc.
 	- Updated make install command to correctly create all leading directories.
