@@ -1,6 +1,6 @@
 /*  IIP Server: JPEG input handler: Efficient decoding of tiles and regions from JPEG images
 
-    Copyright (C) 2024 Ruven Pillay.
+    Copyright (C) 2024-2025 Ruven Pillay.
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -96,14 +96,14 @@ class JPEGImage : public IIPImage {
   void openImage();
 
 
-  /// Overloaded function for loading JP2 image information
+  /// Overloaded function for loading JPEG image information
   /** @param x horizontal sequence angle
       @param y vertical sequence angle
    */
   void loadImageInfo( int x, int y );
 
 
-  /// Overloaded function for closing a JP2 image
+  /// Overloaded function for closing a JPEG image
   void closeImage();
 
 

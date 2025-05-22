@@ -1,5 +1,6 @@
 22/05/2025:
 	- Fix to incorrect resolution calculation in View.cc
+	- Correct typos in comments in JPEGImage.h
 
 
 19/05/2025:
