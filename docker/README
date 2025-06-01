@@ -89,7 +89,7 @@ The default iipsrv startup parameters are:
     FILESYSTEM_PREFIX="/images/"
 
 It's possible to change these at run-time by using the -e docker parameter. See
-https://iipimage.sourceforge.io/documentation/iipsrv for more details of the available startup parameters.
+https://iipimage.sourceforge.io/documentation/server for more details of the available startup parameters.
 For example, to change the level of logging:
 
     docker run -it -p 9000:9000 -p 9999:80 -v /home/images/:/images --rm -e VERBOSITY=1 iipsrv:edge
