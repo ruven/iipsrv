@@ -88,7 +88,7 @@ AC_ARG_ENABLE([debug-mode],
 		AC_DEFINE(OPENJPEG_DEBUG)
 		AC_DEFINE(JPEG_DEBUG)
 		DEBUG=true
-		AC_MSG_RESULT([configure: enabling debug mode])]
+		AC_MSG_RESULT([configure: enabling debug mode])
 )
 
 
