@@ -9,7 +9,7 @@
 
 FROM alpine:latest
 
-MAINTAINER ruven@users.sourceforge.net
+LABEL org.opencontainers.image.authors="ruven@users.sourceforge.net"
 LABEL url "https://iipimage.sourceforge.io"
 LABEL author "Ruven <ruven@users.sourceforge.net>"
 EXPOSE 80 9000
