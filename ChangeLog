@@ -1,3 +1,7 @@
+10/06/2025:
+	- Update src/Makefile.am to use universal "install -d" rather than "install -D"
+
+
 04/06/2025:
 	- Fix typo in configure.ac
 
