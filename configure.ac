@@ -65,7 +65,6 @@ if test "x$enable_openmp" != "xno"; then
 	AX_OPENMP( [OPENMP=true] )
 	if test "x$OPENMP" == "xtrue"; then
 		AM_CXXFLAGS="${OPENMP_CFLAGS} ${AM_CXXFLAGS}"
-		AM_LDFLAGS="${AM_LDFLAGS} ${OPENMP_CFLAGS}"
 	fi
 fi
 
