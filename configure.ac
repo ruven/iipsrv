@@ -60,12 +60,14 @@ LIBS="$PTHREAD_LIBS $LIBS"
 
 
 # Check for OpenMP
-AC_OPENMP
 OPENMP=false
-AS_IF([test "x$enable_openmp" != "xyes"], [
- AM_CXXFLAGS="${OPENMP_CFLAGS} ${AM_CXXFLAGS}"
- OPENMP=true
-])
+if test "x$enable_openmp" != "xno"; then
+	AX_OPENMP( [OPENMP=true] )
+	if test "x$OPENMP" == "xtrue"; then
+		AM_CXXFLAGS="${OPENMP_CFLAGS} ${AM_CXXFLAGS}"
+		LIBS="${LIBS} ${OPENMP_CFLAGS}"
+	fi
+fi
 
 
 # Check for C++ chrono timers and availability of various hash map implementations

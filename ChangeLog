@@ -1,3 +1,7 @@
+11/06/2025:
+	- Improve OpenMP detection in configure
+
+
 10/06/2025:
 	- Update src/Makefile.am to use universal "install -d" rather than "install -D"
 
