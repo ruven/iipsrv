@@ -23,6 +23,8 @@ jobs:
     - name: Compile
       run: make
 
+    - name: Test
+      run: make check
 
   macos:
     runs-on: macos-latest
@@ -40,7 +42,10 @@ jobs:
         export CPPFLAGS=${CFLAGS}
         export LDFLAGS="-L/opt/homebrew/lib -L/opt/homebrew/opt/libomp/lib"
         export LIBS="-lomp"
-        ax_cv_c_openmp="-Xpreprocessor -fopenmp" ./configure
+        ./configure
 
     - name: Compile
       run: make
+
+    - name: Test
+      run: make check
