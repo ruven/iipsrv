@@ -36,9 +36,10 @@ jobs:
     - name: Configure
       run: |
         ./autogen.sh
-        export CFLAGS="-I/opt/homebrew/include"
-        export CPPFLAGS=${CFLAGS}
-        export LDFLAGS="-L/opt/homebrew/lib"
+        export CFLAGS="-I/opt/homebrew/include -I/opt/homebrew/opt/libomp/include"
+        export CPPFLAGS="${CFLAGS}"
+        export LDFLAGS="-L/opt/homebrew/lib -L/opt/homebrew/opt/libomp/lib"
+        export LIBS="-lomp"
         ./configure
 
     - name: Compile

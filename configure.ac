@@ -55,7 +55,7 @@ AX_CXX_HAVE_ISFINITE
 
 # Pthread support
 AX_PTHREAD
-CXXFLAGS="$CXXFLAGS $PTHREAD_CFLAGS"
+AM_CXXFLAGS="$CXXFLAGS $CPPFLAGS $PTHREAD_CFLAGS"
 LIBS="$PTHREAD_LIBS $LIBS"
 
 
@@ -65,7 +65,7 @@ if test "x$enable_openmp" != "xno"; then
 	AX_OPENMP( [OPENMP=true] )
 	if test "x$OPENMP" == "xtrue"; then
 		AM_CXXFLAGS="${OPENMP_CFLAGS} ${AM_CXXFLAGS}"
-		LIBS="${LIBS} ${OPENMP_CFLAGS}"
+		AM_LDFLAGS="${AM_LDFLAGS} ${OPENMP_CFLAGS}"
 	fi
 fi
 
