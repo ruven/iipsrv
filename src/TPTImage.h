@@ -39,7 +39,7 @@ class TPTImage : public IIPImage {
   TIFF *tiff;
 
   /// List of SubIFD sub-resolutions
-  std::vector<uint64_t> subifds;
+  std::vector<toff_t> subifds;
 
   /// To which IFD do these SubIFDs belong
   tdir_t subifd_ifd;
