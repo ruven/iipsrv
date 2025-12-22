@@ -188,11 +188,10 @@ void OpenJPEGImage::loadImageInfo( int seq, int ang )
 #endif
 
   // Loop through each resolution and calculate the image dimensions -
-  // We force a similar behaviour to TIFF with resolutions at floor(x/2)
-  // rather than OpenJPEG's default ceil(x/2)
+  // for JPEG2000, these are defined as ceil(x/2)
   for( unsigned int c=1; c<numResolutions; c++ ){
-    w = floor( w/2.0 );
-    h = floor( h/2.0 );
+    w = ceil( w / 2.0 );
+    h = ceil( h / 2.0 );
     image_widths.push_back(w);
     image_heights.push_back(h);
 #ifdef OPENJPEG_DEBUG
@@ -208,8 +207,8 @@ void OpenJPEGImage::loadImageInfo( int seq, int ang )
   h = image_heights[0];
   while( (w>tile_widths[0]) || (h>tile_heights[0]) ){
     n++;
-    w = floor( w/2.0 );
-    h = floor( h/2.0 );
+    w = ceil( w / 2.0 );
+    h = ceil( h / 2.0 );
     if( n > numResolutions ){
       image_widths.push_back(w);
       image_heights.push_back(h);
@@ -451,11 +450,17 @@ void OpenJPEGImage::process( unsigned int res, int layers, int xoffset, int yoff
     _image->comps[i].factor = vipsres;
   }
 
-  // Image location and size at requested resolution
+  // Requested image location and size projected onto full resolution image
   unsigned int x0 = xoffset << vipsres;
   unsigned int y0 = yoffset << vipsres;
   unsigned int w0 = (xoffset + tw) << vipsres;
   unsigned int h0 = (yoffset + th) << vipsres;
+
+  // Make sure we don't overrun the dimensions of the full-size image
+  if( x0 > image_widths[0]  ) x0 = image_widths[0]  - 1;
+  if( y0 > image_heights[0] ) y0 = image_heights[0] - 1;
+  if( x0 + w0 > image_widths[0]  ) w0 = image_widths[0]  - x0;
+  if( y0 + h0 > image_heights[0] ) h0 = image_heights[0] - y0;
 
 #ifdef OPENJPEG_DEBUG
   logfile << "OpenJPEG :: decoding " << layers << " quality layers" << endl;

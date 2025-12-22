@@ -77,7 +77,7 @@ void CVT::send( Session* session ){
   session->view->setMaxResolutions( num_res );
 
   // Get the resolution, width and height for this view
-  int requested_res = session->view->getResolution();
+  int requested_res = session->view->getResolution( (*session->image)->image_widths, (*session->image)->image_heights );
   im_width = (*session->image)->image_widths[num_res-requested_res-1];
   im_height = (*session->image)->image_heights[num_res-requested_res-1];
 

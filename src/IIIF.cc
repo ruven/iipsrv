@@ -696,7 +696,7 @@ void IIIF::run( Session* session, const string& src )
 
 
   // Get most suitable resolution and recalculate width and height of region in this resolution
-  int requested_res = session->view->getResolution();
+  int requested_res = session->view->getResolution( (*session->image)->image_widths, (*session->image)->image_heights );
   unsigned int im_width = (*session->image)->image_widths[numResolutions - requested_res - 1];
   unsigned int im_height = (*session->image)->image_heights[numResolutions - requested_res - 1];
 

@@ -54,10 +54,10 @@ class View{
 
   /// Internal function to calculate the optimal resolution associated with a width
   ///  or height request. This also takes into account maximum & minimum size limits.
-  /** @param m maximum size
+  /** @param m vector of available sizes
       @param r requested size
    */
-  void calculateResolution( unsigned int m, unsigned int r );
+  void calculateResolution( const std::vector<unsigned int>& m, const unsigned int r );
 
 
  public:
@@ -174,9 +174,13 @@ class View{
   };
 
 
-  /// Return the resolution level needed for the requested view
-  /** @return requested resolution level */
-  unsigned int getResolution();
+  /// Return the optimal resolution level needed for the requested view
+  /// Always try to get a resolution that is exactly the same size or larger than the requested view size
+  /** @param widths vector containing available resolution widths
+      @param heights vector containing available resolution heights
+      @return resolution level (IIP resolution where 0=smallest) for requested image size
+   */
+  unsigned int getResolution( const std::vector<unsigned int>& widths, const std::vector<unsigned int>& heights );
 
 
   /// Return the scaling required in case our requested width or height is in between available resolutions

@@ -7,7 +7,7 @@
     Culture of the Czech Republic.
 
 
-    Copyright (C) 2009-2024 IIPImage.
+    Copyright (C) 2009-2025 IIPImage.
     Author: Ruven Pillay
 
     This program is free software; you can redistribute it and/or modify
@@ -250,17 +250,13 @@ void KakaduImage::loadImageInfo( int seq, int ang )
   logfile << "Kakadu :: Capture Resolution : " << dpi_x << "x" << dpi_y << " pixels/cm" << endl;
 #endif
 
-  // Loop through each resolution and calculate the image dimensions -
-  // We calculate ourselves rather than relying on get_dims() to force a similar
-  // behaviour to TIFF with resolutions at floor(x/2) rather than Kakadu's default ceil(x/2)
+  // Loop through each resolution and get the image dimensions for that resolution
   for( unsigned int c=1; c<numResolutions; c++ ){
-    //    codestream.apply_input_restrictions(0,0,c,1,NULL,KDU_WANT_OUTPUT_COMPONENTS);
-    //    kdu_dims layers;
-    //    codestream.get_dims(0,layers,true);
-    //    image_widths.push_back(layers.size.x);
-    //    image_heights.push_back(layers.size.y);
-    w = floor( w/2.0 );
-    h = floor( h/2.0 );
+    codestream.apply_input_restrictions(0,0,c,1,NULL,KDU_WANT_OUTPUT_COMPONENTS);
+    kdu_dims layers;
+    codestream.get_dims(0,layers,true);
+    w = layers.size.x;
+    h = layers.size.y;
     image_widths.push_back(w);
     image_heights.push_back(h);
 #ifdef KAKADU_DEBUG
@@ -269,16 +265,16 @@ void KakaduImage::loadImageInfo( int seq, int ang )
   }
 
   // If we don't have enough resolutions to fit a whole image into a single tile
-  // we need to generate them ourselves virtually. Fortunately, the
-  // kdu_region_decompressor function is able to handle the downsampling for us for one extra level.
-  // Extra downsampling has to be done ourselves
+  // we need to generate them ourselves virtually - these are always ceil(res/2) for JPEG2000.
+  // Fortunately, the kdu_region_decompressor function is able to handle the downsampling
+  // for us for one extra level. Extra downsampling has to be done ourselves
   unsigned int n = 1;
   w = image_widths[0];
   h = image_heights[0];
   while( (w>tile_widths[0]) || (h>tile_heights[0]) ){
     n++;
-    w = floor( w/2.0 );
-    h = floor( h/2.0 );
+    w = ceil( w / 2.0 );
+    h = ceil( h / 2.0 );
     if( n > numResolutions ){
       image_widths.push_back(w);
       image_heights.push_back(h);

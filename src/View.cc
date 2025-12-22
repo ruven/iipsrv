@@ -24,52 +24,44 @@ using namespace std;
 
 
 /// Calculate optimal resolution for a given requested pixel dimension
-void View::calculateResolution( unsigned int dimension,
-				unsigned int requested_size ){
+void View::calculateResolution( const std::vector<unsigned int>& dimensions,
+				const unsigned int requested_size ){
 
-  // Start from the highest resolution
-  int j = max_resolutions - 1;
-  unsigned int d = dimension;
+  int j;
 
   // Make sure we have a minimum size
   unsigned int rs = (requested_size<min_size) ? min_size : requested_size;
 
   // Find the resolution level closest but higher than the requested size
-  while( true ){
-    d = (unsigned int) floor(d/2.0);
-    if( d < rs ) break;
-    j--;
+  for( j=0; j<max_resolutions; j++ ){
+    if( dimensions[j] < rs ) break;
   }
+
+  // Invert to convert to IIP resolutions (0=smallest) - note that we implicitly add 1 to get resolution higher than
+  j = max_resolutions-j;
 
   // Limit j to the maximum resolution
   if( j < 0 ) j = 0;
   if( j > (int)(max_resolutions-1) ) j = max_resolutions - 1;
 
-  // Only update value of resolution if our calculated resolution is greater than that has already been set
+  // Only update value of resolution if our calculated resolution is greater than value that has already been set
   if( j > resolution ) resolution = j;
 }
 
 
 /// Calculate the optimal resolution and the size of this resolution for the requested view,
 /// taking into account any maximum size settings
-unsigned int View::getResolution(){
+unsigned int View::getResolution( const std::vector<unsigned int>& widths, const std::vector<unsigned int>& heights ){
 
   // Initialize our resolution to smallest available before calculating
   resolution = 0;
 
-  // Note that we use floor() as that is how our resolutions are calculated
   vector<unsigned int> requested_size = View::getRequestSize();
-  View::calculateResolution( width, floor((float)requested_size[0]/(float)view_width) );
-  View::calculateResolution( height, floor((float)requested_size[1]/(float)view_height) );
+  View::calculateResolution( widths, round((float)requested_size[0]/(float)view_width) );
+  View::calculateResolution( heights, round((float)requested_size[1]/(float)view_height) );
 
-  res_width = width;
-  res_height = height;
-
-  // Calculate the width and height of this resolution
-  for( unsigned int i=1; i < (max_resolutions - resolution); i++ ){
-    res_width = (int) floor(res_width/2.0);
-    res_height = (int) floor(res_height/2.0);
-  }
+  res_width = widths[max_resolutions-resolution-1];
+  res_height = heights[max_resolutions-resolution-1];
 
   // Check if we need to limit to a smaller resolution due to our max size limit
   float scale = getScale();
@@ -87,8 +79,8 @@ unsigned int View::getResolution(){
 
     while( resolution > 0 && ( dimension > max_size ) ){
       dimension = (int) (dimension/2.0);
-      res_width = (int) floor(res_width/2.0);
-      res_height = (int) floor(res_height/2.0);
+      res_width = widths[resolution];
+      res_height = heights[resolution];
       resolution--;
     }
   }

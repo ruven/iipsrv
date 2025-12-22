@@ -1,3 +1,9 @@
+22/12/2025:
+	- Update OpenJPEG and Kakadu decoders to store real resolution sizes rather than try to mimic TIFF.
+	  View::getResolution() also updated to take a vector of existing resolution sizes to determine resolution
+	  rather than trying to estimate these sizes. Fixes https://github.com/ruven/iipsrv/issues/283
+
+
 13/06/2025:
 	- Change TIFF SubIFD offset size to uint64_t in TPTImage.h. Fixes https://github.com/ruven/iipsrv/issues/281
 
