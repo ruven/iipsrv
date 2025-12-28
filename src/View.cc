@@ -33,7 +33,7 @@ void View::calculateResolution( const std::vector<unsigned int>& dimensions,
   unsigned int rs = (requested_size<min_size) ? min_size : requested_size;
 
   // Find the resolution level closest but higher than the requested size
-  for( j=0; j<max_resolutions; j++ ){
+  for( j=0; j<(int)max_resolutions; j++ ){
     if( dimensions[j] < rs ) break;
   }
 

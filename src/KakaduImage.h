@@ -34,9 +34,16 @@
 
 #include "IIPImage.h"
 
+// Eliminate gcc compiler warnings caused by Kakadu library
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#pragma GCC diagnostic ignored "-Wdeprecated-copy"
+#pragma GCC diagnostic ignored "-Wctor-dtor-privacy"
+#pragma GCC diagnostic ignored "-Woverloaded-virtual="
 #include <jpx.h>
 #include <jp2.h>
 #include <kdu_stripe_decompressor.h>
+#pragma GCC diagnostic pop
 #include <fstream>
 
 #define TILESIZE 256

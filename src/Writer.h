@@ -166,7 +166,7 @@ class FileWriter {
       @return number of bytes written
    */
   int putStr( const char* msg, int len ){
-    return fwrite( (void*) msg, sizeof(char), len, out );
+    return fwrite( (const void*) msg, sizeof(char), len, out );
   };
 
   /// Write out a string using puts()

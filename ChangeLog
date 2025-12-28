@@ -1,3 +1,7 @@
+28/12/2025:
+	- Eliminate warnings from GCC when using maximal compiler warning levels
+
+
 22/12/2025:
 	- Update OpenJPEG and Kakadu decoders to store real resolution sizes rather than try to mimic TIFF.
 	  View::getResolution() also updated to take a vector of existing resolution sizes to determine resolution
