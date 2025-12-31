@@ -373,7 +373,7 @@ void IIIF::run( Session* session, const string& src )
     int numOfTokens = 0;
 
     // Our region parameters (always between 0 and 1)
-    float region[4] = {0.0, 0.0, 1.0, 1.0};
+    double region[4] = {0.0, 0.0, 1.0, 1.0};
 
     // Region Parameter: { "full"; "square"; "x,y,w,h"; "pct:x,y,w,h" }
     if ( izer.hasMoreTokens() ){
@@ -420,8 +420,8 @@ void IIIF::run( Session* session, const string& src )
         }
 
         // Define our denominators as our session view expects a ratio, not pixel values
-        float wd = (float) width;
-        float hd = (float) height;
+        double wd = (double) width;
+        double hd = (double) height;
 
         if( isPCT ){
 	  wd = 100.0;
@@ -539,7 +539,7 @@ void IIIF::run( Session* session, const string& src )
           i.clear();
           i.str( sizeString.substr( pos + 1, string::npos ) );
           if ( !(i >> requested_height) ) throw invalid_argument( "invalid height" );
-        }
+	}
       }
 
 
@@ -738,15 +738,14 @@ void IIIF::run( Session* session, const string& src )
 
 
   // Determine whether this is a request for an individual tile which, therefore, coincides exactly with our tile boundaries
-  if( ( session->view->maintain_aspect && (requested_res > 0) &&
-	(view_left % tw == 0) && (view_top % th == 0) &&                            // Left / top boundaries align with tile positions
-	(requested_width == vtw) && (requested_height == vth) &&                    // Request is for exact tile dimensions
-	(session->view->getViewWidth() == vtw) && (session->view->getViewHeight() == vth) ) ||  // View size should also be identical to tile dimensions
-      // For smallest resolution, image size can be given as equal or less than tile size or exactly equal to tile size
-      ( ( session->view->maintain_aspect && (requested_res == 0) ) &&
-	( ( ((unsigned int) requested_width == im_width) && ((unsigned int) requested_height == im_height)) ||
-	  ( ((unsigned int) requested_width == tw) && ((unsigned int) requested_height == th)) ) )
-      ){
+  if(
+     // Left / top boundaries align with tile positions
+     (view_left % tw == 0) && (view_top % th == 0) &&
+     // Request is for exact tile dimensions (taking into account edge tile sizes)
+     (requested_width == vtw) && (requested_height == vth) &&
+     // View size should also be identical to tile dimensions
+     (session->view->getViewWidth() == vtw) && (session->view->getViewHeight() == vth)
+     ){
 
     // Get the width and height for last row and column tiles
     unsigned int rem_x = im_width % tw;

@@ -1,3 +1,10 @@
+31/12/2015:
+	- Re-write of View::getResolution() to more robustly determine resolution level: handles images with levels
+	  either rounded up or down.
+	- Update to IIIF.cc to more cleanly determine whether a request is for a tile or not and more accruately
+	  calculate normalized region sizes.
+
+
 28/12/2025:
 	- Eliminate warnings from GCC when using maximal compiler warning levels
 

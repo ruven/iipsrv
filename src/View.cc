@@ -23,45 +23,47 @@
 using namespace std;
 
 
-/// Calculate optimal resolution for a given requested pixel dimension
-void View::calculateResolution( const std::vector<unsigned int>& dimensions,
-				const unsigned int requested_size ){
-
-  int j;
-
-  // Make sure we have a minimum size
-  unsigned int rs = (requested_size<min_size) ? min_size : requested_size;
-
-  // Find the resolution level closest but higher than the requested size
-  for( j=0; j<(int)max_resolutions; j++ ){
-    if( dimensions[j] < rs ) break;
-  }
-
-  // Invert to convert to IIP resolutions (0=smallest) - note that we implicitly add 1 to get resolution higher than
-  j = max_resolutions-j;
-
-  // Limit j to the maximum resolution
-  if( j < 0 ) j = 0;
-  if( j > (int)(max_resolutions-1) ) j = max_resolutions - 1;
-
-  // Only update value of resolution if our calculated resolution is greater than value that has already been set
-  if( j > resolution ) resolution = j;
-}
-
 
 /// Calculate the optimal resolution and the size of this resolution for the requested view,
 /// taking into account any maximum size settings
 unsigned int View::getResolution( const std::vector<unsigned int>& widths, const std::vector<unsigned int>& heights ){
 
-  // Initialize our resolution to smallest available before calculating
-  resolution = 0;
+  int level;
 
+  // Get requested size - takes into account max size
   vector<unsigned int> requested_size = View::getRequestSize();
-  View::calculateResolution( widths, round((float)requested_size[0]/(float)view_width) );
-  View::calculateResolution( heights, round((float)requested_size[1]/(float)view_height) );
 
-  res_width = widths[max_resolutions-resolution-1];
-  res_height = heights[max_resolutions-resolution-1];
+  // Start from the smallest resolution size (last item in size array)
+  for( level = (int) max_resolutions - 1; level >= 0; level-- ){
+
+    // Scaling factor (assume powers of 2)
+    unsigned int factor = 1 << level;
+
+    // For some reason, this needs to be done in 2 steps with fw, fh first, otherwise rounding errors occur :-/
+    float fw = (float) width * view_width;
+    // For full width or height requests use the real level size.
+    // Also add an epsilon to avoid floating-point rounding errors when using floor()
+    unsigned int scaled_width = (view_width == 1.0) ? widths[level] : floor( (fw/factor) + numeric_limits<float>::epsilon() );
+    float fh = (float) height * view_height;
+    unsigned int scaled_height = (view_height == 1.0) ? heights[level] : floor( (fh/factor) + numeric_limits<float>::epsilon() );
+
+    // Note that we add 1px for the first checks to take into account differences between levels that have rounded up or down
+    if( scaled_width <= (widths[level]+1) && scaled_height <= (heights[level]+1) &&
+	// Skip check and avoid potential rounding errors if only a single dimension has been requested
+	( requested_width == 0 ? true : scaled_width >= requested_size[0] ) &&
+        ( requested_height == 0 ? true : scaled_height >= requested_size[1] ) ){
+      break; // Lowest resolution where conditions are met
+    }
+  }
+  // Clamp to 0 if no matches
+  if( level < 0 ) level = 0;
+
+  // Size of image at this level
+  res_width = widths[level];
+  res_height = heights[level];
+
+  // Store resolution as IIP resolution (0=smallest)
+  resolution = max_resolutions - level - 1;
 
   // Check if we need to limit to a smaller resolution due to our max size limit
   float scale = getScale();
@@ -119,21 +121,21 @@ float View::getScale(){
 }
 
 
-void View::setViewLeft( float x ) {
+void View::setViewLeft( double x ) {
   if( x > 1.0 ) view_left = 1.0;
   else if( x < 0.0 ) view_left = 0.0;
   else view_left = x;
 }
 
 
-void View::setViewTop( float y ) {
+void View::setViewTop( double y ) {
   if( y > 1.0 ) view_top = 1.0;
   else if( y < 0.0 ) view_top = 0.0;
   else view_top = y;
 }
 
 
-void View::setViewWidth( float w ) {
+void View::setViewWidth( double w ) {
   // Sanity check
   if( w > 1.0 ) view_width = 1.0;
   else if( w < 0.0 ) view_width = 0.0;
@@ -141,7 +143,7 @@ void View::setViewWidth( float w ) {
 }
 
 
-void View::setViewHeight( float h ) {
+void View::setViewHeight( double h ) {
   // Sanity check
   if( h > 1.0 ) view_height = 1.0;
   else if( h < 0.0 ) view_height = 0.0;

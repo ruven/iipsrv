@@ -39,7 +39,7 @@ class View{
  private:
 
   // Resolution independent x,y,w,h region viewport in range 0 -> 1.0
-  float view_left, view_top, view_width, view_height; /// viewport
+  double view_left, view_top, view_width, view_height; /// viewport
 
   int resolution;                             ///< Requested resolution where 0 is smallest available
   unsigned int max_resolutions;               ///< Total available resolutions
@@ -190,28 +190,28 @@ class View{
 
   /// Set the left co-ordinate of the viewport
   /** @param x left resolution independent co-ordinate */
-  void setViewLeft( float x );
+  void setViewLeft( double x );
 
 
   /// Set the top co-ordinate of the viewport
   /** @param y top resolution independent co-ordinate */
-  void setViewTop( float y );
+  void setViewTop( double y );
 
 
   /// Set the width co-ordinate of the viewport
   /** @param w width resolution independent co-ordinate */
-  void setViewWidth( float w );
+  void setViewWidth( double w );
 
 
   /// Set the height co-ordinate of the viewport
   /** @param h height resolution independent co-ordinate */
-  void setViewHeight( float h );
+  void setViewHeight( double h );
 
 
   /// Return the view dimensions scaled to the full resolution of the image
   /** @return size view dimensions on the full resolution canvas packed into a vector */
   std::vector<float> getViewSize(){
-    std::vector<float> size = { width*view_width, height*view_height };
+    std::vector<float> size = { width*(float)view_width, height*(float)view_height };
     return size;
   };
 
