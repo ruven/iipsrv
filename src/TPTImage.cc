@@ -2,7 +2,7 @@
 
 /*  IIP Server: Tiled Pyramidal TIFF handler
 
-    Copyright (C) 2000-2025 Ruven Pillay.
+    Copyright (C) 2000-2026 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -240,7 +240,7 @@ void TPTImage::loadImageInfo( int seq, int ang )
 
   // Handle various colour spaces
   if( colour == PHOTOMETRIC_CIELAB ) colorspace = ColorSpace::CIELAB;
-  else if( colour == PHOTOMETRIC_MINISBLACK ){
+  else if( colour == PHOTOMETRIC_MINISBLACK || colour == PHOTOMETRIC_MINISWHITE ){
     colorspace = (bpc==1)? ColorSpace::BINARY : ColorSpace::GREYSCALE;
   }
   else if( colour == PHOTOMETRIC_PALETTE ){
@@ -484,7 +484,7 @@ RawTile TPTImage::getTile( int x, int y, unsigned int res, int layers, unsigned 
 
   // Handle various colour spaces
   if( colour == PHOTOMETRIC_CIELAB ) colorspace = ColorSpace::CIELAB;
-  else if( colour == PHOTOMETRIC_MINISBLACK ){
+  else if( colour == PHOTOMETRIC_MINISBLACK || colour == PHOTOMETRIC_MINISWHITE ){
     colorspace = (bpc==1)? ColorSpace::BINARY : ColorSpace::GREYSCALE;
   }
   else if( colour == PHOTOMETRIC_PALETTE ){
@@ -661,8 +661,8 @@ RawTile TPTImage::getTile( int x, int y, unsigned int res, int layers, unsigned 
     // Unpack each raw byte into 8 8-bit pixels
     for( unsigned int i=0; i<nbytes; i++ ){
       unsigned char t = ((unsigned char*)rawtile.data)[i];
-      // Count backwards as TIFF is usually MSB2LSB
-      for( int k=7; k>=0; k-- ){
+      // Count backwards as TIFF is usually MSB2LSB - constrain n as there may be padding in the final byte
+      for( int k=7; k>=0 && n < np; k-- ){
 	// Set values depending on whether bit is set
 	buffer[n++] = (t & (1 << k)) ? max : min;
       }
