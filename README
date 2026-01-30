@@ -24,7 +24,7 @@ FEATURES
 * TIFF, JPEG2000 and JPEG input support
 * JPEG, PNG, WebP, AVIF and TIFF output support: export of whole or regions of images at any size
 * Supports IIP, Zoomify, DeepZoom and IIIF API's
-* 1, 8, 16 and 32 bit input image support including 32 bit floating point support
+* 1, 2, 4, 8, 10, 12, 14, 16 and 32 bit input image support including 32 bit floating point support
 * CIELAB support with automatic CIELAB->sRGB color space conversion
 * Multispectral and hyperspectral image support
 * Support for XMP metadata and ICC profiles
@@ -100,7 +100,7 @@ To install iipsrv to a system folder:
 
     make install
 
-This will install `iipsrv` (note without the .fcgi suffix) in the system `sbin` directory for use, for example, with a service script. By default, this is `/usr/local/sbin/iipsrv`. Use configure's --prefix parameter to change the destination directory. For example:
+This will install `iipsrv` (note without the .fcgi suffix) in the system `sbin` directory for use, for example, with a service script. By default, this is `/usr/local/sbin/iipsrv`. Use configure's --prefix parameter to change the destination directory. For example, to install in /usr/sbin/
 
     ./configure --prefix=/usr
     make
@@ -520,4 +520,4 @@ This can work in conjunction with debugging mode or together with a web server i
 Please refer to the project site https://iipimage.sourceforge.io for further details
 
 ------------------------------------------------------------------------------------
-(c) 2000-2025 Ruven Pillay <ruven@users.sourceforge.net>
+(c) 2000-2026 Ruven Pillay <ruven@users.sourceforge.net>
