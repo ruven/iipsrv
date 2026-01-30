@@ -3,7 +3,8 @@
 	- Make sure PHOTOMETRIC_MINISWHITE interpretation is treated as greyscale in TPTImage
 	- Constrain output buffer indices when converting from 1 to 8 bit
 	- Handle 2, 4, 6, 10, 12 and 14 bit depth TIFFs
-
+	- Added support in OpenJPEGImage for all possible JPEG2000 bit depths up to and including 16 bits.
+	  No changes necessary for KakaduImage as bit scaling handled automatically. Fixes https://github.com/ruven/iipsrv/issues/284
 
 31/12/2025:
 	- Re-write of View::getResolution() to more robustly determine resolution level: handles images with levels

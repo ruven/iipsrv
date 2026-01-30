@@ -1,6 +1,6 @@
 /*  IIPImage Server: OpenJPEG JPEG2000 handler
 
-    Copyright (C) 2019-2024 Ruven Pillay.
+    Copyright (C) 2019-2026 Ruven Pillay.
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -497,18 +497,25 @@ void OpenJPEGImage::process( unsigned int res, int layers, int xoffset, int yoff
     for( unsigned int i=0; i<tw; i+=factor ){
       size_t index = tw*j + i;
       for( unsigned int k=0; k<channels; k++ ){
-        // Handle 16 and 8 bit data:
+        // Handle 16 and 8 bit output data:
 	// OpenJPEG's output data is 32 bit unsigned int, so just mask of the bottom 2 bytes
 	// for 16 bit output or bottom 1 byte for 8 bit
+	// We also need to make sure we scale intermediate bit depths to 8 or 16 bit range
 	if( obpc == 16 ){
-	  ((unsigned short*)d)[n++] =(  (_image->comps[k].data[index]) & 0x0000ffff );
-	}
-	// Binary (bi-level) images need to be scaled up to 8 bits
-	else if( bpc == 1 ){
-	  ((unsigned char*)d)[n++] = ((_image->comps[k].data[index]) & 0x000000f) * 255;
+	  unsigned short       v = ((_image->comps[k].data[index]) & 0x0000ffff);
+	  if( bpc == 10 )      v = (v << 6) | (v >> 4);
+	  else if( bpc == 12 ) v = (v << 4) | (v >> 8);
+	  else if( bpc == 14 ) v = (v << 2) | (v >> 12);
+	  ((unsigned short*)d)[n++] = v;
 	}
 	else{
-	  ((unsigned char*)d)[n++] = (_image->comps[k].data[index]) & 0x000000ff;
+	  // 1 bit binary (bi-level), 2 bit, 4 bit and 6 bit images need to be scaled up to 8 bit range
+	  unsigned char       v = ((_image->comps[k].data[index]) & 0x000000f);
+	  if( bpc == 1 )      v *= 255;
+	  else if( bpc == 2 ) v *= 85;
+	  else if( bpc == 4 ) v *= 17;
+	  else if( bpc == 6 ) v = (v << 2) | (v >> 4);
+	  ((unsigned char*)d)[n++] = v;
 	}
       }
     }
