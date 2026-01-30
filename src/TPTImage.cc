@@ -676,6 +676,174 @@ RawTile TPTImage::getTile( int x, int y, unsigned int res, int layers, unsigned 
     rawtile.bpc = 8;
   }
 
+  // Pad 2 bit, 4 bit and 6 bit images to 8 bits for output
+  else if( bpc == 2 || bpc == 4 || bpc == 6 ){
+
+    // Allocate new buffer for 8 bit output
+    unsigned char *buffer = new unsigned char[np*channels];
+
+    // Tile sizes for raw buffer - these are always padded to the full tile size
+    unsigned int ttw = tile_widths[vipsres];
+    unsigned int tth = tile_heights[vipsres];
+
+    // TIFF rows are byte-aligned. Calculate how many bytes per row in the 4-bit source. Each sample is half a byte.
+    unsigned int samples_per_row = ttw * channels;
+
+    unsigned int bytes_per_row = 0;
+    if( bpc == 2 ) bytes_per_row = (samples_per_row + 3) / 4;
+    else if( bpc == 4 ) bytes_per_row = (samples_per_row + 1) / 2;
+    else bytes_per_row = (samples_per_row * 6 + 7) / 8;
+
+    // Loop through each line of pixels
+    for( unsigned int j = 0; j < tth; j++ ){
+      for( unsigned int i = 0; i < samples_per_row; i++ ){
+
+	unsigned char value = 0;
+
+	// Index in the source buffer
+	unsigned int idx = 0;
+
+	// Index in the destination buffer
+	int odx = (j * samples_per_row) + i;
+
+	// Handle each bit depth separately
+	if( bpc == 2 ){
+	  // Shift depends on pixel position in the byte (Big-Endian/TIFF standard)
+	  // Pixel 0 is top 2 bits, Pixel 3 is bottom 2 bits
+	  int bit_shift = 6 - ((i % 4) * 2);
+	  idx = (j * bytes_per_row) + (i / 4);
+
+	  value = (((unsigned char*)rawtile.data)[idx] >> bit_shift) & 0x03;
+
+	  // Scale to 8 bit range using a 0x55 multiplier
+	  buffer[odx] = value * 85;
+	}
+
+	else if( bpc == 4 ){
+	  // Byte index in the source buffer: (row offset) + (sample offset / 2)
+	  idx = (j * bytes_per_row) + (i / 2);
+
+	  // Extract our 4 bit value - depends on whether it's on the high or low nibble
+	  if ( i % 2 == 0 ) value = (((unsigned char*)rawtile.data)[idx] >> 4) & 0x0F; // High nibble = first pixel
+	  else value = ((unsigned char*)rawtile.data)[idx] & 0x0F;                     // Low nibble = second pixel
+
+	  // Scale to 8-bit
+	  buffer[odx] =  (value << 4) | value;
+	}
+
+	else if( bpc == 6 ){
+	  unsigned int bit_start = i * 6;
+	  unsigned int bit_offset = bit_start % 8;
+	  idx = (j * bytes_per_row) + (bit_start / 8);
+
+	  // We only need 2 bytes to extract 6 bits, but only read the second byte if it exists within buffer
+	  unsigned short chunk = (((unsigned char*)rawtile.data)[idx] << 8);
+	  if( idx + 1 < rawtile.dataLength ){
+	    chunk |= ((unsigned char*)rawtile.data)[idx + 1];
+	  }
+	  // Align and mask
+	  value = (chunk >> (16 - 6 - bit_offset)) & 0x3F;
+
+	  // Scale to 8 bit range
+	  buffer[odx] = (value << 2) | (value >> 4);
+	}
+
+	// Invert our 8 bit pixel if necessary
+	if( colour == PHOTOMETRIC_MINISWHITE ) buffer[odx] = ~buffer[odx];
+      }
+    }
+
+    // Free old data buffer and assign pointer to new data
+    rawtile.deallocate( rawtile.data );
+    rawtile.data = buffer;
+    rawtile.capacity = np * channels;
+    rawtile.dataLength = rawtile.capacity;
+    rawtile.bpc = 8;
+  }
+
+
+  // Pad 10 bit, 12 bit or 14 bit images to 16 bits for output
+  else if( bpc == 10 || bpc == 12 || bpc == 14 ){
+
+    // Allocate new buffer for 16 bit output
+    unsigned short *buffer = new unsigned short[np*channels];
+
+    // Tile sizes for raw buffer - these are always padded to the full tile size
+    unsigned int ttw = tile_widths[vipsres];
+    unsigned int tth = tile_heights[vipsres];
+    unsigned int samples_per_row = ttw * channels;
+
+    // TIFF rows are byte-aligned. Calculate how many bytes per row
+    unsigned int bytes_per_row = (samples_per_row * bpc + 7) / 8;
+
+    // Loop through each line of pixels
+    for( unsigned int j = 0; j < tth; j++ ){
+      for( unsigned int i = 0; i < samples_per_row; i++ ){
+
+	unsigned short value = 0;
+	unsigned int idx = 0;
+
+	// Index in the output buffer
+	int odx = (j * samples_per_row) + i;
+
+	// Both 10 and 14 bit require a chunk method
+	// 10 bit layout: [AAAA AAAA] [AABB BBBB] [BBBB CCCC] [CCCC CCDD] [DDDD DDDD]
+	if( bpc == 10 || bpc == 14 ){
+
+	  // Mask depends on bit depth
+	  int mask = (bpc == 10) ? 0x3FF : 0x3FFF;
+
+	  int bit_start = i * bpc;
+	  unsigned int idx = (j * bytes_per_row) + (bit_start / 8);
+	  int offset = bit_start % 8;
+
+	  // Read 3 bytes into a 32-bit chunk, but only read the second or third byte if it exists within buffer 
+	  unsigned int chunk = (((unsigned char*)rawtile.data)[idx] << 16);
+	  if( idx + 1 < rawtile.dataLength ) chunk |= (((unsigned char*)rawtile.data)[idx + 1] << 8);
+	  if( idx + 2 < rawtile.dataLength ) chunk |= (((unsigned char*)rawtile.data)[idx + 2]);
+
+	  // Extract value
+	  value = (chunk >> (24 - bpc - offset)) & mask;
+
+	  // Scale to 16-bit
+	  if (bpc == 10) buffer[odx] = (value << 6) | (value >> 4);
+	  else           buffer[odx] = (value << 2) | (value >> 12);
+	}
+
+	else if( bpc == 12 ){
+
+	  // Byte index in the source buffer: every 2 samples start at a new 3-byte boundary
+	  unsigned int idx = (j * bytes_per_row) + ((i * 3) / 2);
+
+	  // Extract our 12 bit value - depends on whether it's on the high or low nibble
+	  // 12 bit layout: [AAAA AAAA] [AAAA BBBB] [BBBB BBBB]
+	  unsigned short value;
+	  if( i % 2 == 0 ){
+	    // Even sample: Byte 0 and the High nibble of Byte 1
+	    value = (((unsigned char*)rawtile.data)[idx] << 4) | (((unsigned char*)rawtile.data)[idx + 1] >> 4);
+	  }
+	  else{
+	    // Odd sample: Low nibble of Byte 0 and Byte 1
+	    value = ((((unsigned char*)rawtile.data)[idx] & 0x0F) << 8) | ((unsigned char*)rawtile.data)[idx + 1];
+	  }
+
+	  // Scale to 16-bit
+	  buffer[odx] = (value << 4) | (value >> 8);
+	}
+
+	// Invert our 16 bit pixel if necessary
+	if( colour == PHOTOMETRIC_MINISWHITE ) buffer[odx] = ~buffer[odx];
+      }
+    }
+
+    // Free old data buffer and assign pointer to new data
+    rawtile.deallocate( rawtile.data );
+    rawtile.data = buffer;
+    rawtile.capacity = np * channels * 2;  // Capacity is number of bytes, so multiply by 2
+    rawtile.dataLength = rawtile.capacity;
+    rawtile.bpc = 16;
+  }
+
 
   // Crop our tile if necessary
   if( tw != tile_widths[vipsres] || th != tile_heights[vipsres] ) rawtile.crop( tw, th );

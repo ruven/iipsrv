@@ -1,4 +1,11 @@
-31/12/2015:
+
+30/01/2026:
+	- Make sure PHOTOMETRIC_MINISWHITE interpretation is treated as greyscale in TPTImage
+	- Constrain output buffer indices when converting from 1 to 8 bit
+	- Handle 2, 4, 6, 10, 12 and 14 bit depth TIFFs
+
+
+31/12/2025:
 	- Re-write of View::getResolution() to more robustly determine resolution level: handles images with levels
 	  either rounded up or down.
 	- Update to IIIF.cc to more cleanly determine whether a request is for a tile or not and more accruately
