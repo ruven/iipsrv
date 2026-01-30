@@ -24,7 +24,7 @@ FEATURES
 * TIFF, JPEG2000 and JPEG input support
 * JPEG, PNG, WebP, AVIF and TIFF output support: export of whole or regions of images at any size
 * Supports IIP, Zoomify, DeepZoom and IIIF API's
-* 1, 2, 4, 8, 10, 12, 14, 16 and 32 bit input image support including 32 bit floating point support
+* 1, 2, 4, 6, 8, 10, 12, 14, 16 and 32 bit input image support including 32 bit floating point support
 * CIELAB support with automatic CIELAB->sRGB color space conversion
 * Multispectral and hyperspectral image support
 * Support for XMP metadata and ICC profiles
