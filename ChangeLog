@@ -1,5 +1,6 @@
 11/02/2026:
 	- Correct typos in AVIFCompressor class
+	- Remove obsolete calculateResolution() function from View class
 
 
 30/01/2026:

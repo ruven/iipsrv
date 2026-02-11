@@ -1,7 +1,7 @@
 /*
     Image View and Transform Parameters
 
-    Copyright (C) 2003-2025 Ruven Pillay.
+    Copyright (C) 2003-2026 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -50,14 +50,6 @@ class View{
   unsigned int requested_width;               ///< Width requested by WID command
   unsigned int requested_height;              ///< Height requested by HEI command
   float rotation;                             ///< Rotation requested by ROT command
-
-
-  /// Internal function to calculate the optimal resolution associated with a width
-  ///  or height request. This also takes into account maximum & minimum size limits.
-  /** @param m vector of available sizes
-      @param r requested size
-   */
-  void calculateResolution( const std::vector<unsigned int>& m, const unsigned int r );
 
 
  public:
