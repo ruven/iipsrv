@@ -1,7 +1,7 @@
 /*  IIP AVIF Compressor Class:
     Handles alpha channels, ICC profiles and XMP metadata
 
-    Copyright (C) 2024 Ruven Pillay
+    Copyright (C) 2024-2026 Ruven Pillay
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -50,7 +50,7 @@ void AVIFCompressor::InitCompression( const RawTile& rawtile, unsigned int strip
 
 
 
-/// libwebp cannot handle line or region-based encoding, so simulate strip-based output using byte chunks
+/// libavif cannot handle line or region-based encoding, so simulate strip-based output using byte chunks
 unsigned int AVIFCompressor::CompressStrip( unsigned char* source, unsigned char* output, unsigned int tile_height ){
 
   // Initialize our chunk size only once at the start of the sequence

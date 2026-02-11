@@ -1,7 +1,7 @@
 /*  AVIF Compressor Class:
     Handles alpha channels, ICC profiles and XMP metadata
 
-    Copyright (C) 2024-2025 Ruven Pillay
+    Copyright (C) 2024-2026 Ruven Pillay
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -59,7 +59,7 @@ class AVIFCompressor : public Compressor {
  public:
 
   /// Constructor
-  /** @param quality WebP compression level (range 0-100)
+  /** @param quality AVIF compression level (range 0-100)
    */
   AVIFCompressor( int quality ) : Compressor(quality) {};
 
@@ -99,13 +99,13 @@ class AVIFCompressor : public Compressor {
   unsigned int Compress( RawTile& t );
 
 
-  /// Return the WebP header size
+  /// Return the AVIF header size
   inline unsigned int getHeaderSize() const { return header_size; }
 
   /// Return a pointer to the header itself
   inline unsigned char* getHeader() { return header; }
 
-  /// Return the WebP mime type
+  /// Return the AVIF mime type
   inline const char* getMimeType() const { return "image/avif"; }
 
   /// Return the image filename suffix

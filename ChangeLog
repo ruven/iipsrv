@@ -1,3 +1,6 @@
+11/02/2026:
+	- Correct typos in AVIFCompressor class
+
 
 30/01/2026:
 	- Make sure PHOTOMETRIC_MINISWHITE interpretation is treated as greyscale in TPTImage
