@@ -549,37 +549,136 @@ void JPEGCompressor::injectMetadata( RawTile& rawtile )
 {
   if( (!embedICC && !embedXMP &&!embedEXIF) || (icc.empty() && xmp.empty() && exif.empty()) ) return;
 
-  // Initialize our compression structure
-  InitCompression( rawtile, 0 );
+  // Initialize our destination manager
+  dest->pub.init_destination = iip_init_destination;
+  dest->pub.empty_output_buffer = iip_empty_output_buffer;
+  dest->pub.term_destination = iip_term_destination;
+  dest->strip_height = 0;
 
-  // Abort the compression as we only needed it for writing the header
-  jpeg_abort_compress( &cinfo );
+  // We set up the normal JPEG error routines, then override error_exit.
+  // Must be done before calling jpeg_create_compress()
+  cinfo.err = jpeg_std_error( &jerr );
 
-  // Destroy our compression structure
+  // Override the error_exit function with our own.
+  setup_error_functions( &cinfo );
+
+  // Create compression object
+  jpeg_create_compress( &cinfo );
+
+  // Assign our destination manager to the cinfo object
+  cinfo.dest = (jpeg_destination_mgr*) dest;
+
+  // Set up the correct width and height for this particular tile
+  width = rawtile.width;
+  height = rawtile.height;
+  channels = rawtile.channels;
+
+  // Calculate our metadata storage requirements
+  unsigned int metadata_size =
+  (icc.size()>0 ? (icc.size()+ICC_OVERHEAD_LEN) : 0) +
+  (xmp.size()>0 ? (xmp.size()+XMP_PREFIX_SIZE) : 0) +
+  (exif.size()>0 ? (exif.size()+EXIF_PREFIX_SIZE) : 0);
+
+  // Allocate enough memory for our compressed output data
+  // - compressed images at overly high quality factors can be larger than raw data
+  unsigned long output_size = (unsigned long)( (unsigned int)(width*height*channels*1.5) + metadata_size );
+
+  // Set destination buffer
+  dest->source = new unsigned char[output_size]; // Add some extra buffering
+  dest->source_size = output_size;
+
+  // Set image information
+  cinfo.image_width = width;
+  cinfo.image_height = height;
+  cinfo.input_components = channels;
+  cinfo.in_color_space = ( channels == 3 ? JCS_RGB : JCS_GRAYSCALE );
+
+  // Create a decompression struct to hold the information about the "decompressed" JPEG data
+
+  // NOTE: We do not actually decompress the JPEG data during any of the steps below; we simply
+  // copy the already compressed JPEG data from the source tile image into the destination JPEG,
+  // giving the opportunity to add the necessary metadata, including the APP14 Adobe marker, if
+  // needed; if the APP14 Adobe marker is missing but needed, it can result in the colourspace
+  // being rendering incorrectly in colour-managed software such as Safari and Preview on macOS,
+  // Photoshop, and others. The APP14 Adobe marker segment is needed if the JPEG is an Adobe JPEG,
+  // where the APP14 marker segment informs the decoder how to decode the colourspace information:
+  struct jpeg_decompress_struct dinfo;
+
+  // Create an error struct to hold any error information for the "decompression" step
+  struct jpeg_error_mgr jerr;
+
+  // Assign the error handler to the "decompression" step handler
+  dinfo.err = jpeg_std_error( &jerr );
+
+  // Create the "decompression" step – this is necessary to extract data components from an
+  // already encoded JPEG byte stream, in this case from the JPEG encoded rawtile.data; this
+  // step *does not* cause the JPEG data to be decompressed, it simply creates the handler:
+  jpeg_create_decompress( &dinfo );
+
+  // Source the JPEG data from memory, in this case the rawtile.data; this step *does not* cause
+  // the JPEG data to be decoded, it just makes the data usable by the other libjpeg methods
+  jpeg_mem_src( &dinfo, (const unsigned char*)rawtile.data, (size_t)rawtile.dataLength );
+
+  // Read the source JPEG header information, casting the return value to void to discard it
+  if( jpeg_read_header( &dinfo, TRUE ) != 1 ){
+    throw string("Calling jpeg_read_header() failed!");
+  }
+
+  // Read the encoded coefficients from the JPEG compressed rawtile.data; the coefficients
+  // hold the encoded JPEG data, reading them does not cause them to be decoded; this saves
+  // the process from having to re-encode the JPEG data, saving time and improving efficiency
+  jvirt_barray_ptr *coefficients = jpeg_read_coefficients( &dinfo );
+
+  // Copy the critical parameters from the source image to the destination image
+  jpeg_copy_critical_parameters( &dinfo, &cinfo );
+
+  // The color space information is not copied by the previous call, so it must be set manually
+  cinfo.in_color_space = dinfo.out_color_space;
+
+  // Write the resolution
+  writeResolution();
+
+  // Write the coefficients to the target JPEG
+  jpeg_write_coefficients( &cinfo, coefficients );
+
+  // Add an identifying comment
+  const char *comment = "iipsrv/" VERSION;
+  jpeg_write_marker( &cinfo, JPEG_COM, (const JOCTET *) comment, strlen(comment) );
+
+  // Embed ICC profile if one is supplied
+  writeICCProfile();
+
+  // Write any XMP Metadata to the JPEG
+  writeXMPMetadata();
+
+  // Write any Exif Metadata to the JPEG
+  writeExifMetadata();
+
+  // Finish the decompression step and destroy the handle freeing up the associated memory
+  jpeg_finish_decompress( &dinfo );
+  jpeg_destroy_decompress( &dinfo );
+
+  // Tidy up, get the compressed data size and de-allocate memory
+  jpeg_finish_compress( &cinfo );
+
+  // Check that we have enough memory in our RawTile for the updated JPEG data:
+  // This can happen on small tiles with high quality factors. If so delete and reallocate memory.
+  unsigned long dataLength = dest->written;
+  if( dataLength > rawtile.capacity ){
+    if( rawtile.memoryManaged ) delete[] (unsigned char*) rawtile.data;
+    rawtile.data = new unsigned char[dataLength];
+    rawtile.capacity = dataLength;
+  }
+
+  // Copy the updated destination image memory back the tile
+  memcpy( rawtile.data, dest->source, dataLength );
+
+  // Free up the memory associated with the destination source
+  delete[] dest->source;
+
+  // Free up the memory associated with the compression structure
   jpeg_destroy_compress( &cinfo );
 
-  // Skip final 2 bytes from header
-  unsigned int len = getHeaderSize() - 2;
-
-  unsigned int dataLength = len + rawtile.dataLength;
-  unsigned char* buffer = new unsigned char[dataLength];
-
-  // Copy JPEG header bytes
-  memcpy( buffer, getHeader(), len );
-
-  // SOS (Start of Scan) marker
-  unsigned char SOS[2] = {0xFF,0xDA};
-
-  // Replace bitstream's initial SOI (Start of Image) with an SOS marker
-  ((unsigned char*)rawtile.data)[0]=SOS[0];
-  ((unsigned char*)rawtile.data)[1]=SOS[1];
-
-  // Append JPEG bitstream to header
-  memcpy( &buffer[len], rawtile.data, rawtile.dataLength );
-
-  // Delete our original data buffer and re-assign our new buffer
-  if( rawtile.memoryManaged ) delete[] (unsigned char*) rawtile.data;
-  rawtile.data = buffer;
   rawtile.dataLength = dataLength;
   rawtile.capacity = dataLength;
 }
