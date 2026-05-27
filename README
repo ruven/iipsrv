@@ -453,6 +453,8 @@ CACHE_CONTROL: Set the HTTP Cache-Control header. See http://www.w3.org/Protocol
 
 MAX_ICC: Set the maximum ICC profile size in bytes that is allowed to be embedded within an output image. This is set by default to 65535 bytes. If set to -1, no limit is set and all profiles are embedded. If set to 0, no profiles are embedded.
 
+MAX_EXIF: Set the maximum EXIF size in bytes that is allowed to be embedded within an output image (when serving tiles). This is set by default to 65532 bytes. If set to -1, no limit is set and all EXIF metadata is embedded. If set to 0, no EXIF metadata is embedded.
+
 OMP_NUM_THREADS: Set the number of OpenMP threads to be used by the iipsrv image processing routines (See OpenMP specification for details). All available processor threads are used by default.
 
 KAKADU_READMODE: Set the Kakadu JPEG2000 read-mode. 0 for 'fast' mode with minimal error checking (default), 1 for 'fussy' mode with no error recovery, 2 for 'resilient' mode with maximum recovery from codestream errors. See the Kakadu documentation for further details.

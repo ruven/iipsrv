@@ -1,6 +1,6 @@
 /*  JPEG class wrapper to ijg jpeg library
 
-    Copyright (C) 2000-2024 Ruven Pillay
+    Copyright (C) 2000-2026 Ruven Pillay
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -220,18 +220,18 @@ void JPEGCompressor::InitCompression( const RawTile& rawtile, unsigned int strip
 
   jpeg_start_compress( &cinfo, TRUE );
 
-  // Add an identifying comment
-  const char *comment = "iipsrv/" VERSION;
-  jpeg_write_marker( &cinfo, JPEG_COM, (const JOCTET*) comment, strlen(comment) );
-
-  // Embed ICC profile if one is supplied
-  writeICCProfile();
+  // Add EXIF metadata
+  writeExifMetadata();
 
   // Add XMP metadata
   writeXMPMetadata();
 
-  // Add EXIF metadata
-  writeExifMetadata();
+  // Embed ICC profile if one is supplied
+  writeICCProfile();
+
+  // Add an identifying comment
+  const char *comment = "iipsrv/" VERSION;
+  jpeg_write_marker( &cinfo, JPEG_COM, (const JOCTET*) comment, strlen(comment) );
 
   // Copy the encoded JPEG header data to a separate buffer
   size_t datacount = dest->source_size - dest->pub.free_in_buffer;
@@ -370,20 +370,19 @@ unsigned int JPEGCompressor::Compress( RawTile& rawtile )
   jpeg_set_quality( &cinfo, Q, TRUE );
 
   jpeg_start_compress( &cinfo, TRUE );
-  
-  // Add an identifying comment
-  const char *comment = "iipsrv/" VERSION;
-  jpeg_write_marker( &cinfo, JPEG_COM, (const JOCTET*) comment, strlen(comment) );
-
-  // Embed ICC profile if one is supplied
-  writeICCProfile();
-
-  // Add XMP metadata
-  writeXMPMetadata();
 
   // Add EXIF metadata
   writeExifMetadata();
 
+  // Add XMP metadata
+  writeXMPMetadata();
+
+  // Embed ICC profile if one is supplied
+  writeICCProfile();
+
+  // Add an identifying comment
+  const char *comment = "iipsrv/" VERSION;
+  jpeg_write_marker( &cinfo, JPEG_COM, (const JOCTET*) comment, strlen(comment) );
 
   // Compress the image line by line
   JSAMPROW row[1];

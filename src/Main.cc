@@ -1,7 +1,7 @@
 /*
     IIP FCGI server module - Main loop.
 
-    Copyright (C) 2000-2025 Ruven Pillay
+    Copyright (C) 2000-2026 Ruven Pillay
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -349,6 +349,10 @@ int main( int argc, char *argv[] )
   int max_icc = Environment::getMaxICC();
 
 
+  // Get the max EXIF size we allow to be embedded
+  int max_exif = Environment::getMaxEXIF();
+
+
   // Get codec passthrough setting
   IIPImage::codec_passthrough = Environment::getCodecPassthrough();
 
@@ -437,6 +441,9 @@ int main( int argc, char *argv[] )
     logfile << "Setting maximum ICC profile size to ";
     if( max_icc < 0 ) logfile << "unlimited" << endl;
     else logfile << max_icc << " bytes" << endl;
+    logfile << "Setting maximum EXIF size to ";
+    if( max_exif < 0 ) logfile << "unlimited" << endl;
+    else logfile << max_exif << " bytes" << endl;
     logfile << "Setting codec passthrough to " << (IIPImage::codec_passthrough? "true" : "false") << endl;
     if( !copyright.empty() ) logfile << "Setting default rights/copyright statement to '" << copyright << "'" << endl;
     logfile << "Setting up TIFF support via " << TPTImage::getCodecVersion() << endl;
@@ -666,6 +673,7 @@ int main( int argc, char *argv[] )
     if( max_layers != 0 ) view.setMaxLayers( max_layers );
     view.setAllowUpscaling( allow_upscaling );
     view.setMaxICC( max_icc );
+    view.setMaxEXIF( max_exif );
 
 
     // Create an IIPResponse object - we use this for the OBJ requests.

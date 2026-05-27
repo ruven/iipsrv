@@ -1,7 +1,7 @@
 /*
     IIP JTL Command Handler Class Member Function: Export a single tile
 
-    Copyright (C) 2006-2025 Ruven Pillay.
+    Copyright (C) 2006-2026 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -164,6 +164,25 @@ void JTL::send( Session* session, int resolution, int tile ){
       if( session->loglevel >= 3 ){
 	*(session->logfile) << "JTL :: ICC profile with size "
 			    << (*session->image)->getMetadata("icc").size() << " bytes is too large: Not embedding" << endl;
+      }
+    }
+  }
+
+
+  // Embed EXIF metadata if we have one and if embedding has been enabled at start-up
+  if( ( session->view->maxEXIF() != 0 ) != 0 && ( (*session->image)->getMetadata("exif").size() > 0 ) ){
+    // Only embed if EXIF is of an acceptable size or if acceptable size is unlimited (-1)
+    if( ( session->view->maxEXIF() == -1 ) || ( (*session->image)->getMetadata("exif").size() < (unsigned long)session->view->maxEXIF() ) ){
+      if( session->loglevel >= 3 ){
+	*(session->logfile) << "JTL :: Embedding EXIF metadata with size "
+			    << (*session->image)->getMetadata("exif").size() << " bytes" << endl;
+      }
+      compressor->embedExifMetadata( true );
+    }
+    else{
+      if( session->loglevel >= 3 ){
+	*(session->logfile) << "JTL :: EXIF metadata with size "
+			    << (*session->image)->getMetadata("exif").size() << " bytes is too large: Not embedding" << endl;
       }
     }
   }

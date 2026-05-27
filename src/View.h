@@ -69,6 +69,7 @@ class View{
   bool maintain_aspect;                       ///< Indicate whether aspect ratio should be maintained
   bool allow_upscaling;                       ///< Indicate whether images may be served larger than the source file
   int max_icc;                                ///< Maximum ICC profile size we allow to be embedded
+  int max_exif;                               ///< Maximum EXIF size we allow to be embedded
   ImageEncoding output_format;                ///< Requested output format
   float contrast;                             ///< Contrast adjustment requested by CNT command
   float gamma;                                ///< Gamma adjustment requested by GAM command
@@ -95,6 +96,7 @@ class View{
     allow_upscaling = true;
     colorspace = ColorSpace::NONE;
     max_icc = -1;
+    max_exif = -1;
     output_format = ImageEncoding::JPEG;
     equalization = false;
     minmax = false;
@@ -139,6 +141,20 @@ class View{
     // Disable if colour-mapping, twist, hill-shading or greyscale conversion applied
     if( cmapped || shaded || ctw.size() || colorspace==ColorSpace::GREYSCALE ) return 0;
     return max_icc;
+  }
+
+
+  /// Set the maximum EXIF size we allow to be embedded
+  /** @param max maximum icc profile size
+   */
+  void setMaxEXIF( int max ){ max_exif = max; };
+
+
+  /// Get the maximum EXIF size we allow to be embedded
+  /** @return max EXIFsize
+   */
+  int maxEXIF(){
+    return max_exif;
   }
 
 

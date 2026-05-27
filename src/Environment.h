@@ -1,7 +1,7 @@
 /*
     IIP Environment Variable Class
 
-    Copyright (C) 2006-2025 Ruven Pillay
+    Copyright (C) 2006-2026 Ruven Pillay
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -51,7 +51,8 @@
 #define CACHE_CONTROL "max-age=86400";  // 24 hours
 #define ALLOW_UPSCALING true
 #define URI_MAP ""
-#define MAX_ICC 65536 // Max ICC profile size of 65k
+#define MAX_ICC 65536  // Max ICC profile size of 65k
+#define MAX_EXIF 65533 // Maximum size possible in a single JPEG chunk (taking into account prefix)
 #define CODEC_PASSTHROUGH true
 #define KAKADU_READMODE 0
 #define IIIF_VERSION 3
@@ -390,6 +391,17 @@ class Environment {
     }
     else max_icc = MAX_ICC;
     return max_icc;
+  }
+
+
+  static int getMaxEXIF(){
+    const char* envpara = getenv( "MAX_EXIF" );
+    int max_exif;
+    if( envpara ){
+      max_exif = atoi( envpara );
+    }
+    else max_exif = MAX_EXIF;
+    return max_exif;
   }
 
 
