@@ -22,13 +22,14 @@ RUN apt-get update && \
 	ca-certificates \
 	media-types \
 	lighttpd \
-	apt-transport-https && \
+	apt-transport-https \
+	curl && \
     update-ca-certificates
 
 
 # Install keyring and iipsrv
-COPY iipimage-keyring_1.0.0-1+trixie_all.deb /tmp/
-RUN dpkg -i /tmp/iipimage-keyring_1.0.0-1+trixie_all.deb && \
+RUN curl -o /tmp/iipimage-keyring_1.0.0-1+trixie_all.deb https://iipimage.sourceforge.io/apt/debian/pool/main/i/iipimage-keyring/iipimage-keyring_1.0.0-1+trixie_all.deb && \
+    dpkg -i /tmp/iipimage-keyring_1.0.0-1+trixie_all.deb && \
     apt-get update && \
     apt-get install --no-install-recommends -y iipimage-server
 
