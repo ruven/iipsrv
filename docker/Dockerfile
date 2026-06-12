@@ -10,7 +10,7 @@
 FROM alpine:latest
 
 LABEL org.opencontainers.image.authors="ruven@users.sourceforge.net"
-LABEL url "https://iipimage.sourceforge.io"
+LABEL url="https://iipimage.sourceforge.io"
 LABEL author "Ruven <ruven@users.sourceforge.net>"
 EXPOSE 80 9000
 
@@ -59,4 +59,4 @@ chmod u+x /usr/local/bin/run
 
 # Set iipsrv environment defaults and execute startup script
 ENV HOST="0.0.0.0" PORT="9000" LOGFILE="/dev/stdout" URI_MAP="iiif=>IIIF" VERBOSITY=6 FILESYSTEM_PREFIX="/images/"
-ENTRYPOINT run
+ENTRYPOINT ["run"]

@@ -35,6 +35,10 @@ To build the Alpine-based stable release for a particular platform (note the tra
 
     docker image build -t iipsrv:stable --build-arg ARCH=amd64/ -f Dockerfile.release ./
 
+To build the Debian-based image with the latest stable release of iipsrv (image size: 134MB):
+
+    docker image build -t iipsrv-debian:stable -f Dockerfile.debian-release ./
+
 
 Starting the iipsrv Docker Container
 ------------------------------------
