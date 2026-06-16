@@ -467,6 +467,10 @@ void IIIF::run( Session* session, const string& src )
       string sizeString = izer.nextToken();
       transform( sizeString.begin(), sizeString.end(), sizeString.begin(), ::tolower );
 
+      // Flag for confined "!w,h" requests, which must be clamped to the region
+      // rather than rejected when the source is smaller than the box (#271)
+      bool confined = false;
+
       // Calculate the width and height of our region at full resolution
       requested_width = region[2] * width;   // view->getViewWidth not trustworthy yet (no resolution set)
       requested_height = region[3] * height;
@@ -502,7 +506,7 @@ void IIIF::run( Session* session, const string& src )
       else{
 
         // !w,h request (do not break aspect ratio) - remove the !, store the info and continue usual parsing
-        if ( sizeString.substr(0, 1) == "!" ) sizeString.erase(0, 1);
+        if ( sizeString.substr(0, 1) == "!" ){ sizeString.erase(0, 1); confined = true; }
         // Otherwise tell our view it can break aspect ratio
         else session->view->maintain_aspect = false;
 
@@ -547,10 +551,22 @@ void IIIF::run( Session* session, const string& src )
         throw invalid_argument( "IIIF: invalid size: requested width or height < 0" );
       }
 
-      // Check for malformed upscaling request
-      if( iiif_version >= 3 ){
-	if( session->view->allow_upscaling == false &&
-	    ( requested_width > round(width*region[2]) || requested_height > round(height*region[3]) ) ){
+      // Check for upscaling request
+      if( iiif_version >= 3 && session->view->allow_upscaling == false &&
+	  ( requested_width > round(width*region[2]) || requested_height > round(height*region[3]) ) ){
+	// A confined "!w,h" request must return the largest image that fits
+	// within the region rather than be rejected when the source is smaller
+	// than the requested box (IIIF Image API 3.0 §4.2, issue #271). Clamp
+	// the requested size down to the region; aspect ratio is preserved
+	// downstream in View::getRequestSize(). Other size forms that exceed the
+	// region are genuine upscaling and remain an error.
+	if( confined ){
+	  unsigned int region_width = round( width * region[2] );
+	  unsigned int region_height = round( height * region[3] );
+	  requested_width = std::min( requested_width, region_width );
+	  requested_height = std::min( requested_height, region_height );
+	}
+	else{
 	  throw invalid_argument( "IIIF: upscaling should be prefixed with ^" );
 	}
       }
