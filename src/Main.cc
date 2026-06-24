@@ -750,8 +750,13 @@ int main( int argc, char *argv[] )
 	header = FCGX_GetParam( "QUERY_STRING", request.envp );
 	request_string = (header!=NULL)? header : "";
 
-	header = FCGX_GetParam( "REQUEST_METHOD", request.envp );
-	session.headers["REQUEST_METHOD"] = header;
+	if( header = FCGX_GetParam( "REQUEST_METHOD", request.envp ) ){
+	  session.headers["REQUEST_METHOD"] = header;
+	}
+	else{
+	  if( loglevel >=2 ) logfile << "Missing FCGI REQUEST_METHOD header" << endl;
+	  throw( 400 );
+	}
 
 	// Handle OPTIONS request
 	if( session.headers["REQUEST_METHOD"] == "OPTIONS" ){
@@ -949,6 +954,16 @@ int main( int argc, char *argv[] )
       string header;
 
       switch( code ){
+
+        case 400:
+	  response.setStatus( "400 Bad Request" );
+	  header = response.getHeaderResponse();
+	  writer.putS( header.c_str() );
+	  writer.flush();
+	  if( loglevel >= 2 ){
+	    logfile << "Sending HTTP 400 Bad Request" << endl;
+	  }
+	  break;
 
         case 405:
 	  response.setStatus( "405 Method Not Allowed" );
