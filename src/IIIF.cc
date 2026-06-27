@@ -563,8 +563,8 @@ void IIIF::run( Session* session, const string& src )
 	if( confined ){
 	  unsigned int region_width = round( width * region[2] );
 	  unsigned int region_height = round( height * region[3] );
-	  requested_width = std::min( requested_width, region_width );
-	  requested_height = std::min( requested_height, region_height );
+	  requested_width = ( requested_width > region_width ) ? region_width : requested_width;
+	  requested_height = ( requested_height > region_height ) ? region_height : requested_height;
 	}
 	else{
 	  throw invalid_argument( "IIIF: upscaling should be prefixed with ^" );
