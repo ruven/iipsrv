@@ -55,6 +55,13 @@ string IIIF::extra_info = "";
 bool IIIF::extensions;
 
 
+// Clamp a requested extent down to the region extent (used for confined "!w,h"
+// requests that must fit within the region rather than upscale - see issue #271).
+static inline unsigned int clamp_to_region( unsigned int requested, unsigned int region_extent ){
+  return ( requested > region_extent ) ? region_extent : requested;
+}
+
+
 // The request is in the form {identifier}/{region}/{size}/{rotation}/{quality}{.format}
 //     eg. filename.tif/full/full/0/native.jpg
 // or in the form {identifier}/info.json
@@ -506,7 +513,9 @@ void IIIF::run( Session* session, const string& src )
       else{
 
         // !w,h request (do not break aspect ratio) - remove the !, store the info and continue usual parsing
-        if ( sizeString.substr(0, 1) == "!" ){ sizeString.erase(0, 1); confined = true; }
+        // #271: capture the confined flag before the '!' is stripped below
+        confined = ( !sizeString.empty() && sizeString[0] == '!' );
+        if ( sizeString.substr(0, 1) == "!" ) sizeString.erase(0, 1);
         // Otherwise tell our view it can break aspect ratio
         else session->view->maintain_aspect = false;
 
@@ -551,24 +560,21 @@ void IIIF::run( Session* session, const string& src )
         throw invalid_argument( "IIIF: invalid size: requested width or height < 0" );
       }
 
-      // Check for upscaling request
-      if( iiif_version >= 3 && session->view->allow_upscaling == false &&
-	  ( requested_width > round(width*region[2]) || requested_height > round(height*region[3]) ) ){
-	// A confined "!w,h" request must return the largest image that fits
-	// within the region rather than be rejected when the source is smaller
-	// than the requested box (IIIF Image API 3.0 §4.2, issue #271). Clamp
-	// the requested size down to the region; aspect ratio is preserved
-	// downstream in View::getRequestSize(). Other size forms that exceed the
-	// region are genuine upscaling and remain an error.
-	if( confined ){
-	  unsigned int region_width = round( width * region[2] );
-	  unsigned int region_height = round( height * region[3] );
-	  requested_width = ( requested_width > region_width ) ? region_width : requested_width;
-	  requested_height = ( requested_height > region_height ) ? region_height : requested_height;
-	}
-	else{
-	  throw invalid_argument( "IIIF: upscaling should be prefixed with ^" );
-	}
+      // Check for upscaling request. A confined "!w,h" request that exceeds the
+      // region is clamped down to fit within it (issue #271, IIIF Image API 3.0
+      // §4.2) rather than rejected; aspect ratio is preserved downstream in
+      // View::getRequestSize(). Any other size form that exceeds the region without
+      // a '^' prefix is genuine upscaling and remains an error.
+      bool over_region = ( iiif_version >= 3 && session->view->allow_upscaling == false &&
+			   ( requested_width > round(width*region[2]) || requested_height > round(height*region[3]) ) );
+      if( over_region && confined ){
+	unsigned int region_width = round( width * region[2] );
+	unsigned int region_height = round( height * region[3] );
+	requested_width = clamp_to_region( requested_width, region_width );
+	requested_height = clamp_to_region( requested_height, region_height );
+      }
+      else if( over_region ){
+	throw invalid_argument( "IIIF: upscaling should be prefixed with ^" );
       }
 
       // Limit our requested size to the maximum allowable size if necessary
