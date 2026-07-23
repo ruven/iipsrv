@@ -30,6 +30,10 @@
 #include "KakaduImage.h"
 #endif
 
+#ifdef HAVE_GROK
+#include "GrokImage.h"
+#endif
+
 #ifdef HAVE_OPENJPEG
 #include "OpenJPEGImage.h"
 #endif
@@ -139,7 +143,7 @@ void FIF::run( Session* session, const string& src ){
       if( session->loglevel >= 2 ) *(session->logfile) << "FIF :: JPEG image detected" << endl;
       *session->image = new JPEGImage( test );
     }
-#if defined(HAVE_KAKADU) || defined(HAVE_OPENJPEG)
+#if defined(HAVE_KAKADU) || defined(HAVE_OPENJPEG) || defined(HAVE_GROK)
     else if( format == ImageEncoding::JPEG2000 ){
       if( session->loglevel >= 2 )
         *(session->logfile) << "FIF :: JPEG2000 image detected" << endl;
@@ -148,6 +152,8 @@ void FIF::run( Session* session, const string& src ){
       if( session->codecOptions["KAKADU_READMODE"] ){
 	((KakaduImage*)*session->image)->kdu_readmode = (KakaduImage::KDU_READMODE) session->codecOptions["KAKADU_READMODE"];
       }
+#elif defined(HAVE_GROK)
+      *session->image = new GrokImage( test );
 #elif defined(HAVE_OPENJPEG)
       *session->image = new OpenJPEGImage( test );
 #endif

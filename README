@@ -56,6 +56,7 @@ Building iipsrv requires a C++ compiler and several development libraries.
 
 #### Optional Libraries:
 - [Kakadu](https://kakadusoftware.com/) for JPEG2000 input support. Note, however, that this is not open source and you will need to purchase a license for the source code. In order to use, first build the Kakadu SDK as per the instructions supplied with the SDK. Then, supply the following parameters to the ./configure command: `--with-kakadu=/path/to/kakadu/distribution`
+- [Grok](https://github.com/GrokImageCompression/grok) for JPEG2000 input support. Grok is detected through its `libgrokj2k` pkg-config module, or can be selected from a non-standard installation with `--with-grok=<path>`. See [README-GROK.md](README-GROK.md) for the tested version and detailed build instructions
 - [OpenJPEG](http://www.openjpeg.org/) for JPEG2000 input support. OpenJPEG will be disabled if Kakadu support has been enabled. Use the `--with-openjpeg=<path>` configure option if this library is installed in a non-standard location
 - [libpng](http://libpng.org/pub/png/) for PNG output support
 - [libwebp](https://developers.google.com/speed/webp) for WebP output support
@@ -80,7 +81,7 @@ Now run the configure script:
 
     ./configure
 
-Optional libraries are activated by default if found by configure. To manually disable, use the `--disable-<option>` flag. For example `--disable-openjpeg` will disable OpenJPEG support.
+Optional libraries are activated by default if found by configure. JPEG2000 backends are selected in the order Kakadu, Grok, then OpenJPEG. To manually disable an optional library, use the `--disable-<option>` flag. For example, `--disable-grok` disables Grok support and allows configure to fall back to OpenJPEG.
 
 To see the full list of available configuration options:
 
