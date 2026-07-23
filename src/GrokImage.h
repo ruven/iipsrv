@@ -22,20 +22,33 @@
 #define IIP_GROKIMAGE_H
 
 #include "IIPImage.h"
+#include <memory>
 #include <mutex>
 #include <grok.h>
 
 
-#define TILESIZE 256
-
-
 /// Image class for JPEG 2000 Images:
 /// Inherits from IIPImage. Uses the Grok library.
-class GrokImage : public IIPImage {
+class GrokImage final : public IIPImage {
 
  private:
 
-  grk_object* _codec = nullptr;   /// codec (opaque object)
+  static constexpr unsigned int DEFAULT_TILE_SIZE = 256;
+
+  struct CodecDeleter {
+    void operator()( grk_object* codec ) const noexcept;
+  };
+
+  struct TileGeometry {
+    unsigned int width;
+    unsigned int height;
+    int x;
+    int y;
+  };
+
+  using CodecPtr = std::unique_ptr<grk_object, CodecDeleter>;
+
+  CodecPtr _codec;   /// owning codec handle
   grk_stream_params _stream_params{}; /// stream parameters
   grk_decompress_parameters _decompress_params{}; /// decompress parameters
   grk_header_info _header{}; /// header info cache
@@ -50,83 +63,84 @@ class GrokImage : public IIPImage {
       @param y y coordinate
       @param w width of region
       @param h height of region
-      @param d buffer to fill
+      @param output tile whose buffer will be filled
    */
-  void process( unsigned int r, int l, int x, int y, unsigned int w, unsigned int h, void* d );
-
-  /// Helper to convert Grok planar data to interleaved
-  void planarToInterleaved( const grk_image* img, void* interleaved_data,
-                           unsigned int width, unsigned int height,
-                           unsigned int channels, unsigned int out_bpc,
-                           unsigned int factor);
+  void process( unsigned int r, int l, int x, int y, unsigned int w,
+                unsigned int h, RawTile& output );
 
   /// Initialize decompression parameters
   void initDecompressParams();
+
+  /// Initialize default tile dimensions when the base image has none
+  void initTileDimensions();
+
+  /// Populate native and virtual resolution dimensions
+  void populateResolutionLevels( unsigned int width, unsigned int height );
+
+  /// Return geometry for a requested tile
+  TileGeometry getTileGeometry( unsigned int resolution, unsigned int tile ) const;
+
+  /// Normalize source precision to the RawTile storage precision
+  unsigned int getOutputBitsPerChannel() const;
 
 
  public:
 
   /// Constructor
   GrokImage() : IIPImage(){
-    tile_widths.push_back(TILESIZE); tile_heights.push_back(TILESIZE);
+    initTileDimensions();
     initDecompressParams();
-  };
+  }
 
 
   /// Constructor
   /** @param path image path
    */
-  GrokImage( const std::string& path)  : IIPImage(path) {
-    tile_widths.push_back(TILESIZE); tile_heights.push_back(TILESIZE);
+  explicit GrokImage( const std::string& path ) : IIPImage(path) {
+    initTileDimensions();
     initDecompressParams();
-  };
+  }
 
 
   /// Copy Constructor
   /** @param image Grok object
    */
   GrokImage( const GrokImage& image ): IIPImage( image ) {
-    if( tile_widths.empty() ){
-      tile_widths.push_back(TILESIZE);
-      tile_heights.push_back(TILESIZE);
-    }
+    initTileDimensions();
     initDecompressParams();
-  };
+  }
 
 
   /// Copy Constructor
   /** @param image IIPImage object
    */
-  GrokImage( const IIPImage& image ) : IIPImage(image){
-    if( tile_widths.empty() ){
-      tile_widths.push_back(TILESIZE);
-      tile_heights.push_back(TILESIZE);
-    }
+  explicit GrokImage( const IIPImage& image ) : IIPImage(image){
+    initTileDimensions();
     initDecompressParams();
-  };
+  }
 
 
   /// Destructor
-  ~GrokImage(){ closeImage(); };
+  ~GrokImage() override = default;
 
 
   /// Overloaded function for opening a JPEG2000 image
-  void openImage();
+  void openImage() override;
 
 
   /// Overloaded function for loading JP2 image information
   /** @param x horizontal sequence angle
       @param y vertical sequence angle
   */
-  void loadImageInfo( int x, int y );
+  void loadImageInfo( int x, int y ) override;
 
 
   /// Overloaded function for closing a JP2 image
-  void closeImage();
+  void closeImage() override;
 
 
   /// Return whether this image type directly handles region decoding
-  bool regionDecoding(){ return true; };
+  bool regionDecoding() override { return true; }
 
 
   /// Overloaded function for getting a particular tile
@@ -137,7 +151,8 @@ class GrokImage : public IIPImage {
       @param t tile number
       @param e image encoding
    */
-  RawTile getTile( int x, int y, unsigned int r, int l, unsigned int t, ImageEncoding e = ImageEncoding::RAW );
+  RawTile getTile( int x, int y, unsigned int r, int l, unsigned int t,
+                   ImageEncoding e = ImageEncoding::RAW ) override;
 
 
   /// Overloaded function for returning a region from image
@@ -152,7 +167,8 @@ class GrokImage : public IIPImage {
     @param h        height of region
     @return         a RawTile object
   */
-  RawTile getRegion( int ha, int va, unsigned int res, int layers, int x, int y, unsigned int w, unsigned int h );
+  RawTile getRegion( int ha, int va, unsigned int res, int layers, int x,
+                     int y, unsigned int w, unsigned int h ) override;
 
 
   /// Get codec version

@@ -153,7 +153,9 @@ void FIF::run( Session* session, const string& src ){
 	((KakaduImage*)*session->image)->kdu_readmode = (KakaduImage::KDU_READMODE) session->codecOptions["KAKADU_READMODE"];
       }
 #elif defined(HAVE_GROK)
-      *session->image = new GrokImage( test );
+      // Session exposes the active image as a legacy owning raw pointer;
+      // Main deletes it after the request loop, matching the other backends.
+      *session->image = new GrokImage( test ); // NOSONAR
 #elif defined(HAVE_OPENJPEG)
       *session->image = new OpenJPEGImage( test );
 #endif

@@ -21,11 +21,10 @@
 #include "GrokImage.h"
 #include "Logger.h"
 #include <algorithm>
+#include <cstdint>
 #include <cstdlib>
-#include <cstring>
 #include <limits>
-#include <sstream>
-#include <cmath>
+#include <utility>
 #ifdef GROK_DEBUG
 #include "Timer.h"
 #endif
@@ -34,56 +33,190 @@ using namespace std;
 
 
 // Reference our logging object
-extern Logger logfile;
+extern Logger logfile; // NOSONAR: iipsrv owns one shared mutable logger.
 
-// ---------------------------------------------------------------------------
-// Message callbacks
-// ---------------------------------------------------------------------------
+namespace {
 
-// Handle info, warning and error messages from Grok
-static void error_callback( const char* msg, void* )
+using MutexLock = std::unique_lock<std::mutex>;
+
+// Grok's public C callback ABI requires an opaque client-data parameter.
+void errorCallback( const char* message, void* client_data ) // NOSONAR
 {
-  if( IIPImage::logging ) logfile << "Grok error :: " << msg << endl;
+  auto* logger = static_cast<Logger*>( client_data );
+  if( IIPImage::logging && logger ) *logger << "Grok error :: " << message << endl;
 }
 
 #ifdef GROK_DEBUG
-static void warning_callback( const char* msg, void* )
+void warningCallback( const char* message, void* client_data ) // NOSONAR
 {
-  if( IIPImage::logging ) logfile << "Grok warning :: " << msg << endl;
+  auto* logger = static_cast<Logger*>( client_data );
+  if( IIPImage::logging && logger ) *logger << "Grok warning :: " << message << endl;
 }
-static void info_callback( const char* msg, void* )
+
+void infoCallback( const char* message, void* client_data ) // NOSONAR
 {
-  if( IIPImage::logging ) logfile << "Grok info :: " << msg;
+  auto* logger = static_cast<Logger*>( client_data );
+  if( IIPImage::logging && logger ) *logger << "Grok info :: " << message;
 }
 #endif
 
-static std::once_flag grok_init_flag;
+std::once_flag& grokInitFlag()
+{
+  static std::once_flag flag;
+  return flag;
+}
 
-static void grok_do_init() {
+uint32_t configuredThreadCount()
+{
+  constexpr uint32_t default_threads = 2;
+  const char* setting = std::getenv( "GROK_THREADS" );
+  if( !setting || !*setting ) return default_threads;
+
+  char* end = nullptr;
+  const auto parsed = std::strtoul( setting, &end, 10 );
+  if( end == setting || *end != '\0' ||
+      parsed > std::numeric_limits<uint32_t>::max() ){
+    return default_threads;
+  }
+  return static_cast<uint32_t>( parsed );
+}
+
+void deinitializeGrok()
+{
+  grk_deinitialize();
+}
+
+void initializeGrok()
+{
   grk_msg_handlers msg_handlers = {};
-  msg_handlers.error_callback = error_callback;
+  msg_handlers.error_callback = errorCallback;
+  msg_handlers.error_data = &logfile;
 #ifdef GROK_DEBUG
-  msg_handlers.info_callback = info_callback;
-  msg_handlers.warn_callback = warning_callback;
+  msg_handlers.info_callback = infoCallback;
+  msg_handlers.info_data = &logfile;
+  msg_handlers.warn_callback = warningCallback;
+  msg_handlers.warn_data = &logfile;
 #endif
   grk_set_msg_handlers( msg_handlers );
-  uint32_t num_threads = 2;
-  const char* thread_setting = std::getenv( "GROK_THREADS" );
-  if( thread_setting && *thread_setting ){
-    char* end = nullptr;
-    unsigned long parsed = std::strtoul( thread_setting, &end, 10 );
-    if( end != thread_setting && *end == '\0' &&
-        parsed <= std::numeric_limits<uint32_t>::max() ){
-      num_threads = static_cast<uint32_t>( parsed );
-    }
-  }
 
   // Initialize the process-wide Grok runtime.  GROK_THREADS=0 uses all CPUs.
-  grk_initialize( nullptr, num_threads, nullptr );
-  if( IIPImage::logging ) logfile << "Grok initialized using " << (num_threads == 0 ? "all" : std::to_string(num_threads)) << " threads." << endl;
+  const auto thread_count = configuredThreadCount();
+  grk_initialize( nullptr, thread_count, nullptr );
+  if( IIPImage::logging ){
+    logfile << "Grok initialized using "
+            << (thread_count == 0 ? "all" : std::to_string(thread_count))
+            << " threads." << endl;
+  }
 
   // Release the process-wide worker pool on a normal process exit.
-  std::atexit( [](){ grk_deinitialize(); } );
+  std::atexit( deinitializeGrok );
+}
+
+unsigned int ceilHalf( unsigned int value )
+{
+  return value / 2U + value % 2U;
+}
+
+uint32_t scaleSample( const grk_image_comp& component, size_t index,
+                      uint32_t output_max )
+{
+  auto sample = static_cast<int64_t>(
+    static_cast<const int32_t*>( component.data )[index]
+  );
+  const auto source_max = (1U << component.prec) - 1U;
+  if( component.sgnd ) sample += 1LL << (component.prec - 1);
+
+  const auto clamped = std::max<int64_t>(
+    0, std::min<int64_t>( source_max, sample )
+  );
+  return static_cast<uint32_t>(
+    (static_cast<uint64_t>(clamped) * output_max + source_max / 2U) /
+    source_max
+  );
+}
+
+void validateDecodedImage( const grk_image& image, unsigned int width,
+                           unsigned int height, unsigned int channel_count,
+                           unsigned int factor )
+{
+  if( !image.comps || channel_count == 0 || image.numcomps < channel_count ){
+    throw file_error( "Grok :: invalid decoded image components" );
+  }
+
+  const uint64_t required_width =
+    width == 0 ? 0 : static_cast<uint64_t>(width - 1) * factor + 1;
+  const uint64_t required_height =
+    height == 0 ? 0 : static_cast<uint64_t>(height - 1) * factor + 1;
+
+  for( unsigned int channel = 0; channel < channel_count; ++channel ){
+    const auto& component = image.comps[channel];
+    if( !component.data || component.prec == 0 || component.prec > 16 ||
+        component.w < required_width || component.h < required_height ){
+      throw file_error( "Grok :: decoded component dimensions do not match request" );
+    }
+  }
+}
+
+template<typename OutputSample>
+void interleaveDecodedImage( const grk_image& image, OutputSample* output,
+                             unsigned int width, unsigned int height,
+                             unsigned int channel_count, unsigned int factor )
+{
+  const auto output_max = static_cast<uint32_t>(
+    std::numeric_limits<OutputSample>::max()
+  );
+  size_t output_index = 0;
+
+  for( unsigned int output_y = 0; output_y < height; ++output_y ){
+    const auto source_y = output_y * factor;
+    for( unsigned int output_x = 0; output_x < width; ++output_x ){
+      const auto source_x = output_x * factor;
+      for( unsigned int channel = 0; channel < channel_count; ++channel ){
+        const auto& component = image.comps[channel];
+        const auto source_stride = component.stride ? component.stride : component.w;
+        const auto source_index =
+          static_cast<size_t>(source_y) * source_stride + source_x;
+        output[output_index++] = static_cast<OutputSample>(
+          scaleSample( component, source_index, output_max )
+        );
+      }
+    }
+  }
+}
+
+void copyDecodedImage( const grk_image& image, RawTile& output,
+                       unsigned int width, unsigned int height,
+                       unsigned int channel_count, unsigned int factor )
+{
+  if( !output.data ){
+    throw file_error( "Grok :: decoded output buffer is null" );
+  }
+  validateDecodedImage( image, width, height, channel_count, factor );
+
+  if( output.bpc == 16 ){
+    interleaveDecodedImage(
+      image, static_cast<uint16_t*>(output.data), width, height,
+      channel_count, factor
+    );
+    return;
+  }
+  if( output.bpc == 8 ){
+    interleaveDecodedImage(
+      image, static_cast<uint8_t*>(output.data), width, height,
+      channel_count, factor
+    );
+    return;
+  }
+  throw file_error( "Grok :: unsupported output precision" );
+}
+
+} // namespace
+
+constexpr unsigned int GrokImage::DEFAULT_TILE_SIZE;
+
+void GrokImage::CodecDeleter::operator()( grk_object* codec ) const noexcept
+{
+  grk_object_unref( codec );
 }
 
 void GrokImage::initDecompressParams()
@@ -94,6 +227,12 @@ void GrokImage::initDecompressParams()
   _decompress_params.core.tile_cache_strategy = GRK_TILE_CACHE_NONE;
   _decompress_params.core.skip_allocate_composite = false;
   _decompress_params.asynchronous = false;
+}
+
+void GrokImage::initTileDimensions()
+{
+  if( tile_widths.empty() ) tile_widths.push_back( DEFAULT_TILE_SIZE );
+  if( tile_heights.empty() ) tile_heights.push_back( DEFAULT_TILE_SIZE );
 }
 
 // ---------------------------------------------------------------------------
@@ -107,15 +246,15 @@ void GrokImage::openImage()
   // Update our timestamp
   updateTimestamp( filename );
 
-  std::call_once( grok_init_flag, grok_do_init );
+  std::call_once( grokInitFlag(), initializeGrok );
 
   // Setup stream parameters for file
   _stream_params = {};
   if( filename.size() >= GRK_PATH_LEN ){
     throw file_error( "Grok :: openImage() :: file path exceeds GRK_PATH_LEN: " + filename );
   }
-  std::strncpy(_stream_params.file, filename.c_str(), GRK_PATH_LEN - 1);
-  _stream_params.file[GRK_PATH_LEN - 1] = '\0';
+  std::copy( filename.begin(), filename.end(), _stream_params.file );
+  _stream_params.file[filename.size()] = '\0';
   _stream_params.is_read_stream = true;
   _stream_params.use_stdio = false; // Use memory mapping for better performance
 
@@ -125,7 +264,7 @@ void GrokImage::openImage()
 #endif
 
   // Create decompression codec using grk_decompress_init
-  _codec = grk_decompress_init( &_stream_params, &_decompress_params );
+  _codec.reset( grk_decompress_init( &_stream_params, &_decompress_params ) );
   if( !_codec ){
     throw file_error( "Grok :: openImage() :: Unable to create decompression codec for '" + filename + "'" );
   }
@@ -147,9 +286,8 @@ void GrokImage::openImage()
   _header.split_by_component = false;
   _header.single_tile_decompress = false;
 
-  if( !grk_decompress_read_header( _codec, &_header ) ){
-    grk_object_unref(_codec);
-    _codec=nullptr;
+  if( !grk_decompress_read_header( _codec.get(), &_header ) ){
+    closeImage();
     throw file_error( "Grok :: openImage() :: grk_decompress_read_header() failed" );
   }
   _header_read = true;
@@ -175,10 +313,7 @@ void GrokImage::closeImage()
   timer.start();
 #endif
 
-  if( _codec ){
-    grk_object_unref( _codec ); // This deallocate also _image
-    _codec = nullptr;
-  }
+  _codec.reset();
   _image = nullptr; // _image is owned by the codec – do NOT unref it separately.
   _header_read = false;
 
@@ -188,8 +323,131 @@ void GrokImage::closeImage()
 }
 
 
+void GrokImage::populateResolutionLevels( unsigned int width, unsigned int height )
+{
+  if( width == 0 || height == 0 || numResolutions == 0 ){
+    throw file_error( "Grok :: invalid image dimensions or resolution levels" );
+  }
 
-void GrokImage::loadImageInfo( int seq, int ang )
+  const auto native_level_count = numResolutions;
+  image_widths.clear();
+  image_heights.clear();
+  image_widths.reserve( native_level_count );
+  image_heights.reserve( native_level_count );
+  image_widths.push_back( width );
+  image_heights.push_back( height );
+
+#ifdef GROK_DEBUG
+  logfile << "Grok :: DWT Levels: " << native_level_count << endl;
+  logfile << "Grok :: Resolution : " << width << "x" << height << endl;
+#endif
+
+  auto level_width = width;
+  auto level_height = height;
+  for( unsigned int level = 1; level < native_level_count; ++level ){
+    level_width = ceilHalf( level_width );
+    level_height = ceilHalf( level_height );
+    image_widths.push_back( level_width );
+    image_heights.push_back( level_height );
+#ifdef GROK_DEBUG
+    logfile << "Grok :: Resolution : " << level_width << "x"
+            << level_height << endl;
+#endif
+  }
+
+  unsigned int required_level_count = 1;
+  level_width = width;
+  level_height = height;
+  while( level_width > tile_widths.front() ||
+         level_height > tile_heights.front() ){
+    level_width = ceilHalf( level_width );
+    level_height = ceilHalf( level_height );
+    ++required_level_count;
+    if( required_level_count > native_level_count ){
+      image_widths.push_back( level_width );
+      image_heights.push_back( level_height );
+    }
+  }
+
+  virtual_levels = required_level_count > native_level_count
+    ? required_level_count - native_level_count
+    : 0;
+#ifdef GROK_DEBUG
+  if( virtual_levels > 0 ){
+    logfile << "Grok :: Warning! Insufficient resolution levels in JPEG2000 "
+            << "stream. Will generate " << virtual_levels
+            << " extra levels dynamically." << endl
+            << "Grok :: Regenerate the file with at least "
+            << required_level_count << " levels for best performance." << endl;
+  }
+#endif
+  numResolutions = required_level_count;
+}
+
+
+unsigned int GrokImage::getOutputBitsPerChannel() const
+{
+  if( bpc == 0 || bpc > 16 ){
+    throw file_error( "Grok :: unsupported number of bits" );
+  }
+  return bpc <= 8 ? 8 : 16;
+}
+
+
+GrokImage::TileGeometry GrokImage::getTileGeometry(
+  unsigned int resolution, unsigned int tile
+) const
+{
+  if( resolution >= numResolutions ){
+    throw file_error(
+      "Grok :: asked for non-existent resolution: " +
+      std::to_string(resolution)
+    );
+  }
+
+  const auto native_resolution = getNativeResolution( resolution );
+  if( native_resolution < 0 ||
+      static_cast<size_t>(native_resolution) >= image_widths.size() ){
+    throw file_error( "Grok :: invalid native resolution" );
+  }
+
+  const auto base_width = tile_widths.front();
+  const auto base_height = tile_heights.front();
+  if( base_width == 0 || base_height == 0 ){
+    throw file_error( "Grok :: invalid tile dimensions" );
+  }
+
+  const auto level_width = image_widths[native_resolution];
+  const auto level_height = image_heights[native_resolution];
+  const auto columns = (level_width + base_width - 1U) / base_width;
+  const auto rows = (level_height + base_height - 1U) / base_height;
+  const auto tile_count = static_cast<uint64_t>(columns) * rows;
+  if( tile >= tile_count ){
+    throw file_error(
+      "Grok :: asked for non-existent tile: " + std::to_string(tile)
+    );
+  }
+
+  const auto column = tile % columns;
+  const auto row = tile / columns;
+  const auto x = static_cast<uint64_t>(column) * base_width;
+  const auto y = static_cast<uint64_t>(row) * base_height;
+  if( x > static_cast<uint64_t>(std::numeric_limits<int>::max()) ||
+      y > static_cast<uint64_t>(std::numeric_limits<int>::max()) ){
+    throw file_error( "Grok :: tile offset exceeds supported coordinate range" );
+  }
+
+  return {
+    std::min( base_width, level_width - static_cast<unsigned int>(x) ),
+    std::min( base_height, level_height - static_cast<unsigned int>(y) ),
+    static_cast<int>( x ),
+    static_cast<int>( y )
+  };
+}
+
+
+
+void GrokImage::loadImageInfo( int, int )
 {
 
 #ifdef GROK_DEBUG
@@ -218,59 +476,9 @@ void GrokImage::loadImageInfo( int seq, int ang )
     throw file_error( "Grok :: loadImageInfo() :: unsupported component precision" );
   }
 
-  // Get image dimensions
-  unsigned int w = _header.header_image.x1 - _header.header_image.x0;
-  unsigned int h = _header.header_image.y1 - _header.header_image.y0;
-
-  // Empty any existing list of available resolution sizes
-  image_widths.clear();
-  image_heights.clear();
-
-  // Save first resolution level
-  image_widths.push_back(w);
-  image_heights.push_back(h);
-
-#ifdef GROK_DEBUG
-  logfile << "Grok :: DWT Levels: " << numResolutions << endl;
-  logfile << "Grok :: Resolution : " << w << "x" << h << endl;
-#endif
-
-  // Loop through each resolution and calculate the image dimensions -
-  // for JPEG2000, these are defined as ceil(x/2)
-  for( unsigned int c=1; c<numResolutions; c++ ){
-    w = ceil( w / 2.0 );
-    h = ceil( h / 2.0 );
-    image_widths.push_back(w);
-    image_heights.push_back(h);
-#ifdef GROK_DEBUG
-    logfile << "Grok :: Resolution : " << w << "x" << h << endl;
-#endif
-  }
-
-  // If we don't have enough resolutions to fit a whole image into a single tile
-  // we need to generate them ourselves virtually.
-  unsigned int n = 1;
-  w = image_widths[0];
-  h = image_heights[0];
-  while( (w>tile_widths[0]) || (h>tile_heights[0]) ){
-    n++;
-    w = ceil( w / 2.0 );
-    h = ceil( h / 2.0 );
-    if( n > numResolutions ){
-      image_widths.push_back(w);
-      image_heights.push_back(h);
-    }
-  }
-
-  if( n > numResolutions ){
-#ifdef GROK_DEBUG
-    logfile << "Grok :: Warning! Insufficient resolution levels in JPEG2000 stream. Will generate "
-            << n-numResolutions << " extra levels dynamically -" << endl
-            << "Grok :: However, you are advised to regenerate the file with at least " << n << " levels" << endl;
-#endif
-    virtual_levels = n-numResolutions;
-  }
-  numResolutions = n;
+  const auto width = _header.header_image.x1 - _header.header_image.x0;
+  const auto height = _header.header_image.y1 - _header.header_image.y0;
+  populateResolutionLevels( width, height );
 
   // Need to assign basic colorspace information
   if( channels == 1 ){
@@ -321,11 +529,9 @@ void GrokImage::loadImageInfo( int seq, int ang )
   // Get the max and min values for our data type
   min.clear();
   max.clear();
-  const float max_sample = static_cast<float>( (1U << bpc) - 1U );
-  for( unsigned int i=0; i<channels; i++ ){
-    min.push_back( 0.0 );
-    max.push_back( max_sample );
-  }
+  const auto max_sample = static_cast<float>( (1U << bpc) - 1U );
+  min.assign( channels, 0.0F );
+  max.assign( channels, max_sample );
 
   // Indicate that our metadata has been read
   isSet = true;
@@ -334,133 +540,34 @@ void GrokImage::loadImageInfo( int seq, int ang )
   logfile << "Grok :: loadImageInfo() :: " << timer.getTime() << " microseconds" << endl;
 #endif
 }
-
-
-
-// Helper to convert planar to interleaved
-void GrokImage::planarToInterleaved( const grk_image* img, void* interleaved_data,
-                                     unsigned int width, unsigned int height,
-                                     unsigned int channels, unsigned int out_bpc,
-                                     unsigned int factor)
-{
-  if( !img || !interleaved_data || channels == 0 || img->numcomps < channels ){
-    throw file_error( "Grok :: planarToInterleaved() :: invalid decoded image" );
-  }
-
-  const unsigned int obpc = (out_bpc > 8 && out_bpc <= 16) ? 16 : 8;
-  const uint32_t output_max = (obpc == 16) ? 65535U : 255U;
-
-  size_t n = 0;
-  for( unsigned int c = 0; c < channels; c++ ){
-    const grk_image_comp& comp = img->comps[c];
-    const uint64_t needed_width = width ? (uint64_t)(width - 1) * factor + 1 : 0;
-    const uint64_t needed_height = height ? (uint64_t)(height - 1) * factor + 1 : 0;
-    if( !comp.data || comp.prec == 0 || comp.prec > 16 ||
-        comp.w < needed_width || comp.h < needed_height ){
-      throw file_error( "Grok :: planarToInterleaved() :: decoded component dimensions do not match request" );
-    }
-  }
-
-  for( unsigned int j = 0; j < height; j++ ){
-    const unsigned int src_y = j * factor;
-    for( unsigned int i = 0; i < width; i++ ){
-      const unsigned int src_x = i * factor;
-      for( unsigned int c = 0; c < channels; c++ ){
-        const grk_image_comp& comp = img->comps[c];
-        const size_t src_stride = comp.stride ? comp.stride : comp.w;
-        const size_t index = static_cast<size_t>(src_y) * src_stride + src_x;
-        int64_t sample = static_cast<const int32_t*>(comp.data)[index];
-        const uint32_t source_max = (1U << comp.prec) - 1U;
-        if( comp.sgnd ) sample += 1LL << (comp.prec - 1);
-        sample = std::max<int64_t>( 0, std::min<int64_t>( source_max, sample ) );
-        const uint32_t scaled = static_cast<uint32_t>(
-          (static_cast<uint64_t>(sample) * output_max + source_max / 2U) / source_max
-        );
-
-        if( obpc == 16 ){
-          static_cast<unsigned short*>(interleaved_data)[n++] =
-            static_cast<unsigned short>( scaled );
-        }
-        else{
-          static_cast<unsigned char*>(interleaved_data)[n++] =
-            static_cast<unsigned char>( scaled );
-        }
-      }
-    }
-  }
-}
-
-
-
 // Get an individual tile
 RawTile GrokImage::getTile( int seq, int ang, unsigned int res, int layers, unsigned int tile, ImageEncoding e )
 {
-
-  // Scale up our output bit depth to the nearest factor of 8
-  unsigned obpc = bpc;
-  if( bpc <= 16 && bpc > 8 ) obpc = 16;
-  else if( bpc <= 8 ) obpc = 8;
+  (void)e;
 
 #ifdef GROK_DEBUG
   Timer timer;
   timer.start();
 #endif
 
-  if( res >= numResolutions ){
-    ostringstream tile_no;
-    tile_no << "Grok :: Asked for non-existent resolution: " << res;
-    throw file_error( tile_no.str() ); // FIXME: release allocated resources
-  }
-
-  int vipsres = getNativeResolution( res );
-
-  unsigned int tw = tile_widths[0];
-  unsigned int th = tile_heights[0];
-
-  // Get the width and height for last row and column tiles
-  unsigned int rem_x = image_widths[vipsres] % tile_widths[0];
-  unsigned int rem_y = image_heights[vipsres] % tile_heights[0];
-
-  // Calculate the number of tiles in each direction
-  unsigned int ntlx = (image_widths[vipsres] / tile_widths[0]) + (rem_x == 0 ? 0 : 1);
-  unsigned int ntly = (image_heights[vipsres] / tile_heights[0]) + (rem_y == 0 ? 0 : 1);
-
-  // Check whether requested tile exists
-  if( tile >= ntlx*ntly ){
-    ostringstream tile_no;
-    tile_no << "Grok :: Asked for non-existent tile: " << tile;
-    throw file_error( tile_no.str() ); // FIXME: release allocated resources
-  }
-
-  // Alter the tile size if it's in the last column
-  if( ( tile % ntlx == ntlx - 1 ) && ( rem_x != 0 ) ) {
-    tw = rem_x;
-  }
-
-  // Alter the tile size if it's in the bottom row
-  if( ( tile / ntlx == ntly - 1 ) && rem_y != 0 ) {
-    th = rem_y;
-  }
-
-  // Calculate the pixel offsets for this tile
-  int xoffset = (tile % ntlx) * tile_widths[0];
-  int yoffset = (unsigned int) floor((double)(tile/ntlx)) * tile_heights[0];
+  const auto geometry = getTileGeometry( res, tile );
+  const auto output_bpc = getOutputBitsPerChannel();
 
 #ifdef GROK_DEBUG
-  logfile << "Grok :: Tile size: " << tw << "x" << th << " @" << channels << endl;
+  logfile << "Grok :: Tile size: " << geometry.width << "x"
+          << geometry.height << " @" << channels << endl;
 #endif
 
-  // Grok supports 8 or 16 bit images
-  if( !( (obpc == 8) || (obpc == 16) ) ) throw file_error( "Grok :: Unsupported number of bits" ); // FIXME: release allocated resources
-
-  // Create our Rawtile object and initialize with data
-  RawTile rawtile( tile, res, seq, ang, tw, th, channels, obpc );
+  RawTile rawtile(
+    tile, res, seq, ang, geometry.width, geometry.height, channels, output_bpc
+  );
   rawtile.filename = getImagePath();
   rawtile.timestamp = timestamp;
   rawtile.allocate();
 
-  // Process the tile
-  process( res, layers, xoffset, yoffset, tw, th, rawtile.data );
+  process(
+    res, layers, geometry.x, geometry.y, geometry.width, geometry.height, rawtile
+  );
 
 #ifdef GROK_DEBUG
   logfile << "Grok :: getTile() :: " << timer.getTime() << " microseconds" << endl;
@@ -475,30 +582,24 @@ RawTile GrokImage::getTile( int seq, int ang, unsigned int res, int layers, unsi
 RawTile GrokImage::getRegion( int ha, int va, unsigned int res, int layers, int x, int y, unsigned int w, unsigned int h ){
 
   if( res >= numResolutions ){
-    ostringstream region_no;
-    region_no << "Grok :: Asked for non-existent resolution: " << res;
-    throw file_error( region_no.str() );
+    throw file_error(
+      "Grok :: asked for non-existent resolution: " + std::to_string(res)
+    );
   }
-
-  // Scale up our output bit depth to the nearest factor of 8
-  unsigned int obpc = bpc;
-  if( bpc <= 16 && bpc > 8 ) obpc = 16;
-  else if( bpc <= 8 ) obpc = 8;
 
 #ifdef GROK_DEBUG
   Timer timer;
   timer.start();
 #endif
 
-  // Grok supports 8 or 16 bit images
-  if( !( (obpc == 8) || (obpc == 16) ) ) throw file_error( "Grok :: Unsupported number of bits" ); // FIXME: release allocated resources
-
-  RawTile rawtile( 0, res, ha, va, w, h, channels, obpc );
+  RawTile rawtile(
+    0, res, ha, va, w, h, channels, getOutputBitsPerChannel()
+  );
   rawtile.filename = getImagePath();
   rawtile.timestamp = timestamp;
   rawtile.allocate();
 
-  process( res, layers, x, y, w, h, rawtile.data );
+  process( res, layers, x, y, w, h, rawtile );
 
 #ifdef GROK_DEBUG
   logfile << "Grok :: getRegion() :: " << timer.getTime() << " microseconds" << endl;
@@ -510,105 +611,105 @@ RawTile GrokImage::getRegion( int ha, int va, unsigned int res, int layers, int 
 
 
 // Main processing function
-void GrokImage::process( unsigned int res, int layers, int xoffset, int yoffset, unsigned int tw, unsigned int th, void *d )
+void GrokImage::process( unsigned int res, int layers, int xoffset, int yoffset,
+                         unsigned int tw, unsigned int th, RawTile& output )
 {
-  std::lock_guard<std::mutex> lock(_decode_mutex);
-  // Re-open if necessary
+  MutexLock decode_lock( _decode_mutex );
   if( !_codec ) openImage();
+  if( xoffset < 0 || yoffset < 0 ){
+    throw file_error( "Grok :: process() :: invalid decode coordinates" );
+  }
 
   const unsigned int output_width = tw;
   const unsigned int output_height = th;
   unsigned int factor = 1;
-  int vipsres = getNativeResolution( res ); // Reverse resolution number
+  auto native_resolution = getNativeResolution( res );
+  uint64_t decode_x = static_cast<unsigned int>( xoffset );
+  uint64_t decode_y = static_cast<unsigned int>( yoffset );
+  uint64_t decode_width = tw;
+  uint64_t decode_height = th;
 
-  // Calculate number of extra resolutions needed that have not been encoded in the image
   if( res < virtual_levels ){
-    factor = 1U << (virtual_levels - res);
-    xoffset *= factor;
-    yoffset *= factor;
-    tw *= factor;
-    th *= factor;
-    // Set our resolution level back to the smallest original resolution
-    vipsres = numResolutions - 1 - virtual_levels;
+    const auto shift = virtual_levels - res;
+    if( shift >= std::numeric_limits<unsigned int>::digits ){
+      throw file_error( "Grok :: process() :: virtual resolution factor overflow" );
+    }
+    factor = 1U << shift;
+    decode_x *= factor;
+    decode_y *= factor;
+    decode_width *= factor;
+    decode_height *= factor;
+    native_resolution = numResolutions - 1 - virtual_levels;
 #ifdef GROK_DEBUG
-  logfile << "Grok :: using smallest existing resolution " << virtual_levels << endl;
+    logfile << "Grok :: using smallest existing resolution "
+            << virtual_levels << endl;
 #endif
   }
 
-  // Set the number of layers to half of the number of detected layers if we have not set the
-  // layers parameter manually. If layers is set to less than 0, use all layers.
   if( layers < 0 ) layers = quality_layers;
-  else if( layers == 0 ) layers = ceil( quality_layers/2.0 );
-
-  // Also make sure we have at least 1 layer
+  else if( layers == 0 ) layers = (quality_layers + 1) / 2;
   if( layers < 1 ) layers = 1;
 
-  // Update decompression parameters for this request
-  _decompress_params.core.reduce = vipsres;
-  _decompress_params.core.layers_to_decompress = layers;
-
-  if( xoffset < 0 || yoffset < 0 || vipsres < 0 ||
-      static_cast<size_t>(vipsres) >= image_widths.size() ){
+  if( native_resolution < 0 ||
+      static_cast<size_t>(native_resolution) >= image_widths.size() ){
     throw file_error( "Grok :: process() :: invalid decode coordinates" );
   }
 
-  const uint64_t x0 = static_cast<unsigned int>( xoffset );
-  const uint64_t y0 = static_cast<unsigned int>( yoffset );
-  const uint64_t x1 = x0 + tw;
-  const uint64_t y1 = y0 + th;
-  const uint64_t level_width = image_widths[vipsres];
-  const uint64_t level_height = image_heights[vipsres];
-  if( x0 >= level_width || y0 >= level_height ||
-      x1 > level_width || y1 > level_height ){
+  const uint64_t decode_right = decode_x + decode_width;
+  const uint64_t decode_bottom = decode_y + decode_height;
+  const uint64_t level_width = image_widths[native_resolution];
+  const uint64_t level_height = image_heights[native_resolution];
+  if( decode_x >= level_width || decode_y >= level_height ||
+      decode_right > level_width || decode_bottom > level_height ){
     throw file_error( "Grok :: process() :: requested region exceeds image bounds" );
   }
 
-  // Grok 20.3.x accepts window coordinates directly in reduced output space.
-  _decompress_params.dw_x0 = x0;
-  _decompress_params.dw_y0 = y0;
-  _decompress_params.dw_x1 = x1;
-  _decompress_params.dw_y1 = y1;
+  _decompress_params.core.reduce = native_resolution;
+  _decompress_params.core.layers_to_decompress = layers;
+  _decompress_params.dw_x0 = decode_x;
+  _decompress_params.dw_y0 = decode_y;
+  _decompress_params.dw_x1 = decode_right;
+  _decompress_params.dw_y1 = decode_bottom;
   _decompress_params.dw_reduced = true;
 
 #ifdef GROK_DEBUG
   logfile << "Grok :: decoding " << layers << " quality layers" << endl;
   logfile << "Grok :: requested region at requested resolution: position: "
-          << xoffset << "x" << yoffset << ". size: " << tw << "x" << th << endl;
-  logfile << "Grok :: region size at native reduced resolution: " << tw << "x" << th << endl;
+          << xoffset << "x" << yoffset << ". size: " << tw << "x" << th
+          << endl;
+  logfile << "Grok :: region size at native reduced resolution: "
+          << decode_width << "x" << decode_height << endl;
 #endif
 
   if( IIPImage::logging ){
-    logfile << "Grok :: window x0=" << x0 << " y0=" << y0
-            << " x1=" << x1 << " y1=" << y1
+    logfile << "Grok :: window x0=" << decode_x << " y0=" << decode_y
+            << " x1=" << decode_right << " y1=" << decode_bottom
             << " (reduced image " << level_width << "x" << level_height << ")"
-            << " vipsres=" << vipsres << endl;
+            << " native_resolution=" << native_resolution << endl;
   }
 
-  // Update the codec with new parameters
-  if( !grk_decompress_update( &_decompress_params, _codec ) ){
+  if( !grk_decompress_update( &_decompress_params, _codec.get() ) ){
     closeImage();
     throw file_error( "Grok :: process() :: grk_decompress_update() failed" );
   }
 
-  // Perform decoding - Grok will decode the specified region
-  if( !grk_decompress( _codec, nullptr ) ){
+  if( !grk_decompress( _codec.get(), nullptr ) ){
     closeImage();
     throw file_error( "Grok :: process() :: grk_decompress() failed" );
   }
 
-  // Wait for decompression to complete (synchronous mode)
-  grk_decompress_wait( _codec, nullptr );
+  grk_decompress_wait( _codec.get(), nullptr );
 
-  // Get the decoded image
-  _image = grk_decompress_get_image( _codec );
+  _image = grk_decompress_get_image( _codec.get() );
   if( !_image ){
     closeImage();
     throw file_error( "Grok :: process() :: grk_decompress_get_image() failed" );
   }
 
-  // Convert planar to interleaved
   try{
-    planarToInterleaved( _image, d, output_width, output_height, channels, bpc, factor );
+    copyDecodedImage(
+      *_image, output, output_width, output_height, channels, factor
+    );
   }
   catch( ... ){
     closeImage();
@@ -617,16 +718,16 @@ void GrokImage::process( unsigned int res, int layers, int xoffset, int yoffset,
 
   // Extract any ICC profile - available in header
   if( _header.header_image.meta && _header.header_image.meta->color.icc_profile_len > 0 ){
-    string icc( (const char*)_header.header_image.meta->color.icc_profile_buf,
-                _header.header_image.meta->color.icc_profile_len );
-    metadata.insert( {"icc", icc} );
+    string icc(
+      reinterpret_cast<const char*>(
+        _header.header_image.meta->color.icc_profile_buf
+      ),
+      _header.header_image.meta->color.icc_profile_len
+    );
+    metadata.emplace( "icc", std::move(icc) );
 #ifdef GROK_DEBUG
     logfile << "Grok :: ICC profile detected with size "
             << _header.header_image.meta->color.icc_profile_len << endl;
 #endif
   }
-
-  // We need to close the image here in case we try to use the Grok
-  // stream or image structures multiple times in the same request pipeline
-  // closeImage();
 }
