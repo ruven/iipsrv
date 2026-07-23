@@ -24,6 +24,7 @@
 #include <cstdint>
 #include <cstdlib>
 #include <limits>
+#include <sstream>
 #include <utility>
 #ifdef GROK_DEBUG
 #include "Timer.h"
@@ -115,6 +116,13 @@ void initializeGrok()
 unsigned int ceilHalf( unsigned int value )
 {
   return value / 2U + value % 2U;
+}
+
+std::string indexedError( const char* description, unsigned int value )
+{
+  std::ostringstream message;
+  message << "Grok :: " << description << ": " << value;
+  return message.str();
 }
 
 uint32_t scaleSample( const grk_image_comp& component, size_t index,
@@ -253,7 +261,7 @@ void GrokImage::openImage()
   if( filename.size() >= GRK_PATH_LEN ){
     throw file_error( "Grok :: openImage() :: file path exceeds GRK_PATH_LEN: " + filename );
   }
-  std::copy( filename.begin(), filename.end(), _stream_params.file );
+  filename.copy( _stream_params.file, filename.size() );
   _stream_params.file[filename.size()] = '\0';
   _stream_params.is_read_stream = true;
   _stream_params.use_stdio = false; // Use memory mapping for better performance
@@ -399,10 +407,7 @@ GrokImage::TileGeometry GrokImage::getTileGeometry(
 ) const
 {
   if( resolution >= numResolutions ){
-    throw file_error(
-      "Grok :: asked for non-existent resolution: " +
-      std::to_string(resolution)
-    );
+    throw file_error( indexedError("asked for non-existent resolution", resolution) );
   }
 
   const auto native_resolution = getNativeResolution( resolution );
@@ -423,9 +428,7 @@ GrokImage::TileGeometry GrokImage::getTileGeometry(
   const auto rows = (level_height + base_height - 1U) / base_height;
   const auto tile_count = static_cast<uint64_t>(columns) * rows;
   if( tile >= tile_count ){
-    throw file_error(
-      "Grok :: asked for non-existent tile: " + std::to_string(tile)
-    );
+    throw file_error( indexedError("asked for non-existent tile", tile) );
   }
 
   const auto column = tile % columns;
@@ -582,9 +585,7 @@ RawTile GrokImage::getTile( int seq, int ang, unsigned int res, int layers, unsi
 RawTile GrokImage::getRegion( int ha, int va, unsigned int res, int layers, int x, int y, unsigned int w, unsigned int h ){
 
   if( res >= numResolutions ){
-    throw file_error(
-      "Grok :: asked for non-existent resolution: " + std::to_string(res)
-    );
+    throw file_error( indexedError("asked for non-existent resolution", res) );
   }
 
 #ifdef GROK_DEBUG
@@ -718,13 +719,12 @@ void GrokImage::process( unsigned int res, int layers, int xoffset, int yoffset,
 
   // Extract any ICC profile - available in header
   if( _header.header_image.meta && _header.header_image.meta->color.icc_profile_len > 0 ){
-    string icc(
-      reinterpret_cast<const char*>(
-        _header.header_image.meta->color.icc_profile_buf
-      ),
-      _header.header_image.meta->color.icc_profile_len
-    );
-    metadata.emplace( "icc", std::move(icc) );
+    const auto* profile_begin = _header.header_image.meta->color.icc_profile_buf;
+    const auto* profile_end =
+      profile_begin + _header.header_image.meta->color.icc_profile_len;
+    string icc( profile_begin, profile_end );
+    // try_emplace requires C++17, while iipsrv still supports C++11.
+    metadata.emplace( "icc", std::move(icc) ); // NOSONAR
 #ifdef GROK_DEBUG
     logfile << "Grok :: ICC profile detected with size "
             << _header.header_image.meta->color.icc_profile_len << endl;
