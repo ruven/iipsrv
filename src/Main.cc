@@ -50,6 +50,9 @@
 #ifdef HAVE_OPENJPEG
 #include "OpenJPEGImage.h"
 #endif
+#ifdef HAVE_GROK
+#include "GrokImage.h"
+#endif
 
 #ifdef HAVE_MEMCACHED
 //#ifdef WIN32
@@ -451,6 +454,8 @@ int main( int argc, char *argv[] )
 #ifdef HAVE_KAKADU
     logfile << "Setting up JPEG2000 support via Kakadu SDK " << KakaduImage::getCodecVersion() << endl;
     logfile << "Setting Kakadu read-mode to " << ((kdu_readmode==2) ? "resilient" : (kdu_readmode==1) ? "fussy" : "fast") << endl;
+#elif defined(HAVE_GROK)
+    logfile << "Setting up JPEG2000 support via Grok " << GrokImage::getCodecVersion() << endl;
 #elif defined(HAVE_OPENJPEG)
     logfile << "Setting up JPEG2000 support via OpenJPEG " << OpenJPEGImage::getCodecVersion() << endl;
 #endif
