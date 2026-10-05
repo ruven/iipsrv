@@ -1,7 +1,7 @@
 /*
     IIP OJB Command Handler Class Member Functions
 
-    Copyright (C) 2006-2025 Ruven Pillay.
+    Copyright (C) 2006-2026 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -26,6 +26,8 @@
 
 using namespace std;
 
+// Need to initialize static member
+bool OBJ::enable_health;
 
 
 void OBJ::run( Session* s, const std::string& a )
@@ -125,6 +127,19 @@ void OBJ::run( Session* s, const std::string& a )
 
     session->response->setMimeType( "application/json" );
     session->response->addResponse( json.str() );
+  }
+
+  // Health endpoint
+  else if( OBJ::enable_health && argument == "health" ){
+    session->response->setMimeType( "application/json" );
+    session->response->setCacheControl( "no-store" );
+    session->response->setCachability( false );
+    if( session->headers["REQUEST_METHOD"] == "HEAD" ){
+      session->response->setProtocol( "IIP:" + string(VERSION) );
+    }
+    else{
+      session->response->addResponse( "{\"status\": \"healthy\"}" );
+    }
   }
 
   // None of the above!

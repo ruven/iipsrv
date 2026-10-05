@@ -1,5 +1,7 @@
 05/10/2026:
-	- Updated systemd service file: improved security and better portability
+	- Updated systemd service file: improved security and better portability.
+	- Added health endpoint through OBJ=health when using the IIP protocol or /health when using IIIF.
+	  Enabled by setting environment variable ENABLE_HEALTH=1 at startup. Disabled by default.
 
 
 27/09/2026:

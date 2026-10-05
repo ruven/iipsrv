@@ -128,6 +128,8 @@ class OBJ : public Task {
 
  public:
 
+  static bool enable_health;         ///< Whether health endpoint enabled
+
   void run( Session* session, const std::string& argument );
 
   void iip();

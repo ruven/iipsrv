@@ -377,6 +377,10 @@ int main( int argc, char *argv[] )
   string copyright = Environment::getCopyright();
 
 
+  // Whether a "/health" or "OBJ=health" end-point is enabled
+  OBJ::enable_health = Environment::getEnableHealth();
+
+
   // Create our image processing engine
   Transform processor;
 
@@ -425,6 +429,7 @@ int main( int argc, char *argv[] )
     logfile << "Setting maximum CVT size to " << max_CVT << endl;
     logfile << "Setting HTTP Cache-Control header to '" << cache_control << "'" << endl;
     logfile << "Setting 3D file sequence name pattern to '" << FIF::filename_pattern << "'" << endl;
+    logfile << "Setting Health endpoint availability to " << (OBJ::enable_health? "true" : "false") << endl;
     logfile << "Setting default IIIF Image API version to " << IIIF::version << endl;
     logfile << "Setting IIIF image processing API extension support to " << (IIIF::extensions ? "true" : "false") << endl;
     if( IIIF::delimiter.size() ){
@@ -737,7 +742,9 @@ int main( int argc, char *argv[] )
 	  // Strip out any query string if we are in prefix mode
 	  size_t q = request_uri.find_first_of('?');
 	  unsigned int end = (q==string::npos) ? request_uri.length() : q;
-	  request_string = command + "=" + request_uri.substr( start, end-start );
+	  string argument = request_uri.substr( start, end-start );
+	  if( OBJ::enable_health && argument == "health" ) command = "obj";  // Handle "/health" request
+	  request_string = command + "=" + argument;
 	  if( loglevel >= 2 ) logfile << "Request URI mapped to " << request_string << endl;
 	}
       }
@@ -750,11 +757,12 @@ int main( int argc, char *argv[] )
 	header = FCGX_GetParam( "QUERY_STRING", request.envp );
 	request_string = (header!=NULL)? header : "";
 
+	// Get the HTTP method. Throw the HTTP 400 Bad Request error if not set
 	if( header = FCGX_GetParam( "REQUEST_METHOD", request.envp ) ){
 	  session.headers["REQUEST_METHOD"] = header;
 	}
 	else{
-	  if( loglevel >=2 ) logfile << "Missing FCGI REQUEST_METHOD header" << endl;
+	  if( loglevel >=2 ) logfile << "Missing FCGI REQUEST_METHOD header. Check your server's FCGI configuration" << endl;
 	  throw( 400 );
 	}
 
@@ -763,7 +771,9 @@ int main( int argc, char *argv[] )
 	  if( loglevel >=2 ) logfile << "HTTP OPTIONS request" << endl;
 	  throw( 204 );
 	}
-	else if( session.headers["REQUEST_METHOD"] != "GET" && session.headers["REQUEST_METHOD"] != "POST" ){
+	else if( session.headers["REQUEST_METHOD"] != "GET" &&
+		 session.headers["REQUEST_METHOD"] != "POST" &&
+		 session.headers["REQUEST_METHOD"] != "HEAD" ){
 	  if( loglevel >=2 ) logfile << "Unsupported HTTP method " << session.headers["REQUEST_METHOD"] << endl;
 	  throw( 405 );
 	}
