@@ -1,3 +1,7 @@
+05/10/2026:
+	- Updated systemd service file: improved security and better portability
+
+
 27/09/2026:
 	- Fixed incorrect bit mask in OpenJPEGImage for 8 bit images. Fixes https://github.com/ruven/iipsrv/issues/294
 
