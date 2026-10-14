@@ -113,7 +113,7 @@ For building on Windows, Visual Studio build files are available in the `windows
 
 To install all required and optional dependencies using vcpkg:
 
-    .\vcpkg.exe install tiff openjpeg fastcgi libpng libwebp libavif[aom] --triplet x64-windows
+    .\vcpkg.exe install tiff openjpeg fastcgi libmemcached-awesome libpng libwebp libavif[aom] --triplet x64-windows
 
 Make these available to Visual Studio:
 

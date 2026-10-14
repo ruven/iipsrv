@@ -1,5 +1,6 @@
 14/10/2026:
-	- Performance optimizations to twist() and convolution() image processing functions in Transform class
+	- Performance optimizations to twist() and convolution() image processing functions in Transform class.
+	- Added Visual Studio 2026 build solution for Windows (libmemcached now also enabled).
 
 
 05/10/2026:
