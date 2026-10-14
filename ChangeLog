@@ -1,3 +1,7 @@
+14/10/2026:
+	- Performance optimizations to twist() and convolution() image processing functions in Transform class
+
+
 05/10/2026:
 	- Updated systemd service file: improved security and better portability.
 	- Added health endpoint through OBJ=health when using the IIP protocol or /health when using IIIF.

@@ -1015,12 +1015,14 @@ void Transform::twist( RawTile& rawtile, const vector< vector<float> >& matrix )
   if( output_channels == rawtile.channels ) output = (float*) rawtile.data;
   else output = new float[np * output_channels];
 
-  // Need to make sure the matrix is adapted to the number of channels in the raw data
-  unsigned int* row_sizes = new unsigned int[output_channels]; // Number of columns for each row
+  // Prepare flattened matrix and row sizes for efficient access
+  std::vector<unsigned int> row_sizes( output_channels );
+  std::vector<float> flat_matrix( output_channels * rawtile.channels, 0.0f );
 
-  // Get the number of columns in each row - can be less than number of channels - limit if there are more
-  for( int k=0; k<output_channels; k++ ){
-    row_sizes[k] = (matrix[k].size()>(unsigned int)rawtile.channels) ? rawtile.channels : matrix[k].size();
+  for( int k = 0; k < output_channels; ++k ){
+    unsigned int cols = std::min( matrix[k].size(), (size_t) rawtile.channels );
+    row_sizes[k] = cols;
+    std::copy( matrix[k].begin(), matrix[k].begin() + cols, flat_matrix.begin() + k * rawtile.channels );
   }
 
 #pragma omp parallel if( rawtile.width*rawtile.height > PARALLEL_THRESHOLD )
@@ -1028,37 +1030,34 @@ void Transform::twist( RawTile& rawtile, const vector< vector<float> >& matrix )
     // Create temporary buffer for our calculated values (need one for each thread)
     float* pixel = new float[output_channels];
 
-    // Loop through each pixel
-#pragma omp for
+    #pragma omp for
     for( uint32_t i=0; i<np; i++ ){
 
-      uint32_t in = (uint32_t) i*rawtile.channels;  // Pixel index in input buffer
-      uint32_t on = (uint32_t) i*output_channels;   // Pixel index in output buffer
+      // Pointer to input data
+      const float* in = ((float*)rawtile.data) + i*rawtile.channels;
 
-      // Calculate pixel value for each output channel
+      // Compute all output channels into the temporary pixel buffer
       for( int k=0; k<output_channels; k++ ){
+	float sum = 0.0f;
+	const float* row = &flat_matrix[k * rawtile.channels];
+	unsigned int sz = row_sizes[k];
 
-	// First zero our pixel buffer
-	pixel[k] = 0.0f;
-
-	// Loop through each column (input channel coefficient ) in the matrix
-	for( unsigned int j=0; j<row_sizes[k]; j++ ){
-	  float m = matrix[k][j];
-	  if( m ){
-	    float p = ((float*)rawtile.data)[in+j];
-	    pixel[k] += (m == 1.0) ? p : p * m;
-	  }
+        #pragma omp simd reduction(+:sum)
+	for( unsigned int j = 0; j < sz; j++ ){
+	  sum += in[j] * row[j];
 	}
+	pixel[k] = sum;
       }
 
-      // Only write out to our buffer at the end as we reuse channel values several times during the twist loops
-      for( int k=0; k<output_channels; k++ ) output[on++] = pixel[k];
+      // Write the computed pixel values to the output buffer
+      float* out = output + i*output_channels;
+      for( int k=0; k<output_channels; k++ ){
+	out[k] = pixel[k];
+      }
     }
 
     delete[] pixel;
   }
-
-  delete[] row_sizes;
 
   // If we have a different number of output channels, swap our buffer and update our rawtile parameters
   if( output_channels != rawtile.channels ){
@@ -1265,11 +1264,6 @@ void Transform::equalize( RawTile& in, vector<unsigned int>& histogram ){
   // Scale our CDF
   float scale = (float)(bits-1) / cdf[bits-1];
   float cdfmin = cdf[n0] / (float)(in.width*in.height);
-#if defined(__ICC) || defined(__INTEL_COMPILER)
-#pragma ivdep
-#elif defined(_OPENMP)
-#pragma omp parallel for
-#endif
   for( unsigned int i=0; i<bits; i++ ){
     cdf[i] = round( scale * (cdf[i]-cdfmin) );
   }
@@ -1310,7 +1304,7 @@ void Transform::convolution( RawTile& in, const vector<float>& kernel ){
 #if defined(__ICC) || defined(__INTEL_COMPILER)
 #pragma ivdep
 #elif defined(_OPENMP)
-#pragma omp parallel for
+#pragma omp parallel for collapse(2) if( in.width*in.height > PARALLEL_THRESHOLD )
 #endif
   for( unsigned long y=0; y<in.height; y++ ){
     for( unsigned long x=0; x<in.width; x++ ){
@@ -1337,7 +1331,7 @@ void Transform::convolution( RawTile& in, const vector<float>& kernel ){
         }
 	// Normalize our values
 	if( total > 0.0 ) v = v / total;
-	buffer[n++] = v;
+	buffer[n] = (float) v;
       }
     }
   }
