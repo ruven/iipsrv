@@ -55,13 +55,6 @@ string IIIF::extra_info = "";
 bool IIIF::extensions;
 
 
-// Clamp a requested extent down to the region extent (used for confined "!w,h"
-// requests that must fit within the region rather than upscale - see issue #271).
-static inline unsigned int clamp_to_region( unsigned int requested, unsigned int region_extent ){
-  return ( requested > region_extent ) ? region_extent : requested;
-}
-
-
 // The request is in the form {identifier}/{region}/{size}/{rotation}/{quality}{.format}
 //     eg. filename.tif/full/full/0/native.jpg
 // or in the form {identifier}/info.json
@@ -475,7 +468,7 @@ void IIIF::run( Session* session, const string& src )
       transform( sizeString.begin(), sizeString.end(), sizeString.begin(), ::tolower );
 
       // Flag for confined "!w,h" requests, which must be clamped to the region
-      // rather than rejected when the source is smaller than the box (#271)
+      // rather than rejected when the source is smaller than the box
       bool confined = false;
 
       // Calculate the width and height of our region at full resolution
@@ -513,11 +506,11 @@ void IIIF::run( Session* session, const string& src )
       else{
 
         // !w,h request (do not break aspect ratio) - remove the !, store the info and continue usual parsing
-        // #271: capture the confined flag before the '!' is stripped below
-        confined = ( !sizeString.empty() && sizeString[0] == '!' );
-        if ( sizeString.substr(0, 1) == "!" ) sizeString.erase(0, 1);
-        // Otherwise tell our view it can break aspect ratio
-        else session->view->maintain_aspect = false;
+	if( !sizeString.empty() && sizeString[0] == '!' ){
+	  confined = true;
+	  sizeString.erase(0, 1);
+	}
+	else session->view->maintain_aspect = false;
 
         size_t pos = sizeString.find_first_of(",");
 
@@ -570,8 +563,8 @@ void IIIF::run( Session* session, const string& src )
       if( over_region && confined ){
 	unsigned int region_width = round( width * region[2] );
 	unsigned int region_height = round( height * region[3] );
-	requested_width = clamp_to_region( requested_width, region_width );
-	requested_height = clamp_to_region( requested_height, region_height );
+	requested_width = (requested_width > region_width) ? region_width : requested_width;
+	requested_height = (requested_height > region_height) ? region_height : requested_height;
       }
       else if( over_region ){
 	throw invalid_argument( "IIIF: upscaling should be prefixed with ^" );
