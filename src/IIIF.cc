@@ -467,6 +467,10 @@ void IIIF::run( Session* session, const string& src )
       string sizeString = izer.nextToken();
       transform( sizeString.begin(), sizeString.end(), sizeString.begin(), ::tolower );
 
+      // Flag for confined "!w,h" requests, which must be clamped to the region
+      // rather than rejected when the source is smaller than the box
+      bool confined = false;
+
       // Calculate the width and height of our region at full resolution
       requested_width = region[2] * width;   // view->getViewWidth not trustworthy yet (no resolution set)
       requested_height = region[3] * height;
@@ -502,9 +506,11 @@ void IIIF::run( Session* session, const string& src )
       else{
 
         // !w,h request (do not break aspect ratio) - remove the !, store the info and continue usual parsing
-        if ( sizeString.substr(0, 1) == "!" ) sizeString.erase(0, 1);
-        // Otherwise tell our view it can break aspect ratio
-        else session->view->maintain_aspect = false;
+	if( !sizeString.empty() && sizeString[0] == '!' ){
+	  confined = true;
+	  sizeString.erase(0, 1);
+	}
+	else session->view->maintain_aspect = false;
 
         size_t pos = sizeString.find_first_of(",");
 
@@ -547,12 +553,21 @@ void IIIF::run( Session* session, const string& src )
         throw invalid_argument( "IIIF: invalid size: requested width or height < 0" );
       }
 
-      // Check for malformed upscaling request
-      if( iiif_version >= 3 ){
-	if( session->view->allow_upscaling == false &&
-	    ( requested_width > round(width*region[2]) || requested_height > round(height*region[3]) ) ){
-	  throw invalid_argument( "IIIF: upscaling should be prefixed with ^" );
-	}
+      // Check for upscaling request. A confined "!w,h" request that exceeds the
+      // region is clamped down to fit within it (issue #271, IIIF Image API 3.0
+      // §4.2) rather than rejected; aspect ratio is preserved downstream in
+      // View::getRequestSize(). Any other size form that exceeds the region without
+      // a '^' prefix is genuine upscaling and remains an error.
+      bool over_region = ( iiif_version >= 3 && session->view->allow_upscaling == false &&
+			   ( requested_width > round(width*region[2]) || requested_height > round(height*region[3]) ) );
+      if( over_region && confined ){
+	unsigned int region_width = round( width * region[2] );
+	unsigned int region_height = round( height * region[3] );
+	requested_width = (requested_width > region_width) ? region_width : requested_width;
+	requested_height = (requested_height > region_height) ? region_height : requested_height;
+      }
+      else if( over_region ){
+	throw invalid_argument( "IIIF: upscaling should be prefixed with ^" );
       }
 
       // Limit our requested size to the maximum allowable size if necessary
