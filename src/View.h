@@ -72,6 +72,7 @@ class View{
   int max_exif;                               ///< Maximum EXIF size we allow to be embedded
   ImageEncoding output_format;                ///< Requested output format
   float contrast;                             ///< Contrast adjustment requested by CNT command
+  float clip;                                 ///< Percentile retained before clipping when using contrast stretching
   float gamma;                                ///< Gamma adjustment requested by GAM command
   std::vector<float> convolution;             ///< Convolution matrix
   bool equalization;                          ///< Whether to perform histogram equalization
@@ -86,7 +87,7 @@ class View{
     res_width = 0; res_height = 0;
     min_size = 1; max_size = 0;
     requested_width = 0; requested_height = 0;
-    contrast = 1.0; gamma = 1.0;
+    contrast = 1.0; clip = 100.0; gamma = 1.0;
     xangle = 0; yangle = 90;
     shaded = false; shade[0] = 0; shade[1] = 0; shade[2] = 0;
     cmapped = false; cmap = HOT; inverted = false;

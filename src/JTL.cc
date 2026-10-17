@@ -229,25 +229,48 @@ void JTL::send( Session* session, int resolution, int tile ){
       max = vector<float>( rawtile.channels, 1.0 );
     }
 
+
     // Change our image max and min if we have asked for a contrast stretch
-    if( session->view->contrast == -1 ){
+    if( session->view->contrast == -1 && !(*session->image)->histogram.empty() ){
 
-      // Find first non-zero bin in histogram
+      const vector<unsigned int>& hist = (*session->image)->histogram;
+
+      // Exact pixel count from the smallest image in pyramid
+      uint32_t pixels = (*session->image)->image_widths[num_res-1] * (*session->image)->image_heights[num_res-1];
+
+      // Clip is expressed as a percentile: 100.0 for unclipped full range, 98.0 for 2% clipping etc. Calculate number of pixels to clip
+      // Note we divide by 200 as clipping is from both top and bottom
+      uint32_t clip_count = (uint32_t)( (float)pixels * ( (100.0 - session->view->clip) / 200.0 ) );
+
+      // Find lower bound
       unsigned int n0 = 0;
-      while( (*session->image)->histogram[n0] == 0 ) ++n0;
+      uint32_t accum = 0;
+      while( n0 < hist.size() - 1 && accum + hist[n0] < clip_count ){
+	accum += hist[n0++];
+      }
 
-      // Find highest bin
-      unsigned int n1 = (*session->image)->histogram.size() - 1;
-      while( (*session->image)->histogram[n1] == 0 ) --n1;
+      // Find upper bound
+      unsigned int n1 = hist.size() - 1;
+      accum = 0;
+      while( n1 > n0 && accum + hist[n1] < clip_count ){
+	accum += hist[n1--];
+      }
+
+      // Safeguard against completely flat/uniform images
+      if( n1 <= n0 ){
+	n0 = 0;
+	n1 = hist.size() - 1;
+      }
 
       // Histogram has been calculated using 8 bits, so scale up to native bit depth
       if( rawtile.bpc > 8 && rawtile.sampleType == SampleType::FIXEDPOINT ){
-	n0 = n0 << (rawtile.bpc-8);
-	n1 = n1 << (rawtile.bpc-8);
+	uint64_t scale = ((1ULL << rawtile.bpc) - 1) / 255;
+	n0 = (unsigned int)(n0 * scale);
+	n1 = (unsigned int)(n1 * scale);
       }
 
-      min.assign( rawtile.bpc, (float)n0 );
-      max.assign( rawtile.bpc, (float)n1 );
+      min.assign( rawtile.channels, (float)n0 );
+      max.assign( rawtile.channels, (float)n1 );
 
       // Reset our contrast
       session->view->contrast = 1.0;

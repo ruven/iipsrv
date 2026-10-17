@@ -1,3 +1,10 @@
+17/10/2026:
+	- More robust contrast stretch calculation in JTC and CVT classes.
+	  Added optional percentile clipping to contrast stretch. CNT command now optionally accepts a colon
+	  after ST or STRETCH parameter with a percentile of pixels to retain. For example CNT=ST:98 will perform
+	  contrast stretching with clipping of 2% of the highest and lowest pixels.
+
+
 14/10/2026:
 	- Performance optimizations to twist() and convolution() image processing functions in Transform class.
 	- Added Visual Studio 2026 build solution for Windows (libmemcached now also enabled).
