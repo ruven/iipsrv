@@ -244,7 +244,7 @@ void CNT::run( Session* session, const string& argument ){
   }
 
   // Linear stretch
-  if( arg.find("st") == 0 || arg.find("stretch") == 0 ){
+  else if( arg.find("st") == 0 || arg.find("stretch") == 0 ){
 
     // Use reserved value of -1 for contrast stretch
     session->view->contrast = -1;
