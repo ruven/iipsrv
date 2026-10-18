@@ -171,10 +171,8 @@ void Transform::normalize( RawTile& in, const vector<float>& max, const vector<f
 
 
 
-// Hillshading function
+// Hillshading function - input data is a normalized floating-point 3-band normal map
 void Transform::shade( RawTile& in, int h_angle, int v_angle ){
-
-  float o_x, o_y, o_z;
 
   // Incident light angle
   float a = (h_angle * 2 * M_PI) / 360.0;
@@ -182,9 +180,7 @@ void Transform::shade( RawTile& in, int h_angle, int v_angle ){
   // We assume a hypotenous of 1.0
   float s_y = cos(a);
   float s_x = sqrt( 1.0 - s_y*s_y );
-  if( h_angle > 180 ){
-    s_x = -s_x;
-  }
+  if( h_angle > 180 ) s_x = -s_x;
 
   a = (v_angle * 2 * M_PI) / 360.0;
   float s_z = - sin(a);
@@ -194,43 +190,43 @@ void Transform::shade( RawTile& in, int h_angle, int v_angle ){
   s_y = s_y / s_norm;
   s_z = s_z / s_norm;
 
-  float *buffer, *infptr;
+  /* Normal components are o = 1 - 2*v, so output = 0.5 + 0.5*(s.o)
+   *                         = 0.5 + 0.5*(s_x+s_y+s_z) - (s.v).
+   * Precompute the constant once instead of per pixel
+   */
+  const float c = 0.5 + 0.5 * ( s_x + s_y + s_z );
 
-  uint32_t np = (uint32_t) in.width * in.height * in.channels;
+  // Number of pixels
+  uint32_t np = (uint32_t) in.width * in.height;
 
-  infptr= (float*)in.data;
+  float *infptr = (float*) in.data;
 
   // Create new (float) data buffer
-  buffer = new float[np];
-
+  float *buffer = new float[np];
 
 #if defined(__ICC) || defined(__INTEL_COMPILER)
 #pragma ivdep
 #elif defined(_OPENMP)
-#pragma omp parallel for
+#pragma omp parallel for if( np > PARALLEL_THRESHOLD )
 #endif
   for( uint32_t k=0; k<np; k++ ){
 
     unsigned int n = k*3;
-    if( infptr[n] == 0.0 && infptr[n+1] == 0.0 && infptr[n+2] == 0.0 ){
-      o_x = o_y = o_z = 0.0;
-    }
-    else {
-      o_x = (float) - ((float)infptr[n]-0.5) * 2.0;
-      o_y = (float) - ((float)infptr[n+1]-0.5) * 2.0;
-      o_z = (float) - ((float)infptr[n+2]-0.5) * 2.0;
-    }
 
     float dot_product;
-    dot_product = (s_x*o_x) + (s_y*o_y) + (s_z*o_z);
+    // (0,0,0) normal map pixels signify no surface data -> black
+    if( infptr[n] == 0.0 && infptr[n+1] == 0.0 && infptr[n+2] == 0.0 ){
+      dot_product = 0.0;
+    }
+    else {
+      dot_product = c - ( (s_x*infptr[n]) + (s_y*infptr[n+1]) + (s_z*infptr[n+2]) );
+    }
 
-    dot_product = 0.5 * dot_product;
     if( dot_product < 0.0 ) dot_product = 0.0;
-    if( dot_product > 1.0 ) dot_product = 1.0;
+    else if( dot_product > 1.0 ) dot_product = 1.0;
 
     buffer[k] = dot_product;
   }
-
 
   // Delete old data buffer
   delete[] (float*) in.data;
@@ -471,32 +467,33 @@ void Transform::sRGB2LAB( RawTile& in ){
 
 
 
-// Colormap function
-// Based on the routine colormap.cpp in Imagin Raytracer by Olivier Ferrand
-// http://www.imagin-raytracer.org
+// Colormap function - produce a 3 band color mapped image from normalized input data
+// Based on the routine colormap.cpp in Imagin Raytracer by Olivier Ferrand http://www.imagin-raytracer.org
+// Note that the colormap is applied to only the first band of each input image
 void Transform::cmap( RawTile& in, enum cmap_type cmap ){
 
-  float value;
   unsigned in_chan = in.channels;
   unsigned out_chan = 3;
-  uint32_t np = (uint32_t) in.width * in.height * in.channels; // pixels in input image
-  uint32_t onp = (uint32_t) in.width * in.height * out_chan;   // pixels in output image
+  uint32_t np = (uint32_t) in.width * in.height;               // pixels in input image
+  uint32_t onp = (uint32_t) in.width * in.height * out_chan;   // pixels*channels in output image
 
   const float max3 = 1.0/3.0;
   const float max8 = 1.0/8.0;
 
   float *fptr = (float*)in.data;
   float *outptr = new float[onp];
-  float *outv = outptr;
 
   switch(cmap){
 
     case HOT:
 #if defined(__ICC) || defined(__INTEL_COMPILER)
 #pragma ivdep
+#elif defined(_OPENMP)
+#pragma omp parallel for if( in.width*in.height > PARALLEL_THRESHOLD )
 #endif
-      for( uint32_t n=0; n<np; n+=in_chan, outv+=3 ){
-        value = fptr[n];
+      for( uint32_t p=0; p<np; p++ ){
+        float value = fptr[p*in_chan];
+        float *outv = outptr + p*3;
         if(value>1.)
           { outv[0]=outv[1]=outv[2]=1.; }
         else if(value<=0.)
@@ -514,9 +511,12 @@ void Transform::cmap( RawTile& in, enum cmap_type cmap ){
     case COLD:
 #if defined(__ICC) || defined(__INTEL_COMPILER)
 #pragma ivdep
+#elif defined(_OPENMP)
+#pragma omp parallel for if( in.width*in.height > PARALLEL_THRESHOLD )
 #endif
-      for( uint32_t n=0; n<np; n+=in_chan, outv+=3 ){
-        value = fptr[n];
+      for( uint32_t p=0; p<np; p++ ){
+        float value = fptr[p*in_chan];
+        float *outv = outptr + p*3;
         if(value>1.)
           { outv[0]=outv[1]=outv[2]=1.; }
         else if(value<=0.)
@@ -534,9 +534,12 @@ void Transform::cmap( RawTile& in, enum cmap_type cmap ){
     case JET:
 #if defined(__ICC) || defined(__INTEL_COMPILER)
 #pragma ivdep
+#elif defined(_OPENMP)
+#pragma omp parallel for if( in.width*in.height > PARALLEL_THRESHOLD )
 #endif
-      for( uint32_t n=0; n<np; n+=in_chan, outv+=3 ){
-        value = fptr[n];
+      for( uint32_t p=0; p<np; p++ ){
+        float value = fptr[p*in_chan];
+        float *outv = outptr + p*3;
         if(value<0.)
           { outv[0]=outv[1]=outv[2]=0.; }
         else if(value<max8)
@@ -556,9 +559,12 @@ void Transform::cmap( RawTile& in, enum cmap_type cmap ){
     case RED:
 #if defined(__ICC) || defined(__INTEL_COMPILER)
 #pragma ivdep
+#elif defined(_OPENMP)
+#pragma omp parallel for if( in.width*in.height > PARALLEL_THRESHOLD )
 #endif
-      for( uint32_t n=0; n<np; n+=in_chan, outv+=3 ){
-	value = fptr[n];
+      for( uint32_t p=0; p<np; p++ ){
+        float value = fptr[p*in_chan];
+        float *outv = outptr + p*3;
 	outv[0] = value;
 	outv[1] = outv[2] = 0.;
       }
@@ -567,9 +573,12 @@ void Transform::cmap( RawTile& in, enum cmap_type cmap ){
     case GREEN:
 #if defined(__ICC) || defined(__INTEL_COMPILER)
 #pragma ivdep
+#elif defined(_OPENMP)
+#pragma omp parallel for if( in.width*in.height > PARALLEL_THRESHOLD )
 #endif
-      for( uint32_t n=0; n<np; n+=in_chan, outv+=3 ) {
-	value = fptr[n];
+      for( uint32_t p=0; p<np; p++ ) {
+        float value = fptr[p*in_chan];
+        float *outv = outptr + p*3;
 	outv[0] = outv[2] = 0.;
 	outv[1] = value;
       }
@@ -578,9 +587,12 @@ void Transform::cmap( RawTile& in, enum cmap_type cmap ){
     case BLUE:
 #if defined(__ICC) || defined(__INTEL_COMPILER)
 #pragma ivdep
+#elif defined(_OPENMP)
+#pragma omp parallel for if( in.width*in.height > PARALLEL_THRESHOLD )
 #endif
-      for( uint32_t n=0; n<np; n+=in_chan, outv+=3 ) {
-	value = fptr[n];
+      for( uint32_t p=0; p<np; p++ ) {
+        float value = fptr[p*in_chan];
+        float *outv = outptr + p*3;
 	outv[0] = outv[1] = 0;
 	outv[2] = value;
       }
@@ -646,13 +658,24 @@ void Transform::interpolate_nearestneighbour( RawTile& in, unsigned int resample
   float xscale = (float)width / (float)resampled_width;
   float yscale = (float)height / (float)resampled_height;
 
+  // Do not parallelize for small images (256x256 pixels) as this can be slower that single threaded.
+  // Also, only parallelize when resampling to a larger image as our output buffer then never
+  // aliases our input buffer and can be safely written to by multiple threads
+#if defined(__ICC) || defined(__INTEL_COMPILER)
+#pragma ivdep
+#elif defined(_OPENMP)
+#pragma omp parallel for if( new_buffer && resampled_width*resampled_height > PARALLEL_THRESHOLD )
+#endif
   for( unsigned int j=0; j<resampled_height; j++ ){
+
+    // Index to the current pyramid resolution's top left pixel
+    uint32_t jj = (uint32_t) floorf(j*yscale);
+
     for( unsigned int i=0; i<resampled_width; i++ ){
 
       // Indexes in the current pyramid resolution and resampled spaces
       // Make sure to limit our input index to the image surface
       uint32_t ii = (uint32_t) floorf(i*xscale);
-      uint32_t jj = (uint32_t) floorf(j*yscale);
       uint32_t pyramid_index = (uint32_t) channels * ( ii + jj*width );
 
       uint32_t resampled_index = (uint32_t)(i + j*resampled_width)*channels;
@@ -890,9 +913,6 @@ void Transform::rotate( RawTile& in, float angle=0.0 ){
   // Currently implemented only for rectangular rotations
   if( (int)angle % 90 == 0 && (int)angle % 360 != 0 ){
 
-    // Initialize our counter
-    unsigned int n = 0;
-
     // Allocate memory for our temporary buffer - rotate function only ever operates on 8bit data
     void *buffer = new unsigned char[in.width*in.height*in.channels];
 
@@ -934,10 +954,16 @@ void Transform::rotate( RawTile& in, float angle=0.0 ){
 
     // Rotate 180
     else if( (int) angle % 360 == 180 ){
+#if defined(__ICC) || defined(__INTEL_COMPILER)
+#pragma ivdep
+#elif defined(_OPENMP)
+#pragma omp parallel for if( in.width*in.height > PARALLEL_THRESHOLD )
+#endif
       for( int i=(in.width*in.height)-1; i >= 0; i-- ){
-	unsigned index = i * in.channels;
+	unsigned int index  = i * in.channels;
+	unsigned int oindex = (in.width*in.height - 1 - i) * in.channels;
 	for( int k=0; k < in.channels; k++ ){
-	  ((unsigned char*)buffer)[n++] = ((unsigned char*)in.data)[index+k];
+	  ((unsigned char*)buffer)[oindex+k] = ((unsigned char*)in.data)[index+k];
 	}
       }
     }
