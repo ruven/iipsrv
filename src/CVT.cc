@@ -24,6 +24,7 @@
 #include <cmath>
 #include <algorithm>
 #include <sstream>
+#include <iomanip>
 
 
 using namespace std;
@@ -36,7 +37,6 @@ void CVT::send( Session* session ){
 
 
   if( session->loglevel >= 2 ) *(session->logfile) << "CVT handler reached" << endl;
-
 
   // Make sure we have set our image
   this->session = session;
@@ -110,6 +110,7 @@ void CVT::send( Session* session ){
     if( session->loglevel >= 3 ){
       *(session->logfile) << "CVT :: Region: " << view_left << "," << view_top
 			  << "," << view_width << "," << view_height << endl;
+      *(session->logfile) << "CVT :: requested size: " << resampled_width << "x" << resampled_height << endl;
     }
   }
   else{
@@ -203,6 +204,56 @@ void CVT::send( Session* session ){
   }
 
 
+  // Calculate Eigenvectors if required
+  if( session->view->requireEigenvectors() && (*session->image)->eigenvectors.empty() ){
+
+#ifdef HAVE_EIGEN3
+    if( session->loglevel >= 5 ) function_timer.start();
+
+    // Retrieve an uncompressed version of our smallest tile
+    // which should be sufficient for calculating the covariance matrix
+    RawTile thumbnail = tilemanager.getTile( 0, 0, 0, session->view->yangle, session->view->getLayers(), ImageEncoding::RAW );
+
+    // Normalize tile to 0->1 and convert to floating point
+    session->processor->normalize( thumbnail, (*session->image)->max, (*session->image)->min );
+
+    // Calculate mean, covariance and eigenvectors
+    (*session->image)->mean = session->processor->mean( thumbnail );
+    (*session->image)->covariance = session->processor->covariance( thumbnail, (*session->image)->mean );
+    vector<vector<float>> eigen = session->processor->eigenvectors( (*session->image)->covariance );
+    (*session->image)->eigenvectors = eigen;
+
+    if( session->loglevel >= 5 ){
+      *(session->logfile) << "CVT :: Calculated eigenvectors in "
+			  << function_timer.getTime() << " microseconds" << endl;
+
+      *(session->logfile) << "CVT :: Eigenvalues: [" << eigen[0][0] << "," << eigen[0][1] << "," << eigen[0][2] << "]" << endl;
+      *(session->logfile) << "CVT :: Eigenvectors: ";
+      int n = 0;
+      for( int i=0; i<thumbnail.channels; i++ ){
+	if( i > 0 ) *(session->logfile) << "                     ";
+	for( int j=0; j<thumbnail.channels; j++ ){
+	  *(session->logfile) << setprecision(6) << eigen[1][n++] << " ";
+	}
+	*(session->logfile) << endl;
+      }
+    }
+
+    // Insert the mean, covariance and eigenvectors into our image cache
+    const string key = (*session->image)->getImagePath();
+    imageCacheMapType::iterator i = session->imageCache->find(key);
+    if( i != session->imageCache->end() ){
+      (i->second).mean = (*session->image)->mean;
+      (i->second).covariance = (*session->image)->covariance;
+      (i->second).eigenvectors = (*session->image)->eigenvectors;
+    }
+#else
+    if( session->loglevel >= 1 ){
+      *(session->logfile) << "CVT :: Eigen library not enabled: unable to calculate eigenvectors. Disabling PCA and decorrelation stretch" << endl;
+    }
+#endif
+  }
+
 
   // Retrieve image region
   if( session->loglevel >= 2 ) function_timer.start();
@@ -229,6 +280,7 @@ void CVT::send( Session* session ){
 
   // Only use our floating point image processing pipeline if necessary
   if( complete_image.sampleType == SampleType::FLOATINGPOINT || session->view->floatProcessing() ){
+
 
     // Make a copy of our max and min as we may change these
     vector <float> min = (*session->image)->min;
@@ -299,6 +351,29 @@ void CVT::send( Session* session ){
       session->processor->normalize( complete_image, max, min );
       if( session->loglevel >= 5 ){
 	*(session->logfile) << "CVT :: Converting to floating point and normalizing in "
+			    << function_timer.getTime() << " microseconds" << endl;
+      }
+    }
+
+
+    // Apply decorrelation stretch
+    if( session->view->decorrelation ){
+      if( session->loglevel >= 5 ) function_timer.start();
+      session->processor->decorrelation( complete_image, (*session->image)->eigenvectors,
+					 (*session->image)->mean, (*session->image)->covariance );
+      if( session->loglevel >= 5 ){
+	*(session->logfile) << "CVT :: Decorrelation stretch applied in "
+			    << function_timer.getTime() << " microseconds" << endl;
+      }
+    }
+
+
+    // Apply PCA
+    if( session->view->pca ){
+      if( session->loglevel >= 5 ) function_timer.start();
+      session->processor->pca( complete_image, (*session->image)->eigenvectors, (*session->image)->mean );
+      if( session->loglevel >= 5 ){
+	*(session->logfile) << "CVT :: PCA applied in "
 			    << function_timer.getTime() << " microseconds" << endl;
       }
     }

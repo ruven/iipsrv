@@ -29,6 +29,7 @@ FEATURES
 * Multispectral and hyperspectral image support
 * Support for XMP metadata and ICC profiles
 * Image stacks and image sequence support
+* Principal component analysis (PCA) and decorrelation stretch support
 * Dynamic hillshading of 3D surface topologies
 * Dynamic watermarking
 * Memcached support
@@ -61,6 +62,7 @@ Building iipsrv requires a C++ compiler and several development libraries.
 - [libwebp](https://developers.google.com/speed/webp) for WebP output support
 - [libavif](https://github.com/AOMediaCodec/libavif) for AVIF output support
 - [libmemcached](https://libmemcached.org) for [Memcached](https://www.memcached.org), a high-performance, distributed memory object caching system. If enabled, IIPImage will cache results using this distributed cache, giving IIPImage added speed and scalability
+- [Eigen](https://eigen.tuxfamily.org), a linear algebra library and numerical solver, for principal component analysis (PCA) and decorrelation stretch support
 
 
 ### Building on UNIX / Linux / Mac OSX

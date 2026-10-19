@@ -2,7 +2,7 @@
 
     IIIF Request Command Handler Class Member Function
 
-    Copyright (C) 2014-2025 Ruven Pillay
+    Copyright (C) 2014-2026 Ruven Pillay
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -684,6 +684,12 @@ void IIIF::run( Session* session, const string& src )
       }
       else if( IIIF::extensions && quality == "log" ){
 	session->view->gamma = -1;
+      }
+      else if( IIIF::extensions && quality == "pca" ){
+	session->view->pca = true;
+      }
+      else if( IIIF::extensions && quality == "dstretch" ){
+	session->view->decorrelation = true;
       }
       else{
         throw invalid_argument( "unsupported quality parameter: " + quality );

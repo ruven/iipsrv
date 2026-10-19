@@ -1,3 +1,11 @@
+19/10/2026:
+	- Added ability to perform fast on-the-fly PCA and decorrelation stretch to N-band images. New IIP parameter
+	  TFM allows user to select a transform: pca for PCA and dstretch for decorrelation stretch. For example: TFM=PCA.
+	  Functionality also available for IIIF requests via the quality parameter if IIIF_EXTENSIONS enabled at startup.
+	  For example: /image/full/full/0/pca.jpg Covariance matrix and eigenvalues / eigenvectors are calculated once
+	  from lowest resolution image and stored in cache. Eigenvector calculation requires the Eigen linear algebra library.
+
+
 18/20/2016:
 	- Fix to incorrect shade() implementation in Transform class.
 	- Added OpenMP optimizations for cmp(), rotate() and interpolate_nearestneighbour() functions.

@@ -3,7 +3,7 @@
 
 /*  IIP fcgi server module
 
-    Copyright (C) 2000-2024 Ruven Pillay.
+    Copyright (C) 2000-2026 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -83,6 +83,9 @@ void IIPImage::swap( IIPImage& first, IIPImage& second ) // nothrow
   std::swap( first.currentX, second.currentX );
   std::swap( first.currentY, second.currentY );
   std::swap( first.histogram, second.histogram );
+  std::swap( first.covariance, second.covariance );
+  std::swap( first.eigenvectors, second.eigenvectors );
+  std::swap( first.mean, second.mean );
   std::swap( first.metadata, second.metadata );
   std::swap( first.timestamp, second.timestamp );
   std::swap( first.min, second.min );

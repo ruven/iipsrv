@@ -2,7 +2,7 @@
 
 /*  IIPImage image processing routines
 
-    Copyright (C) 2004-2025 Ruven Pillay.
+    Copyright (C) 2004-2026 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -22,7 +22,14 @@
 #include <cmath>
 #include <algorithm>
 #include <numeric>
+#include <limits>
 #include "Transforms.h"
+
+#if HAVE_EIGEN3
+#include <Eigen/Dense>
+#include <Eigen/Eigenvalues>
+#endif
+
 
 
 // Define something similar to C99 std::isfinite if this does not exist
@@ -1364,4 +1371,354 @@ void Transform::convolution( RawTile& in, const vector<float>& kernel ){
 
   delete[] (float*) in.data;
   in.data = (void*) buffer;
+}
+
+
+
+// Calculate per-channel mean
+vector<float> Transform::mean( const RawTile& in ){
+
+  // Create vector and initialize values to zero
+  vector<float> mean( in.channels, 0 );
+
+  uint32_t np = (uint32_t) in.width * in.height * in.channels;
+  uint32_t pixels = in.width * in.height;
+
+  // Sum the pixel values for each channel
+  /*#if defined(__ICC) || defined(__INTEL_COMPILER)
+#pragma ivdep
+#elif defined(_OPENMP)
+#pragma omp parallel for
+#endif*/
+  for( uint32_t n = 0; n < np; n += in.channels ){
+    for( int k = 0; k < in.channels; k++ ){
+      mean[k] += (float)((float*)in.data)[n+k];
+    }
+  }
+
+  // Divide to obtain mean for each channel
+  for( int k = 0; k < in.channels; k++ ){
+    mean[k] /= (float) pixels;
+  }
+
+  return mean;
+}
+
+
+
+// Calculate covariance between channels
+vector<float> Transform::covariance( const RawTile& in, const vector<float>& means ){
+
+  // Number of pixels – guard against division-by-zero
+  uint32_t np = (uint32_t) in.width * in.height;
+  if( np <= 1 ) return vector<float>( in.channels * in.channels, 0.0f );
+
+  // Global accumulator: double precision to minimize rounding error
+  vector<double> globalCov( in.channels * in.channels, 0.0 );
+
+  // The tile data has already been normalised to float
+  const float *data = (float *)in.data;
+
+  // Parallel region – each thread gets its own private covariance matrix
+#pragma omp parallel if( in.width * in.height > PARALLEL_THRESHOLD )
+  {
+    vector<double> localCov( in.channels * in.channels, 0.0 );
+
+    // Distribute pixels across threads
+    #pragma omp for nowait
+    for( uint32_t n = 0; n < np; n++ ){
+
+      const float *pixel = data + n * in.channels;
+
+      // Centered values – accumulate only the upper triangle
+      for( int i = 0; i < in.channels; i++ ){
+	float vi = pixel[i] - means[i];
+
+        #pragma omp simd
+	for( int j = i; j < in.channels; j++ ){
+	  float vj = pixel[j] - means[j];
+	  localCov[i * in.channels + j] += (double)vi * vj;
+	}
+      }
+    }
+
+    // Reduce thread-local matrices into the global one
+#pragma omp critical
+    for( size_t k = 0; k < globalCov.size(); k++ ){
+      globalCov[k] += localCov[k];
+    }
+  }
+
+  // Normalise by (N-1) and copy to a float vector, preserving symmetry
+  vector<float> covariance( in.channels * in.channels, 0.0f );
+  double denom = (double)(np - 1);
+  for( int i = 0; i < in.channels; i++ ){
+    for( int j = i; j < in.channels; j++ ){
+      float val = (float)(globalCov[i * in.channels + j] / denom);
+      covariance[i * in.channels + j] = val;
+      covariance[j * in.channels + i] = val;   // matrix is symmetric
+    }
+  }
+
+  return covariance;
+}
+
+
+
+/// Calculate Eigenvalues and Eigenvectors. These are returned in a single STL vector where
+/// vector[0] are the eigenvalues and vector[1] are the eigenvectors. The eigenvectors are stored row-wise
+/// and not column-wise
+vector<vector<float>> Transform::eigenvectors( const vector<float>& covariance ){
+
+  int channels = (int) sqrtf( covariance.size() );
+  vector<float> values( channels, 0.0 );
+  vector<float> vectors( channels*channels, 0.0 );
+
+#ifdef HAVE_EIGEN3
+
+  // Copy our covariance matrix to an Eigen matrix structure
+  Eigen::MatrixXf cov( channels, channels );
+  unsigned int n = 0;
+  for( int j=0; j<channels; j++ ){
+    for( int i=0; i<channels; i++ ){
+      cov(i,j) = covariance[n++];
+    }
+  }
+
+  // Solve to find eigenvalues and vectors - use fast solver for symmetric matrices
+  Eigen::SelfAdjointEigenSolver<Eigen::MatrixXf> eigenValueSolver( cov );
+
+  // Get Eigenvalues and load into vector
+  Eigen::MatrixXf v = eigenValueSolver.eigenvalues();
+  values = vector<float>( v.data(), v.data() + v.size() );
+
+  // Eigen's solver stores eigenvectors as columns, and MatrixXf is column-major.
+  // Therefore, each eigenvector k is already stored contiguously at offset [k * channels + i].
+  Eigen::MatrixXf eigenvectors = eigenValueSolver.eigenvectors();
+
+  // Make sure largest value in each eigenvector is positive
+  for( Eigen::Index k = 0; k < eigenvectors.cols(); ++k ){
+    // Find the coefficient with the largest absolute value
+    Eigen::Index maxIndex;
+    eigenvectors.col(k).cwiseAbs().maxCoeff(&maxIndex);
+    // Ensure that coefficient is positive
+    if (eigenvectors(maxIndex, k) < 0.0) eigenvectors.col(k) *= -1.0;
+  }
+
+  vectors = vector<float>( eigenvectors.data(), eigenvectors.data() + eigenvectors.size() );
+
+#endif
+
+  // Pack both eigen values and eigen vectors into single STL vector
+  // with the first array item the values and the second the eigenvectors
+  vector<vector<float>> eigen = {values,vectors};
+  return eigen;
+}
+
+
+
+// Decorrelation stretch on N-band image
+void Transform::decorrelation( RawTile& in, const vector<vector<float>>& eigenvectors,
+                               const vector<float>& mean, const vector<float>& covariance ){
+
+  // Basic sanity check – data must exist and there must be at least one channel
+  if( !in.data || in.channels <= 0 ) return;
+  if( in.sampleType != SampleType::FLOATINGPOINT || in.bpc != 32 ) return;
+
+  const int channels = in.channels;
+
+  // Verify that the supplied statistics match the channel count
+  if( eigenvectors.size() < 2 ||
+      eigenvectors[0].size() < (size_t)channels ||
+      eigenvectors[1].size() < (size_t)channels * channels ||
+      mean.size()        < (size_t)channels ||
+      covariance.size()  < (size_t)channels * channels )
+    return;
+
+  const vector<float>& values  = eigenvectors[0];   // eigenvalues (size channels)
+  const vector<float>& vectors = eigenvectors[1];   // eigenvectors (row‑wise, channels×channels)
+
+  // Standard deviation per channel (sqrt of diagonal of covariance)
+  vector<float> stddev( channels );
+  for( int k = 0; k < channels; ++k ){
+    float var = covariance[k * channels + k];
+    stddev[k] = (var > 0.0f) ? sqrtf(var) : 0.0f;
+  }
+
+  // Scale factors - 1 / sqrt(eigenvalue) (whitening)
+  vector<float> scale( channels );
+  for( int k = 0; k < channels; ++k ){
+    scale[k] = (values[k] > 1e-6f) ? (1.0f / sqrtf(values[k])) : 0.0f;
+  }
+
+  // Build the N×N transformation matrix T = D·V·S·Vᵀ
+  // Stored row‑major as a flat vector: T[row*N + col]
+  vector<float> T( channels * channels, 0.0f );
+  for( int j = 0; j < channels; ++j ){
+    for( int i = 0; i < channels; ++i ){
+      float sum = 0.0f;
+      for( int k = 0; k < channels; ++k ){
+        // Vectors are row‑wise: row k, column *
+        sum += scale[k] * vectors[k * channels + j] * vectors[k * channels + i];
+      }
+      T[j * channels + i] = stddev[j] * sum;
+    }
+  }
+
+  // Pre‑compute the constant bias vector: b = mean – T·mean
+  vector<float> bias( channels );
+  for( int j = 0; j < channels; ++j ){
+    float dot = 0.0f;
+    for( int i = 0; i < channels; ++i ){
+      dot += T[j * channels + i] * mean[i];
+    }
+    bias[j] = mean[j] - dot;
+  }
+
+  uint32_t np = (uint32_t) in.width * in.height * channels;
+  float *data = (float*) in.data;
+
+  // Fast path for 3-channel RGB: eliminates inner loops and enables SIMD vectorization
+  if( channels == 3 ){
+    const float T0 = T[0], T1 = T[1], T2 = T[2];
+    const float T3 = T[3], T4 = T[4], T5 = T[5];
+    const float T6 = T[6], T7 = T[7], T8 = T[8];
+    const float b0 = bias[0], b1 = bias[1], b2 = bias[2];
+
+#if defined(__ICC) || defined(__INTEL_COMPILER)
+#pragma ivdep
+#elif defined(_OPENMP)
+#pragma omp parallel for if( in.width * in.height > PARALLEL_THRESHOLD )
+#endif
+    for( uint32_t n = 0; n < np; n += 3 ){
+      float r = data[n], g = data[n + 1], b = data[n + 2];
+      float o0 = b0 + T0 * r + T1 * g + T2 * b;
+      float o1 = b1 + T3 * r + T4 * g + T5 * b;
+      float o2 = b2 + T6 * r + T7 * g + T8 * b;
+      data[n]     = (o0 < 0.0f) ? 0.0f : (o0 > 1.0f ? 1.0f : o0);
+      data[n + 1] = (o1 < 0.0f) ? 0.0f : (o1 > 1.0f ? 1.0f : o1);
+      data[n + 2] = (o2 < 0.0f) ? 0.0f : (o2 > 1.0f ? 1.0f : o2);
+    }
+    return;
+  }
+
+  // Generic path for arbitrary channels (allocates buffer once per thread, no VLAs)
+#pragma omp parallel if( in.width * in.height > PARALLEL_THRESHOLD )
+  {
+    vector<float> out( channels );
+
+    #pragma omp for
+    for( uint32_t n = 0; n < np; n += channels ){
+      const float *pixel = data + n;
+      for( int j = 0; j < channels; ++j ){
+        float acc = bias[j];
+        const float *Trow = &T[j * channels];
+        for( int i = 0; i < channels; ++i ){
+          acc += Trow[i] * pixel[i];
+        }
+        out[j] = (acc < 0.0f) ? 0.0f : (acc > 1.0f ? 1.0f : acc);
+      }
+
+      for( int i = 0; i < channels; ++i ){
+        data[n + i] = out[i];
+      }
+    }
+  }
+}
+
+
+
+// PCA Transform with global variance scaling
+void Transform::pca( RawTile& in, const vector<vector<float>>& eigenvectors, const vector<float>& mean ){
+
+  // Make sure we have valid image data and eigen values / vectors
+  if( !in.data || in.channels <= 0 ) return;
+  if( in.sampleType != SampleType::FLOATINGPOINT || in.bpc != 32 ) return;
+  if( eigenvectors.size() < 2 || eigenvectors[0].empty() || eigenvectors[1].empty() ) return;
+
+  const vector<float>& values  = eigenvectors[0];
+  const vector<float>& vectors = eigenvectors[1];
+
+  const int channels = in.channels;
+  if( (int)values.size() < channels || (int)vectors.size() < channels * channels || (int)mean.size() < channels ){
+    return;
+  }
+
+  // Sort component indices in descending order of eigenvalue (largest variance / PC1 first)
+  vector<int> order( channels );
+  for( int i = 0; i < channels; i++ ) order[i] = i;
+  sort( order.begin(), order.end(), [&values]( int a, int b ){
+    return values[a] > values[b];
+  });
+
+  // Precompute affine projection: out = P * x + bias
+  // Using 2.75-sigma scaling (k=2.75) to map [-2.75*sigma, +2.75*sigma] to [0.0, 1.0]
+  // (2.75 equates to approximately 0.6% percentile clipping - 0.3% at each low/high extremity)
+  const float k_sigma = 2.75f;
+  vector<float> P( channels * channels, 0.0f );
+  vector<float> bias( channels, 0.0f );
+
+  for( int j = 0; j < channels; j++ ){
+    int vec_idx = order[j];
+    float lambda = values[vec_idx];
+    float scale = (lambda > 1e-6f) ? (1.0f / (2.0f * k_sigma * sqrtf(lambda))) : 0.0f;
+
+    float dot_mean = 0.0f;
+    for( int i = 0; i < channels; i++ ){
+      float v = vectors[vec_idx * channels + i];
+      P[j * channels + i] = v * scale;
+      dot_mean += v * mean[i];
+    }
+    bias[j] = 0.5f - dot_mean * scale;
+  }
+
+  uint32_t np = (uint32_t) in.width * in.height * channels;
+  float *data = (float*) in.data;
+
+  // Fast path for 3-channel RGB: eliminates inner loops and enables SIMD vectorization
+  if( channels == 3 ){
+    const float P0 = P[0], P1 = P[1], P2 = P[2];
+    const float P3 = P[3], P4 = P[4], P5 = P[5];
+    const float P6 = P[6], P7 = P[7], P8 = P[8];
+    const float b0 = bias[0], b1 = bias[1], b2 = bias[2];
+
+#if defined(__ICC) || defined(__INTEL_COMPILER)
+#pragma ivdep
+#elif defined(_OPENMP)
+#pragma omp parallel for if( in.width * in.height > PARALLEL_THRESHOLD )
+#endif
+    for( uint32_t n = 0; n < np; n += 3 ){
+      float r = data[n], g = data[n + 1], b = data[n + 2];
+      float o0 = b0 + P0 * r + P1 * g + P2 * b;
+      float o1 = b1 + P3 * r + P4 * g + P5 * b;
+      float o2 = b2 + P6 * r + P7 * g + P8 * b;
+      data[n]     = (o0 < 0.0f) ? 0.0f : (o0 > 1.0f ? 1.0f : o0);
+      data[n + 1] = (o1 < 0.0f) ? 0.0f : (o1 > 1.0f ? 1.0f : o1);
+      data[n + 2] = (o2 < 0.0f) ? 0.0f : (o2 > 1.0f ? 1.0f : o2);
+    }
+    return;
+  }
+
+  // Generic path for arbitrary channels (allocates buffer once per thread)
+#pragma omp parallel if( in.width * in.height > PARALLEL_THRESHOLD )
+  {
+    vector<float> out( channels );
+
+    #pragma omp for
+    for( uint32_t n = 0; n < np; n += channels ){
+      const float *pixel = data + n;
+      for( int j = 0; j < channels; ++j ){
+        float acc = bias[j];
+        const float *Prow = &P[j * channels];
+        for( int i = 0; i < channels; ++i ){
+          acc += Prow[i] * pixel[i];
+        }
+        out[j] = (acc < 0.0f) ? 0.0f : (acc > 1.0f ? 1.0f : acc);
+      }
+
+      for( int i = 0; i < channels; ++i ){
+        data[n + i] = out[i];
+      }
+    }
+  }
 }

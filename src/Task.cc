@@ -1,7 +1,7 @@
 /*
     IIP Command Handler Member Functions
 
-    Copyright (C) 2006-2025 Ruven Pillay.
+    Copyright (C) 2006-2026 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -76,6 +76,7 @@ Task* Task::factory( const string& t ){
   else if( type == "ctw" ) return new CTW;
   else if( type == "col" ) return new COL;
   else if( type == "cnv" ) return new CNV;
+  else if( type == "tfm" ) return new TFM;
   else if( type == "iiif" ) return new IIIF;
   else return NULL;
 
@@ -740,5 +741,20 @@ void CNV::run( Session* session, const string& src ){
       session->view->convolution = std::move(kernel);
     }
   }
+}
+
+
+// Transform request
+void TFM::run( Session* session, const string& argument ){
+
+  // Convert to lower case in order to do our string comparison
+  string ctype = argument;
+  transform( ctype.begin(), ctype.end(), ctype.begin(), ::tolower );
+
+  if( session->loglevel >= 2 ) *(session->logfile) << "TFM handler reached" << endl;
+  if( session->loglevel >= 3 ) *(session->logfile) << "TFM :: requested transform " << ctype << endl;
+
+  if( ctype == "pca" ) session->view->pca = true;
+  else if( ctype == "dstretch" ) session->view->decorrelation = true;
 
 }

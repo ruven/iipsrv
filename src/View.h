@@ -76,6 +76,9 @@ class View{
   float gamma;                                ///< Gamma adjustment requested by GAM command
   std::vector<float> convolution;             ///< Convolution matrix
   bool equalization;                          ///< Whether to perform histogram equalization
+  bool pca;                                   ///< Whether to perform principal component analysis
+  bool decorrelation;                         ///< Whether to perform a decorrelation stretch
+
   bool minmax;                                ///< Whether to perform contrast stretching using user-defined min/max
 
 
@@ -100,6 +103,9 @@ class View{
     max_exif = -1;
     output_format = ImageEncoding::JPEG;
     equalization = false;
+    pca = false;
+    decorrelation = false;
+
     minmax = false;
   };
 
@@ -140,7 +146,7 @@ class View{
    */
   int maxICC(){
     // Disable if colour-mapping, twist, hill-shading or greyscale conversion applied
-    if( cmapped || shaded || ctw.size() || colorspace==ColorSpace::GREYSCALE ) return 0;
+    if( cmapped || shaded || ctw.size() || pca || decorrelation || colorspace==ColorSpace::GREYSCALE ) return 0;
     return max_icc;
   }
 
@@ -281,7 +287,7 @@ class View{
 
   /// Whether view requires floating point processing
   bool floatProcessing(){
-    if( contrast != 1.0 || gamma != 1.0 || cmapped || shaded || inverted || minmax || ctw.size() || convolution.size() ){
+    if( contrast != 1.0 || gamma != 1.0 || cmapped || shaded || inverted || minmax || decorrelation || pca || ctw.size() || convolution.size() ){
       return true;
     }
     else return false;
@@ -290,6 +296,12 @@ class View{
   /// Whether we require a histogram
   bool requireHistogram(){
     if( equalization || colorspace==ColorSpace::BINARY || contrast==-1 ) return true;
+    else return false;
+  }
+
+  /// Whether we require Eigenvectors
+  bool requireEigenvectors(){
+    if( decorrelation || pca ) return true;
     else return false;
   }
 

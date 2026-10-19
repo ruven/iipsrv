@@ -1,7 +1,7 @@
 /*
     IIP Session & Generic Task Classes
 
-    Copyright (C) 2006-2025 Ruven Pillay
+    Copyright (C) 2006-2026 Ruven Pillay
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -411,5 +411,11 @@ class CNV : public Task {
   void run( Session* session, const std::string& argument );
 };
 
+
+/// TFM Image Transform Command
+class TFM : public Task {
+ public:
+  void run( Session* session, const std::string& argument );
+};
 
 #endif
