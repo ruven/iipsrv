@@ -2,6 +2,8 @@
 	- Fix to FIF.cc to ensure that any previously allocated image instances are first freed before creating a new instance.
 	  A single request can include multiple FIF, Zoomify or IIIF commands, resulting in repeated allocation and memory leakage.
 	  Fixes issue raised in https://github.com/ruven/iipsrv/issues/295.
+	- Added guards to Zoomify.cc and Deepzoom.cc for invalid resolution numbers which can potentially cause out of bound
+	  reads on the IIPImage->image_widths vector. Fixes issue raised in https://github.com/ruven/iipsrv/issues/295.
 
 
 19/10/2026:
@@ -10,6 +12,7 @@
 	  Functionality also available for IIIF requests via the quality parameter if IIIF_EXTENSIONS enabled at startup.
 	  For example: /image/full/full/0/pca.jpg Covariance matrix and eigenvalues / eigenvectors are calculated once
 	  from lowest resolution image and stored in cache. Eigenvector calculation requires the Eigen linear algebra library.
+
 
 18/20/2016:
 	- Fix to incorrect shade() implementation in Transform class.
