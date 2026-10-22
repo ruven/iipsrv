@@ -1,0 +1,36 @@
+FROM debian:trixie-slim
+
+ARG GROK_REF=v20.4.19
+ARG GROK_COMMIT=31ae6fa25be3747370b47a65d311e355f2adb33f
+ARG BUILD_JOBS=3
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    -o Dpkg::Options::=--force-unsafe-io \
+    autoconf automake build-essential ca-certificates cmake curl file git \
+    libavif-dev libeigen3-dev libfcgi-bin libfcgi-dev libjpeg-dev liblcms2-dev \
+    libopenjp2-7-dev libopenjp2-tools libpng-dev libtiff-dev libtool \
+    libwebp-dev ninja-build pkg-config python3 python3-pil zlib1g-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+ENV PATH="/opt/grok/bin:${PATH}" \
+    LD_LIBRARY_PATH="/opt/grok/lib" \
+    PKG_CONFIG_PATH="/opt/grok/lib/pkgconfig"
+
+RUN git clone --depth 1 --branch "${GROK_REF}" \
+      https://github.com/GrokImageCompression/grok.git /opt/grok-src \
+    && test "$(git -C /opt/grok-src rev-parse HEAD)" = "${GROK_COMMIT}" \
+    && git -C /opt/grok-src submodule update --init --depth 1 \
+      src/include/CLI11 src/include/spdlog src/include/taskflow src/lib/core/highway \
+    && cmake -S /opt/grok-src -B /opt/grok-build -G Ninja \
+      -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/opt/grok \
+      -DCMAKE_INSTALL_LIBDIR=lib -DGRK_BUILD_CORE_SWIG_BINDINGS=OFF \
+      -DGRK_BUILD_CORE_EXAMPLES=OFF -DGRK_BUILD_LIBPNG=OFF \
+      -DGRK_BUILD_LIBTIFF=OFF -DGRK_BUILD_JPEG=OFF -DGRK_BUILD_LCMS2=OFF \
+    && cmake --build /opt/grok-build --parallel "${BUILD_JOBS}" \
+    && cmake --install /opt/grok-build \
+    && useradd --create-home --uid 10001 grok-test \
+    && install -d -o grok-test -g grok-test /work
+
+USER grok-test:grok-test
+WORKDIR /work
+CMD ["bash"]

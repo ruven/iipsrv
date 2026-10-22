@@ -13,6 +13,10 @@ if ENABLE_OPENJPEG
 iipsrv_fcgi_LDADD += OpenJPEGImage.o
 endif
 
+if ENABLE_GROK
+iipsrv_fcgi_LDADD += GrokImage.o
+endif
+
 if ENABLE_PNG
 iipsrv_fcgi_LDADD += PNGCompressor.o
 endif
@@ -32,6 +36,7 @@ endif
 EXTRA_iipsrv_fcgi_SOURCES = Main.cc DSOImage.h DSOImage.cc \
 			KakaduImage.h KakaduImage.cc \
 			OpenJPEGImage.h OpenJPEGImage.cc \
+			GrokImage.h GrokImage.cc \
 			PNGCompressor.h PNGCompressor.cc \
 			WebPCompressor.h WebPCompressor.cc \
 			AVIFCompressor.h AVIFCompressor.cc
