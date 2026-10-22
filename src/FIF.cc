@@ -1,7 +1,7 @@
 /*
     IIP FIF Command Handler Class Member Function
 
-    Copyright (C) 2006-2023 Ruven Pillay.
+    Copyright (C) 2006-2026 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -125,9 +125,16 @@ void FIF::run( Session* session, const string& src ){
 
 
 
-    /*****************************************************
-      Test for supported image formats: TIFF or JPEG2000
-    ******************************************************/
+    /***********************************************************
+      Test for supported image formats: TIFF, JPEG or JPEG2000
+    ***********************************************************/
+
+    // It's possible to call an image open command through FIF, Zoomify or IIIF etc several times in a single request.
+    // Ensure that any previous allocated instances are first freed to avoid memory leakage
+    if( *session->image ){
+      delete *session->image;
+      *session->image = NULL;
+    }
 
     ImageEncoding format = test.getImageFormat();
 
