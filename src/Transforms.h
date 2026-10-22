@@ -1,7 +1,7 @@
 /*
     Image Transforms
 
-    Copyright (C) 2004-2025 Ruven Pillay.
+    Copyright (C) 2004-2026 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -211,6 +211,42 @@ struct Transform {
   */
   void convolution( RawTile& in, const std::vector<float>& conv );
 
+
+  /// Calculate per-channel mean
+  /** @param in input image
+      @return vector containing mean pixel value per channel
+   */
+  std::vector<float> mean( const RawTile& in );
+
+
+  /// Calculate inter-band co-variance
+  /** @param in input image
+      @param mean vector of mean values for each channel
+      @return covariance matrix
+   */
+  std::vector<float> covariance( const RawTile& in, const std::vector<float>& mean );
+
+
+  /// Calculate eigenvectors
+  /** @param covariance covariance matrix
+      @return eigenvectors
+   */
+  std::vector<std::vector<float>> eigenvectors( const std::vector<float>& covariance );
+
+
+  /// Transform image
+  /** @param in input image
+      @param vector of vectors containing the eigen values packed in the first row and vectors in the second
+   */
+  void pca( RawTile& in, const std::vector< std::vector<float> >& eigenvectors, const std::vector<float>& mean );
+
+
+  /// Decorrelation stretch
+  /** @param in input image
+      @param mean means for each band
+      @param covariance matrix
+   */
+  void decorrelation( RawTile& in, const std::vector< std::vector<float> >& eigenvectors, const std::vector<float>& mean, const std::vector<float>& covariance );
 
 };
 

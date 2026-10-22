@@ -72,9 +72,13 @@ class View{
   int max_exif;                               ///< Maximum EXIF size we allow to be embedded
   ImageEncoding output_format;                ///< Requested output format
   float contrast;                             ///< Contrast adjustment requested by CNT command
+  float clip;                                 ///< Percentile retained before clipping when using contrast stretching
   float gamma;                                ///< Gamma adjustment requested by GAM command
   std::vector<float> convolution;             ///< Convolution matrix
   bool equalization;                          ///< Whether to perform histogram equalization
+  bool pca;                                   ///< Whether to perform principal component analysis
+  bool decorrelation;                         ///< Whether to perform a decorrelation stretch
+
   bool minmax;                                ///< Whether to perform contrast stretching using user-defined min/max
 
 
@@ -86,7 +90,7 @@ class View{
     res_width = 0; res_height = 0;
     min_size = 1; max_size = 0;
     requested_width = 0; requested_height = 0;
-    contrast = 1.0; gamma = 1.0;
+    contrast = 1.0; clip = 100.0; gamma = 1.0;
     xangle = 0; yangle = 90;
     shaded = false; shade[0] = 0; shade[1] = 0; shade[2] = 0;
     cmapped = false; cmap = HOT; inverted = false;
@@ -99,6 +103,9 @@ class View{
     max_exif = -1;
     output_format = ImageEncoding::JPEG;
     equalization = false;
+    pca = false;
+    decorrelation = false;
+
     minmax = false;
   };
 
@@ -139,7 +146,7 @@ class View{
    */
   int maxICC(){
     // Disable if colour-mapping, twist, hill-shading or greyscale conversion applied
-    if( cmapped || shaded || ctw.size() || colorspace==ColorSpace::GREYSCALE ) return 0;
+    if( cmapped || shaded || ctw.size() || pca || decorrelation || colorspace==ColorSpace::GREYSCALE ) return 0;
     return max_icc;
   }
 
@@ -280,7 +287,7 @@ class View{
 
   /// Whether view requires floating point processing
   bool floatProcessing(){
-    if( contrast != 1.0 || gamma != 1.0 || cmapped || shaded || inverted || minmax || ctw.size() || convolution.size() ){
+    if( contrast != 1.0 || gamma != 1.0 || cmapped || shaded || inverted || minmax || decorrelation || pca || ctw.size() || convolution.size() ){
       return true;
     }
     else return false;
@@ -289,6 +296,12 @@ class View{
   /// Whether we require a histogram
   bool requireHistogram(){
     if( equalization || colorspace==ColorSpace::BINARY || contrast==-1 ) return true;
+    else return false;
+  }
+
+  /// Whether we require Eigenvectors
+  bool requireEigenvectors(){
+    if( decorrelation || pca ) return true;
     else return false;
   }
 

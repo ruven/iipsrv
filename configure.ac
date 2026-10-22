@@ -81,6 +81,32 @@ AX_CXX_COMPILE_STDCXX(11)
 AC_LANG_POP([C++])
 
 
+
+# Testing presence of pkg-config
+AC_MSG_CHECKING([pkg-config m4 macros])
+if test m4_ifdef([PKG_CHECK_MODULES], [yes], [no]) == yes; then
+	AC_MSG_RESULT([yes]);
+else
+	AC_MSG_RESULT([no]);
+	AC_MSG_ERROR([
+		pkg-config is required.
+		See pkg-config.freedesktop.org])
+fi
+
+
+# Test for Eigen - allow user to disable
+AC_ARG_ENABLE([eigen],[  --disable-eigen         disable Eigen support])
+if test "x$enable_eigen" == "xno"; then
+	EIGEN=false
+	AC_MSG_RESULT([configure: Eigen support disabled])
+else
+	PKG_CHECK_MODULES([EIGEN], [eigen3], [ EIGEN=true
+						AC_DEFINE(HAVE_EIGEN3)
+						AM_CXXFLAGS="${EIGEN_CFLAGS} ${AM_CXXFLAGS}"],
+					     [EIGEN=false])
+fi
+
+
 # Enable debugging
 AC_ARG_ENABLE([debug-mode],
               [  --enable-debug-mode     enable debugging mode (no FCGI)],
@@ -346,18 +372,6 @@ AC_ARG_WITH([openjpeg],
     [openjpeg_path=])
 
 
-# Testing presence of pkg-config
-AC_MSG_CHECKING([pkg-config m4 macros])
-if test m4_ifdef([PKG_CHECK_MODULES], [yes], [no]) = yes; then
-	AC_MSG_RESULT([yes]);
-else
-	AC_MSG_RESULT([no]);
-	AC_MSG_ERROR([
-		pkg-config is required.
-		See pkg-config.freedesktop.org])
-fi
-
-
 
 # Grok takes precedence over OpenJPEG.  Its pkg-config module is
 # "libgrokj2k" (not "libopenjp2").
@@ -366,7 +380,10 @@ if test "x${KAKADU}" != xtrue; then
 		AC_MSG_RESULT([configure: disabling Grok support])
 	elif test -n "$grok_path"; then
 		AC_MSG_CHECKING([for Grok headers below $grok_path])
-		if test -f "$grok_path/include/grok-20.3/grok.h"; then
+		if test -f "$grok_path/include/grok-20.4/grok.h"; then
+			GROK_CFLAGS="-I$grok_path/include/grok-20.4"
+			GROK=true
+		elif test -f "$grok_path/include/grok-20.3/grok.h"; then
 			GROK_CFLAGS="-I$grok_path/include/grok-20.3"
 			GROK=true
 		elif test -f "$grok_path/include/grok-20/grok.h"; then
@@ -481,6 +498,7 @@ Options Enabled:
  Memcached   :  ${MEMCACHED}
  JPEG2000    :  ${JPEG2000_CODEC}
  OpenMP      :  ${OPENMP}
+ Eigen       :  ${EIGEN}
  Loggers     :  ${LOGGING}
  PNG  Output :  ${PNG}
  WebP Output :  ${WEBP}

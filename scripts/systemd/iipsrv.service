@@ -1,10 +1,10 @@
-[Install]
-WantedBy=multi-user.target
-
 [Unit]
 Description=IIPImage server
 After=network.target
 Documentation=https://iipimage.sourceforge.io man:iipsrv(8)
+
+[Install]
+WantedBy=multi-user.target
 
 [Service]
 User=iipsrv
@@ -14,8 +14,10 @@ Environment="HOST=0.0.0.0" "PORT=9000" "LOGFILE=/var/log/iipsrv.log"
 EnvironmentFile=-/etc/default/iipsrv
 
 # Make sure logfile is writable by our user
-ExecStartPre=+/bin/sh -ec "if [[ ${LOGFILE} != syslog ]]; then /usr/bin/touch -a ${LOGFILE} && chown iipsrv:iipsrv ${LOGFILE}; fi"
+ExecStartPre=+/bin/sh -ec "if [ '${LOGFILE}' != syslog ]; then /usr/bin/touch -a '${LOGFILE}' && chown iipsrv:iipsrv '${LOGFILE}'; fi"
 
+NoNewPrivileges=yes
 ExecStart=/usr/sbin/iipsrv --bind ${HOST}:${PORT}
-ExecReload=kill -HUP $MAINPID
+ExecReload=/bin/kill -HUP $MAINPID
 Restart=on-failure
+RestartSec=2

@@ -60,6 +60,7 @@
 #define IIIF_EXTRA_INFO ""
 #define IIIF_EXTENSIONS false
 #define COPYRIGHT ""
+#define ENABLE_HEALTH false
 
 
 #include <string>
@@ -465,6 +466,15 @@ class Environment {
     const char* envpara = getenv( "COPYRIGHT" );
     if( envpara ) return std::string( envpara );
     else return COPYRIGHT;
+  }
+
+
+  static bool getEnableHealth(){
+    const char* envpara = getenv( "ENABLE_HEALTH" );
+    bool enable_health;
+    if( envpara ) enable_health =  atoi( envpara ); // Implicit cast to boolean, all values other than '0' treated as true
+    else enable_health = ENABLE_HEALTH;
+    return enable_health;
   }
 
 };

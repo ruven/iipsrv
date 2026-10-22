@@ -2,7 +2,7 @@
 
 /*  IIPImage image processing routines
 
-    Copyright (C) 2004-2025 Ruven Pillay.
+    Copyright (C) 2004-2026 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -22,7 +22,14 @@
 #include <cmath>
 #include <algorithm>
 #include <numeric>
+#include <limits>
 #include "Transforms.h"
+
+#if HAVE_EIGEN3
+#include <Eigen/Dense>
+#include <Eigen/Eigenvalues>
+#endif
+
 
 
 // Define something similar to C99 std::isfinite if this does not exist
@@ -171,10 +178,8 @@ void Transform::normalize( RawTile& in, const vector<float>& max, const vector<f
 
 
 
-// Hillshading function
+// Hillshading function - input data is a normalized floating-point 3-band normal map
 void Transform::shade( RawTile& in, int h_angle, int v_angle ){
-
-  float o_x, o_y, o_z;
 
   // Incident light angle
   float a = (h_angle * 2 * M_PI) / 360.0;
@@ -182,9 +187,7 @@ void Transform::shade( RawTile& in, int h_angle, int v_angle ){
   // We assume a hypotenous of 1.0
   float s_y = cos(a);
   float s_x = sqrt( 1.0 - s_y*s_y );
-  if( h_angle > 180 ){
-    s_x = -s_x;
-  }
+  if( h_angle > 180 ) s_x = -s_x;
 
   a = (v_angle * 2 * M_PI) / 360.0;
   float s_z = - sin(a);
@@ -194,43 +197,43 @@ void Transform::shade( RawTile& in, int h_angle, int v_angle ){
   s_y = s_y / s_norm;
   s_z = s_z / s_norm;
 
-  float *buffer, *infptr;
+  /* Normal components are o = 1 - 2*v, so output = 0.5 + 0.5*(s.o)
+   *                         = 0.5 + 0.5*(s_x+s_y+s_z) - (s.v).
+   * Precompute the constant once instead of per pixel
+   */
+  const float c = 0.5 + 0.5 * ( s_x + s_y + s_z );
 
-  uint32_t np = (uint32_t) in.width * in.height * in.channels;
+  // Number of pixels
+  uint32_t np = (uint32_t) in.width * in.height;
 
-  infptr= (float*)in.data;
+  float *infptr = (float*) in.data;
 
   // Create new (float) data buffer
-  buffer = new float[np];
-
+  float *buffer = new float[np];
 
 #if defined(__ICC) || defined(__INTEL_COMPILER)
 #pragma ivdep
 #elif defined(_OPENMP)
-#pragma omp parallel for
+#pragma omp parallel for if( np > PARALLEL_THRESHOLD )
 #endif
   for( uint32_t k=0; k<np; k++ ){
 
     unsigned int n = k*3;
-    if( infptr[n] == 0.0 && infptr[n+1] == 0.0 && infptr[n+2] == 0.0 ){
-      o_x = o_y = o_z = 0.0;
-    }
-    else {
-      o_x = (float) - ((float)infptr[n]-0.5) * 2.0;
-      o_y = (float) - ((float)infptr[n+1]-0.5) * 2.0;
-      o_z = (float) - ((float)infptr[n+2]-0.5) * 2.0;
-    }
 
     float dot_product;
-    dot_product = (s_x*o_x) + (s_y*o_y) + (s_z*o_z);
+    // (0,0,0) normal map pixels signify no surface data -> black
+    if( infptr[n] == 0.0 && infptr[n+1] == 0.0 && infptr[n+2] == 0.0 ){
+      dot_product = 0.0;
+    }
+    else {
+      dot_product = c - ( (s_x*infptr[n]) + (s_y*infptr[n+1]) + (s_z*infptr[n+2]) );
+    }
 
-    dot_product = 0.5 * dot_product;
     if( dot_product < 0.0 ) dot_product = 0.0;
-    if( dot_product > 1.0 ) dot_product = 1.0;
+    else if( dot_product > 1.0 ) dot_product = 1.0;
 
     buffer[k] = dot_product;
   }
-
 
   // Delete old data buffer
   delete[] (float*) in.data;
@@ -471,32 +474,33 @@ void Transform::sRGB2LAB( RawTile& in ){
 
 
 
-// Colormap function
-// Based on the routine colormap.cpp in Imagin Raytracer by Olivier Ferrand
-// http://www.imagin-raytracer.org
+// Colormap function - produce a 3 band color mapped image from normalized input data
+// Based on the routine colormap.cpp in Imagin Raytracer by Olivier Ferrand http://www.imagin-raytracer.org
+// Note that the colormap is applied to only the first band of each input image
 void Transform::cmap( RawTile& in, enum cmap_type cmap ){
 
-  float value;
   unsigned in_chan = in.channels;
   unsigned out_chan = 3;
-  uint32_t np = (uint32_t) in.width * in.height * in.channels; // pixels in input image
-  uint32_t onp = (uint32_t) in.width * in.height * out_chan;   // pixels in output image
+  uint32_t np = (uint32_t) in.width * in.height;               // pixels in input image
+  uint32_t onp = (uint32_t) in.width * in.height * out_chan;   // pixels*channels in output image
 
   const float max3 = 1.0/3.0;
   const float max8 = 1.0/8.0;
 
   float *fptr = (float*)in.data;
   float *outptr = new float[onp];
-  float *outv = outptr;
 
   switch(cmap){
 
     case HOT:
 #if defined(__ICC) || defined(__INTEL_COMPILER)
 #pragma ivdep
+#elif defined(_OPENMP)
+#pragma omp parallel for if( in.width*in.height > PARALLEL_THRESHOLD )
 #endif
-      for( uint32_t n=0; n<np; n+=in_chan, outv+=3 ){
-        value = fptr[n];
+      for( uint32_t p=0; p<np; p++ ){
+        float value = fptr[p*in_chan];
+        float *outv = outptr + p*3;
         if(value>1.)
           { outv[0]=outv[1]=outv[2]=1.; }
         else if(value<=0.)
@@ -514,9 +518,12 @@ void Transform::cmap( RawTile& in, enum cmap_type cmap ){
     case COLD:
 #if defined(__ICC) || defined(__INTEL_COMPILER)
 #pragma ivdep
+#elif defined(_OPENMP)
+#pragma omp parallel for if( in.width*in.height > PARALLEL_THRESHOLD )
 #endif
-      for( uint32_t n=0; n<np; n+=in_chan, outv+=3 ){
-        value = fptr[n];
+      for( uint32_t p=0; p<np; p++ ){
+        float value = fptr[p*in_chan];
+        float *outv = outptr + p*3;
         if(value>1.)
           { outv[0]=outv[1]=outv[2]=1.; }
         else if(value<=0.)
@@ -534,9 +541,12 @@ void Transform::cmap( RawTile& in, enum cmap_type cmap ){
     case JET:
 #if defined(__ICC) || defined(__INTEL_COMPILER)
 #pragma ivdep
+#elif defined(_OPENMP)
+#pragma omp parallel for if( in.width*in.height > PARALLEL_THRESHOLD )
 #endif
-      for( uint32_t n=0; n<np; n+=in_chan, outv+=3 ){
-        value = fptr[n];
+      for( uint32_t p=0; p<np; p++ ){
+        float value = fptr[p*in_chan];
+        float *outv = outptr + p*3;
         if(value<0.)
           { outv[0]=outv[1]=outv[2]=0.; }
         else if(value<max8)
@@ -556,9 +566,12 @@ void Transform::cmap( RawTile& in, enum cmap_type cmap ){
     case RED:
 #if defined(__ICC) || defined(__INTEL_COMPILER)
 #pragma ivdep
+#elif defined(_OPENMP)
+#pragma omp parallel for if( in.width*in.height > PARALLEL_THRESHOLD )
 #endif
-      for( uint32_t n=0; n<np; n+=in_chan, outv+=3 ){
-	value = fptr[n];
+      for( uint32_t p=0; p<np; p++ ){
+        float value = fptr[p*in_chan];
+        float *outv = outptr + p*3;
 	outv[0] = value;
 	outv[1] = outv[2] = 0.;
       }
@@ -567,9 +580,12 @@ void Transform::cmap( RawTile& in, enum cmap_type cmap ){
     case GREEN:
 #if defined(__ICC) || defined(__INTEL_COMPILER)
 #pragma ivdep
+#elif defined(_OPENMP)
+#pragma omp parallel for if( in.width*in.height > PARALLEL_THRESHOLD )
 #endif
-      for( uint32_t n=0; n<np; n+=in_chan, outv+=3 ) {
-	value = fptr[n];
+      for( uint32_t p=0; p<np; p++ ) {
+        float value = fptr[p*in_chan];
+        float *outv = outptr + p*3;
 	outv[0] = outv[2] = 0.;
 	outv[1] = value;
       }
@@ -578,9 +594,12 @@ void Transform::cmap( RawTile& in, enum cmap_type cmap ){
     case BLUE:
 #if defined(__ICC) || defined(__INTEL_COMPILER)
 #pragma ivdep
+#elif defined(_OPENMP)
+#pragma omp parallel for if( in.width*in.height > PARALLEL_THRESHOLD )
 #endif
-      for( uint32_t n=0; n<np; n+=in_chan, outv+=3 ) {
-	value = fptr[n];
+      for( uint32_t p=0; p<np; p++ ) {
+        float value = fptr[p*in_chan];
+        float *outv = outptr + p*3;
 	outv[0] = outv[1] = 0;
 	outv[2] = value;
       }
@@ -646,13 +665,24 @@ void Transform::interpolate_nearestneighbour( RawTile& in, unsigned int resample
   float xscale = (float)width / (float)resampled_width;
   float yscale = (float)height / (float)resampled_height;
 
+  // Do not parallelize for small images (256x256 pixels) as this can be slower that single threaded.
+  // Also, only parallelize when resampling to a larger image as our output buffer then never
+  // aliases our input buffer and can be safely written to by multiple threads
+#if defined(__ICC) || defined(__INTEL_COMPILER)
+#pragma ivdep
+#elif defined(_OPENMP)
+#pragma omp parallel for if( new_buffer && resampled_width*resampled_height > PARALLEL_THRESHOLD )
+#endif
   for( unsigned int j=0; j<resampled_height; j++ ){
+
+    // Index to the current pyramid resolution's top left pixel
+    uint32_t jj = (uint32_t) floorf(j*yscale);
+
     for( unsigned int i=0; i<resampled_width; i++ ){
 
       // Indexes in the current pyramid resolution and resampled spaces
       // Make sure to limit our input index to the image surface
       uint32_t ii = (uint32_t) floorf(i*xscale);
-      uint32_t jj = (uint32_t) floorf(j*yscale);
       uint32_t pyramid_index = (uint32_t) channels * ( ii + jj*width );
 
       uint32_t resampled_index = (uint32_t)(i + j*resampled_width)*channels;
@@ -890,9 +920,6 @@ void Transform::rotate( RawTile& in, float angle=0.0 ){
   // Currently implemented only for rectangular rotations
   if( (int)angle % 90 == 0 && (int)angle % 360 != 0 ){
 
-    // Initialize our counter
-    unsigned int n = 0;
-
     // Allocate memory for our temporary buffer - rotate function only ever operates on 8bit data
     void *buffer = new unsigned char[in.width*in.height*in.channels];
 
@@ -934,10 +961,16 @@ void Transform::rotate( RawTile& in, float angle=0.0 ){
 
     // Rotate 180
     else if( (int) angle % 360 == 180 ){
+#if defined(__ICC) || defined(__INTEL_COMPILER)
+#pragma ivdep
+#elif defined(_OPENMP)
+#pragma omp parallel for if( in.width*in.height > PARALLEL_THRESHOLD )
+#endif
       for( int i=(in.width*in.height)-1; i >= 0; i-- ){
-	unsigned index = i * in.channels;
+	unsigned int index  = i * in.channels;
+	unsigned int oindex = (in.width*in.height - 1 - i) * in.channels;
 	for( int k=0; k < in.channels; k++ ){
-	  ((unsigned char*)buffer)[n++] = ((unsigned char*)in.data)[index+k];
+	  ((unsigned char*)buffer)[oindex+k] = ((unsigned char*)in.data)[index+k];
 	}
       }
     }
@@ -1015,12 +1048,14 @@ void Transform::twist( RawTile& rawtile, const vector< vector<float> >& matrix )
   if( output_channels == rawtile.channels ) output = (float*) rawtile.data;
   else output = new float[np * output_channels];
 
-  // Need to make sure the matrix is adapted to the number of channels in the raw data
-  unsigned int* row_sizes = new unsigned int[output_channels]; // Number of columns for each row
+  // Prepare flattened matrix and row sizes for efficient access
+  std::vector<unsigned int> row_sizes( output_channels );
+  std::vector<float> flat_matrix( output_channels * rawtile.channels, 0.0f );
 
-  // Get the number of columns in each row - can be less than number of channels - limit if there are more
-  for( int k=0; k<output_channels; k++ ){
-    row_sizes[k] = (matrix[k].size()>(unsigned int)rawtile.channels) ? rawtile.channels : matrix[k].size();
+  for( int k = 0; k < output_channels; ++k ){
+    unsigned int cols = std::min( matrix[k].size(), (size_t) rawtile.channels );
+    row_sizes[k] = cols;
+    std::copy( matrix[k].begin(), matrix[k].begin() + cols, flat_matrix.begin() + k * rawtile.channels );
   }
 
 #pragma omp parallel if( rawtile.width*rawtile.height > PARALLEL_THRESHOLD )
@@ -1028,37 +1063,34 @@ void Transform::twist( RawTile& rawtile, const vector< vector<float> >& matrix )
     // Create temporary buffer for our calculated values (need one for each thread)
     float* pixel = new float[output_channels];
 
-    // Loop through each pixel
-#pragma omp for
+    #pragma omp for
     for( uint32_t i=0; i<np; i++ ){
 
-      uint32_t in = (uint32_t) i*rawtile.channels;  // Pixel index in input buffer
-      uint32_t on = (uint32_t) i*output_channels;   // Pixel index in output buffer
+      // Pointer to input data
+      const float* in = ((float*)rawtile.data) + i*rawtile.channels;
 
-      // Calculate pixel value for each output channel
+      // Compute all output channels into the temporary pixel buffer
       for( int k=0; k<output_channels; k++ ){
+	float sum = 0.0f;
+	const float* row = &flat_matrix[k * rawtile.channels];
+	unsigned int sz = row_sizes[k];
 
-	// First zero our pixel buffer
-	pixel[k] = 0.0f;
-
-	// Loop through each column (input channel coefficient ) in the matrix
-	for( unsigned int j=0; j<row_sizes[k]; j++ ){
-	  float m = matrix[k][j];
-	  if( m ){
-	    float p = ((float*)rawtile.data)[in+j];
-	    pixel[k] += (m == 1.0) ? p : p * m;
-	  }
+        #pragma omp simd reduction(+:sum)
+	for( unsigned int j = 0; j < sz; j++ ){
+	  sum += in[j] * row[j];
 	}
+	pixel[k] = sum;
       }
 
-      // Only write out to our buffer at the end as we reuse channel values several times during the twist loops
-      for( int k=0; k<output_channels; k++ ) output[on++] = pixel[k];
+      // Write the computed pixel values to the output buffer
+      float* out = output + i*output_channels;
+      for( int k=0; k<output_channels; k++ ){
+	out[k] = pixel[k];
+      }
     }
 
     delete[] pixel;
   }
-
-  delete[] row_sizes;
 
   // If we have a different number of output channels, swap our buffer and update our rawtile parameters
   if( output_channels != rawtile.channels ){
@@ -1265,11 +1297,6 @@ void Transform::equalize( RawTile& in, vector<unsigned int>& histogram ){
   // Scale our CDF
   float scale = (float)(bits-1) / cdf[bits-1];
   float cdfmin = cdf[n0] / (float)(in.width*in.height);
-#if defined(__ICC) || defined(__INTEL_COMPILER)
-#pragma ivdep
-#elif defined(_OPENMP)
-#pragma omp parallel for
-#endif
   for( unsigned int i=0; i<bits; i++ ){
     cdf[i] = round( scale * (cdf[i]-cdfmin) );
   }
@@ -1310,7 +1337,7 @@ void Transform::convolution( RawTile& in, const vector<float>& kernel ){
 #if defined(__ICC) || defined(__INTEL_COMPILER)
 #pragma ivdep
 #elif defined(_OPENMP)
-#pragma omp parallel for
+#pragma omp parallel for collapse(2) if( in.width*in.height > PARALLEL_THRESHOLD )
 #endif
   for( unsigned long y=0; y<in.height; y++ ){
     for( unsigned long x=0; x<in.width; x++ ){
@@ -1337,11 +1364,361 @@ void Transform::convolution( RawTile& in, const vector<float>& kernel ){
         }
 	// Normalize our values
 	if( total > 0.0 ) v = v / total;
-	buffer[n++] = v;
+	buffer[n] = (float) v;
       }
     }
   }
 
   delete[] (float*) in.data;
   in.data = (void*) buffer;
+}
+
+
+
+// Calculate per-channel mean
+vector<float> Transform::mean( const RawTile& in ){
+
+  // Create vector and initialize values to zero
+  vector<float> mean( in.channels, 0 );
+
+  uint32_t np = (uint32_t) in.width * in.height * in.channels;
+  uint32_t pixels = in.width * in.height;
+
+  // Sum the pixel values for each channel
+  /*#if defined(__ICC) || defined(__INTEL_COMPILER)
+#pragma ivdep
+#elif defined(_OPENMP)
+#pragma omp parallel for
+#endif*/
+  for( uint32_t n = 0; n < np; n += in.channels ){
+    for( int k = 0; k < in.channels; k++ ){
+      mean[k] += (float)((float*)in.data)[n+k];
+    }
+  }
+
+  // Divide to obtain mean for each channel
+  for( int k = 0; k < in.channels; k++ ){
+    mean[k] /= (float) pixels;
+  }
+
+  return mean;
+}
+
+
+
+// Calculate covariance between channels
+vector<float> Transform::covariance( const RawTile& in, const vector<float>& means ){
+
+  // Number of pixels – guard against division-by-zero
+  uint32_t np = (uint32_t) in.width * in.height;
+  if( np <= 1 ) return vector<float>( in.channels * in.channels, 0.0f );
+
+  // Global accumulator: double precision to minimize rounding error
+  vector<double> globalCov( in.channels * in.channels, 0.0 );
+
+  // The tile data has already been normalised to float
+  const float *data = (float *)in.data;
+
+  // Parallel region – each thread gets its own private covariance matrix
+#pragma omp parallel if( in.width * in.height > PARALLEL_THRESHOLD )
+  {
+    vector<double> localCov( in.channels * in.channels, 0.0 );
+
+    // Distribute pixels across threads
+    #pragma omp for nowait
+    for( uint32_t n = 0; n < np; n++ ){
+
+      const float *pixel = data + n * in.channels;
+
+      // Centered values – accumulate only the upper triangle
+      for( int i = 0; i < in.channels; i++ ){
+	float vi = pixel[i] - means[i];
+
+        #pragma omp simd
+	for( int j = i; j < in.channels; j++ ){
+	  float vj = pixel[j] - means[j];
+	  localCov[i * in.channels + j] += (double)vi * vj;
+	}
+      }
+    }
+
+    // Reduce thread-local matrices into the global one
+#pragma omp critical
+    for( size_t k = 0; k < globalCov.size(); k++ ){
+      globalCov[k] += localCov[k];
+    }
+  }
+
+  // Normalise by (N-1) and copy to a float vector, preserving symmetry
+  vector<float> covariance( in.channels * in.channels, 0.0f );
+  double denom = (double)(np - 1);
+  for( int i = 0; i < in.channels; i++ ){
+    for( int j = i; j < in.channels; j++ ){
+      float val = (float)(globalCov[i * in.channels + j] / denom);
+      covariance[i * in.channels + j] = val;
+      covariance[j * in.channels + i] = val;   // matrix is symmetric
+    }
+  }
+
+  return covariance;
+}
+
+
+
+/// Calculate Eigenvalues and Eigenvectors. These are returned in a single STL vector where
+/// vector[0] are the eigenvalues and vector[1] are the eigenvectors. The eigenvectors are stored row-wise
+/// and not column-wise
+vector<vector<float>> Transform::eigenvectors( const vector<float>& covariance ){
+
+  int channels = (int) sqrtf( covariance.size() );
+  vector<float> values( channels, 0.0 );
+  vector<float> vectors( channels*channels, 0.0 );
+
+#ifdef HAVE_EIGEN3
+
+  // Copy our covariance matrix to an Eigen matrix structure
+  Eigen::MatrixXf cov( channels, channels );
+  unsigned int n = 0;
+  for( int j=0; j<channels; j++ ){
+    for( int i=0; i<channels; i++ ){
+      cov(i,j) = covariance[n++];
+    }
+  }
+
+  // Solve to find eigenvalues and vectors - use fast solver for symmetric matrices
+  Eigen::SelfAdjointEigenSolver<Eigen::MatrixXf> eigenValueSolver( cov );
+
+  // Get Eigenvalues and load into vector
+  Eigen::MatrixXf v = eigenValueSolver.eigenvalues();
+  values = vector<float>( v.data(), v.data() + v.size() );
+
+  // Eigen's solver stores eigenvectors as columns, and MatrixXf is column-major.
+  // Therefore, each eigenvector k is already stored contiguously at offset [k * channels + i].
+  Eigen::MatrixXf eigenvectors = eigenValueSolver.eigenvectors();
+
+  // Make sure largest value in each eigenvector is positive
+  for( Eigen::Index k = 0; k < eigenvectors.cols(); ++k ){
+    // Find the coefficient with the largest absolute value
+    Eigen::Index maxIndex;
+    eigenvectors.col(k).cwiseAbs().maxCoeff(&maxIndex);
+    // Ensure that coefficient is positive
+    if (eigenvectors(maxIndex, k) < 0.0) eigenvectors.col(k) *= -1.0;
+  }
+
+  vectors = vector<float>( eigenvectors.data(), eigenvectors.data() + eigenvectors.size() );
+
+#endif
+
+  // Pack both eigen values and eigen vectors into single STL vector
+  // with the first array item the values and the second the eigenvectors
+  vector<vector<float>> eigen = {values,vectors};
+  return eigen;
+}
+
+
+
+// Decorrelation stretch on N-band image
+void Transform::decorrelation( RawTile& in, const vector<vector<float>>& eigenvectors,
+                               const vector<float>& mean, const vector<float>& covariance ){
+
+  // Basic sanity check – data must exist and there must be at least one channel
+  if( !in.data || in.channels <= 0 ) return;
+  if( in.sampleType != SampleType::FLOATINGPOINT || in.bpc != 32 ) return;
+
+  const int channels = in.channels;
+
+  // Verify that the supplied statistics match the channel count
+  if( eigenvectors.size() < 2 ||
+      eigenvectors[0].size() < (size_t)channels ||
+      eigenvectors[1].size() < (size_t)channels * channels ||
+      mean.size()        < (size_t)channels ||
+      covariance.size()  < (size_t)channels * channels )
+    return;
+
+  const vector<float>& values  = eigenvectors[0];   // eigenvalues (size channels)
+  const vector<float>& vectors = eigenvectors[1];   // eigenvectors (row‑wise, channels×channels)
+
+  // Standard deviation per channel (sqrt of diagonal of covariance)
+  vector<float> stddev( channels );
+  for( int k = 0; k < channels; ++k ){
+    float var = covariance[k * channels + k];
+    stddev[k] = (var > 0.0f) ? sqrtf(var) : 0.0f;
+  }
+
+  // Scale factors - 1 / sqrt(eigenvalue) (whitening)
+  vector<float> scale( channels );
+  for( int k = 0; k < channels; ++k ){
+    scale[k] = (values[k] > 1e-6f) ? (1.0f / sqrtf(values[k])) : 0.0f;
+  }
+
+  // Build the N×N transformation matrix T = D·V·S·Vᵀ
+  // Stored row‑major as a flat vector: T[row*N + col]
+  vector<float> T( channels * channels, 0.0f );
+  for( int j = 0; j < channels; ++j ){
+    for( int i = 0; i < channels; ++i ){
+      float sum = 0.0f;
+      for( int k = 0; k < channels; ++k ){
+        // Vectors are row‑wise: row k, column *
+        sum += scale[k] * vectors[k * channels + j] * vectors[k * channels + i];
+      }
+      T[j * channels + i] = stddev[j] * sum;
+    }
+  }
+
+  // Pre‑compute the constant bias vector: b = mean – T·mean
+  vector<float> bias( channels );
+  for( int j = 0; j < channels; ++j ){
+    float dot = 0.0f;
+    for( int i = 0; i < channels; ++i ){
+      dot += T[j * channels + i] * mean[i];
+    }
+    bias[j] = mean[j] - dot;
+  }
+
+  uint32_t np = (uint32_t) in.width * in.height * channels;
+  float *data = (float*) in.data;
+
+  // Fast path for 3-channel RGB: eliminates inner loops and enables SIMD vectorization
+  if( channels == 3 ){
+    const float T0 = T[0], T1 = T[1], T2 = T[2];
+    const float T3 = T[3], T4 = T[4], T5 = T[5];
+    const float T6 = T[6], T7 = T[7], T8 = T[8];
+    const float b0 = bias[0], b1 = bias[1], b2 = bias[2];
+
+#if defined(__ICC) || defined(__INTEL_COMPILER)
+#pragma ivdep
+#elif defined(_OPENMP)
+#pragma omp parallel for if( in.width * in.height > PARALLEL_THRESHOLD )
+#endif
+    for( uint32_t n = 0; n < np; n += 3 ){
+      float r = data[n], g = data[n + 1], b = data[n + 2];
+      float o0 = b0 + T0 * r + T1 * g + T2 * b;
+      float o1 = b1 + T3 * r + T4 * g + T5 * b;
+      float o2 = b2 + T6 * r + T7 * g + T8 * b;
+      data[n]     = (o0 < 0.0f) ? 0.0f : (o0 > 1.0f ? 1.0f : o0);
+      data[n + 1] = (o1 < 0.0f) ? 0.0f : (o1 > 1.0f ? 1.0f : o1);
+      data[n + 2] = (o2 < 0.0f) ? 0.0f : (o2 > 1.0f ? 1.0f : o2);
+    }
+    return;
+  }
+
+  // Generic path for arbitrary channels (allocates buffer once per thread, no VLAs)
+#pragma omp parallel if( in.width * in.height > PARALLEL_THRESHOLD )
+  {
+    vector<float> out( channels );
+
+    #pragma omp for
+    for( uint32_t n = 0; n < np; n += channels ){
+      const float *pixel = data + n;
+      for( int j = 0; j < channels; ++j ){
+        float acc = bias[j];
+        const float *Trow = &T[j * channels];
+        for( int i = 0; i < channels; ++i ){
+          acc += Trow[i] * pixel[i];
+        }
+        out[j] = (acc < 0.0f) ? 0.0f : (acc > 1.0f ? 1.0f : acc);
+      }
+
+      for( int i = 0; i < channels; ++i ){
+        data[n + i] = out[i];
+      }
+    }
+  }
+}
+
+
+
+// PCA Transform with global variance scaling
+void Transform::pca( RawTile& in, const vector<vector<float>>& eigenvectors, const vector<float>& mean ){
+
+  // Make sure we have valid image data and eigen values / vectors
+  if( !in.data || in.channels <= 0 ) return;
+  if( in.sampleType != SampleType::FLOATINGPOINT || in.bpc != 32 ) return;
+  if( eigenvectors.size() < 2 || eigenvectors[0].empty() || eigenvectors[1].empty() ) return;
+
+  const vector<float>& values  = eigenvectors[0];
+  const vector<float>& vectors = eigenvectors[1];
+
+  const int channels = in.channels;
+  if( (int)values.size() < channels || (int)vectors.size() < channels * channels || (int)mean.size() < channels ){
+    return;
+  }
+
+  // Sort component indices in descending order of eigenvalue (largest variance / PC1 first)
+  vector<int> order( channels );
+  for( int i = 0; i < channels; i++ ) order[i] = i;
+  sort( order.begin(), order.end(), [&values]( int a, int b ){
+    return values[a] > values[b];
+  });
+
+  // Precompute affine projection: out = P * x + bias
+  // Using 2.75-sigma scaling (k=2.75) to map [-2.75*sigma, +2.75*sigma] to [0.0, 1.0]
+  // (2.75 equates to approximately 0.6% percentile clipping - 0.3% at each low/high extremity)
+  const float k_sigma = 2.75f;
+  vector<float> P( channels * channels, 0.0f );
+  vector<float> bias( channels, 0.0f );
+
+  for( int j = 0; j < channels; j++ ){
+    int vec_idx = order[j];
+    float lambda = values[vec_idx];
+    float scale = (lambda > 1e-6f) ? (1.0f / (2.0f * k_sigma * sqrtf(lambda))) : 0.0f;
+
+    float dot_mean = 0.0f;
+    for( int i = 0; i < channels; i++ ){
+      float v = vectors[vec_idx * channels + i];
+      P[j * channels + i] = v * scale;
+      dot_mean += v * mean[i];
+    }
+    bias[j] = 0.5f - dot_mean * scale;
+  }
+
+  uint32_t np = (uint32_t) in.width * in.height * channels;
+  float *data = (float*) in.data;
+
+  // Fast path for 3-channel RGB: eliminates inner loops and enables SIMD vectorization
+  if( channels == 3 ){
+    const float P0 = P[0], P1 = P[1], P2 = P[2];
+    const float P3 = P[3], P4 = P[4], P5 = P[5];
+    const float P6 = P[6], P7 = P[7], P8 = P[8];
+    const float b0 = bias[0], b1 = bias[1], b2 = bias[2];
+
+#if defined(__ICC) || defined(__INTEL_COMPILER)
+#pragma ivdep
+#elif defined(_OPENMP)
+#pragma omp parallel for if( in.width * in.height > PARALLEL_THRESHOLD )
+#endif
+    for( uint32_t n = 0; n < np; n += 3 ){
+      float r = data[n], g = data[n + 1], b = data[n + 2];
+      float o0 = b0 + P0 * r + P1 * g + P2 * b;
+      float o1 = b1 + P3 * r + P4 * g + P5 * b;
+      float o2 = b2 + P6 * r + P7 * g + P8 * b;
+      data[n]     = (o0 < 0.0f) ? 0.0f : (o0 > 1.0f ? 1.0f : o0);
+      data[n + 1] = (o1 < 0.0f) ? 0.0f : (o1 > 1.0f ? 1.0f : o1);
+      data[n + 2] = (o2 < 0.0f) ? 0.0f : (o2 > 1.0f ? 1.0f : o2);
+    }
+    return;
+  }
+
+  // Generic path for arbitrary channels (allocates buffer once per thread)
+#pragma omp parallel if( in.width * in.height > PARALLEL_THRESHOLD )
+  {
+    vector<float> out( channels );
+
+    #pragma omp for
+    for( uint32_t n = 0; n < np; n += channels ){
+      const float *pixel = data + n;
+      for( int j = 0; j < channels; ++j ){
+        float acc = bias[j];
+        const float *Prow = &P[j * channels];
+        for( int i = 0; i < channels; ++i ){
+          acc += Prow[i] * pixel[i];
+        }
+        out[j] = (acc < 0.0f) ? 0.0f : (acc > 1.0f ? 1.0f : acc);
+      }
+
+      for( int i = 0; i < channels; ++i ){
+        data[n + i] = out[i];
+      }
+    }
+  }
 }

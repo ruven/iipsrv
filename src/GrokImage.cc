@@ -128,9 +128,9 @@ std::string indexedError( const char* description, unsigned int value )
 uint32_t scaleSample( const grk_image_comp& component, size_t index,
                       uint32_t output_max )
 {
-  auto sample = static_cast<int64_t>(
-    static_cast<const int32_t*>( component.data )[index]
-  );
+  int64_t sample = component.data_type == GRK_INT_16
+    ? static_cast<const int16_t*>(component.data)[index]
+    : static_cast<const int32_t*>(component.data)[index];
   const auto source_max = (1U << component.prec) - 1U;
   if( component.sgnd ) sample += 1LL << (component.prec - 1);
 
@@ -158,8 +158,12 @@ void validateDecodedImage( const grk_image& image, unsigned int width,
 
   for( unsigned int channel = 0; channel < channel_count; ++channel ){
     const auto& component = image.comps[channel];
+    if( component.data_type != GRK_INT_16 && component.data_type != GRK_INT_32 ){
+      throw file_error( "Grok :: unsupported decoded component storage type" );
+    }
     if( !component.data || component.prec == 0 || component.prec > 16 ||
-        component.w < required_width || component.h < required_height ){
+        component.w < required_width || component.h < required_height ||
+        (component.stride != 0 && component.stride < component.w) ){
       throw file_error( "Grok :: decoded component dimensions do not match request" );
     }
   }
@@ -255,6 +259,7 @@ void GrokImage::openImage()
   updateTimestamp( filename );
 
   std::call_once( grokInitFlag(), initializeGrok );
+  initDecompressParams();
 
   // Setup stream parameters for file
   _stream_params = {};
@@ -730,4 +735,8 @@ void GrokImage::process( unsigned int res, int layers, int xoffset, int yoffset,
             << _header.header_image.meta->color.icc_profile_len << endl;
 #endif
   }
+
+  // Grok only permits parameter updates before the first decode. A subsequent
+  // region (for example, after a histogram thumbnail) needs a fresh codec.
+  closeImage();
 }

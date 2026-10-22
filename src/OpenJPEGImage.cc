@@ -510,7 +510,7 @@ void OpenJPEGImage::process( unsigned int res, int layers, int xoffset, int yoff
 	}
 	else{
 	  // 1 bit binary (bi-level), 2 bit, 4 bit and 6 bit images need to be scaled up to 8 bit range
-	  unsigned char       v = ((_image->comps[k].data[index]) & 0x000000f);
+	  unsigned char       v = ((_image->comps[k].data[index]) & 0x00000ff);
 	  if( bpc == 1 )      v *= 255;
 	  else if( bpc == 2 ) v *= 85;
 	  else if( bpc == 4 ) v *= 17;

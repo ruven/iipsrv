@@ -1,3 +1,38 @@
+19/10/2026:
+	- Added ability to perform fast on-the-fly PCA and decorrelation stretch to N-band images. New IIP parameter
+	  TFM allows user to select a transform: pca for PCA and dstretch for decorrelation stretch. For example: TFM=PCA.
+	  Functionality also available for IIIF requests via the quality parameter if IIIF_EXTENSIONS enabled at startup.
+	  For example: /image/full/full/0/pca.jpg Covariance matrix and eigenvalues / eigenvectors are calculated once
+	  from lowest resolution image and stored in cache. Eigenvector calculation requires the Eigen linear algebra library.
+
+
+18/20/2016:
+	- Fix to incorrect shade() implementation in Transform class.
+	- Added OpenMP optimizations for cmp(), rotate() and interpolate_nearestneighbour() functions.
+
+
+17/10/2026:
+	- More robust contrast stretch calculation in JTC and CVT classes.
+	  Added optional percentile clipping to contrast stretch. CNT command now optionally accepts a colon
+	  after ST or STRETCH parameter with a percentile of pixels to retain. For example CNT=ST:98 will perform
+	  contrast stretching with clipping of 2% of the highest and lowest pixels.
+
+
+14/10/2026:
+	- Performance optimizations to twist() and convolution() image processing functions in Transform class.
+	- Added Visual Studio 2026 build solution for Windows (libmemcached now also enabled).
+
+
+05/10/2026:
+	- Updated systemd service file: improved security and better portability.
+	- Added health endpoint through OBJ=health when using the IIP protocol or /health when using IIIF.
+	  Enabled by setting environment variable ENABLE_HEALTH=1 at startup. Disabled by default.
+
+
+27/09/2026:
+	- Fixed incorrect bit mask in OpenJPEGImage for 8 bit images. Fixes https://github.com/ruven/iipsrv/issues/294
+
+
 24/06/2026:
 	- Added extra check when accessing FCGI REQUEST_METHOD parameter as mis-configured servers may not send this.
 	  Fixes issue raised in https://github.com/ruven/iipsrv/issues/288

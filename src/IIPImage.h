@@ -2,7 +2,7 @@
 
 /*  IIP fcgi server module
 
-    Copyright (C) 2000-2025 Ruven Pillay.
+    Copyright (C) 2000-2026 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -173,11 +173,17 @@ class IIPImage {
   /// Image histogram
   std::vector<unsigned int> histogram;
 
+  /// Inter-band co-variance
+  std::vector<float> covariance;
+  std::vector< std::vector<float> > eigenvectors;
+  std::vector<float> mean;
+
   /// STL map to hold string metadata
   std::map <const std::string, const std::string> metadata;
 
   /// Image modification timestamp
   time_t timestamp;
+
 
   /// Our logging stream - declared statically
   static bool logging;
@@ -268,6 +274,9 @@ class IIPImage {
     currentX( image.currentX ),
     currentY( image.currentY ),
     histogram( image.histogram ),
+    covariance( image.covariance ),
+    eigenvectors( image.eigenvectors ),
+    mean( image.mean ),
     metadata( image.metadata ),
     timestamp( image.timestamp ) {};
 

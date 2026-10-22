@@ -1,7 +1,7 @@
 /*
     IIP Command Handler Member Functions
 
-    Copyright (C) 2006-2025 Ruven Pillay.
+    Copyright (C) 2006-2026 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -76,6 +76,7 @@ Task* Task::factory( const string& t ){
   else if( type == "ctw" ) return new CTW;
   else if( type == "col" ) return new COL;
   else if( type == "cnv" ) return new CNV;
+  else if( type == "tfm" ) return new TFM;
   else if( type == "iiif" ) return new IIIF;
   else return NULL;
 
@@ -227,6 +228,9 @@ void MINMAX::run( Session* session, const string& argument ){
 }
 
 
+// Handle various types of contrast: numerical contrast adjustment, histogram equalization ('EQ' or 'EQUALIZATION') and
+// linear contrast stretching ('ST' or 'STRETCH'). Stretching optionally allows percentile clipping via suffix ':<percentile>'.
+// For example STRETCH:99 to retain 99% of image range and clip 1%
 void CNT::run( Session* session, const string& argument ){
 
   if( session->loglevel >= 2 ) *(session->logfile) << "CNT handler reached" << endl;
@@ -234,16 +238,44 @@ void CNT::run( Session* session, const string& argument ){
   // Request for histogram equalization
   string arg = argument;
   transform( arg.begin(), arg.end(), arg.begin(), ::tolower );
+
   if( arg == "eq" || arg == "equalization" ){
     session->view->equalization = true;
     if( session->loglevel >= 3 ) *(session->logfile) << "CNT :: histogram equalization requested" << endl;
   }
+
   // Linear stretch
-  else if( arg == "st" || arg == "stretch" ){
+  else if( arg.find("st") == 0 || arg.find("stretch") == 0 ){
+
     // Use reserved value of -1 for contrast stretch
     session->view->contrast = -1;
-    if( session->loglevel >= 3 ) *(session->logfile) << "CNT :: contrast stretch requested" << endl;
+
+    if( session->loglevel >= 3 ) *(session->logfile) << "CNT :: contrast stretch requested";
+
+    // Allow percentile clippping via ":<percent>" suffix. For example stretch:99
+    size_t pos = arg.find(':');
+
+    // If colon found, try to parse percentile
+    if( pos != std::string::npos ){
+      string percentile_str = arg.substr( pos + 1 );
+      float percentile = atof( percentile_str.c_str() );
+
+      // Validate range (0-100)
+      if( percentile >= 0 && percentile <= 100 ){
+	session->view->clip = percentile;
+	if( session->loglevel >= 3 ){
+	  *(session->logfile) << " with clipping percentile " << percentile;
+	}
+      }
+      else {
+	// Handle invalid values
+	if( session->loglevel >= 3 ) *(session->logfile) << " but invalid percentile value " << percentile_str << ": ignoring";
+      }
+    }
+
+    if( session->loglevel >= 3 ) *(session->logfile) << endl;
   }
+
   // Contrast adjustment by pixel multiplication
   else{
     float contrast = (float) atof( argument.c_str() );
@@ -709,5 +741,20 @@ void CNV::run( Session* session, const string& src ){
       session->view->convolution = std::move(kernel);
     }
   }
+}
+
+
+// Transform request
+void TFM::run( Session* session, const string& argument ){
+
+  // Convert to lower case in order to do our string comparison
+  string ctype = argument;
+  transform( ctype.begin(), ctype.end(), ctype.begin(), ::tolower );
+
+  if( session->loglevel >= 2 ) *(session->logfile) << "TFM handler reached" << endl;
+  if( session->loglevel >= 3 ) *(session->logfile) << "TFM :: requested transform " << ctype << endl;
+
+  if( ctype == "pca" ) session->view->pca = true;
+  else if( ctype == "dstretch" ) session->view->decorrelation = true;
 
 }

@@ -109,7 +109,8 @@ string IIPResponse::formatResponse(){
       eof + eof + error;
   }
   else{
-    response = server + eof + powered + eof + cacheControl + eof + modified + eof + mimeType + eof;
+    response = server + eof + powered + eof + cacheControl + eof + mimeType + eof;
+    if( !modified.empty() ) response += modified + eof;
     if( !cors.empty() ) response += cors + eof;
     if( !protocol.empty() ) response += protocol + eof;
     response += eof + responseBody;
