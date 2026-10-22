@@ -35,7 +35,7 @@ def generate(directory):
     width, height = 512, 384
     with (directory / "gray16.pgm").open("wb") as output:
         output.write(f"P5\n{width} {height}\n65535\n".encode())
-        for y in range(height):
+        for _ in range(height):
             output.write(b"".join((x * 65535 // (width - 1)).to_bytes(2, "big") for x in range(width)))
 
 
