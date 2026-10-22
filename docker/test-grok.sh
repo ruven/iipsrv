@@ -14,12 +14,12 @@ CXXFLAGS='-O2 -g -std=c++11 -Wall -Wextra -Wpedantic' \
 grep -F 'true (Grok)' /work/results/configure.log
 make -j3 > /work/results/build.log 2>&1
 make check > /work/results/check.log 2>&1
-test "$(pkg-config --modversion libgrokj2k)" = '20.4.19'
+[[ "$(pkg-config --modversion libgrokj2k)" == '20.4.19' ]]
 
 python3 docker/grok-test-data.py generate /work/results
 for name in sample color gray16; do
   extension=pnm
-  if test "$name" = gray16; then extension=pgm; fi
+  if [[ "$name" == gray16 ]]; then extension=pgm; fi
   grk_compress -i "/work/results/$name.$extension" \
     -o "/work/results/$name.jp2" -t 256,256 -n 6 -L -X -H 2 \
     > "/work/results/encode-$name.log" 2>&1

@@ -8,6 +8,21 @@ from pathlib import Path
 from PIL import Image, ImageChops, ImageStat
 
 
+def gradient_image(width, height, color):
+    channels = 3 if color else 1
+    pixels = bytearray(width * height * channels)
+    for y in range(height):
+        for x in range(width):
+            offset = (y * width + x) * channels
+            red = x * 255 // (width - 1)
+            green = y * 255 // (height - 1)
+            if color:
+                pixels[offset:offset + 3] = bytes((red, green, (red + green) // 2))
+            else:
+                pixels[offset] = (red + green) // 2
+    return Image.frombytes("RGB" if color else "L", (width, height), bytes(pixels))
+
+
 def generate(directory):
     directory.mkdir(parents=True, exist_ok=True)
     for name, width, height, color in (
@@ -15,19 +30,7 @@ def generate(directory):
         ("virtual", 2048, 1536, False),
         ("color", 512, 384, True),
     ):
-        channels = 3 if color else 1
-        pixels = bytearray(width * height * channels)
-        for y in range(height):
-            for x in range(width):
-                offset = (y * width + x) * channels
-                red = x * 255 // (width - 1)
-                green = y * 255 // (height - 1)
-                if color:
-                    pixels[offset:offset + 3] = bytes((red, green, (red + green) // 2))
-                else:
-                    pixels[offset] = (red + green) // 2
-        image = Image.frombytes("RGB" if color else "L", (width, height), bytes(pixels))
-        image.save(directory / f"{name}.pnm")
+        gradient_image(width, height, color).save(directory / f"{name}.pnm")
 
     width, height = 512, 384
     with (directory / "gray16.pgm").open("wb") as output:
