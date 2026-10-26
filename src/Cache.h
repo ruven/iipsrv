@@ -2,9 +2,7 @@
 
 /*  IIP Image Server
 
-    Copyright (C) 2005-2022 Ruven Pillay.
-    Based on an LRU cache by Patrick Audley <http://blackcat.ca/lifeline/query.php/tag=LRU_CACHE>
-    Copyright (C) 2004 by Patrick Audley
+    Copyright (C) 2005-2026 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -27,70 +25,68 @@
 #define _CACHE_H
 
 
-// Fix missing snprintf in Windows
-#if defined _MSC_VER && _MSC_VER<1900
-#define snprintf _snprintf
-#endif
-
-
-
-// Test for available map types. Try to use an efficient hashed map type if possible
-// and define this as HASHMAP, which we can then use elsewhere.
-#if defined(HAVE_UNORDERED_MAP)
-#include <unordered_map>
-#define HASHMAP std::unordered_map
-
-#elif defined(HAVE_TR1_UNORDERED_MAP)
-#include <tr1/unordered_map>
-#define HASHMAP std::tr1::unordered_map
-
-// Use the gcc hash_map extension if we have it
-#elif defined(HAVE_EXT_HASH_MAP)
-#include <ext/hash_map>
-#define HASHMAP __gnu_cxx::hash_map
-
-/* Explicit template specialization of hash of a string class,
-   which just uses the internal char* representation as a wrapper.
-   Required for older versions of gcc as hashing on a string is
-   not supported.
- */
-namespace __gnu_cxx {
-  template <>
-    struct hash<std::string> {
-      size_t operator() (const std::string& x) const {
-	return hash<const char*>()(x.c_str());
-      }
-    };
-}
-
-// If no hash type available, just use map
-#else
-#include <map>
-#define HASHMAP std::map
-
-#endif // End of #if defined
-
-
-
 // Try to use the gcc high performance memory pool allocator (available in gcc >= 3.4)
 #ifdef HAVE_EXT_POOL_ALLOCATOR
 #include <ext/pool_allocator.h>
 #endif
 
 
-
+#include <unordered_map>
 #include <list>
 #include <string>
+#include <cstddef>
+#include <functional>
 #include "RawTile.h"
 
 
 
-/// Cache to store raw tile data
+/// LRU Cache to store raw tile data
 
 class Cache {
 
 
  private:
+
+  /// Cache key for RawTile storage and lookup
+  /**
+   * Allocation-free and trivially copyable. 'f' references the filename owned by
+   * the cached RawTile itself (stored keys) or by the caller (transient lookup keys).
+   * Safe because map entries and list nodes are always erased together and std::list
+   * element addresses are stable.
+   */
+  struct TileKey {
+    const std::string* f;   // image path (non-owning)
+    int r;                  // resolution
+    int t;                  // tile number
+    int h;                  // hSequence
+    int v;                  // vSequence
+    ImageEncoding c;        // compression type
+    int q;                  // quality
+
+    bool operator==(const TileKey& k) const {
+      return t == k.t && r == k.r && q == k.q && c == k.c &&
+	h == k.h && v == k.v && (f == k.f || (f && k.f && *f == *k.f));
+    }
+  };
+
+  /// Portable C++11 hash combiner (based on Boost's golden-ratio mixer)
+  static void hash_combine(std::size_t& seed, std::size_t val) {
+    seed ^= val + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+  }
+
+  /// Hash functor for TileKey
+  struct TileKeyHash {
+    std::size_t operator()(const TileKey& k) const {
+      std::size_t seed = k.f ? std::hash<std::string>()(*k.f) : 0;
+      Cache::hash_combine(seed, static_cast<std::size_t>(k.t));
+      Cache::hash_combine(seed, static_cast<std::size_t>(k.r));
+      Cache::hash_combine(seed, static_cast<std::size_t>(k.q));
+      Cache::hash_combine(seed, static_cast<std::size_t>(k.c));
+      Cache::hash_combine(seed, static_cast<std::size_t>(k.h));
+      Cache::hash_combine(seed, static_cast<std::size_t>(k.v));
+      return seed;
+    }
+  };
 
   /// Basic object storage size
   int tileSize;
@@ -103,24 +99,24 @@ class Cache {
 
   /// Main cache storage typedef
 #ifdef HAVE_EXT_POOL_ALLOCATOR
-  typedef std::list < std::pair<const std::string,RawTile>,
-    __gnu_cxx::__pool_alloc< std::pair<const std::string,RawTile> > > TileList;
+  typedef std::list < RawTile,
+    __gnu_cxx::__pool_alloc< RawTile > > TileList;
 #else
-  typedef std::list < std::pair<const std::string,RawTile> > TileList;
+  typedef std::list < RawTile > TileList;
 #endif
 
   /// Main cache list iterator typedef
-  typedef std::list < std::pair<const std::string,RawTile> >::iterator List_Iter;
+  typedef TileList::iterator List_Iter;
 
   /// Index typedef
 #ifdef HAVE_EXT_POOL_ALLOCATOR
-  typedef HASHMAP < std::string, List_Iter,
-    __gnu_cxx::hash< const std::string >,
-    std::equal_to< const std::string >,
-    __gnu_cxx::__pool_alloc< std::pair<const std::string, List_Iter> >
+  typedef std::unordered_map < TileKey, List_Iter,
+    TileKeyHash,
+    std::equal_to< TileKey >,
+    __gnu_cxx::__pool_alloc< std::pair<const TileKey, List_Iter> >
     > TileMap;
 #else
-  typedef HASHMAP < std::string,List_Iter > TileMap;
+  typedef std::unordered_map < TileKey, List_Iter, TileKeyHash > TileMap;
 #endif
 
 
@@ -131,40 +127,21 @@ class Cache {
   TileMap tileMap;
 
 
-  /// Internal touch function
-  /** Touches a key in the Cache and makes it the most recently used
-   *  @param key to be touched
-   *  @return a Map_Iter pointing to the key that was touched.
-   */
-  TileMap::iterator _touch( const std::string &key ) {
-    TileMap::iterator miter = tileMap.find( key );
-    if( miter == tileMap.end() ) return miter;
-    // Move the found node to the head of the list.
+  /// Internal touch function - moves an existing cache entry to the head of the list
+  /** @param miter TileMap iterator pointing to the entry to touch */
+  void _touch( TileMap::iterator miter ) {
     tileList.splice( tileList.begin(), tileList, miter->second );
-    return miter;
   }
 
 
-  /// Interal remove function
-  /**
-   *  @param miter Map_Iter that points to the key to remove
-   *  @warning miter is no longer usable after being passed to this function.
-   */
-  void _remove( const TileMap::iterator &miter ) {
-    // Reduce our current size counter
-    currentSize -= ( (miter->second->second).dataLength +
-		     ( (miter->second->second).filename.capacity() + (miter->second->first).capacity() )*sizeof(char) +
-		     tileSize );
-    tileList.erase( miter->second );
+  /// Internal remove function - removes an entry from both map and list, safely maintaining lifetime order
+  /**  @param miter TileMap iterator pointing to the entry to remove */
+  void _remove( TileMap::iterator miter ) {
+    List_Iter liter = miter->second;
+    unsigned long entrySize = liter->dataLength + liter->filename.capacity()*sizeof(char) + tileSize;
+    currentSize = ( currentSize > entrySize ) ? ( currentSize - entrySize ) : 0;
     tileMap.erase( miter );
-  }
-
-
-  /// Interal remove function
-  /** @param key to remove */
-  void _remove( const std::string &key ) {
-    TileMap::iterator miter = tileMap.find( key );
-    this->_remove( miter );
+    tileList.erase( liter );
   }
 
 
@@ -175,9 +152,8 @@ class Cache {
   /** @param max Maximum cache size in MB */
   Cache( const float max ) {
     maxSize = (unsigned long)(max*1024000) ; currentSize = 0;
-    // 64 chars added at the end represents an average string length
-    tileSize = sizeof( RawTile ) + sizeof( std::pair<const std::string,RawTile> ) +
-      sizeof( std::pair<const std::string, List_Iter> ) + sizeof(char)*64 + sizeof(List_Iter);
+    tileSize = sizeof( RawTile ) + 2 * sizeof(void*) +
+               sizeof( std::pair<const TileKey, List_Iter> ) + sizeof(void*);
   };
 
 
@@ -201,51 +177,71 @@ class Cache {
 
     if( maxSize == 0 ) return;
 
-    std::string key = this->getIndex( r.filename, r.resolution, r.tileNum,
-				      r.hSequence, r.vSequence, r.compressionType, r.quality );
+    // Reject tiles larger than the cache capacity to prevent evicting the entire cache
+    if( r.dataLength + r.filename.capacity() * sizeof(char) + tileSize > maxSize ) return;
 
-    // Touch the key, if it exists
-    TileMap::iterator miter = this->_touch( key );
+    TileKey lookupKey{ &r.filename, r.resolution, r.tileNum,
+                       r.hSequence, r.vSequence, r.compressionType, r.quality };
+
+    TileMap::iterator miter = tileMap.find( lookupKey );
 
     // Check whether this tile exists in our cache
     if( miter != tileMap.end() ){
       // Check the timestamp and delete if necessary
-      if( miter->second->second.timestamp < r.timestamp ){
+      if( miter->second->timestamp < r.timestamp ){
 	this->_remove( miter );
       }
-      // If this index already exists and it is up to date, do nothing
-      else return;
+      // If this index already exists and it is up to date, move it to the front of the list and return
+      else{
+	this->_touch( miter );
+	return;
+      }
     }
 
-    // Store the key if it doesn't already exist in our cache
-    // Ok, do the actual insert at the head of the list
-    tileList.push_front( std::make_pair(key,r) );
-
-    // And store this in our map
+    // Insert tile at the front of the list
+    tileList.push_front( r );
     List_Iter liter = tileList.begin();
-    tileMap[ key ] = liter;
 
-    // Update our total current size variable. Use the string::capacity function
-    // rather than length() as std::string can allocate slightly more than necessary
-    // The +1 is for the terminating null byte
-    currentSize += (r.dataLength + (r.filename.capacity()+key.capacity())*sizeof(char) + tileSize);
+    // Store key in map referencing the stable filename inside the list node
+    TileKey storedKey{ &(liter->filename), liter->resolution, liter->tileNum,
+                       liter->hSequence, liter->vSequence, liter->compressionType, liter->quality };
+    const std::pair<TileMap::iterator,bool> inserted = tileMap.emplace( storedKey, liter );
 
-    // Check to see if we need to remove an element due to exceeding max_size
-    while( currentSize > maxSize ) {
-      // Remove the last element
-      liter = tileList.end();
-      --liter;
-      this->_remove( liter->first );
+    // Check for duplicate key in map and remove from list if found (should never happen)
+    if( !inserted.second ){
+      tileList.erase( liter );
+      return;
+    }
+
+    // Update running total memory usage
+    currentSize += ( liter->dataLength + liter->filename.capacity()*sizeof(char) + tileSize );
+
+    // Evict least recently used elements if exceeding max_size
+    while( currentSize > maxSize && !tileList.empty() ){
+      RawTile& back = tileList.back();
+      TileKey evictKey{ &(back.filename), back.resolution, back.tileNum,
+                        back.hSequence, back.vSequence, back.compressionType, back.quality };
+      TileMap::iterator emiter = tileMap.find( evictKey );
+      if( emiter != tileMap.end() ){
+	this->_remove( emiter );
+      }
+      else{
+	unsigned long entrySize = back.dataLength + back.filename.capacity()*sizeof(char) + tileSize;
+	currentSize = ( currentSize > entrySize ) ? ( currentSize - entrySize ) : 0;
+	tileList.pop_back();
+      }
     }
 
   }
 
 
   /// Return the number of tiles in the cache
+  /** @return number of tiles */
   unsigned int getNumElements() const { return tileList.size(); }
 
 
   /// Return the number of MB stored
+  /** @return approximate number of MB stored */
   float getMemorySize() const { return (float) ( currentSize / 1024000.0 ); }
 
 
@@ -264,37 +260,16 @@ class Cache {
 
     if( maxSize == 0 ) return NULL;
 
-    std::string key = this->getIndex( f, r, t, h, v, c, q );
+    TileKey key{ &f, r, t, h, v, c, q };
 
     TileMap::iterator miter = tileMap.find( key );
     if( miter == tileMap.end() ) return NULL;
-    this->_touch( key );
+    this->_touch( miter );
 
-    return &(miter->second->second);
+    return &(*miter->second);
   }
-
-
-  /// Create a hash index
-  /** 
-   *  @param f filename
-   *  @param r resolution number
-   *  @param t tile number
-   *  @param h horizontal sequence number
-   *  @param v vertical sequence number
-   *  @param c ImageEncoding type
-   *  @param q compression quality
-   *  @return string
-   */
-  std::string getIndex( const std::string& f, int r, int t, int h, int v, ImageEncoding c, int q ) const {
-    char tmp[1024];
-    snprintf( tmp, 1024, "%s:%d:%d:%d:%d:%d:%d", f.c_str(), r, t, h, v, (int)c, q );
-    return std::string( tmp );
-  }
-
-
 
 };
-
 
 
 #endif

@@ -1,3 +1,10 @@
+26/10/2026:
+	- Optimized tile Cache.h by replacing string index with allocation-free compact non-owning TileKey struct.
+	  Redundant double hash lookup in _touch() on cache hits removed. ~5x faster for cache hits, ~3x for misses
+	  and ~1.22x for churn.
+	- Removed HASHMAP ifdefs and standardized on unordered_map in both Cach.h and Task.h.
+
+
 22/10/2026:
 	- Fix to FIF.cc to ensure that any previously allocated image instances are first freed before creating a new instance.
 	  A single request can include multiple FIF, Zoomify or IIIF commands, resulting in repeated allocation and memory leakage.
@@ -14,7 +21,7 @@
 	  from lowest resolution image and stored in cache. Eigenvector calculation requires the Eigen linear algebra library.
 
 
-18/20/2016:
+18/10/2026:
 	- Fix to incorrect shade() implementation in Transform class.
 	- Added OpenMP optimizations for cmp(), rotate() and interpolate_nearestneighbour() functions.
 
