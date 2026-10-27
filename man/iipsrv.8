@@ -1,4 +1,4 @@
-.TH IIPSRV 8 "May 2025" "Ruven Pillay"
+.TH IIPSRV 8 "Oct 2026" "Ruven Pillay"
 .SH NAME
 
 IIPSRV \- IIPImage Image Server
@@ -122,7 +122,7 @@ The probability that a particular tile will have a watermark applied to it. 0 me
 .IP WATERMARK_OPACITY
 The opacity (between 0 and 1) applied to the watermark image.
 .IP MEMCACHED_SERVERS
-A comma-delimitted list of memcached servers with optional port numbers. For example: localhost,192.168.0.1:8888,192.168.0.2.
+A comma-delimitted list of memcached servers with optional port numbers. For example: localhost,192.168.0.1:8888,192.168.0.2. Memcached support is disabled unless this is set.
 .IP MEMCACHED_TIMEOUT
 Time in seconds that cache remains fresh. Default is 86400 seconds (24 hours).
 .IP FILENAME_PATTERN

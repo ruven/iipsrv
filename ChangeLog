@@ -2,6 +2,8 @@
 	- Added SHA256 hashing for keys for Memcached: avoids problems with truncated keys with long URL requests.
 	  Keys also now include iipsrv version number. This adds new header SHA256.h for sha256 implementation
 	  (based on public domain https://github.com/B-Con/crypto-algorithms).
+	- Enabled more robust detection of Memcached server connection as well as better error reporting. The default
+	  connection to localhost is now disabled and connection is only attempted if MEMCACHED_SERVERS has been set.
 
 
 26/10/2026:

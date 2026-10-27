@@ -2,7 +2,7 @@
 
 /*  IIP Image Server
 
-    Copyright (C) 2010-2013 Ruven Pillay.
+    Copyright (C) 2010-2026 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -81,18 +81,28 @@ class Memcache {
   /** @param servernames list of memcached servers
       @param timeout memcached timeout - defaults to 1 hour (3600 seconds)
   */
-  Memcache( const std::string& servernames = "localhost", unsigned int timeout = 3600 ) {
+  Memcache( const std::string& servernames, unsigned int timeout = 3600 ) {
 
     _length = 0;
+    _connected = false;
+    _servers = NULL;
 
     // Set our timeout
     _timeout =  timeout;
 
     // Create our memcached object
     _memc = memcached_create(NULL);
+    if( _memc == NULL ){
+      _rc = MEMCACHED_MEMORY_ALLOCATION_FAILURE;
+      return;
+    }
 
     // Create a list of servers
     _servers = memcached_servers_parse( servernames.c_str() );
+    if( _servers == NULL ){
+      _rc = MEMCACHED_INVALID_ARGUMENTS;
+      return;
+    }
 
     // Try to set some memcached behaviour settings for performance. For example,
     // using the binary protocol, non-blocking IO, and no reply for add commands
@@ -103,11 +113,15 @@ class Memcache {
 
     // Connect to the servers
     _rc = memcached_server_push( _memc, _servers );
-    if(_rc == MEMCACHED_SUCCESS ) _connected = true;
-    else _connected = false;
+    if( _rc != MEMCACHED_SUCCESS ) return;
 
-    if( memcached_server_count(_memc) > 0 ) _connected = true;
-    else _connected = false;
+    if( memcached_server_count( _memc ) == 0 ){
+      _rc = MEMCACHED_NO_SERVERS;
+      return;
+    }
+
+    _rc = memcached_version( _memc );
+    _connected = ( _rc == MEMCACHED_SUCCESS );
   };
 
 
@@ -130,8 +144,8 @@ class Memcache {
  
     std::string k = cacheKey( key );
     _rc = memcached_set( _memc, k.c_str(), k.length(),
-                        (char*) data, length,
-                        _timeout, 0 );
+			 (char*) data, length,
+			 _timeout, 0 );
   }
 
 
@@ -151,6 +165,11 @@ class Memcache {
 
   /// Get error string
   const char* error(){
+    if( !_memc ) return "Memcached initialization failed";
+    if( _rc != MEMCACHED_SUCCESS && memcached_last_error( _memc ) != MEMCACHED_SUCCESS ){
+      const char* msg = memcached_last_error_message( _memc );
+      if( msg != NULL ) return msg;
+    }
     return memcached_strerror( _memc, _rc );
   };
 

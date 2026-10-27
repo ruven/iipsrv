@@ -43,7 +43,6 @@
 #define WATERMARK ""
 #define WATERMARK_PROBABILITY 1.0
 #define WATERMARK_OPACITY 1.0
-#define LIBMEMCACHED_SERVERS "localhost"
 #define LIBMEMCACHED_TIMEOUT 86400  // 24 hours
 #define INTERPOLATION 1  // 1: Bilinear
 #define CORS "";
@@ -309,13 +308,7 @@ class Environment {
 
   static std::string getMemcachedServers(){
     const char* envpara = getenv( "MEMCACHED_SERVERS" );
-    std::string memcached_servers;
-    if( envpara ){
-      memcached_servers = std::string( envpara );
-    }
-    else memcached_servers = LIBMEMCACHED_SERVERS;
-
-    return memcached_servers;
+    return envpara ? std::string( envpara ) : std::string();
   }
 
 

@@ -52,11 +52,7 @@
 #endif
 
 #ifdef HAVE_MEMCACHED
-//#ifdef WIN32
-//#include "../windows/MemcachedWindows.h"
-//#else
 #include "Memcached.h"
-//#endif
 #endif
 
 #ifdef ENABLE_DL
@@ -531,11 +527,14 @@ int main( int argc, char *argv[] )
   // Create our memcached object
   Memcache memcached( memcached_servers, memcached_timeout );
   if( loglevel >= 1 ){
-    if( memcached.connected() ){
-      logfile << "Memcached support enabled. Connected to servers: '" << memcached_servers
-	      << "' with timeout " << memcached_timeout << endl;
+    logfile << "Memcached support enabled: ";
+    if( memcached_servers.empty() ){
+      logfile << "No servers set: support disabled" << endl;
     }
-    else logfile << "Unable to connect to Memcached servers: '" << memcached.error() << "'" << endl;
+    else if( memcached.connected() ){
+      logfile << "Connected to servers: '" << memcached_servers << "' with timeout " << memcached_timeout << endl;
+    }
+    else logfile << "Unable to connect to servers: '" << memcached.error() << "'" << endl;
   }
 
 #endif
