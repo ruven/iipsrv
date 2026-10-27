@@ -5,6 +5,7 @@
 	- Enabled more robust detection of Memcached server connection as well as better error reporting. The default
 	  connection to localhost is now disabled and connection is only attempted if MEMCACHED_SERVERS has been set.
 	- Added detection of max server cache item size to avoid unnecessary writes.
+	- Refactor of Writer.h to remove use of realloc() and align buffer size to max size reported by Memcached.
 
 
 26/10/2026:

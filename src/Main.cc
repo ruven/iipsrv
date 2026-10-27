@@ -518,21 +518,27 @@ int main( int argc, char *argv[] )
   }
 
 
+  // Maximum size for network cache buffer
+  size_t memcached_maxsize = 0;
+
 #ifdef HAVE_MEMCACHED
 
   // Get our list of memcached servers if we have any and the timeout
   string memcached_servers = Environment::getMemcachedServers();
   unsigned int memcached_timeout = Environment::getMemcachedTimeout();
 
+
   // Create our memcached object
   Memcache memcached( memcached_servers, memcached_timeout );
+  memcached_maxsize = memcached.connected() ? memcached.maxItemSize() : 0;
+
   if( loglevel >= 1 ){
     logfile << "Memcached support enabled: ";
     if( memcached_servers.empty() ){
       logfile << "No servers set: support disabled" << endl;
     }
     else if( memcached.connected() ){
-      logfile << "Connected to servers: '" << memcached_servers << "' with timeout " << memcached_timeout << " and max item size " << memcached.maxItemSize()/1048576.0 << "MB" << endl;
+      logfile << "Connected to servers: '" << memcached_servers << "' with timeout " << memcached_timeout << " and max item size " << memcached_maxsize/1048576.0 << "MB" << endl;
     }
     else logfile << "Unable to connect to servers: '" << memcached.error() << "'" << endl;
   }
@@ -645,7 +651,7 @@ int main( int argc, char *argv[] )
   // In FCGI mode, listen for FCGI requests
   while( FCGX_Accept_r( &request ) >= 0 ){
 
-    FCGIWriter writer( request.out );
+    FCGIWriter writer( request.out, memcached_maxsize );
     request_string.clear();
 
 #endif
@@ -938,7 +944,7 @@ int main( int argc, char *argv[] )
 
 #ifdef HAVE_MEMCACHED
 #ifndef DEBUG
-      if( response.cachable() && memcached.connected() ){
+      if( response.cachable() && memcached.connected() && (!writer.getError()) && writer.sz > 0){
 	Timer memcached_timer;
 	memcached_timer.start();
 	memcached.store( session.headers["QUERY_STRING"], writer.buffer, writer.sz );
