@@ -4,6 +4,7 @@
 	  (based on public domain https://github.com/B-Con/crypto-algorithms).
 	- Enabled more robust detection of Memcached server connection as well as better error reporting. The default
 	  connection to localhost is now disabled and connection is only attempted if MEMCACHED_SERVERS has been set.
+	- Added detection of max server cache item size to avoid unnecessary writes.
 
 
 26/10/2026:

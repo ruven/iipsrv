@@ -532,7 +532,7 @@ int main( int argc, char *argv[] )
       logfile << "No servers set: support disabled" << endl;
     }
     else if( memcached.connected() ){
-      logfile << "Connected to servers: '" << memcached_servers << "' with timeout " << memcached_timeout << endl;
+      logfile << "Connected to servers: '" << memcached_servers << "' with timeout " << memcached_timeout << " and max item size " << memcached.maxItemSize()/1048576.0 << "MB" << endl;
     }
     else logfile << "Unable to connect to servers: '" << memcached.error() << "'" << endl;
   }

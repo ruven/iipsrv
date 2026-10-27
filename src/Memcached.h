@@ -23,6 +23,8 @@
 #define _MEMCACHED_H
 
 #include <string>
+#include <cstring>
+#include <cstdlib>
 
 #include "SHA256.h"
 
@@ -48,8 +50,12 @@ class Memcache {
 
  private:
 
-  /// Memcached structure
+  /// Memcached structure for writes (quiet / fire-and-forget)
   memcached_st *_memc;
+
+  /// Separate Memcached structure for reads, so quiet write commands never
+  /// corrupt the response state used by memcached_get()
+  memcached_st *_memc_get;
 
   /// Memcached return value
   memcached_return_t _rc;
@@ -66,12 +72,30 @@ class Memcache {
   /// Flag whether we are connected
   bool _connected;
 
+  /// Maximum size in bytes accepted by our memcached servers (default 1MB)
+  size_t _max_item_size;
+
   /// Create Memcached key using a sha256 of the request URL
   /** @param request URL of request
    *  @return hashed key for use in Memcached
    */
   static std::string cacheKey( const std::string& request ){
     return std::string("iipsrv::") + VERSION + "::" + sha256::hex( request );
+  }
+
+  /// Callback for memcached_stat_execute(): capture the `item_size_max` limit
+  /// from each server's `stats settings`, keeping the minimum across the pool
+  static memcached_return_t maxItemSizeCallback( const memcached_instance_st*,
+                                                 const char* key, size_t key_length,
+                                                 const char* value, size_t value_length,
+                                                 void* context ){
+    static const char target[] = "item_size_max";
+    if( key_length == sizeof(target) - 1 && std::memcmp( key, target, key_length ) == 0 ){
+      size_t* minimum = static_cast<size_t*>( context );
+      unsigned long long n = std::strtoull( value, NULL, 10 );
+      if( n > 0 && n < *minimum ) *minimum = static_cast<size_t>( n );
+    }
+    return MEMCACHED_SUCCESS;
   }
 
 
@@ -85,15 +109,29 @@ class Memcache {
 
     _length = 0;
     _connected = false;
+    _max_item_size = 1024 * 1024;
+    _memc = NULL;
+    _memc_get = NULL;
     _servers = NULL;
 
     // Set our timeout
     _timeout =  timeout;
 
-    // Create our memcached object
+    // Create our memcached object for writes
     _memc = memcached_create(NULL);
     if( _memc == NULL ){
       _rc = MEMCACHED_MEMORY_ALLOCATION_FAILURE;
+      return;
+    }
+
+    // Create a separate memcached object for reads, since the quiet write
+    // commands issued with MEMCACHED_BEHAVIOR_NOREPLY would otherwise break
+    // memcached_get() on the same connection
+    _memc_get = memcached_create(NULL);
+    if( _memc_get == NULL ){
+      _rc = MEMCACHED_MEMORY_ALLOCATION_FAILURE;
+      memcached_free( _memc );
+      _memc = NULL;
       return;
     }
 
@@ -105,14 +143,21 @@ class Memcache {
     }
 
     // Try to set some memcached behaviour settings for performance. For example,
-    // using the binary protocol, non-blocking IO, and no reply for add commands
+    // using the binary protocol and non-blocking IO. Writes are fire-and-forget
+    // (NOREPLY), so cache writes never block the response stream
     _rc =  memcached_behavior_set( _memc, MEMCACHED_BEHAVIOR_BINARY_PROTOCOL, 1 );
     _rc =  memcached_behavior_set( _memc, MEMCACHED_BEHAVIOR_NO_BLOCK, 1 );
     _rc =  memcached_behavior_set( _memc, MEMCACHED_BEHAVIOR_TCP_NODELAY, 1 );
     _rc =  memcached_behavior_set( _memc, MEMCACHED_BEHAVIOR_NOREPLY, 1 );
 
+    // Reads must wait for their response, so no NOREPLY on the read connection
+    _rc =  memcached_behavior_set( _memc_get, MEMCACHED_BEHAVIOR_BINARY_PROTOCOL, 1 );
+    _rc =  memcached_behavior_set( _memc_get, MEMCACHED_BEHAVIOR_TCP_NODELAY, 1 );
+
     // Connect to the servers
     _rc = memcached_server_push( _memc, _servers );
+    if( _rc != MEMCACHED_SUCCESS ) return;
+    _rc = memcached_server_push( _memc_get, _servers );
     if( _rc != MEMCACHED_SUCCESS ) return;
 
     if( memcached_server_count( _memc ) == 0 ){
@@ -120,8 +165,13 @@ class Memcache {
       return;
     }
 
-    _rc = memcached_version( _memc );
+    _rc = memcached_version( _memc_get );
     _connected = ( _rc == MEMCACHED_SUCCESS );
+
+    // Query `stats settings` for the lowest maximum item size accepted by the pool of servers
+    if( _connected ){
+      _rc = memcached_stat_execute( _memc_get, "settings", maxItemSizeCallback, &_max_item_size );
+    }
   };
 
 
@@ -130,6 +180,7 @@ class Memcache {
     // Disconnect from our servers and free our memcached structure
     if( _servers ) memcached_server_free(_servers); 
     if( _memc ) memcached_free(_memc);
+    if( _memc_get ) memcached_free(_memc_get);
   }
 
 
@@ -141,6 +192,9 @@ class Memcache {
   void store( const std::string& key, void* data, unsigned int length ){
 
     if( !_connected ) return;
+
+    // Skip if the data would exceed the maximum size accepted by our servers
+    if( length > _max_item_size ) return;
  
     std::string k = cacheKey( key );
     _rc = memcached_set( _memc, k.c_str(), k.length(),
@@ -159,7 +213,7 @@ class Memcache {
 
     uint32_t flags;
     std::string k = cacheKey( key );
-    return memcached_get( _memc, k.c_str(), k.length(), &_length, &flags, &_rc );
+    return memcached_get( _memc_get, k.c_str(), k.length(), &_length, &flags, &_rc );
   }
 
 
@@ -180,6 +234,10 @@ class Memcache {
 
   /// Tell us whether we are connected to any memcached servers
   bool connected(){ return _connected; };
+
+
+  /// Return the maximum value size (bytes) accepted by our memcached servers
+  size_t maxItemSize(){ return _max_item_size; };
 
 
 };
