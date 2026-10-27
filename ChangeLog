@@ -1,3 +1,9 @@
+27/10/2026:
+	- Added SHA256 hashing for keys for Memcached: avoids problems with truncated keys with long URL requests.
+	  Keys also now include iipsrv version number. This adds new header SHA256.h for sha256 implementation
+	  (based on public domain https://github.com/B-Con/crypto-algorithms).
+
+
 26/10/2026:
 	- Optimized tile Cache.h by replacing string index with allocation-free compact non-owning TileKey struct.
 	  Redundant double hash lookup in _touch() on cache hits removed. ~5x faster for cache hits, ~3x for misses

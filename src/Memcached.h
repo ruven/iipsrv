@@ -24,6 +24,12 @@
 
 #include <string>
 
+#include "SHA256.h"
+
+#ifndef VERSION
+#define VERSION "999"
+#endif
+
 // Need to undefine _WIN32 on Windows to avoid compilation problems with winsock2.h and ws2def.h
 // includes when using libmemcached-awesome                                                                           
 #ifdef WIN32                                                                                                                                                                    
@@ -59,6 +65,14 @@ class Memcache {
 
   /// Flag whether we are connected
   bool _connected;
+
+  /// Create Memcached key using a sha256 of the request URL
+  /** @param request URL of request
+   *  @return hashed key for use in Memcached
+   */
+  static std::string cacheKey( const std::string& request ){
+    return std::string("iipsrv::") + VERSION + "::" + sha256::hex( request );
+  }
 
 
  public:
@@ -114,7 +128,7 @@ class Memcache {
 
     if( !_connected ) return;
  
-    std::string k = "iipsrv::" + key;
+    std::string k = cacheKey( key );
     _rc = memcached_set( _memc, k.c_str(), k.length(),
                         (char*) data, length,
                         _timeout, 0 );
@@ -130,7 +144,7 @@ class Memcache {
     if( !_connected ) return NULL;
 
     uint32_t flags;
-    std::string k = "iipsrv::" + key;
+    std::string k = cacheKey( key );
     return memcached_get( _memc, k.c_str(), k.length(), &_length, &flags, &_rc );
   }
 

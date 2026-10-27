@@ -62,6 +62,7 @@ iipsrv_fcgi_SOURCES = \
 			Transforms.cc \
 			Environment.h \
 			URL.h \
+			SHA256.h \
 			Writer.h \
 			Task.h \
 			Task.cc \
