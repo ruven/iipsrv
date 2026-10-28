@@ -1,3 +1,9 @@
+28/10/2026:
+	- Update to TIFF passthrough mode to make it more robust and to directly inject missing JFIF for YCbCr
+	  or Adobe APP14 markers for RGB encoded images. injectMetadata() function also updated to work directly
+	  on the bit stream rather than by hacking libjpeg. Fixes issue https://github.com/ruven/iipsrv/issues/279.
+
+
 27/10/2026:
 	- Added SHA256 hashing for keys for Memcached: avoids problems with truncated keys with long URL requests.
 	  Keys also now include iipsrv version number. This adds new header SHA256.h for sha256 implementation

@@ -19,6 +19,7 @@
 
 
 #include <cmath>
+#include <limits>
 #include "JPEGCompressor.h"
 
 using namespace std;
@@ -510,7 +511,7 @@ void JPEGCompressor::writeICCProfile()
 void JPEGCompressor::writeXMPMetadata()
 {
   // Make sure our XMP data has a valid size (namespace prefix is 29 bytes)
-  if( !embedXMP || xmp.empty() || xmp.size()>(65536-XMP_PREFIX_SIZE) ) return;
+  if( !embedXMP || xmp.empty() || xmp.size() > (MAX_BYTES_IN_MARKER - XMP_PREFIX_SIZE) ) return;
 
   // The XMP data in a JPEG stream needs to be prefixed with a zero-terminated ID string
   // ref http://www.adobe.com/content/dam/Adobe/en/devnet/xmp/pdfs/cs6/XMPSpecificationPart3.pdf (pp13-14)
@@ -533,6 +534,11 @@ void JPEGCompressor::writeExifMetadata()
 
   size_t len = exif.size();
 
+  // A single JPEG APP1 marker allows at most 65533 bytes of payload (including
+  // the 2-byte length field). With the 6-byte "Exif\0\0" prefix, the EXIF data
+  // itself is limited to 65527 bytes.
+  if( len > (MAX_BYTES_IN_MARKER - EXIF_PREFIX_SIZE) ) return;
+
   // Need to add prefix (need do this with memcpy because of null bytes)
   char exifstr[65536];
   memcpy( exifstr, EXIF_PREFIX, EXIF_PREFIX_SIZE );
@@ -546,39 +552,150 @@ void JPEGCompressor::writeExifMetadata()
 
 void JPEGCompressor::injectMetadata( RawTile& rawtile )
 {
-  if( (!embedICC && !embedXMP &&!embedEXIF) || (icc.empty() && xmp.empty() && exif.empty()) ) return;
+  unsigned char* data = (unsigned char*) rawtile.data;
 
-  // Initialize our compression structure
-  InitCompression( rawtile, 0 );
+  if( (data==NULL) || rawtile.dataLength < 4 || data[0] != 0xFF || data[1] != 0xD8 ) return;
 
-  // Abort the compression as we only needed it for writing the header
-  jpeg_abort_compress( &cinfo );
+  const bool update_resolution = dpi_x > 0.0 || dpi_y > 0.0;
 
-  // Destroy our compression structure
-  jpeg_destroy_compress( &cinfo );
+  // Compute the number of bytes the metadata segments will add to the stream.
+  // Each segment is: marker (2) + length (2) + payload. Payloads:
+  //  EXIF: "Exif\0\0" prefix + EXIF data
+  //  XMP:  XMP_PREFIX (incl. null terminator) + XMP data
+  //  ICC:  "ICC_PROFILE\0" + sequence + total + profile data, split into chunks
+  size_t added_length = 0;
+  if( embedEXIF && !exif.empty() && exif.size() <= (MAX_BYTES_IN_MARKER - EXIF_PREFIX_SIZE) ){
+    added_length += 2 + 2 + EXIF_PREFIX_SIZE + exif.size();
+  }
+  if( embedXMP && !xmp.empty() && xmp.size() <= (MAX_BYTES_IN_MARKER - XMP_PREFIX_SIZE) ){
+    added_length += 2 + 2 + XMP_PREFIX_SIZE + xmp.size();
+  }
+  if( embedICC && !icc.empty() ){
+    const size_t num_markers = 1 + (icc.size() - 1) / MAX_DATA_BYTES_IN_MARKER;
+    // Maximum number of markers in JPEG is 255
+    if( num_markers <= 255 ){
+      added_length += icc.size() + num_markers * (4 + ICC_OVERHEAD_LEN);
+    }
+  }
 
-  // Skip final 2 bytes from header
-  unsigned int len = getHeaderSize() - 2;
+  // Return if no valid metadata or resolution
+  if( added_length == 0 && !update_resolution ) return;
 
-  unsigned int dataLength = len + rawtile.dataLength;
-  unsigned char* buffer = new unsigned char[dataLength];
+  // The metadata segments are inserted directly into the JPEG stream after the
+  // initial consecutive APPn/COM markers (i.e. after the SOI and any JFIF/Adobe
+  // and existing metadata markers) and before the quantization/Huffman tables
+  // and the SOS marker.
 
-  // Copy JPEG header bytes
-  memcpy( buffer, getHeader(), len );
+  // Find insertion point after consecutive APPn/COM markers. Do not modify a
+  // JPEG whose leading metadata segment is truncated or has an invalid length.
+  unsigned int pos = 2;
+  unsigned int dlen = rawtile.dataLength;
+  while( pos < dlen && data[pos] == 0xFF ){
+    if( pos + 1 >= dlen ) return;
+    if( !((data[pos+1] >= 0xE0 && data[pos+1] <= 0xEF) ||
+          data[pos+1] == 0xFE) ) break;
+    if( pos + 3 >= dlen ) return;
+    unsigned int mlen = (data[pos+2] << 8) | data[pos+3];
+    if( mlen < 2 || mlen > dlen - pos - 2 ) return;
+    pos += 2 + mlen;
+  }
 
-  // SOS (Start of Scan) marker
-  unsigned char SOS[2] = {0xFF,0xDA};
+  // Add the physical resolution in-place if specified, after validating the
+  // leading marker sequence so malformed input remains untouched.
+  if( (dpi_x > 0.0 || dpi_y > 0.0) && dlen >= 20 && data[2] == 0xFF && data[3] == 0xE0 &&
+      ((data[4] << 8) | data[5]) >= 16 && ((data[4] << 8) | data[5]) <= dlen - 4 &&
+      data[6] == 'J' && data[7] == 'F' && data[8] == 'I' && data[9] == 'F' && data[10] == 0x00 ){
+    const double rounded_x = round( dpi_x );
+    const double rounded_y = round( dpi_y );
+    // Make sure the values are valid for JPEG, which can only handle 16bit values
+    const bool valid_x = dpi_x <= 0.0 || (isfinite( rounded_x ) && rounded_x <= 65535.0);
+    const bool valid_y = dpi_y <= 0.0 || (isfinite( rounded_y ) && rounded_y <= 65535.0);
+    unsigned int xd = (dpi_x > 0.0 && valid_x) ? (unsigned int) rounded_x : (valid_x ? 1 : 0);
+    unsigned int yd = (dpi_y > 0.0 && valid_y) ? (unsigned int) rounded_y : (valid_y ? 1 : 0);
+    data[13] = (dpi_units >= 0 && dpi_units <= 2) ? (unsigned char) dpi_units : 0;
+    data[14] = (xd >> 8) & 0xFF; data[15] = xd & 0xFF;
+    data[16] = (yd >> 8) & 0xFF; data[17] = yd & 0xFF;
+  }
 
-  // Replace bitstream's initial SOI (Start of Image) with an SOS marker
-  ((unsigned char*)rawtile.data)[0]=SOS[0];
-  ((unsigned char*)rawtile.data)[1]=SOS[1];
+  // Zero-copy fast path when no metadata segments need to be added.
+  if( added_length == 0 ) return;
 
-  // Append JPEG bitstream to header
-  memcpy( &buffer[len], rawtile.data, rawtile.dataLength );
+  const size_t max_length = std::numeric_limits<uint32_t>::max();
+  size_t new_length = dlen;
+  if( added_length > max_length - new_length ) return;
+  new_length += added_length;
+
+  // The passthrough buffer is sized exactly to the tile data, so there is no
+  // spare capacity to insert metadata in place. Always allocate a new buffer
+  // and copy the disjoint prefix, metadata segments and image data into it.
+  unsigned char* buffer = new unsigned char[new_length];
+
+  memcpy( buffer, data, pos );
+  unsigned int offset = pos;
+
+  // Write our EXIF APP1 segment: "Exif\0\0" + EXIF data
+  if( embedEXIF && !exif.empty() && exif.size() <= (MAX_BYTES_IN_MARKER - EXIF_PREFIX_SIZE) ){
+    size_t seg_len = 2 + EXIF_PREFIX_SIZE + exif.size();
+    buffer[offset] = 0xFF; buffer[offset+1] = 0xE1;
+    buffer[offset+2] = (seg_len >> 8) & 0xFF; buffer[offset+3] = seg_len & 0xFF;
+    offset += 4;
+    const unsigned char prefix[EXIF_PREFIX_SIZE] = {'E','x','i','f',0x00,0x00};
+    memcpy( &buffer[offset], prefix, EXIF_PREFIX_SIZE );
+    offset += EXIF_PREFIX_SIZE;
+    memcpy( &buffer[offset], exif.c_str(), exif.size() );
+    offset += exif.size();
+  }
+
+  // Write our XMP APP1 segment: XMP_PREFIX (incl. null terminator) + XMP data
+  if( embedXMP && !xmp.empty() && xmp.size() <= (MAX_BYTES_IN_MARKER - XMP_PREFIX_SIZE) ){
+    static const unsigned char prefix[] = "http://ns.adobe.com/xap/1.0/";
+    size_t seg_len = 2 + XMP_PREFIX_SIZE + xmp.size();
+    buffer[offset] = 0xFF; buffer[offset+1] = 0xE1;
+    buffer[offset+2] = (seg_len >> 8) & 0xFF; buffer[offset+3] = seg_len & 0xFF;
+    offset += 4;
+    memcpy( &buffer[offset], prefix, XMP_PREFIX_SIZE - 1 );
+    buffer[offset + XMP_PREFIX_SIZE - 1] = 0x00;
+    offset += XMP_PREFIX_SIZE;
+    memcpy( &buffer[offset], xmp.c_str(), xmp.size() );
+    offset += xmp.size();
+  }
+
+  // Write our ICC APP2 segment(s): "ICC_PROFILE\0" + sequence + total + profile data
+  if( embedICC && !icc.empty() ){
+    const size_t num_markers = 1 + (icc.size() - 1) / MAX_DATA_BYTES_IN_MARKER;
+    if( num_markers <= 255 ){
+      const unsigned char* icc_data = (const unsigned char*) icc.c_str();
+      size_t icc_remaining = icc.size();
+      for( size_t cur_marker = 1; icc_remaining > 0; cur_marker++ ){
+        size_t length = icc_remaining;
+        if( length > MAX_DATA_BYTES_IN_MARKER ) length = MAX_DATA_BYTES_IN_MARKER;
+        icc_remaining -= length;
+        size_t seg_len = 2 + ICC_OVERHEAD_LEN + length;
+        buffer[offset] = 0xFF; buffer[offset+1] = 0xE2;
+        buffer[offset+2] = (seg_len >> 8) & 0xFF; buffer[offset+3] = seg_len & 0xFF;
+        offset += 4;
+        static const char id[12] = "ICC_PROFILE";
+        memcpy( &buffer[offset], id, 12 );
+        offset += 12;
+        buffer[offset] = (unsigned char) cur_marker;
+        buffer[offset+1] = (unsigned char) num_markers;
+        offset += 2;
+        memcpy( &buffer[offset], icc_data, length );
+        offset += length;
+        icc_data += length;
+      }
+    }
+  }
+
+  // Copy the image data itself
+  memcpy( &buffer[offset], &data[pos], dlen - pos );
 
   // Delete our original data buffer and re-assign our new buffer
   if( rawtile.memoryManaged ) delete[] (unsigned char*) rawtile.data;
+  rawtile.memoryManaged = 1;
+  rawtile.capacity = (uint32_t) new_length;
   rawtile.data = buffer;
-  rawtile.dataLength = dataLength;
-  rawtile.capacity = dataLength;
+
+  rawtile.dataLength = (uint32_t) new_length;
+
 }
