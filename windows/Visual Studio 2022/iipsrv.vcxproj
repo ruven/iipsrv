@@ -264,6 +264,9 @@
     <ClCompile Include="..\..\src\Main.cc" />
     <ClCompile Include="..\..\src\OBJ.cc" />
     <ClCompile Include="..\..\src\OpenJPEGImage.cc" />
+    <ClCompile Include="..\..\src\GrokImage.cc">
+      <ExcludedFromBuild>true</ExcludedFromBuild>
+    </ClCompile>
     <ClCompile Include="..\..\src\PFL.cc" />
     <ClCompile Include="..\..\src\PNGCompressor.cc" />
     <ClCompile Include="..\..\src\SPECTRA.cc" />
@@ -291,6 +294,7 @@
     <ClInclude Include="..\..\src\KakaduImage.h" />
     <ClInclude Include="..\..\src\Memcached.h" />
     <ClInclude Include="..\..\src\OpenJPEGImage.h" />
+    <ClInclude Include="..\..\src\GrokImage.h" />
     <ClInclude Include="..\..\src\PNGCompressor.h" />
     <ClInclude Include="..\..\src\RawTile.h" />
     <ClInclude Include="..\..\src\Task.h" />
