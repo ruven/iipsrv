@@ -1,3 +1,7 @@
+29/10/2026:
+	- Fix to Cache.h to use Rawtile's capacity rather than its dataLength.
+
+
 28/10/2026:
 	- Update to TIFF passthrough mode to make it more robust and to directly inject missing JFIF for YCbCr
 	  or Adobe APP14 markers for RGB encoded images. injectMetadata() function also updated to work directly

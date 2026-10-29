@@ -2,7 +2,7 @@
 
 /*  IIPImage Server
 
-    Copyright (C) 2000-2024 Ruven Pillay.
+    Copyright (C) 2000-2026 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -413,7 +413,7 @@ class RawTile {
 
     if( this != &tile ){
 
-      if( data && dataLength>0 ) delete this;
+      if( memoryManaged ) deallocate( data );
 
       // Use move for std::string. The other fields are of basic type
       filename = std::move( tile.filename );

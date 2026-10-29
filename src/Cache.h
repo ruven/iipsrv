@@ -138,7 +138,7 @@ class Cache {
   /**  @param miter TileMap iterator pointing to the entry to remove */
   void _remove( TileMap::iterator miter ) {
     List_Iter liter = miter->second;
-    unsigned long entrySize = liter->dataLength + liter->filename.capacity()*sizeof(char) + tileSize;
+    unsigned long entrySize = liter->capacity + liter->filename.capacity()*sizeof(char) + tileSize;
     currentSize = ( currentSize > entrySize ) ? ( currentSize - entrySize ) : 0;
     tileMap.erase( miter );
     tileList.erase( liter );
@@ -178,7 +178,7 @@ class Cache {
     if( maxSize == 0 ) return;
 
     // Reject tiles larger than the cache capacity to prevent evicting the entire cache
-    if( r.dataLength + r.filename.capacity() * sizeof(char) + tileSize > maxSize ) return;
+    if( r.capacity + r.filename.capacity() * sizeof(char) + tileSize > maxSize ) return;
 
     TileKey lookupKey{ &r.filename, r.resolution, r.tileNum,
                        r.hSequence, r.vSequence, r.compressionType, r.quality };
@@ -214,7 +214,7 @@ class Cache {
     }
 
     // Update running total memory usage
-    currentSize += ( liter->dataLength + liter->filename.capacity()*sizeof(char) + tileSize );
+    currentSize += ( liter->capacity + liter->filename.capacity()*sizeof(char) + tileSize );
 
     // Evict least recently used elements if exceeding max_size
     while( currentSize > maxSize && !tileList.empty() ){
@@ -226,7 +226,7 @@ class Cache {
 	this->_remove( emiter );
       }
       else{
-	unsigned long entrySize = back.dataLength + back.filename.capacity()*sizeof(char) + tileSize;
+	unsigned long entrySize = back.capacity + back.filename.capacity()*sizeof(char) + tileSize;
 	currentSize = ( currentSize > entrySize ) ? ( currentSize - entrySize ) : 0;
 	tileList.pop_back();
       }
