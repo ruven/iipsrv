@@ -490,7 +490,7 @@ RawTile TileManager::getRegion( unsigned int res, int seq, int ang, int layers, 
   }
 
   // Set total length of data
-  region.dataLength = (uint32_t) region.width * region.height * region.channels * (region.bpc/8);
+  region.dataLength = (uint32_t)( (uint64_t) region.width * region.height * region.channels * (region.bpc/8) );
 
   return region;
 

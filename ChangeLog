@@ -1,5 +1,8 @@
 29/10/2026:
 	- Fix to Cache.h to use Rawtile's capacity rather than its dataLength.
+	- Added guards to prevent over-sized user input in CTW color twist command and updated Tokenizer class,
+	  added extra resolution/tile user input validation and harmonized types for pixel counts to uint64_t
+	  to avoid overflow risk.
 
 
 28/10/2026:

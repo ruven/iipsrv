@@ -697,13 +697,13 @@ void CVT::send( Session* session ){
   // data is greater than uncompressed
   unsigned int strip_height = 128;
   unsigned int channels = complete_image.channels;
-  unsigned char* output = new unsigned char[resampled_width*channels*strip_height+65536];
+  unsigned char* output = new unsigned char[(uint64_t) resampled_width*channels*strip_height+65536];
   int strips = (resampled_height/strip_height) + (resampled_height%strip_height == 0 ? 0 : 1);
 
   for( int n=0; n<strips; n++ ){
 
     // Get the starting index for this strip of data
-    unsigned char* input = &((unsigned char*)complete_image.data)[n*strip_height*resampled_width*channels];
+    unsigned char* input = &((unsigned char*)complete_image.data)[(uint64_t) n*strip_height*resampled_width*channels];
 
     // The last strip may have a different height
     if( (n==strips-1) && (resampled_height%strip_height!=0) ) strip_height = resampled_height % strip_height;

@@ -47,6 +47,13 @@ void JTL::send( Session* session, int resolution, int tile ){
   // Need to know the number of resolutions
   int num_res = (*session->image)->getNumResolutions();
 
+  // Sanity check the resolution and tile number
+  if( (resolution<0) || (tile<0) || (resolution>=num_res) ){
+    ostringstream error;
+    error << "JTL :: Invalid resolution/tile number: " << resolution << "," << tile;
+    throw error.str();
+  }
+
 
   // If we have requested a rotation, remap the tile index to rotated coordinates
   if( (int)((session->view)->getRotation()) % 360 == 90 ){
@@ -63,14 +70,6 @@ void JTL::send( Session* session, int resolution, int tile ){
     unsigned int th = (*session->image)->tile_heights[vipsres];
     int ntiles = (int) ceil( (double)im_width/tw ) * (int) ceil( (double)im_height/th );
     tile = ntiles - tile - 1;
-  }
-
-
-  // Sanity check
-  if( (resolution<0) || (tile<0) || (resolution>=num_res) ){
-    ostringstream error;
-    error << "JTL :: Invalid resolution/tile number: " << resolution << "," << tile;
-    throw error.str();
   }
 
 
