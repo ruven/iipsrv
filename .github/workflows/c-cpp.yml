@@ -33,7 +33,7 @@ jobs:
     - uses: actions/checkout@v4
 
     - name: Install dependencies
-      run: brew install automake pkgconf fcgi libtiff jpeg-turbo openjpeg libmemcached webp libavif libomp eigen
+      run: brew install automake libtool pkgconf fcgi libtiff jpeg-turbo openjpeg libmemcached webp libavif libomp eigen
 
     - name: Configure
       run: |
