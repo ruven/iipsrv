@@ -37,17 +37,8 @@
 
 
 
-#ifdef HAVE_EXT_POOL_ALLOCATOR
-#include <ext/pool_allocator.h>
-typedef std::unordered_map < std::string, IIPImage,
-			      __gnu_cxx::hash< const std::string >,
-			      std::equal_to< const std::string >,
-			      __gnu_cxx::__pool_alloc< std::pair<const std::string,IIPImage> >
-			      > imageCacheMapType;
-#else
+/// Define a cache map type for our image metadata cache
 typedef std::unordered_map <std::string,IIPImage> imageCacheMapType;
-#endif
-
 
 
 

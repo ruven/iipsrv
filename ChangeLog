@@ -1,6 +1,12 @@
+30/10/2026:
+	- Refactored and cleaned up configure.ac and m4 includes to better adhere to GNU standards and to
+	  correctly enable flags for OpenMP on Mac / ARM.
+	- Removed use of outdated ext/pool_allocator.h from Cache.h and Task.h
+
+
 29/10/2026:
 	- Fix to Cache.h to use Rawtile's capacity rather than its dataLength.
-	- Added guards to prevent over-sized user input in CTW color twist command and updated Tokenizer class,
+	- Added guards to prevent over-sized user input in CTW color twist command, updated Tokenizer class and
 	  added extra resolution/tile user input validation and harmonized types for pixel counts to uint64_t
 	  to avoid overflow risk.
 

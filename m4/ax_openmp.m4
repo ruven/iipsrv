@@ -13,8 +13,8 @@
 #   (see http://www-unix.mcs/)
 #
 #   On success, it sets the OPENMP_CFLAGS/OPENMP_CXXFLAGS/OPENMP_F77FLAGS
-#   output variable to the flag (e.g. -omp) used both to compile *and* link
-#   OpenMP programs in the current language.
+#   output variable to the flag (e.g. -fopenmp) used both to compile *and*
+#   link OpenMP programs in the current language.
 #
 #   NOTE: You are assumed to not only compile your program with these flags,
 #   but also link it with them as well.
@@ -34,6 +34,11 @@
 #   found, and ACTION-IF-NOT-FOUND is a list of commands to run it if it is
 #   not found. If ACTION-IF-FOUND is not specified, the default action will
 #   define HAVE_OPENMP.
+#
+#   On Apple Clang (macOS), enabling OpenMP requires two separate flags,
+#   '-Xpreprocessor -fopenmp', together with the separately-installed OpenMP
+#   runtime library libomp.  When that combination is selected, the macro
+#   additionally sets and AC_SUBSTs the OPENMP_*LIBS variable to '-lomp'.
 #
 # LICENSE
 #
@@ -72,23 +77,38 @@
 AC_DEFUN([AX_OPENMP], [
 AC_PREREQ([2.69]) dnl for _AC_LANG_PREFIX
 
-AC_CACHE_CHECK([for OpenMP flag of _AC_LANG compiler], ax_cv_[]_AC_LANG_ABBREV[]_openmp, [save[]_AC_LANG_PREFIX[]FLAGS=$[]_AC_LANG_PREFIX[]FLAGS
-ax_cv_[]_AC_LANG_ABBREV[]_openmp=unknown
-# Flags to try:  -fopenmp (gcc), -mp (SGI & PGI),
-#                -qopenmp (icc>=15), -openmp (icc),
-#                -xopenmp (Sun), -omp (Tru64),
-#                -qsmp=omp (AIX),
-#                none
-ax_openmp_flags="-fopenmp -openmp -qopenmp -mp -xopenmp -omp -qsmp=omp none"
-if test "x$OPENMP_[]_AC_LANG_PREFIX[]FLAGS" != x; then
-  ax_openmp_flags="$OPENMP_[]_AC_LANG_PREFIX[]FLAGS $ax_openmp_flags"
-fi
-for ax_openmp_flag in $ax_openmp_flags; do
-  case $ax_openmp_flag in
-    none) []_AC_LANG_PREFIX[]FLAGS=$save[]_AC_LANG_PREFIX[] ;;
-    *) []_AC_LANG_PREFIX[]FLAGS="$save[]_AC_LANG_PREFIX[]FLAGS $ax_openmp_flag" ;;
-  esac
-  AC_LINK_IFELSE([AC_LANG_SOURCE([[
+AC_CACHE_CHECK([for OpenMP flag of _AC_LANG compiler], ax_cv_[]_AC_LANG_ABBREV[]_openmp, [
+  save[]_AC_LANG_PREFIX[]FLAGS=$[]_AC_LANG_PREFIX[]FLAGS
+  save_LIBS=$LIBS
+  ax_cv_[]_AC_LANG_ABBREV[]_openmp=unknown
+  # Flags to try:  -fopenmp (gcc), -mp (SGI & PGI),
+  #                -qopenmp (icc>=15), -openmp (icc),
+  #                -xopenmp (Sun), -omp (Tru64),
+  #                -qsmp=omp (AIX),
+  #                -Xpreprocessor -fopenmp (Apple clang on macOS/arm64),
+  #                none
+  # Each candidate is separated by a pipe so that a multi-word flag (such as
+  # Apple Clang's '-Xpreprocessor -fopenmp') remains a single item for the
+  # shell loop; the pipe is then replaced by a space before testing.
+  for ax_openmp_flag in \
+    '-Xpreprocessor|-fopenmp' \
+    -fopenmp \
+    -openmp \
+    -qopenmp \
+    -mp \
+    -xopenmp \
+    -omp \
+    -qsmp=omp \
+    none
+  do
+    ax_openmp_test_flag=`echo "$ax_openmp_flag" | tr '|' ' '`
+    AS_IF([test "x$ax_openmp_flag" = xnone],
+      []_AC_LANG_PREFIX[]FLAGS=$save[]_AC_LANG_PREFIX[]FLAGS,
+      []_AC_LANG_PREFIX[]FLAGS="$save[]_AC_LANG_PREFIX[]FLAGS $ax_openmp_test_flag")
+    LIBS=$save_LIBS
+    AS_IF([test "x$ax_openmp_flag" = "x-Xpreprocessor|-fopenmp"],
+      [LIBS="-lomp $LIBS"])
+    AC_LINK_IFELSE([AC_LANG_SOURCE([[
 @%:@include <omp.h>
 
 static void
@@ -108,15 +128,24 @@ main(void)
   parallel_fill(arr, 100000);
   return 0;
 }
-]])],[ax_cv_[]_AC_LANG_ABBREV[]_openmp=$ax_openmp_flag; break],[])
-done
-[]_AC_LANG_PREFIX[]FLAGS=$save[]_AC_LANG_PREFIX[]FLAGS
+]])],[ax_cv_[]_AC_LANG_ABBREV[]_openmp=$ax_openmp_test_flag],[])
+    AS_IF([test "x$ax_cv_[]_AC_LANG_ABBREV[]_openmp" != xunknown], [break])
+  done
+  []_AC_LANG_PREFIX[]FLAGS=$save[]_AC_LANG_PREFIX[]FLAGS
+  LIBS=$save_LIBS
 ])
 if test "x$ax_cv_[]_AC_LANG_ABBREV[]_openmp" = "xunknown"; then
   m4_default([$2],:)
 else
   if test "x$ax_cv_[]_AC_LANG_ABBREV[]_openmp" != "xnone"; then
     OPENMP_[]_AC_LANG_PREFIX[]FLAGS=$ax_cv_[]_AC_LANG_ABBREV[]_openmp
+    # Apple Clang does not bundle the OpenMP runtime, so when its
+    # '-Xpreprocessor -fopenmp' combination was selected, add -lomp
+    # explicitly to the libraries.
+    if test "x$ax_cv_[]_AC_LANG_ABBREV[]_openmp" = "x-Xpreprocessor -fopenmp"; then
+      OPENMP_LIBS="-lomp"
+      AC_SUBST([OPENMP_LIBS])
+    fi
   fi
   m4_default([$1], [AC_DEFINE(HAVE_OPENMP,1,[Define if OpenMP is enabled])])
 fi

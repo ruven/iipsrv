@@ -6,11 +6,13 @@ dnl
 
 AC_DEFUN([AX_CHECK_LIBJPEG], [
 
+	AC_LANG_PUSH([C])
+
 	AC_CHECK_HEADER([jpeglib.h],
 			[AC_CHECK_LIB(
 				[jpeg],
 				[jpeg_abort],
-				[],
+				[LIBS="-ljpeg $LIBS"],
 				[AC_MSG_ERROR([libjpeg not found])]
 		)],
                 [AC_MSG_ERROR([No libjpeg headers found])]
@@ -23,16 +25,18 @@ AC_DEFUN([AX_CHECK_LIBJPEG], [
 				#include <jpeglib.h>]],
 				[[int a]])],
 			[AC_MSG_RESULT([yes])],
-			[AC_MSG_ERROR([unable to compile])]
+			[AC_MSG_ERROR([unable to compile libjpeg])]
 	)
 
 	AC_MSG_CHECKING([whether libjpeg can be linked])
-	AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+	AC_LINK_IFELSE([AC_LANG_PROGRAM([[
 				#include <stdio.h>
 				#include <jpeglib.h>]],
-				[[jpeg_abort((void*)0)]])],
+				[[jpeg_abort((void*)0);]])],
 			[AC_MSG_RESULT([yes])],
-			[AC_MSG_ERROR([unable to link])]
+			[AC_MSG_ERROR([unable to link libjpeg])]
 	)
+
+	AC_LANG_POP([C])
 
 ])

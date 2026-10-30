@@ -33,15 +33,14 @@ jobs:
     - uses: actions/checkout@v4
 
     - name: Install dependencies
-      run: brew install automake libtool fcgi openjpeg libmemcached webp libavif libomp eigen
+      run: brew install automake pkgconf fcgi libtiff jpeg-turbo openjpeg libmemcached webp libavif libomp eigen
 
     - name: Configure
       run: |
         ./autogen.sh
-        export CFLAGS="-I/opt/homebrew/include -I/opt/homebrew/opt/libomp/include"
+        export CFLAGS="-I$(brew --prefix)/include -I$(brew --prefix)/opt/libomp/include"
         export CPPFLAGS=${CFLAGS}
-        export LDFLAGS="-L/opt/homebrew/lib -L/opt/homebrew/opt/libomp/lib"
-        export LIBS="-lomp"
+        export LDFLAGS="-L$(brew --prefix)/lib -L$(brew --prefix)/opt/libomp/lib"
         ./configure
 
     - name: Compile

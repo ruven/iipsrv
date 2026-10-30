@@ -29,6 +29,10 @@ if ENABLE_MODULES
 iipsrv_fcgi_LDADD += DSOImage.o
 endif
 
+if BUNDLED_FCGI
+iipsrv_fcgi_LDADD += $(top_builddir)/fcgi/libfcgi/libfcgi.a
+endif
+
 EXTRA_iipsrv_fcgi_SOURCES = Main.cc DSOImage.h DSOImage.cc \
 			KakaduImage.h KakaduImage.cc \
 			OpenJPEGImage.h OpenJPEGImage.cc \

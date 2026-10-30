@@ -25,12 +25,6 @@
 #define _CACHE_H
 
 
-// Try to use the gcc high performance memory pool allocator (available in gcc >= 3.4)
-#ifdef HAVE_EXT_POOL_ALLOCATOR
-#include <ext/pool_allocator.h>
-#endif
-
-
 #include <unordered_map>
 #include <list>
 #include <string>
@@ -98,26 +92,13 @@ class Cache {
   unsigned long currentSize;
 
   /// Main cache storage typedef
-#ifdef HAVE_EXT_POOL_ALLOCATOR
-  typedef std::list < RawTile,
-    __gnu_cxx::__pool_alloc< RawTile > > TileList;
-#else
   typedef std::list < RawTile > TileList;
-#endif
 
   /// Main cache list iterator typedef
   typedef TileList::iterator List_Iter;
 
   /// Index typedef
-#ifdef HAVE_EXT_POOL_ALLOCATOR
-  typedef std::unordered_map < TileKey, List_Iter,
-    TileKeyHash,
-    std::equal_to< TileKey >,
-    __gnu_cxx::__pool_alloc< std::pair<const TileKey, List_Iter> >
-    > TileMap;
-#else
   typedef std::unordered_map < TileKey, List_Iter, TileKeyHash > TileMap;
-#endif
 
 
   /// Main cache storage object
