@@ -456,11 +456,13 @@ void OpenJPEGImage::process( unsigned int res, int layers, int xoffset, int yoff
   unsigned int w0 = (xoffset + tw) << vipsres;
   unsigned int h0 = (yoffset + th) << vipsres;
 
-  // Make sure we don't overrun the dimensions of the full-size image
+  // Make sure we don't overrun the dimensions of the full-size image.
+  // Note that w0 and h0 are the end coordinates of the requested region,
+  // not its width and height.
   if( x0 > image_widths[0]  ) x0 = image_widths[0]  - 1;
   if( y0 > image_heights[0] ) y0 = image_heights[0] - 1;
-  if( x0 + w0 > image_widths[0]  ) w0 = image_widths[0]  - x0;
-  if( y0 + h0 > image_heights[0] ) h0 = image_heights[0] - y0;
+  if( w0 > image_widths[0]  ) w0 = image_widths[0];
+  if( h0 > image_heights[0] ) h0 = image_heights[0];
 
 #ifdef OPENJPEG_DEBUG
   logfile << "OpenJPEG :: decoding " << layers << " quality layers" << endl;

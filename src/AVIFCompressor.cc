@@ -74,9 +74,9 @@ unsigned int AVIFCompressor::CompressStrip( unsigned char* source, unsigned char
 unsigned int AVIFCompressor::Finish( unsigned char* output ){
 
   // Output any remaining bytes
-  if( current_chunk < tile.dataLength-1 ){
+  if( current_chunk < tile.dataLength ){
     unsigned char* data = (unsigned char*) tile.data;
-    chunk_size = tile.dataLength - current_chunk - 1;
+    chunk_size = tile.dataLength - current_chunk;
     memcpy( output, &data[current_chunk], chunk_size );
     return chunk_size;
   }
@@ -107,6 +107,15 @@ unsigned int AVIFCompressor::Compress( RawTile& rawtile ){
   if( !avif ){
     throw string( "AVIFCompressor :: avifImageCreate() error" );
   }
+
+  // Use an identity matrix and full range for lossless colour images so that
+  // the RGB to YUV conversion is reversible without any rounding error
+#if AVIF_VERSION_MAJOR >= 1
+  if( this->Q == -1 && rawtile.channels >= 3 ){
+    avif->matrixCoefficients = AVIF_MATRIX_COEFFICIENTS_IDENTITY;
+    avif->yuvRange = AVIF_RANGE_FULL;
+  }
+#endif
 
   avifRGBImage rgb;
   avifRGBImageSetDefaults( &rgb, avif );
@@ -142,7 +151,9 @@ unsigned int AVIFCompressor::Compress( RawTile& rawtile ){
   encoder->autoTiling = true;
   if( this->Q == -1 ){
     encoder->quality = AVIF_QUALITY_LOSSLESS;
+    encoder->qualityAlpha = AVIF_QUALITY_LOSSLESS;
     encoder->maxQuantizer = AVIF_QUANTIZER_LOSSLESS;
+    encoder->maxQuantizerAlpha = AVIF_QUANTIZER_LOSSLESS;
   }
   else encoder->quality = this->Q;
 #else

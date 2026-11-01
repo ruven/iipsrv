@@ -1,9 +1,10 @@
-01/10/2026:
+01/11/2026:
 	- Updated image reader classes to correctly check for valid resolutions, fixed allocation typo in Rawtile.h
-	  and updated default member constructor for AVIFCompressor class
+	  and updated default member constructor for AVIFCompressor class. Also updated avif and webp compressor
+	  classes to ensure full reversibility for lossless encoding and 1 byte under-run in CVT output.
 
 
-30/10/2026:
+30/11/2026:
 	- Refactored and cleaned up configure.ac and m4 includes to better adhere to GNU standards and to
 	  correctly enable flags for OpenMP on Mac / ARM.
 	- Removed use of outdated ext/pool_allocator.h from Cache.h and Task.h

@@ -541,7 +541,7 @@ RawTile TPTImage::getTile( int x, int y, unsigned int res, int layers, unsigned 
   // If we are in pass-through mode, we need to know the exact number of bytes the tile
   // takes up as this may sometimes be larger than the raw data size
   if( ( requested_encoding == ImageEncoding::JPEG && compression == COMPRESSION_JPEG )
-#ifdef HAVE_WEB
+#ifdef HAVE_WEBP
       || ( requested_encoding == ImageEncoding::WEBP && compression == COMPRESSION_WEBP )
 #endif
       ){

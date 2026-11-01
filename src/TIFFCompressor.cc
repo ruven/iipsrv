@@ -237,9 +237,9 @@ unsigned int TIFFCompressor::CompressStrip( unsigned char *source, unsigned char
 unsigned int TIFFCompressor::Finish( unsigned char *output )
 {
   // Output any remaining bytes
-  if( current_chunk < dest.end - 1 ){
+  if( current_chunk < dest.end ){
     unsigned char* data = (unsigned char*) dest.buffer;
-    chunk_size = dest.end - current_chunk - 1;
+    chunk_size = dest.end - current_chunk;
     memcpy( output, &data[current_chunk], chunk_size );
   }
   else chunk_size = 0;

@@ -61,7 +61,7 @@ class AVIFCompressor : public Compressor {
   /// Constructor
   /** @param quality AVIF compression level (range 0-100)
    */
-  AVIFCompressor( int quality ) : Compressor(quality) {};
+  AVIFCompressor( int quality ) : Compressor(quality), codec(AVIF_CODEC_CHOICE_AUTO) {};
 
   /// Destructor
   ~AVIFCompressor(){};
