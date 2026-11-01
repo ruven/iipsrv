@@ -7,7 +7,7 @@
     Culture of the Czech Republic.
 
 
-    Copyright (C) 2009-2025 IIPImage.
+    Copyright (C) 2009-2026 IIPImage.
     Author: Ruven Pillay
 
     This program is free software; you can redistribute it and/or modify
@@ -449,7 +449,7 @@ RawTile KakaduImage::getTile( int seq, int ang, unsigned int res, int layers, un
   timer.start();
 #endif
 
-  if( res > numResolutions ){
+  if( res >= numResolutions ){
     ostringstream tile_no;
     tile_no << "Kakadu :: Asked for non-existent resolution: " << res;
     throw file_error( tile_no.str() );

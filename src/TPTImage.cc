@@ -115,7 +115,7 @@ void TPTImage::loadImageInfo( int seq, int ang )
 
   // If image is untiled, set tile sizes to zero
   if( TIFFGetField( tiff, TIFFTAG_TILEWIDTH, &tw ) == 0 ) tw = 0;
-  if( TIFFGetField( tiff, TIFFTAG_TILEWIDTH, &th ) == 0 ) th = 0;
+  if( TIFFGetField( tiff, TIFFTAG_TILELENGTH, &th ) == 0 ) th = 0;
 
   // Units for libtiff are 1=unknown, 2=DPI and 3=pixels/cm, whereas we want 0=unknown, 1=DPI and 2=pixels/cm
   dpi_units--;
@@ -352,7 +352,7 @@ RawTile TPTImage::getTile( int x, int y, unsigned int res, int layers, unsigned 
 
 
   // Check the resolution exists
-  if( res > numResolutions ){
+  if( res >= numResolutions ){
     ostringstream error;
     error << "TPTImage :: Asked for non-existent resolution: " << res;
     throw file_error( error.str() );

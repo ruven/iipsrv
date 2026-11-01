@@ -1,6 +1,6 @@
 /*  IIPImage Server: JPEG reader
 
-    Copyright (C) 2024-2025 Ruven Pillay.
+    Copyright (C) 2024-2026 Ruven Pillay.
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -244,7 +244,7 @@ RawTile JPEGImage::getTile( int seq, int ang, unsigned int res, int layers, unsi
   timer.start();
 #endif
 
-  if( res > numResolutions ){
+  if( res >= numResolutions ){
     ostringstream tile_no;
     tile_no << "JPEG :: Asked for non-existent resolution: " << res;
     throw file_error( tile_no.str() );

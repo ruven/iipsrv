@@ -213,7 +213,7 @@ class RawTile {
     switch( bpc ){
       case 32:
 	if( sampleType == SampleType::FLOATINGPOINT ) data = new float[size/4];
-	else data = new int[size/4];
+	else data = new unsigned int[size/4];
 	break;
       case 16:
 	data = new unsigned short[size/2];

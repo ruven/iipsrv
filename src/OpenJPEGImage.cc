@@ -299,7 +299,7 @@ RawTile OpenJPEGImage::getTile( int seq, int ang, unsigned int res, int layers, 
   timer.start();
 #endif
 
-  if( res > numResolutions ){
+  if( res >= numResolutions ){
     ostringstream tile_no;
     tile_no << "OpenJPEG :: Asked for non-existent resolution: " << res;
     throw file_error( tile_no.str() );
