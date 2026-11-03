@@ -1,5 +1,5 @@
 03/11/2026:
-	- Updated OpenJPEG and Kakadu image handlers to correctly set Rawtile dataLength value
+	- Updated OpenJPEG, Kakadu and JPEG input image handlers to correctly set Rawtile dataLength value
 
 
 01/11/2026:
