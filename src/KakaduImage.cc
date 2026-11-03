@@ -507,8 +507,8 @@ RawTile KakaduImage::getTile( int seq, int ang, unsigned int res, int layers, un
   rawtile.allocate();
 
   // Process the tile
-  process( res, layers, xoffset, yoffset, tw, th, rawtile.data );
-
+  size_t bytes = process( res, layers, xoffset, yoffset, tw, th, rawtile.data );
+  rawtile.dataLength = bytes;
 
 #ifdef KAKADU_DEBUG
   logfile << "Kakadu :: bytes parsed: " << codestream.get_total_bytes(true) << endl;
@@ -541,7 +541,8 @@ RawTile KakaduImage::getRegion( int seq, int ang, unsigned int res, int layers, 
   rawtile.timestamp = timestamp;
   rawtile.allocate();
 
-  process( res, layers, x, y, w, h, rawtile.data );
+  size_t bytes = process( res, layers, x, y, w, h, rawtile.data );
+  rawtile.dataLength = bytes;
 
 #ifdef KAKADU_DEBUG
   logfile << "Kakadu :: getRegion() :: " << timer.getTime() << " microseconds" << endl;
@@ -553,7 +554,7 @@ RawTile KakaduImage::getRegion( int seq, int ang, unsigned int res, int layers, 
 
 
 // Main processing function
-void KakaduImage::process( unsigned int res, int layers, int xoffset, int yoffset, unsigned int tw, unsigned int th, void *d )
+size_t KakaduImage::process( unsigned int res, int layers, int xoffset, int yoffset, unsigned int tw, unsigned int th, void *d )
 {
 
   // Scale up our output bit depth to the nearest factor of 8
@@ -625,6 +626,10 @@ void KakaduImage::process( unsigned int res, int layers, int xoffset, int yoffse
   void *stripe_buffer = NULL;
   int *stripe_heights = NULL;
 
+  // Number of bytes in output
+  size_t bytes = tw*th*channels * (obpc/8);
+
+
   try{
 
     // Note that we set max channels rather than leave the default to strip off alpha channels
@@ -679,7 +684,6 @@ void KakaduImage::process( unsigned int res, int layers, int xoffset, int yoffse
 
     // Keep track of changes in stripe heights
     int previous_stripe_heights = stripe_heights[0];
-
 
     while( continues ){
 
@@ -778,7 +782,6 @@ void KakaduImage::process( unsigned int res, int layers, int xoffset, int yoffse
       throw file_error( "Kakadu :: Error indicated by finish()" );
     }
 
-
     // Shrink virtual resolution tiles
     if( res < virtual_levels ){
 
@@ -801,8 +804,9 @@ void KakaduImage::process( unsigned int res, int layers, int xoffset, int yoffse
 	  }
 	}
       }
+      bytes = n;
     }
-    else memcpy( d, buffer, tw*th*channels * (obpc/8) );
+    else memcpy( d, buffer, bytes );
 
     // Delete our local buffer
     delete_buffer( buffer );
@@ -839,6 +843,7 @@ void KakaduImage::process( unsigned int res, int layers, int xoffset, int yoffse
     stripe_heights = NULL;
   }
 
+  return bytes;
 }
 
 

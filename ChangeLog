@@ -1,3 +1,7 @@
+03/11/2026:
+	- Updated OpenJPEG and Kakadu image handlers to correctly set Rawtile dataLength value
+
+
 01/11/2026:
 	- Updated image reader classes to correctly check for valid resolutions, fixed allocation typo in Rawtile.h
 	  and updated default member constructor for AVIFCompressor class. Also updated avif and webp compressor

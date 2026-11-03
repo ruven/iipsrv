@@ -9,7 +9,7 @@
     Culture of the Czech Republic.
 
 
-    Copyright (C) 2009-2024 IIPImage.
+    Copyright (C) 2009-2026 IIPImage.
     Author: Ruven Pillay
 
     This program is free software; you can redistribute it and/or modify
@@ -89,8 +89,9 @@ class KakaduImage : public IIPImage {
       @param w width of region
       @param h height of region
       @param d buffer to fill
+      @return number of bytes in JPEG2000
    */
-  void process( unsigned int r, int l, int x, int y, unsigned int w, unsigned int h, void* d );
+  size_t process( unsigned int r, int l, int x, int y, unsigned int w, unsigned int h, void* d );
 
   /// Convenience function to delete allocated buffers
   /** @param b pointer to buffer

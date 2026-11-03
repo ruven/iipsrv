@@ -353,7 +353,8 @@ RawTile OpenJPEGImage::getTile( int seq, int ang, unsigned int res, int layers, 
   rawtile.allocate();
 
   // Process the tile
-  process( res, layers, xoffset, yoffset, tw, th, rawtile.data );
+  size_t bytes = process( res, layers, xoffset, yoffset, tw, th, rawtile.data );
+  rawtile.dataLength = bytes;
 
 #ifdef OPENJPEG_DEBUG
   logfile << "OpenJPEG :: getTile() :: " << timer.getTime() << " microseconds" << endl;
@@ -385,7 +386,8 @@ RawTile OpenJPEGImage::getRegion( int ha, int va, unsigned int res, int layers, 
   rawtile.timestamp = timestamp;
   rawtile.allocate();
 
-  process( res, layers, x, y, w, h, rawtile.data );
+  size_t bytes = process( res, layers, x, y, w, h, rawtile.data );
+  rawtile.dataLength = bytes;
 
 #ifdef OPENJPEG_DEBUG
   logfile << "OpenJPEG :: getRegion() :: " << timer.getTime() << " microseconds" << endl;
@@ -397,7 +399,7 @@ RawTile OpenJPEGImage::getRegion( int ha, int va, unsigned int res, int layers, 
 
 
 // Main processing function
-void OpenJPEGImage::process( unsigned int res, int layers, int xoffset, int yoffset, unsigned int tw, unsigned int th, void *d )
+size_t OpenJPEGImage::process( unsigned int res, int layers, int xoffset, int yoffset, unsigned int tw, unsigned int th, void *d )
 {
   // Unfortunately, it's not currently possible to re-use OpenJPEG's stream or image structures,
   // so re-open if necessary
@@ -527,4 +529,6 @@ void OpenJPEGImage::process( unsigned int res, int layers, int xoffset, int yoff
   // stream or image structures multiple times in the same request pipeline
   closeImage();
 
+  // Return number of bytes
+  return n;
 }
