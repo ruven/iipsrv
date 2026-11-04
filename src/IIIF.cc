@@ -271,17 +271,14 @@ void IIIF::run( Session* session, const string& src )
 
     // Create extraFormats string
     string extraFormats = "";
-#if defined(HAVE_WEBP) || defined(HAVE_AVIF)
-    extraFormats += ",";
 #ifdef HAVE_WEBP
-    extraFormats += "\"webp\"";
-#endif
-#if defined(HAVE_WEBP) && defined(HAVE_AVIF)
-    extraFormats += ",";
+    extraFormats += ",\"webp\"";
 #endif
 #ifdef HAVE_AVIF
-    extraFormats += "\"avif\"";
+    extraFormats += ",\"avif\"";
 #endif
+#ifdef HAVE_JXL
+    extraFormats += ",\"jxl\"";
 #endif
 
     // extraQualities string
@@ -657,6 +654,9 @@ void IIIF::run( Session* session, const string& src )
 #endif
 #ifdef HAVE_AVIF
 	else if( format == "avif" ) session->view->output_format = ImageEncoding::AVIF;
+#endif
+#ifdef HAVE_JXL
+	else if( format == "jxl" ) session->view->output_format = ImageEncoding::JXL;
 #endif
 	else throw invalid_argument( "IIIF :: unsupported output format" );
       }

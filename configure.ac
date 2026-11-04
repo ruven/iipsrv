@@ -248,6 +248,35 @@ fi
 
 
 #************************************************************
+#     Check for JPEG-XL support
+#************************************************************
+
+JXL=false
+AC_ARG_ENABLE( [jxl],
+    [AS_HELP_STRING([--disable-jxl], [disable JPEG-XL])])
+
+
+if test "x$enable_jxl" = "xno"; then
+   AC_MSG_NOTICE([configure: disabling JPEG-XL support])
+   AM_CONDITIONAL([ENABLE_JXL], [false])
+else
+   PKG_CHECK_MODULES([JXL], [libjxl >= 0.7 libjxl_threads >= 0.7],
+     [JXL=true],
+     [JXL=false; AC_MSG_NOTICE([configure: libjxl >= 0.7 not found - disabling JPEG-XL])])
+
+   if test "x${JXL}" = xtrue; then
+      AM_CONDITIONAL([ENABLE_JXL], [true])
+      AC_DEFINE([HAVE_JXL], [1], [Define to 1 if you have JPEG-XL])
+      AM_CPPFLAGS="${JXL_CFLAGS} ${AM_CPPFLAGS}"
+      LIBS="${JXL_LIBS} ${LIBS}"
+   else
+      AM_CONDITIONAL([ENABLE_JXL], [false])
+   fi
+
+fi
+
+
+#************************************************************
 # Check for libdl for dynamic library loading
 #************************************************************
 
@@ -478,6 +507,7 @@ Options Enabled:
  PNG  Output    :  ${PNG}
  WebP Output    :  ${WEBP}
  AVIF Output    :  ${AVIF}
+ JPEG-XL Output :  ${JXL}
 EOF
 
 if test "x${DEBUG}" = xtrue; then

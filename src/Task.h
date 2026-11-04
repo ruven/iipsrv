@@ -56,6 +56,9 @@ struct Session {
 #ifdef HAVE_AVIF
   AVIFCompressor* avif;
 #endif
+#ifdef HAVE_JXL
+  JXLCompressor* jxl;
+#endif
   View* view;
   IIPResponse* response;
   Watermark* watermark;
@@ -258,6 +261,17 @@ public:
   void run( Session* session, const std::string& argument ){
     // Set our encoding format and call JTL::run
     session->view->output_format = ImageEncoding::AVIF;
+    JTL::run( session, argument );
+  };
+};
+
+
+/// JPEG-XL Tile Command
+class JXTL : public JTL {
+public:
+  void run( Session* session, const std::string& argument ){
+    // Set our encoding format and call JTL::run
+    session->view->output_format = ImageEncoding::JXL;
     JTL::run( session, argument );
   };
 };

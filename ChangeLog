@@ -1,3 +1,13 @@
+04/11/2026:
+	- Added JPEG-XL output support. Both tile and region output are supported for both IIP and IIIF.
+	  Individual tiles can be requested with IIP using the JXTL parameter which works in the same way as PTL
+	  for PNG and JTL for JPEG. For IIIF, use .jxl suffix for format. CVT region requests can be made with
+	  CVT=jxl. The JXL encoder supports alpha channels and 8 or 16 bit integer images as well as 32 bit float.
+	  To compile, iipsrv automatically detects for the libjxl development headers and libraries.
+	  The JXL_QUALITY server environment variable sets the default encoding quality (0=most compression,
+	  100=best quality, default=50), -1 specifies lossless encoding.
+
+
 03/11/2026:
 	- Updated OpenJPEG, Kakadu and JPEG input image handlers to correctly set Rawtile dataLength value
 

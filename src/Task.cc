@@ -60,6 +60,9 @@ Task* Task::factory( const string& t ){
 #ifdef HAVE_AVIF
   else if( type == "atl" ) return new ATL;
 #endif
+#ifdef HAVE_JXL
+  else if( type == "jxtl" ) return new JXTL;
+#endif
   else if( type == "jtl" ) return new JTL;
   else if( type == "ttl" ) return new TTL;
   else if( type == "jtls" ) return new JTLS;
@@ -126,7 +129,7 @@ void QLT::run( Session* session, const string& argument ){
   if( factor < 0 || factor > 100 ){
     if( session->loglevel >= 2 ){
       *(session->logfile) << "QLT :: Warning: quality factor of " << argument
-			  << " out of bounds. Must be 0-100 for JPEG and WebP and 1-9 for PNG" << endl;
+			  << " out of bounds. Must be 0-100 for JPEG, WebP, AVIF and JPEG-XL and 1-9 for PNG" << endl;
     }
   }
 
@@ -141,6 +144,9 @@ void QLT::run( Session* session, const string& argument ){
 #endif
 #ifdef HAVE_AVIF
   session->avif->setQuality( factor );
+#endif
+#ifdef HAVE_JXL
+  session->jxl->setQuality( factor );
 #endif
 
   if( session->loglevel >= 2 ) *(session->logfile) << "QLT :: Requested quality is " << factor << endl;
@@ -337,6 +343,12 @@ void CVT::run( Session* session, const string& src ){
   else if( argument == "avif" ){
     session->view->output_format = ImageEncoding::AVIF;
     if( session->loglevel >= 3 ) *(session->logfile) << "CVT :: AVIF output" << endl;
+  }
+#endif
+#ifdef HAVE_JXL
+  else if( argument == "jxl" ){
+    session->view->output_format = ImageEncoding::JXL;
+    if( session->loglevel >= 3 ) *(session->logfile) << "CVT :: JPEG-XL output" << endl;
   }
 #endif
   else{

@@ -25,6 +25,10 @@ if ENABLE_AVIF
 iipsrv_fcgi_LDADD += AVIFCompressor.o
 endif
 
+if ENABLE_JXL
+iipsrv_fcgi_LDADD += JXLCompressor.o
+endif
+
 if ENABLE_MODULES
 iipsrv_fcgi_LDADD += DSOImage.o
 endif
@@ -38,7 +42,8 @@ EXTRA_iipsrv_fcgi_SOURCES = Main.cc DSOImage.h DSOImage.cc \
 			OpenJPEGImage.h OpenJPEGImage.cc \
 			PNGCompressor.h PNGCompressor.cc \
 			WebPCompressor.h WebPCompressor.cc \
-			AVIFCompressor.h AVIFCompressor.cc
+			AVIFCompressor.h AVIFCompressor.cc \
+			JXLCompressor.h JXLCompressor.cc
 
 iipsrv_fcgi_SOURCES = \
 			IIPImage.h \

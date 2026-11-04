@@ -285,20 +285,31 @@ int main( int argc, char *argv[] )
   int jpeg_quality = Environment::getJPEGQuality();
 
 
+#ifdef HAVE_PNG
   // Get our default PNG compression level
   int png_quality = Environment::getPNGQuality();
+#endif
 
 
+#ifdef HAVE_WEBP
   // Get our default WebP compression level
   int webp_quality = Environment::getWebPQuality();
+#endif
 
 
+#ifdef HAVE_JXL
+  // Get our default JPEG-XL compression level
+  int jxl_quality = Environment::getJXLQuality();
+#endif
+
+
+#ifdef HAVE_AVIF
   // Get our default AVIF compression level
   int avif_quality = Environment::getAVIFQuality();
 
-
   // Get our requested AVIF codec
   unsigned int avif_codec = Environment::getAVIFCodec();
+#endif
 
 
   // Get our default TIFF compression scheme
@@ -415,6 +426,11 @@ int main( int argc, char *argv[] )
     logfile << "Setting default WebP output compression level to ";
     if( webp_quality == -1 ) logfile << "lossless" << endl;
     else logfile << webp_quality << endl;
+#endif
+#ifdef HAVE_JXL
+    logfile << "Setting default JPEG-XL output compression level to ";
+    if( jxl_quality == -1 ) logfile << "lossless" << endl;
+    else logfile << jxl_quality << endl;
 #endif
 #ifdef HAVE_AVIF
     logfile << "Setting default AVIF compression level to ";
@@ -676,6 +692,9 @@ int main( int argc, char *argv[] )
     AVIFCompressor avif( avif_quality );
     avif.setCodec( avif_codec );
 #endif
+#ifdef HAVE_JXL
+    JXLCompressor jxl( jxl_quality );
+#endif
 
     // View object for use with the CVT command etc
     View view;
@@ -710,6 +729,9 @@ int main( int argc, char *argv[] )
 #endif
 #ifdef HAVE_AVIF
       session.avif = &avif;
+#endif
+#ifdef HAVE_JXL
+      session.jxl = &jxl;
 #endif
       session.loglevel = loglevel;
       session.logfile = &logfile;
