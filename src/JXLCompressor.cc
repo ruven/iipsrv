@@ -21,12 +21,25 @@
 
 
 #include "JXLCompressor.h"
+#include <jxl/version.h>
 #include <cstdint>
 #include <climits>
 #include <new>
 
 
 using namespace std;
+
+
+#if !defined(JPEGXL_NUMERIC_VERSION) || \
+    JPEGXL_NUMERIC_VERSION < JPEGXL_COMPUTE_NUMERIC_VERSION(0,9,0)
+namespace {
+  float distanceFromQuality( float quality ){
+    if( quality >= 100.0f ) return 0.0f;
+    if( quality >= 30.0f ) return 0.1f + (100.0f - quality) * 0.09f;
+    return 53.0f / 3000.0f * quality * quality - 23.0f / 20.0f * quality + 25.0f;
+  }
+}
+#endif
 
 
 /// Constructor
@@ -57,8 +70,11 @@ JXLCompressor::JXLCompressor( int quality )
       throw string( "JXLCompressor :: Unable to set responsive option" );
     if( JxlEncoderFrameSettingsSetOption( settings, JXL_ENC_FRAME_SETTING_BROTLI_EFFORT, 0 ) != JXL_ENC_SUCCESS )
       throw string( "JXLCompressor :: Unable to set brotli effort" );
+#if defined(JPEGXL_NUMERIC_VERSION) && \
+    JPEGXL_NUMERIC_VERSION >= JPEGXL_COMPUTE_NUMERIC_VERSION(0,9,0)
     if( JxlEncoderFrameSettingsSetOption( settings, JXL_ENC_FRAME_SETTING_BUFFERING, 1 ) != JXL_ENC_SUCCESS )
       throw string( "JXLCompressor :: Unable to set buffering option" );
+#endif
 
   }
   catch( const std::string& ){
@@ -143,7 +159,12 @@ void JXLCompressor::configure( const RawTile& rawtile ){
   // Otherwise lossy encoding
   else {
     // Convert JPEG-style quality (0-100) to JPEG-XL distance measure where 0.0 = visually lossless and max compression = 25.0
+#if defined(JPEGXL_NUMERIC_VERSION) && \
+    JPEGXL_NUMERIC_VERSION >= JPEGXL_COMPUTE_NUMERIC_VERSION(0,9,0)
     float distance = JxlEncoderDistanceFromQuality( Q );
+#else
+    float distance = distanceFromQuality( (float)Q );
+#endif
     // Set encoder distance value
     if( JxlEncoderSetFrameDistance( this->settings, distance ) != JXL_ENC_SUCCESS ){
       throw string( "JXLCompressor :: JxlEncoderSetFrameDistance() error" );
