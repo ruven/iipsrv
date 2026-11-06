@@ -1,3 +1,7 @@
+06/20/2026:
+	- Improvements to URL class: hexToChar() now uses explicit digit handling instead of ASCII bit tricks
+
+
 04/11/2026:
 	- Added JPEG-XL output support. Both tile and region output are supported for both IIP and IIIF.
 	  Individual tiles can be requested with IIP using the JXTL parameter which works in the same way as PTL

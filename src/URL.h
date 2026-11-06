@@ -1,7 +1,7 @@
 /*
     Simple URL decoder Class
 
-    Copyright (C) 2014-2022 Ruven Pillay.
+    Copyright (C) 2014-2026 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -25,6 +25,7 @@
 #include <string>
 #include <iterator>
 #include <cctype>
+#include <cstddef>
 
 
 /// Simple utility class to decode and filter URLs
@@ -55,17 +56,23 @@ class URL{
   std::string escape();
 
   /// Return any warning message
-  std::string warning() const { return warning_message; };
+  const std::string& warning() const { return warning_message; };
 
 };
 
 
 inline char URL::hexToChar ( char first, char second ) const {
-  int digit;
-  digit = (first >= 'A' ? ((first & 0xDF) - 'A') + 10 : (first - '0'));
-  digit *= 16;
-  digit += (second >= 'A' ? ((second & 0xDF) - 'A') + 10 : (second - '0'));
-  return static_cast<char>(digit);
+  const unsigned char high = static_cast<unsigned char>(first);
+  const unsigned char low = static_cast<unsigned char>(second);
+
+  const int high_digit = (high >= '0' && high <= '9') ? high - '0' :
+                         (high >= 'A' && high <= 'F') ? high - 'A' + 10 :
+                                                        high - 'a' + 10;
+  const int low_digit = (low >= '0' && low <= '9') ? low - '0' :
+                        (low >= 'A' && low <= 'F') ? low - 'A' + 10 :
+                                                     low - 'a' + 10;
+
+  return static_cast<char>((high_digit << 4) + low_digit);
 }
 
 
@@ -84,8 +91,9 @@ inline std::string URL::decode()
       break;
     case '%':
       // Don't assume well-formed input
-      if( std::distance(iter, url.end()) >= 2 &&
-          std::isxdigit(*(iter + 1)) && std::isxdigit(*(iter + 2)) ){
+      if( std::distance(iter, url.end()) >= 3 &&
+          std::isxdigit(static_cast<unsigned char>(*(iter + 1))) &&
+          std::isxdigit(static_cast<unsigned char>(*(iter + 2))) ){
 
 	// Filter out embedded NULL bytes of the form %00 from the URL
 	if( (*(iter+1)=='0' && *(iter+2)=='0') ){
@@ -99,14 +107,21 @@ inline std::string URL::decode()
 	  argument.append(1,hexToChar(c,*++iter));
 	}
       }
-      // Just pass the % through untouched
+      // Warn but preserve malformed escapes
       else {
+	warning_message = "Warning! Malformed percent escape in URL: " + url;
 	argument.append(1,'%');
       }
       break;
 
     default:
-      argument.append(1,*iter);
+      // Filter raw NULL bytes like %00, but warn
+      if( *iter == '\0' ){
+	warning_message = "Warning! Detected raw NULL byte in URL: " + url;
+      }
+      else{
+	argument.append(1,*iter);
+      }
       break;
     }
   }
@@ -120,9 +135,12 @@ inline std::string URL::escape()
 {
   std::string json;
   std::string input = this->decode();
+  json.reserve(input.size());
 
-  for( unsigned int i=0; i<input.length(); i++ ){
-    char c = input[i];
+  static const char hex[] = "0123456789abcdef";
+
+  for( std::size_t i=0; i<input.size(); i++ ){
+    const unsigned char c = static_cast<unsigned char>(input[i]);
     switch(c){
       case '\\':
 	json += "\\\\";
@@ -130,11 +148,30 @@ inline std::string URL::escape()
       case '"':
 	json += "\\\"";
 	break;
-      case '%':        // printf() requires % escaping
-	json += "%%";
-        break;
+      case '\b':
+	json += "\\b";
+	break;
+      case '\f':
+	json += "\\f";
+	break;
+      case '\n':
+	json += "\\n";
+	break;
+      case '\r':
+	json += "\\r";
+	break;
+      case '\t':
+	json += "\\t";
+	break;
       default:
-	json += c;
+	if( c < 0x20 ){
+	  json += "\\u00";
+	  json += hex[(c >> 4) & 0x0f];
+	  json += hex[c & 0x0f];
+	}
+	else{
+	  json += static_cast<char>(c);
+	}
     }
   }
   return json;
