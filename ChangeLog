@@ -1,4 +1,11 @@
-06/20/2026:
+08/11/2026:
+	- Added TIFF EXIF handling for both reading (TPTImage) and writing (TIFFCompressor) through shared EXIF
+	  namespaced exif::extract() and exif::write() functions implemented in EXIF.cc. Handles both standard
+	  EXIF and GPS EXIF tags (GPS requires libtiff 4.2 or later). Extracted tags fully compatible with
+	  JPEG, AVIF, WebP, JXL and PNG output.
+
+
+06/11/2026:
 	- Improvements to URL class: hexToChar() now uses explicit digit handling instead of ASCII bit tricks
 
 

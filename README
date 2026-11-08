@@ -27,7 +27,7 @@ FEATURES
 * 1, 2, 4, 6, 8, 10, 12, 14, 16 and 32 bit input image support including 32 bit floating point support
 * CIELAB support with automatic CIELAB->sRGB color space conversion
 * Multispectral and hyperspectral image support
-* Support for XMP metadata and ICC profiles
+* Support for XMP and EXIF metadata and ICC profiles
 * Image stacks and image sequence support
 * Principal component analysis (PCA) and decorrelation stretch support
 * Dynamic hillshading of 3D surface topologies

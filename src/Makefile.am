@@ -48,6 +48,8 @@ EXTRA_iipsrv_fcgi_SOURCES = Main.cc DSOImage.h DSOImage.cc \
 iipsrv_fcgi_SOURCES = \
 			IIPImage.h \
 			IIPImage.cc \
+			EXIF.h \
+			EXIF.cc \
 			TPTImage.h \
 			TPTImage.cc \
 			JPEGImage.h \

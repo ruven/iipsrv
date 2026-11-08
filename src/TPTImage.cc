@@ -22,7 +22,9 @@
 
 
 #include "TPTImage.h"
+#include "EXIF.h"
 #include "Logger.h"
+#include <cstring>
 #include <sstream>
 
 using namespace std;
@@ -39,26 +41,43 @@ static const char* mode = "rmO";
 extern Logger logfile;
 
 
-// Handle libtiff errors as exceptions and log warnings to our Logger
-static void errorHandler( const char* module, const char* fmt, va_list args ){
-  char buffer[1024];
-  vsnprintf( buffer, sizeof(buffer), fmt, args );
-  throw file_error( "TPTImage :: TIFF error: " + string(buffer) );
-}
-
-static void warningHandler( const char* module, const char* fmt, va_list args ){
+// Log libtiff messages to our Logger
+static void tiffMessageHandler( const char* level, const char* module, const char* fmt, va_list args ){
   if( IIPImage::logging ){
     char buffer[1024];
     vsnprintf( buffer, sizeof(buffer), fmt, args );
-    logfile << "TPTImage :: TIFF warning: " << buffer << endl;
+    logfile << "TPTImage :: TIFF " << level;
+    if( module != NULL ) logfile << " in " << module;
+    logfile << ": " << buffer << endl;
   }
 }
 
+// Error handler - uses shared message handler
+static void errorHandler( const char* module, const char* fmt, va_list args ){
+  tiffMessageHandler( "error", module, fmt, args );
+}
 
+// Warning handler - uses shared message handler
+static void warningHandler( const char* module, const char* fmt, va_list args ){
+  tiffMessageHandler( "warning", module, fmt, args );
+}
+
+
+// Return to the directory we were in before EXIF extraction, falling back to
+// the root directory if that fails
+static void restoreExifDirectory( TIFF* tiff, uint64_t offset ){
+  if( tiff == NULL ) return;
+  if( offset != 0 && TIFFSetSubDirectory( tiff, offset ) == 1 ) return;
+  TIFFSetDirectory( tiff, 0 );
+}
+
+
+// Set up error and warning handlers for libtiff
 void TPTImage::setupLogging(){
   TIFFSetErrorHandler( errorHandler );
   TIFFSetWarningHandler( warningHandler );
 }
+
 
 
 void TPTImage::openImage()
@@ -328,6 +347,43 @@ void TPTImage::loadImageInfo( int seq, int ang )
     char buffer[32];
     snprintf( buffer, sizeof(buffer), "%g", scale );
     metadata.insert( {"scale",buffer} );
+  }
+
+  // Load our EXIF tags
+  loadEXIFMetadata();
+}
+
+
+
+void TPTImage::loadEXIFMetadata()
+{
+  metadata.erase( "exif" );
+
+  uint64_t exif_offset = 0;
+  uint64_t gps_offset = 0;
+  uint64_t saved_offset = 0;
+
+  try {
+    const int has_exif = TIFFGetField( tiff, TIFFTAG_EXIFIFD, &exif_offset );
+    const int has_gps = TIFFGetField( tiff, TIFFTAG_GPSIFD, &gps_offset );
+    if( ( has_exif != 1 || exif_offset == 0 ) &&
+        ( has_gps != 1 || gps_offset == 0 ) ) return;
+
+    saved_offset = TIFFCurrentDirOffset( tiff );
+
+    vector<unsigned char> exif_data;
+    if( exif::extract( tiff, exif_data, exif_offset, gps_offset ) && !exif_data.empty() ){
+      metadata.insert( {"exif", string((const char*)exif_data.data(), exif_data.size())} );
+      if( IIPImage::logging ){
+        logfile << "TPTImage :: EXIF metadata: " << exif_data.size() << " bytes" << endl;
+      }
+    }
+
+    restoreExifDirectory( tiff, saved_offset );
+  }
+  catch( const std::exception& error ){
+    logfile << "TPTImage :: EXIF extraction failed: " << error.what() << endl;
+    restoreExifDirectory( tiff, saved_offset );
   }
 }
 

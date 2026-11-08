@@ -35,6 +35,19 @@ AC_DEFUN([AX_CHECK_LIBTIFF], [
 			[AC_MSG_ERROR([unable to link libtiff])]
 	)
 
+	# GPS directory support was added in libtiff 4.2.  It is optional: older
+	# libtiff versions still build with EXIF support, but without GPS.
+	AC_MSG_CHECKING([whether libtiff has GPS directory support])
+	AC_LINK_IFELSE([AC_LANG_PROGRAM([[
+				#include <tiffio.h>]],
+				[[TIFF* t = 0;
+				  TIFFReadGPSDirectory(t, 0);
+				  TIFFCreateGPSDirectory(t);]])],
+			[AC_MSG_RESULT([yes])
+			 AC_DEFINE([HAVE_TIFF_GPS], [1], [Define if libtiff has GPS directory support])],
+			[AC_MSG_RESULT([no])]
+	)
+
 	AC_LANG_POP([C])
 
 ])
