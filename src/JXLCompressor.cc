@@ -42,6 +42,31 @@ namespace {
 #endif
 
 
+namespace {
+
+  // Process-wide thread runner. Creating the runner spawns its worker threads,
+  // so keep a single instance for the lifetime of the process rather than
+  // creating and destroying one for every request.
+  struct RunnerHolder {
+    void* runner;
+
+    RunnerHolder()
+      : runner( JxlThreadParallelRunnerCreate( NULL, JxlThreadParallelRunnerDefaultNumWorkerThreads() ) ) {}
+
+    ~RunnerHolder(){
+      if( runner ) JxlThreadParallelRunnerDestroy( runner );
+    }
+  };
+
+  void* jxlRunner(){
+    // C++11 guarantees thread-safe initialisation of function-local statics
+    static RunnerHolder holder;
+    return holder.runner;
+  }
+
+}
+
+
 /// Constructor
 JXLCompressor::JXLCompressor( int quality )
   : Compressor(quality), jxl(NULL), settings(NULL), runner(NULL), chunk_size(0), current_chunk(0) {
@@ -51,14 +76,6 @@ JXLCompressor::JXLCompressor( int quality )
     // Create re-usable global encoder object
     jxl = JxlEncoderCreate( NULL );
     if( jxl == NULL ) throw string( "JXLCompressor :: Unable to create encoder" );
-
-    // Setup parallelized threaded encoding
-    runner = JxlThreadParallelRunnerCreate( NULL, JxlThreadParallelRunnerDefaultNumWorkerThreads() );
-    if( runner == NULL ) throw string( "JXLCompressor :: Unable to create parallel runner" );
-
-    if( JxlEncoderSetParallelRunner( jxl, JxlThreadParallelRunner, runner ) != JXL_ENC_SUCCESS ){
-      throw string( "JXLCompressor :: Unable to set parallel runner" );
-    }
 
     settings = JxlEncoderFrameSettingsCreate( jxl, NULL );
     if( settings == NULL ) throw string( "JXLCompressor :: Error creating frame settings" );
@@ -78,9 +95,9 @@ JXLCompressor::JXLCompressor( int quality )
 
   }
   catch( const std::string& ){
-    // Clean up partially-created resources before rethrowing the original error
+    // Clean up partially-created resources before rethrowing the original error.
+    // The thread runner is a process-wide singleton and is owned by RunnerHolder.
     if( jxl ) JxlEncoderDestroy( jxl );
-    if( runner ) JxlThreadParallelRunnerDestroy( runner );
     throw;
   }
 
@@ -90,10 +107,9 @@ JXLCompressor::JXLCompressor( int quality )
 
 /// Destructor
 JXLCompressor::~JXLCompressor(){
-  // Destroy the encoder (which also frees the frame settings) before the runner
-  // it uses, so the runner is never accessed after being destroyed
+  // Destroy the encoder (which also frees the frame settings). The thread
+  // runner is a process-wide singleton and is owned by RunnerHolder.
   JxlEncoderDestroy( jxl );
-  JxlThreadParallelRunnerDestroy( runner );
 }
 
 
@@ -221,6 +237,17 @@ unsigned char* JXLCompressor::encode( const RawTile& rawtile, size_t& dataLength
 
   // Make sure we don't read beyond the valid data
   if( bytes > rawtile.dataLength ) throw string( "JXLCompressor :: Input data length smaller than image dimensions" );
+
+  // Attach the process-wide thread runner on first use. Creating the runner
+  // spawns its worker threads, so only do this when JPEG-XL is actually encoded.
+  if( !runner ){
+    void* shared_runner = jxlRunner();
+    if( shared_runner == NULL ) throw string( "JXLCompressor :: Unable to create parallel runner" );
+    if( JxlEncoderSetParallelRunner( jxl, JxlThreadParallelRunner, shared_runner ) != JXL_ENC_SUCCESS ){
+      throw string( "JXLCompressor :: Unable to set parallel runner" );
+    }
+    runner = shared_runner;
+  }
 
   // Setup and configure encoder
   this->configure( rawtile );

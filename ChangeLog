@@ -1,3 +1,8 @@
+09/11/2026:
+	- Modification to JXLCompressor to only initialize thread runner when required and not when constructor
+	  called.
+
+
 08/11/2026:
 	- Added TIFF EXIF handling for both reading (TPTImage) and writing (TIFFCompressor) through shared EXIF
 	  namespaced exif::extract() and exif::write() functions implemented in EXIF.cc. Handles both standard

@@ -37,7 +37,7 @@ class JXLCompressor : public Compressor {
   /// JXL structures
   JxlEncoder *jxl;                    ///< Encoder
   JxlEncoderFrameSettings *settings;  ///< Encoding settings
-  void *runner;                       ///< Thread runner for use on images larger than 256x256 tiles
+  void *runner;                       ///< Non-owning pointer to the process-wide thread runner
 
   /// Data for simulated strip-based output
   RawTile tile;                       ///< Compressed output data for strip-based output
