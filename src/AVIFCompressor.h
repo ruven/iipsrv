@@ -29,7 +29,7 @@
 
 
 
-/// Wrapper class to AVIF library: Handles 8 bit and alpha channels
+/// Wrapper class to AVIF library: Handles 8 and 16 bit input, alpha channels, ICC profiles and XMP metadata
 class AVIFCompressor : public Compressor {
 
  private:

@@ -1,6 +1,8 @@
 09/11/2026:
 	- Modification to JXLCompressor to only initialize thread runner when required and not when constructor
 	  called.
+	- Updated AVIFCompressor to handle 16 bit input images. These are scaled down to the maximum bit depth
+	  supported by AVIF of 12 bits per channel.
 
 
 08/11/2026:
