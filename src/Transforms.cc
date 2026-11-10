@@ -335,7 +335,7 @@ void Transform::sRGB2LAB( const float *in, float *out ){
   else B = powf( ( (B+0.055) / 1.055 ), 2.4 );
 
   // Linear RGB needs to be scaled to 100
-  R += 100.0;
+  R *= 100.0;
   G *= 100.0;
   B *= 100.0;
 
@@ -435,7 +435,7 @@ void Transform::LAB2sRGB( RawTile& in ){
     if( in.bpc == 8 ) delete[] (unsigned char*) in.data;
     else if( in.bpc == 16 ) delete[] (unsigned short*) in.data;
     in.data = (void*) output;
-    in.memoryManaged = 1;
+    in.memoryManaged = true;
     in.bpc = 32;
     in.sampleType = SampleType::FLOATINGPOINT;
     in.dataLength = (uint32_t)( np << 2 ); // Multiply by 4 for float

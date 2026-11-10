@@ -692,7 +692,7 @@ void JPEGCompressor::injectMetadata( RawTile& rawtile )
 
   // Delete our original data buffer and re-assign our new buffer
   if( rawtile.memoryManaged ) delete[] (unsigned char*) rawtile.data;
-  rawtile.memoryManaged = 1;
+  rawtile.memoryManaged = true;
   rawtile.capacity = (uint32_t) new_length;
   rawtile.data = buffer;
 

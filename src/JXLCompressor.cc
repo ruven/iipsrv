@@ -320,11 +320,7 @@ unsigned char* JXLCompressor::encode( const RawTile& rawtile, size_t& dataLength
 void JXLCompressor::InitCompression( const RawTile& rawtile, unsigned int strip_height ){
 
   // Free any previously compressed output buffer from an earlier request
-  // Note: RawTile::deallocate() does not clear the data pointer, so set it
-  // to NULL ourselves to avoid a dangling pointer (and double-free) if
-  // encode() throws before we reassign tile.data below
   if( tile.data != NULL ) tile.deallocate( tile.data );
-  tile.data = NULL;
 
   // JXL encodes the whole region as a single frame, so compress the entire buffer in one go
   size_t dataLength, capacity;
@@ -340,7 +336,7 @@ void JXLCompressor::InitCompression( const RawTile& rawtile, unsigned int strip_
   tile.data = buffer;
   tile.capacity = capacity;
   tile.dataLength = dataLength;
-  tile.memoryManaged = 1;
+  tile.memoryManaged = true;
 
   current_chunk = 0;
 }
@@ -403,7 +399,7 @@ unsigned int JXLCompressor::Compress( RawTile& rawtile ){
   rawtile.data = buffer;
   rawtile.bpc = 8;
   rawtile.sampleType = SampleType::FIXEDPOINT;
-  rawtile.memoryManaged = 1;
+  rawtile.memoryManaged = true;
 
   rawtile.quality = this->Q;
   rawtile.compressionType = ImageEncoding::JXL;

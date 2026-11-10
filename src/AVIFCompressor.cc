@@ -40,7 +40,7 @@ void AVIFCompressor::InitCompression( const RawTile& rawtile, unsigned int strip
   tile.data = rawtile.data;
   tile.dataLength = rawtile.dataLength;
   tile.capacity = rawtile.capacity;
-  tile.memoryManaged = 0;   // We don't want the RawTile destructor to free this memory
+  tile.memoryManaged = false;   // We don't want the RawTile destructor to free this memory
 
   // libavif cannot handle strip or region-based encoding, so compress the entire image in one go
   this->Compress( tile );
@@ -206,7 +206,7 @@ unsigned int AVIFCompressor::Compress( RawTile& rawtile ){
     if( rawtile.memoryManaged ) rawtile.deallocate( rawtile.data );
     rawtile.data = buffer;
     rawtile.capacity = output.size;
-    rawtile.memoryManaged = 1;
+    rawtile.memoryManaged = true;
   }
   else{
     memcpy( rawtile.data, output.data, output.size );

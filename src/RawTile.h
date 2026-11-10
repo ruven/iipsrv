@@ -27,6 +27,7 @@
 #include <cstdlib>
 #include <cstdint>
 #include <ctime>
+#include <utility>
 
 
 
@@ -94,7 +95,7 @@ class RawTile {
   /// This tracks whether we have allocated memory locally for data
   /// or whether it is simply a pointer
   /** This is used in the destructor to make sure we deallocate correctly */
-  int memoryManaged;
+  bool memoryManaged;
 
   /// Pointer to the image data
   void *data;
@@ -126,7 +127,7 @@ class RawTile {
       vSequence( vs ),
       capacity( 0 ),
       dataLength( 0 ),
-      memoryManaged( 1 ),
+      memoryManaged( true ),
       data( NULL ) {};
 
 
@@ -162,7 +163,7 @@ class RawTile {
     if( tile.data && tile.dataLength > 0 ){
       allocate( tile.dataLength );
       memcpy( data, tile.data, tile.dataLength );
-      memoryManaged = 1;
+      memoryManaged = true;
     }
 
   }
@@ -173,6 +174,8 @@ class RawTile {
   RawTile& operator= ( const RawTile& tile ) {
 
     if( this != &tile ){
+      // Free any existing memory first just in case
+      if( memoryManaged ) deallocate( data );
 
       tileNum = tile.tileNum;
       resolution = tile.resolution;
@@ -194,7 +197,7 @@ class RawTile {
       if( tile.data && tile.dataLength > 0 ){
 	allocate( tile.dataLength );
 	memcpy( data, tile.data, tile.dataLength );
-	memoryManaged = 1;
+	memoryManaged = true;
       }
     }
 
@@ -223,14 +226,14 @@ class RawTile {
 	break;
     }
 
-    memoryManaged = 1;
+    memoryManaged = true;
     capacity = size;
   };
 
 
 
   /// Free our data buffer
-  void deallocate( void* buffer ) {
+  void deallocate( void*& buffer ) {
 
     if( buffer ){
       switch( bpc ){
@@ -262,18 +265,18 @@ class RawTile {
 
     // Keep track of original data buffer and whether we manage it
     void* buffer = data;
-    int mm = memoryManaged;
+    bool mm = memoryManaged;
 
     // Create a new buffer with the new size
-    unsigned int len = w * h * channels * (bpc/8);
+    uint32_t len = (uint32_t) w * h * channels * (bpc/8);
     allocate( len );
 
     unsigned char* src_ptr = (unsigned char*) buffer;
     unsigned char* dst_ptr = (unsigned char*) data;
 
     // Copy one entire scanline at a time
-    unsigned int dlen = w * channels * (bpc/8);
-    unsigned int slen = width * channels * (bpc/8);
+    uint32_t dlen = (uint32_t) w * channels * (bpc/8);
+    uint32_t slen = (uint32_t) width * channels * (bpc/8);
 
     for( unsigned int i=0; i<h; i++ ){
       memcpy( dst_ptr, src_ptr, dlen );
@@ -293,14 +296,14 @@ class RawTile {
 
 
 
-  /// Expand monochrome 1 band image to 3 by duplicating channels 
+  /// Expand monochrome 1 band image to 3 by duplicating channels
   void triplicate() {
 
     if( channels != 1 ) return;
 
     // Keep track of original data buffer and whether we manage it
     void* buffer = data;
-    int mm = memoryManaged;
+    bool mm = memoryManaged;
 
     // Create a new buffer with the new size - make sure we update channel number first
     channels = 3;
@@ -308,25 +311,47 @@ class RawTile {
 
     // Loop through each pixel and duplicate
     unsigned int len = width * height;
-    uint32_t n = 0;
-    for( uint32_t i=0; i<len; i++ ){
-      for( uint8_t k=0; k<3; k++ ){
-	if( bpc == 32 ){
-	  if( sampleType == SampleType::FLOATINGPOINT ) ((float*) data)[n+k] = ((float*) buffer)[i];
-	  else               ((unsigned   int*) data)[n+k] = ((unsigned   int*) buffer)[i];
-	}
-	else if( bpc == 16 ) ((unsigned short*) data)[n+k] = ((unsigned short*) buffer)[i];
-	else                 ((unsigned  char*) data)[n+k] = ((unsigned  char*) buffer)[i];
+    unsigned char* src = (unsigned char*) buffer;
+    unsigned char* dst = (unsigned char*) data;
+    size_t stride = bpc / 8;
+
+    if( bpc == 32 && sampleType == SampleType::FLOATINGPOINT ){
+      float* s = (float*) buffer;
+      float* d = (float*) data;
+      for( uint32_t i=0; i<len; i++ ){
+        float v = s[i];
+        d[3*i] = d[3*i+1] = d[3*i+2] = v;
       }
-      n += 3;
+    }
+    else if( bpc == 32 ){
+      unsigned int* s = (unsigned int*) buffer;
+      unsigned int* d = (unsigned int*) data;
+      for( uint32_t i=0; i<len; i++ ){
+        unsigned int v = s[i];
+        d[3*i] = d[3*i+1] = d[3*i+2] = v;
+      }
+    }
+    else if( bpc == 16 ){
+      unsigned short* s = (unsigned short*) buffer;
+      unsigned short* d = (unsigned short*) data;
+      for( uint32_t i=0; i<len; i++ ){
+        unsigned short v = s[i];
+        d[3*i] = d[3*i+1] = d[3*i+2] = v;
+      }
+    }
+    else{
+      for( uint32_t i=0; i<len; i++ ){
+        unsigned char v = src[i];
+        dst[3*i] = dst[3*i+1] = dst[3*i+2] = v;
+      }
     }
 
     // Delete original memory buffer
     if( mm ) deallocate( buffer );
 
     // Set the new tile dimensions and data storage size
-    capacity = len;   // Need to set this manually as deallocate sets this to zero
-    dataLength = len;
+    capacity = (uint32_t)(len * 3 * stride);
+    dataLength = capacity;
   };
 
 
@@ -387,7 +412,7 @@ class RawTile {
       data( NULL )
   {
 
-    if( tile.memoryManaged == 1 ){
+    if( tile.memoryManaged ){
 
       // Transfer ownership of data
       data = tile.data;
@@ -396,13 +421,13 @@ class RawTile {
       tile.data = nullptr;
       tile.dataLength = 0;
       tile.capacity = 0;
-      tile.memoryManaged = 0;
+      tile.memoryManaged = false;
     }
     // Need to copy data if other tile is not owner of its data
     else if( tile.data && tile.dataLength > 0 ){
       allocate( tile.dataLength );
       memcpy( data, tile.data, tile.dataLength );
-      memoryManaged = 1;
+      memoryManaged = true;
     }
   }
 
@@ -433,7 +458,7 @@ class RawTile {
       bpc = tile.bpc;
       sampleType = tile.sampleType;
 
-      if( tile.memoryManaged == 1 ){
+      if( tile.memoryManaged ){
 
 	// Transfer ownership of raw data
 	data = tile.data;
@@ -442,7 +467,7 @@ class RawTile {
 	tile.data = nullptr;
 	tile.dataLength = 0;
 	tile.capacity = 0;
-	tile.memoryManaged = 0;
+	tile.memoryManaged = false;
       }
       else if( tile.data && tile.dataLength > 0 ){
 	allocate( tile.dataLength );
