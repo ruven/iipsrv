@@ -299,7 +299,7 @@ RawTile OpenJPEGImage::getTile( int seq, int ang, unsigned int res, int layers, 
   timer.start();
 #endif
 
-  if( res > numResolutions ){
+  if( res >= numResolutions ){
     ostringstream tile_no;
     tile_no << "OpenJPEG :: Asked for non-existent resolution: " << res;
     throw file_error( tile_no.str() );
@@ -353,7 +353,8 @@ RawTile OpenJPEGImage::getTile( int seq, int ang, unsigned int res, int layers, 
   rawtile.allocate();
 
   // Process the tile
-  process( res, layers, xoffset, yoffset, tw, th, rawtile.data );
+  size_t bytes = process( res, layers, xoffset, yoffset, tw, th, rawtile.data );
+  rawtile.dataLength = bytes;
 
 #ifdef OPENJPEG_DEBUG
   logfile << "OpenJPEG :: getTile() :: " << timer.getTime() << " microseconds" << endl;
@@ -385,7 +386,8 @@ RawTile OpenJPEGImage::getRegion( int ha, int va, unsigned int res, int layers, 
   rawtile.timestamp = timestamp;
   rawtile.allocate();
 
-  process( res, layers, x, y, w, h, rawtile.data );
+  size_t bytes = process( res, layers, x, y, w, h, rawtile.data );
+  rawtile.dataLength = bytes;
 
 #ifdef OPENJPEG_DEBUG
   logfile << "OpenJPEG :: getRegion() :: " << timer.getTime() << " microseconds" << endl;
@@ -397,7 +399,7 @@ RawTile OpenJPEGImage::getRegion( int ha, int va, unsigned int res, int layers, 
 
 
 // Main processing function
-void OpenJPEGImage::process( unsigned int res, int layers, int xoffset, int yoffset, unsigned int tw, unsigned int th, void *d )
+size_t OpenJPEGImage::process( unsigned int res, int layers, int xoffset, int yoffset, unsigned int tw, unsigned int th, void *d )
 {
   // Unfortunately, it's not currently possible to re-use OpenJPEG's stream or image structures,
   // so re-open if necessary
@@ -456,11 +458,13 @@ void OpenJPEGImage::process( unsigned int res, int layers, int xoffset, int yoff
   unsigned int w0 = (xoffset + tw) << vipsres;
   unsigned int h0 = (yoffset + th) << vipsres;
 
-  // Make sure we don't overrun the dimensions of the full-size image
+  // Make sure we don't overrun the dimensions of the full-size image.
+  // Note that w0 and h0 are the end coordinates of the requested region,
+  // not its width and height.
   if( x0 > image_widths[0]  ) x0 = image_widths[0]  - 1;
   if( y0 > image_heights[0] ) y0 = image_heights[0] - 1;
-  if( x0 + w0 > image_widths[0]  ) w0 = image_widths[0]  - x0;
-  if( y0 + h0 > image_heights[0] ) h0 = image_heights[0] - y0;
+  if( w0 > image_widths[0]  ) w0 = image_widths[0];
+  if( h0 > image_heights[0] ) h0 = image_heights[0];
 
 #ifdef OPENJPEG_DEBUG
   logfile << "OpenJPEG :: decoding " << layers << " quality layers" << endl;
@@ -525,4 +529,6 @@ void OpenJPEGImage::process( unsigned int res, int layers, int xoffset, int yoff
   // stream or image structures multiple times in the same request pipeline
   closeImage();
 
+  // Return number of bytes
+  return n;
 }

@@ -20,6 +20,7 @@
 */
 
 #include "TIFFCompressor.h"
+#include "EXIF.h"
 
 
 using namespace std;
@@ -101,6 +102,10 @@ extern "C" {
 
 void TIFFCompressor::configure( const RawTile &rawtile )
 {
+  // Must stay first: exif::write() ends with TIFFCreateDirectory(), which
+  // discards any main directory tags set before it.
+  writeExifMetadata();
+
   // Set basic TIFF metadata tags
   TIFFSetField( tiff, TIFFTAG_IMAGEWIDTH, rawtile.width );              // width of the image
   TIFFSetField( tiff, TIFFTAG_IMAGELENGTH, rawtile.height );            // height of the image
@@ -153,7 +158,7 @@ void TIFFCompressor::InitCompression( const RawTile &rawtile, unsigned int strip
   dest.end = 0;
 
   // Calculate buffer size necessary - add 4K for TIFF and metadata overhead
-  dest.capacity = (rawtile.width * strip_height * rawtile.channels * (rawtile.bpc/8)) + icc.size() + xmp.size() + 4096;
+  dest.capacity = (rawtile.width * strip_height * rawtile.channels * (rawtile.bpc/8)) + icc.size() + xmp.size() + exif.size() + 4096;
 
   // Initialize our buffer
   dest.buffer = (unsigned char*) malloc( dest.capacity );
@@ -237,9 +242,9 @@ unsigned int TIFFCompressor::CompressStrip( unsigned char *source, unsigned char
 unsigned int TIFFCompressor::Finish( unsigned char *output )
 {
   // Output any remaining bytes
-  if( current_chunk < dest.end - 1 ){
+  if( current_chunk < dest.end ){
     unsigned char* data = (unsigned char*) dest.buffer;
-    chunk_size = dest.end - current_chunk - 1;
+    chunk_size = dest.end - current_chunk;
     memcpy( output, &data[current_chunk], chunk_size );
   }
   else chunk_size = 0;
@@ -259,7 +264,7 @@ unsigned int TIFFCompressor::Compress( RawTile& rawtile )
   dest.end = 0;
 
   // Calculate buffer size necessary - add 1K for TIFF and metadata overhead
-  dest.capacity = (rawtile.width * rawtile.height * rawtile.channels * (rawtile.bpc/8)) + icc.size() + xmp.size() + 1024;
+  dest.capacity = (rawtile.width * rawtile.height * rawtile.channels * (rawtile.bpc/8)) + icc.size() + xmp.size() + exif.size() + 1024;
 
   // Initialize our tile buffer
   dest.buffer = (unsigned char*) malloc( dest.capacity );
@@ -357,6 +362,23 @@ void TIFFCompressor::writeXMPMetadata()
 
   if( TIFFSetField( tiff, TIFFTAG_XMLPACKET, xmp.size(), xmp.c_str() ) != 1 ){
     throw string( "TIFFCompressor :: Error writing XMP tag" );
+  }
+}
+
+
+void TIFFCompressor::writeExifMetadata()
+{
+  if( !embedEXIF || exif.empty() ) return;
+
+  uint64_t exif_offset = 0;
+  uint64_t gps_offset = 0;
+  if( !exif::write( tiff, exif, exif_offset, gps_offset ) ) return;
+
+  if( exif_offset != 0 && TIFFSetField( tiff, TIFFTAG_EXIFIFD, exif_offset ) != 1 ){
+    throw string( "TIFFCompressor :: Error writing EXIF tag" );
+  }
+  if( gps_offset != 0 && TIFFSetField( tiff, TIFFTAG_GPSIFD, gps_offset ) != 1 ){
+    throw string( "TIFFCompressor :: Error writing GPS tag" );
   }
 }
 

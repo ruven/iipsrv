@@ -68,6 +68,9 @@ class TIFFCompressor: public Compressor {
   /// Write XMP metadata
   void writeXMPMetadata();
 
+  /// Write EXIF metadata
+  void writeExifMetadata();
+
   /// Configure encoding parameters
   void configure( const RawTile& );
 

@@ -1,7 +1,7 @@
 FROM debian:trixie-slim
 
-ARG GROK_REF=v20.4.19
-ARG GROK_COMMIT=31ae6fa25be3747370b47a65d311e355f2adb33f
+ARG GROK_REF=v20.4.25
+ARG GROK_COMMIT=46ab34dee9590dcd97026e40e9ecd9383706bcad
 ARG BUILD_JOBS=3
 
 RUN apt-get update && apt-get install -y --no-install-recommends \

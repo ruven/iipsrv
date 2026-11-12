@@ -47,6 +47,13 @@ void JTL::send( Session* session, int resolution, int tile ){
   // Need to know the number of resolutions
   int num_res = (*session->image)->getNumResolutions();
 
+  // Sanity check the resolution and tile number
+  if( (resolution<0) || (tile<0) || (resolution>=num_res) ){
+    ostringstream error;
+    error << "JTL :: Invalid resolution/tile number: " << resolution << "," << tile;
+    throw error.str();
+  }
+
 
   // If we have requested a rotation, remap the tile index to rotated coordinates
   if( (int)((session->view)->getRotation()) % 360 == 90 ){
@@ -66,14 +73,6 @@ void JTL::send( Session* session, int resolution, int tile ){
   }
 
 
-  // Sanity check
-  if( (resolution<0) || (tile<0) || (resolution>=num_res) ){
-    ostringstream error;
-    error << "JTL :: Invalid resolution/tile number: " << resolution << "," << tile;
-    throw error.str();
-  }
-
-
   // Determine which output encoding to use
   ImageEncoding ct = session->view->output_format;
   Compressor *compressor;
@@ -87,6 +86,9 @@ void JTL::send( Session* session, int resolution, int tile ){
 #endif
 #ifdef HAVE_AVIF
   else if( session->view->output_format == ImageEncoding::AVIF ) compressor = session->avif;
+#endif
+#ifdef HAVE_JXL
+  else if( session->view->output_format == ImageEncoding::JXL ) compressor = session->jxl;
 #endif
   else compressor = session->jpeg;
 
@@ -478,7 +480,8 @@ void JTL::send( Session* session, int resolution, int tile ){
   if( ( (session->view->output_format == ImageEncoding::JPEG) && (rawtile.channels == 2 || rawtile.channels > 3) ) ||
       ( (session->view->output_format == ImageEncoding::PNG)  && (rawtile.channels  > 4) ) ||
       ( (session->view->output_format == ImageEncoding::WEBP) && (rawtile.channels  > 4) ) ||
-      ( (session->view->output_format == ImageEncoding::AVIF) && (rawtile.channels  > 4) ) ){
+      ( (session->view->output_format == ImageEncoding::AVIF) && (rawtile.channels  > 4) ) ||
+      ( (session->view->output_format == ImageEncoding::JXL)  && (rawtile.channels  > 4) ) ){
 
     unsigned int bands = (rawtile.channels==2) ? 1 : 3;
     if( session->loglevel >= 4 ){

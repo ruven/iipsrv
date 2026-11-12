@@ -22,12 +22,12 @@ FEATURES
 * High performance with inbuilt configurable cache
 * Support for extremely large images: tera-pixel and multi gigapixel support
 * TIFF, JPEG2000 and JPEG input support
-* JPEG, PNG, WebP, AVIF and TIFF output support: export of whole or regions of images at any size
+* JPEG, PNG, WebP, AVIF, JPEG-XL and TIFF output support: export of whole or regions of images at any size
 * Supports IIP, Zoomify, DeepZoom and IIIF API's
 * 1, 2, 4, 6, 8, 10, 12, 14, 16 and 32 bit input image support including 32 bit floating point support
 * CIELAB support with automatic CIELAB->sRGB color space conversion
 * Multispectral and hyperspectral image support
-* Support for XMP metadata and ICC profiles
+* Support for XMP and EXIF metadata and ICC profiles
 * Image stacks and image sequence support
 * Principal component analysis (PCA) and decorrelation stretch support
 * Dynamic hillshading of 3D surface topologies
@@ -62,6 +62,7 @@ Building iipsrv requires a C++ compiler and several development libraries.
 - [libpng](http://libpng.org/pub/png/) for PNG output support
 - [libwebp](https://developers.google.com/speed/webp) for WebP output support
 - [libavif](https://github.com/AOMediaCodec/libavif) for AVIF output support
+- [libjxl](https://github.com/libjxl/libjxl) for JPEG-XL output support
 - [libmemcached](https://libmemcached.org) for [Memcached](https://www.memcached.org), a high-performance, distributed memory object caching system. If enabled, IIPImage will cache results using this distributed cache, giving IIPImage added speed and scalability
 - [Eigen](https://eigen.tuxfamily.org), a linear algebra library and numerical solver, for principal component analysis (PCA) and decorrelation stretch support
 
@@ -415,11 +416,13 @@ JPEG_QUALITY: The default JPEG quality factor for compression when the client do
 
 PNG_QUALITY: The default PNG quality factor for compression when the client does not specify one. The value should be between 1 (highest level of compression) and 9 (highest image quality). The default is 1.
 
-WEBP_QUALITY: The default WebP quality factor for compression when the client does not specify one. For lossy compression the value should be between 0 (highest level of compression) and 100 (highest image quality). For lossless compression, set this to -1. The default is lossy compression with a quality factor of 50.
+WEBP_QUALITY: The default WebP quality factor for compression when the client does not specify one. For lossy compression the value should be between 0 (highest level of compression) and 100 (highest lossy image quality). For lossless compression, set this to -1. The default is lossy compression with a quality factor of 50.
 
-AVIF_QUALITY: The default AVIF quality factor for compression when the client does not specify one. For lossy compression the value should be between 0 (highest level of compression) and 100 (highest image quality). For lossless compression, set this to -1. The default is lossy compression with a quality factor of 50.
+AVIF_QUALITY: The default AVIF quality factor for compression when the client does not specify one. For lossy compression the value should be between 0 (highest level of compression) and 100 (highest lossy image quality). For lossless compression, set this to -1. The default is lossy compression with a quality factor of 50.
 
 AVIF_CODEC: The AVIF codec to be used for encoding. Set to 0 for automatic codec selection, 1 for aom, 2 for rav1e and 3 for svt. The default is 0 (automatic codec selection).
+
+JXL_QUALITY: The default JPEG-XL quality factor for compression when the client does not specify one. For lossy compression the value should be between 0 (highest level of compression) and 100 (highest lossy image quality). For lossless compression, set this to -1. The default is lossy compression with a quality factor of 50.
 
 MAX_CVT: Limits the maximum output image dimensions (in pixels) allowable for dynamic image export via the CVT command or for IIIF requests. This prevents huge requests from overloading the server. The default is 5000. If set to -1, no limit is set.
 
@@ -436,7 +439,7 @@ WATERMARK_PROBABILITY: The probability that a particular tile will have a waterm
 
 WATERMARK_OPACITY: The opacity (between 0 and 1) applied to the watermark image.
 
-MEMCACHED_SERVERS: A comma-delimited list of memcached servers with optional port numbers. For example: localhost,192.168.0.1:8888,192.168.0.2.
+MEMCACHED_SERVERS: A comma-delimited list of memcached servers with optional port numbers. For example: localhost,192.168.0.1:8888,192.168.0.2. Memcached support is disabled unless this is set.
 
 MEMCACHED_TIMEOUT: Time in seconds that cache remains fresh.
 Default is 86400 seconds (24 hours).

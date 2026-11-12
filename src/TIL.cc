@@ -21,6 +21,8 @@
 
 #include "Task.h"
 
+#include <sstream>
+
 using namespace std;
 
 
@@ -60,6 +62,13 @@ void TIL::run( Session* session, const std::string& a ){
 
   // Make sure our range is logical
   if( end_tile < start_tile ) end_tile = start_tile;
+
+  // Check that the requested resolution exists
+  if( resolution < 0 || resolution >= (int)(*session->image)->getNumResolutions() ){
+    ostringstream error;
+    error << "TIL :: Invalid resolution: " << resolution;
+    throw error.str();
+  }
 
   /* But we don't necessarily want all of these tiles. The spec requires
      us to return the tiles within the square formed by the first and

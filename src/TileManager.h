@@ -2,7 +2,7 @@
 
 /*  IIP Image Server
 
-    Copyright (C) 2005-2025 Ruven Pillay.
+    Copyright (C) 2005-2026 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -36,6 +36,9 @@
 #endif
 #ifdef HAVE_AVIF
 #include "AVIFCompressor.h"
+#endif
+#ifdef HAVE_JXL
+#include "JXLCompressor.h"
 #endif
 #include "Cache.h"
 #include "Timer.h"

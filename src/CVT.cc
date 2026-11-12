@@ -60,6 +60,9 @@ void CVT::send( Session* session ){
 #ifdef HAVE_AVIF
   else if( session->view->output_format == ImageEncoding::AVIF ) compressor = session->avif;
 #endif
+#ifdef HAVE_JXL
+  else if( session->view->output_format == ImageEncoding::JXL ) compressor = session->jxl;
+#endif
   else return;
 
 
@@ -504,7 +507,8 @@ void CVT::send( Session* session ){
   if( ( (session->view->output_format == ImageEncoding::JPEG) && (complete_image.channels == 2 || complete_image.channels > 3) ) ||
       ( (session->view->output_format == ImageEncoding::PNG)  && (complete_image.channels  > 4) ) ||
       ( (session->view->output_format == ImageEncoding::WEBP) && (complete_image.channels  > 4) ) ||
-      ( (session->view->output_format == ImageEncoding::AVIF) && (complete_image.channels  > 4) ) ){
+      ( (session->view->output_format == ImageEncoding::AVIF) && (complete_image.channels  > 4) ) ||
+      ( (session->view->output_format == ImageEncoding::JXL)  && (complete_image.channels  > 4) ) ){
 
     int output_channels = (complete_image.channels==2)? 1 : 3;
     if( session->loglevel >= 5 ) function_timer.start();
@@ -697,13 +701,13 @@ void CVT::send( Session* session ){
   // data is greater than uncompressed
   unsigned int strip_height = 128;
   unsigned int channels = complete_image.channels;
-  unsigned char* output = new unsigned char[resampled_width*channels*strip_height+65536];
+  unsigned char* output = new unsigned char[(uint64_t) resampled_width*channels*strip_height+65536];
   int strips = (resampled_height/strip_height) + (resampled_height%strip_height == 0 ? 0 : 1);
 
   for( int n=0; n<strips; n++ ){
 
     // Get the starting index for this strip of data
-    unsigned char* input = &((unsigned char*)complete_image.data)[n*strip_height*resampled_width*channels];
+    unsigned char* input = &((unsigned char*)complete_image.data)[(uint64_t) n*strip_height*resampled_width*channels];
 
     // The last strip may have a different height
     if( (n==strips-1) && (resampled_height%strip_height!=0) ) strip_height = resampled_height % strip_height;

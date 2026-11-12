@@ -40,7 +40,7 @@ void AVIFCompressor::InitCompression( const RawTile& rawtile, unsigned int strip
   tile.data = rawtile.data;
   tile.dataLength = rawtile.dataLength;
   tile.capacity = rawtile.capacity;
-  tile.memoryManaged = 0;   // We don't want the RawTile destructor to free this memory
+  tile.memoryManaged = false;   // We don't want the RawTile destructor to free this memory
 
   // libavif cannot handle strip or region-based encoding, so compress the entire image in one go
   this->Compress( tile );
@@ -74,9 +74,9 @@ unsigned int AVIFCompressor::CompressStrip( unsigned char* source, unsigned char
 unsigned int AVIFCompressor::Finish( unsigned char* output ){
 
   // Output any remaining bytes
-  if( current_chunk < tile.dataLength-1 ){
+  if( current_chunk < tile.dataLength ){
     unsigned char* data = (unsigned char*) tile.data;
-    chunk_size = tile.dataLength - current_chunk - 1;
+    chunk_size = tile.dataLength - current_chunk;
     memcpy( output, &data[current_chunk], chunk_size );
     return chunk_size;
   }
@@ -102,14 +102,33 @@ unsigned int AVIFCompressor::Compress( RawTile& rawtile ){
 
   if( rawtile.channels == 1 ) format = AVIF_PIXEL_FORMAT_YUV400;
 
+  // AV1 supports a maximum of 12 bits per channel. For 16 bit input, keep the
+  // RGB input depth at 16 and let libavif rescale to 12 bits during the RGB to
+  // YUV conversion
+  const unsigned int output_depth = ( rawtile.bpc > 12 ) ? 12 : rawtile.bpc;
+
   // Create our image structure
-  avif = avifImageCreate( (uint32_t) rawtile.width, (uint32_t) rawtile.height, (uint32_t) rawtile.bpc, format );
+  avif = avifImageCreate( (uint32_t) rawtile.width, (uint32_t) rawtile.height, (uint32_t) output_depth, format );
   if( !avif ){
     throw string( "AVIFCompressor :: avifImageCreate() error" );
   }
 
+  // Use an identity matrix and full range for lossless colour images so that
+  // the RGB to YUV conversion is reversible without any rounding error
+#if AVIF_VERSION_MAJOR >= 1
+  if( this->Q == -1 && rawtile.channels >= 3 ){
+    avif->matrixCoefficients = AVIF_MATRIX_COEFFICIENTS_IDENTITY;
+    avif->yuvRange = AVIF_RANGE_FULL;
+  }
+#endif
+
   avifRGBImage rgb;
   avifRGBImageSetDefaults( &rgb, avif );
+
+  // avifRGBImageSetDefaults() uses the output AVIF image depth. The RGB input can have
+  // a different depth (for example 16 bit input encoded as 12 bit AVIF), so override it
+  rgb.depth = rawtile.bpc;
+  rgb.isFloat = AVIF_FALSE;
 
 
   // Set channel layout
@@ -142,7 +161,9 @@ unsigned int AVIFCompressor::Compress( RawTile& rawtile ){
   encoder->autoTiling = true;
   if( this->Q == -1 ){
     encoder->quality = AVIF_QUALITY_LOSSLESS;
+    encoder->qualityAlpha = AVIF_QUALITY_LOSSLESS;
     encoder->maxQuantizer = AVIF_QUANTIZER_LOSSLESS;
+    encoder->maxQuantizerAlpha = AVIF_QUANTIZER_LOSSLESS;
   }
   else encoder->quality = this->Q;
 #else
@@ -176,15 +197,24 @@ unsigned int AVIFCompressor::Compress( RawTile& rawtile ){
   }
 
 
-  // Allocate the appropriate amount of memory if the encoded AVIF is larger than the raw image buffer
-  if( output.size > rawtile.capacity ){
-    if( rawtile.memoryManaged ) delete[] (unsigned char*) rawtile.data;
-    rawtile.data = new unsigned char[output.size];
+  // The encoded AVIF is always byte data. If the input buffer was allocated
+  // for 16 bit samples, or if the output does not fit, swap in a byte buffer
+  // so that RawTile::deallocate() uses the correct element type.
+  if( rawtile.bpc != 8 || output.size > rawtile.capacity ){
+    unsigned char* buffer = new unsigned char[output.size];
+    memcpy( buffer, output.data, output.size );
+    if( rawtile.memoryManaged ) rawtile.deallocate( rawtile.data );
+    rawtile.data = buffer;
     rawtile.capacity = output.size;
+    rawtile.memoryManaged = true;
+  }
+  else{
+    memcpy( rawtile.data, output.data, output.size );
   }
 
-  // Copy the encoded data back into our rawtile buffer
-  memcpy( rawtile.data, output.data, output.size );
+  // The compressed data is byte-oriented, regardless of the input depth
+  rawtile.bpc = 8;
+  rawtile.sampleType = SampleType::FIXEDPOINT;
 
   if( avif ){
     avifImageDestroy( avif );
@@ -209,8 +239,9 @@ unsigned int AVIFCompressor::Compress( RawTile& rawtile ){
 /// Write ICC profile
 void AVIFCompressor::writeICCProfile()
 {
+  if( !embedICC || icc.empty() ) return;
+
   size_t len = icc.size();
-  if( len == 0 ) return;
 
 #if AVIF_VERSION_MAJOR < 1
   // No return from version < 1
@@ -227,8 +258,9 @@ void AVIFCompressor::writeICCProfile()
 /// Write XMP metadata
 void AVIFCompressor::writeXMPMetadata()
 {
+  if( !embedXMP || xmp.empty() ) return;
+
   size_t len = xmp.size();
-  if( len == 0 ) return;
 
 #if AVIF_VERSION_MAJOR < 1
   // No return from version < 1
@@ -245,8 +277,9 @@ void AVIFCompressor::writeXMPMetadata()
 /// Write EXIF metadata
 void AVIFCompressor::writeExifMetadata()
 {
+  if( !embedEXIF || exif.empty() ) return;
+
   size_t len = exif.size();
-  if( len == 0 ) return;
 
 #if AVIF_VERSION_MAJOR < 1
   // No return from version < 1

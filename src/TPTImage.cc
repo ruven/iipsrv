@@ -22,7 +22,9 @@
 
 
 #include "TPTImage.h"
+#include "EXIF.h"
 #include "Logger.h"
+#include <cstring>
 #include <sstream>
 
 using namespace std;
@@ -39,26 +41,43 @@ static const char* mode = "rmO";
 extern Logger logfile;
 
 
-// Handle libtiff errors as exceptions and log warnings to our Logger
-static void errorHandler( const char* module, const char* fmt, va_list args ){
-  char buffer[1024];
-  vsnprintf( buffer, sizeof(buffer), fmt, args );
-  throw file_error( "TPTImage :: TIFF error: " + string(buffer) );
-}
-
-static void warningHandler( const char* module, const char* fmt, va_list args ){
+// Log libtiff messages to our Logger
+static void tiffMessageHandler( const char* level, const char* module, const char* fmt, va_list args ){
   if( IIPImage::logging ){
     char buffer[1024];
     vsnprintf( buffer, sizeof(buffer), fmt, args );
-    logfile << "TPTImage :: TIFF warning: " << buffer << endl;
+    logfile << "TPTImage :: TIFF " << level;
+    if( module != NULL ) logfile << " in " << module;
+    logfile << ": " << buffer << endl;
   }
 }
 
+// Error handler - uses shared message handler
+static void errorHandler( const char* module, const char* fmt, va_list args ){
+  tiffMessageHandler( "error", module, fmt, args );
+}
 
+// Warning handler - uses shared message handler
+static void warningHandler( const char* module, const char* fmt, va_list args ){
+  tiffMessageHandler( "warning", module, fmt, args );
+}
+
+
+// Return to the directory we were in before EXIF extraction, falling back to
+// the root directory if that fails
+static void restoreExifDirectory( TIFF* tiff, uint64_t offset ){
+  if( tiff == NULL ) return;
+  if( offset != 0 && TIFFSetSubDirectory( tiff, offset ) == 1 ) return;
+  TIFFSetDirectory( tiff, 0 );
+}
+
+
+// Set up error and warning handlers for libtiff
 void TPTImage::setupLogging(){
   TIFFSetErrorHandler( errorHandler );
   TIFFSetWarningHandler( warningHandler );
 }
+
 
 
 void TPTImage::openImage()
@@ -115,7 +134,7 @@ void TPTImage::loadImageInfo( int seq, int ang )
 
   // If image is untiled, set tile sizes to zero
   if( TIFFGetField( tiff, TIFFTAG_TILEWIDTH, &tw ) == 0 ) tw = 0;
-  if( TIFFGetField( tiff, TIFFTAG_TILEWIDTH, &th ) == 0 ) th = 0;
+  if( TIFFGetField( tiff, TIFFTAG_TILELENGTH, &th ) == 0 ) th = 0;
 
   // Units for libtiff are 1=unknown, 2=DPI and 3=pixels/cm, whereas we want 0=unknown, 1=DPI and 2=pixels/cm
   dpi_units--;
@@ -329,6 +348,43 @@ void TPTImage::loadImageInfo( int seq, int ang )
     snprintf( buffer, sizeof(buffer), "%g", scale );
     metadata.insert( {"scale",buffer} );
   }
+
+  // Load our EXIF tags
+  loadEXIFMetadata();
+}
+
+
+
+void TPTImage::loadEXIFMetadata()
+{
+  metadata.erase( "exif" );
+
+  uint64_t exif_offset = 0;
+  uint64_t gps_offset = 0;
+  uint64_t saved_offset = 0;
+
+  try {
+    const int has_exif = TIFFGetField( tiff, TIFFTAG_EXIFIFD, &exif_offset );
+    const int has_gps = TIFFGetField( tiff, TIFFTAG_GPSIFD, &gps_offset );
+    if( ( has_exif != 1 || exif_offset == 0 ) &&
+        ( has_gps != 1 || gps_offset == 0 ) ) return;
+
+    saved_offset = TIFFCurrentDirOffset( tiff );
+
+    vector<unsigned char> exif_data;
+    if( exif::extract( tiff, exif_data, exif_offset, gps_offset ) && !exif_data.empty() ){
+      metadata.insert( {"exif", string((const char*)exif_data.data(), exif_data.size())} );
+      if( IIPImage::logging ){
+        logfile << "TPTImage :: EXIF metadata: " << exif_data.size() << " bytes" << endl;
+      }
+    }
+
+    restoreExifDirectory( tiff, saved_offset );
+  }
+  catch( const std::exception& error ){
+    logfile << "TPTImage :: EXIF extraction failed: " << error.what() << endl;
+    restoreExifDirectory( tiff, saved_offset );
+  }
 }
 
 
@@ -352,7 +408,7 @@ RawTile TPTImage::getTile( int x, int y, unsigned int res, int layers, unsigned 
 
 
   // Check the resolution exists
-  if( res > numResolutions ){
+  if( res >= numResolutions ){
     ostringstream error;
     error << "TPTImage :: Asked for non-existent resolution: " << res;
     throw file_error( error.str() );
@@ -458,7 +514,7 @@ RawTile TPTImage::getTile( int x, int y, unsigned int res, int layers, unsigned 
   }
 
   // Total number of pixels in tile
-  size_t np = tw * th;
+  size_t np = (size_t)tw * (size_t)th;
 
   // Get the width and height for last row and column tiles
   rem_x = im_width % tw;
@@ -512,16 +568,23 @@ RawTile TPTImage::getTile( int x, int y, unsigned int res, int layers, unsigned 
   //  make sure we decode the tile to raw pixel format
   if( (IIPImage::codec_passthrough == false) ||
       (tw != tile_widths[vipsres] || th != tile_heights[vipsres]) ||
+      (colour == PHOTOMETRIC_CIELAB) ||
       (bpc==1 && channels==1) ){
     requested_encoding = ImageEncoding::RAW;
   }
 
-  // Also disable pass-through for TIFF-JPEGs where YCbCr sub-sampling has been defined with an RGB color space - these
-  // require the full JFIF format rather than the abreviated JPEG within the TIFF
+
+  // JPEG table data (required for pass-through decoding)
+  unsigned char* jpeg_tables = NULL;
+  uint32_t jpeg_tables_size = 0;
+
+
+  // Verify JPEGTables tag exists and is valid  - otherwise fall back gracefully to RAW decoding
   if( requested_encoding == ImageEncoding::JPEG && compression == COMPRESSION_JPEG ){
-    uint16_t subsampling[2];
-    if( (TIFFGetField( tiff, TIFFTAG_YCBCRSUBSAMPLING, &subsampling[0], &subsampling[1] ) != 0) && (colour == PHOTOMETRIC_RGB) ){
-      if( IIPImage::logging ) logfile << "TPTImage :: Sub-sampled RGB JPEG-encoded TIFF: tile decoded to RAW" << endl;
+    if( (TIFFGetField( tiff, TIFFTAG_JPEGTABLES, &jpeg_tables_size, &jpeg_tables ) == 0) || (jpeg_tables_size < 8) ||
+	(jpeg_tables[0] != 0xFF || jpeg_tables[1] != 0xD8) ||
+	(jpeg_tables[jpeg_tables_size-2] != 0xFF || jpeg_tables[jpeg_tables_size-1] != 0xD9) ){
+      if( IIPImage::logging ) logfile << "TPTImage :: Missing or invalid JPEGTABLES tag: tile decoded to RAW" << endl;
       requested_encoding = ImageEncoding::RAW;
     }
   }
@@ -534,7 +597,7 @@ RawTile TPTImage::getTile( int x, int y, unsigned int res, int layers, unsigned 
   // If we are in pass-through mode, we need to know the exact number of bytes the tile
   // takes up as this may sometimes be larger than the raw data size
   if( ( requested_encoding == ImageEncoding::JPEG && compression == COMPRESSION_JPEG )
-#ifdef HAVE_WEB
+#ifdef HAVE_WEBP
       || ( requested_encoding == ImageEncoding::WEBP && compression == COMPRESSION_WEBP )
 #endif
       ){
@@ -563,42 +626,74 @@ RawTile TPTImage::getTile( int x, int y, unsigned int res, int layers, unsigned 
        EOI marker from the table tag and the initial SOI marker from the tile data removed
     */
 
-    unsigned char* jpeg_tables;
-    uint16_t count = 0;
+    const unsigned char* marker = NULL;
+    size_t marker_size = 0;
 
-    if( ( TIFFGetField( tiff, TIFFTAG_JPEGTABLES, &count, &jpeg_tables ) != 0 ) && ( count > 4 ) ){
+    // Check for existing marker
+    bool has_marker = ( jpeg_tables[2] == 0xFF && ( jpeg_tables[3] == 0xE0 || jpeg_tables[3] == 0xEE ) );
 
-      // Allocate enough space for compressed tile data + JPEG tables
-      rawtile.allocate( bytes + count - 4 );
-
-      // Store last 2 bytes of the JPEG table data itself for use later - skip over the final 2 byte EOI marker
-      unsigned char table_end[2];
-      table_end[0] = ((unsigned char*)jpeg_tables)[count-4];
-      table_end[1] = ((unsigned char*)jpeg_tables)[count-3];
-
-      // Copy tables to our RawTile buffer - ignore the final 2 byte EOI marker
-      memcpy( rawtile.data, jpeg_tables, count-2 );
-
-      // Note starting position before we add image data - rewind by extra 2 bytes as we want to temporarily
-      // overwrite the end of the table data with the SOI which preceeds the image data in the tile stream
-      int pos = count - 4;
-
-      int length = TIFFReadRawTile( tiff, (ttile_t) tile, (tdata_t) &(((unsigned char*)rawtile.data)[pos]), bytes );
-      if( length == -1 ){
-	throw file_error( "TPTImage :: TIFFReadRawTile() failed for JPEG-encoded tile for " + getFileName( x, y ) );
+    // The reconstructed JPEG streams are abbreviated and usually contain no leading JFIF or Adobe APP14 marker.
+    // Add appropriate marker if not already present in the tables - decoders assume YCbCr, so RGB images can be mis-interpreted
+    if( !has_marker ){
+      if( ( channels == 3 && colour == PHOTOMETRIC_RGB ) || ( channels == 4 && colour == PHOTOMETRIC_SEPARATED ) ){
+	// Adobe APP14 marker with transform 0: RGB for 3 components, CMYK for 4 components.
+	static const unsigned char adobe_marker[16] = {0xFF,0xEE, 0x00,0x0E, 'A','d','o','b','e', 0x00,0x64, 0x00,0x00, 0x00,0x00, 0x00};
+	marker = adobe_marker;
+	marker_size = sizeof(adobe_marker);
       }
-
-      // Overwrite superfluous SOI marker from tile with previously saved end of JPEG tables
-      ((unsigned char*)rawtile.data)[pos]=table_end[0];
-      ((unsigned char*)rawtile.data)[pos+1]=table_end[1];
-
-      rawtile.dataLength = pos + length;
-      rawtile.compressionType = ImageEncoding::JPEG;
+      else if( channels == 1 || channels == 3 ){
+	// Bare JFIF APP0 marker with no resolution information
+	static const unsigned char jfif_marker[18] = {0xFF,0xE0, 0x00,0x10, 'J','F','I','F', 0x00, 0x01,0x02, 0x00, 0x00,0x01, 0x00,0x01, 0x00,0x00};
+	marker = jfif_marker;
+	marker_size = sizeof(jfif_marker);
+      }
     }
-    else{
-      // Throw error if no JPEG tables present
-      throw file_error( "TPTImage :: Empty TIFFTAG_JPEGTABLES tag for JPEG-encoded tile for " + getFileName( x, y ) );
+
+    // Add an identifying comment marker if the JPEG stream had no leading JFIF or APP14 marker
+    static const char com_comment[] = "iipsrv/" VERSION;
+    const unsigned int clen = sizeof(com_comment) - 1;   // (string is a compile-time constant, so sizeof() can be used)
+    const size_t com_size = marker ? (4 + clen) : 0;
+
+    // Allocate enough space for SOI + colorspace marker + comment + compressed tile data + JPEG tables
+    rawtile.allocate( 2 + marker_size + com_size + bytes + jpeg_tables_size - 6 );
+
+    // Copy the SOI marker from the JPEGTABLES tag, followed by our colorspace marker, the comment and
+    // the tables themselves - ignoring the final 2 byte EOI marker from the JPEGTABLES tag
+    memcpy( rawtile.data, jpeg_tables, 2 );
+    if( marker ) memcpy( &((unsigned char*)rawtile.data)[2], marker, marker_size );
+
+    // Write comment marker
+    if( com_size > 0 ){
+      unsigned char* com = &((unsigned char*)rawtile.data)[2 + marker_size];
+      com[0]=0xFF;
+      com[1]=0xFE;
+      com[2]=(unsigned char)(((2 + clen) >> 8) & 0xFF);
+      com[3]=(unsigned char)((2 + clen) & 0xFF);
+      memcpy( &com[4], com_comment, clen );
     }
+
+    // Copy JPEG tables
+    memcpy( &((unsigned char*)rawtile.data)[2 + marker_size + com_size], &((unsigned char*)jpeg_tables)[2], jpeg_tables_size - 4 );
+
+    // Note starting position before we add image data - rewind by extra 2 bytes as we want to temporarily
+    // overwrite the end of the table data with the SOI which preceeds the image data in the tile stream
+    tsize_t pos = 2 + marker_size + com_size + jpeg_tables_size - 6;
+
+    tsize_t length = TIFFReadRawTile( tiff, (ttile_t) tile, (tdata_t) &(((unsigned char*)rawtile.data)[pos]), bytes );
+    if( length == -1 ){
+      throw file_error( "TPTImage :: TIFFReadRawTile() failed for JPEG-encoded tile for " + getFileName( x, y ) );
+    }
+    // Check for valid leading SOI marker and ensure no out-of-bounds read at the end of the table
+    if( length < 4 || ((unsigned char*)rawtile.data)[pos] != 0xFF || ((unsigned char*)rawtile.data)[pos+1] != 0xD8 ){
+      throw file_error( "TPTImage :: Invalid JPEG tile data for " + getFileName( x, y ) );
+    }
+
+    // Overwrite superfluous SOI marker from tile with end of JPEG tables
+    ((unsigned char*)rawtile.data)[pos]   = jpeg_tables[jpeg_tables_size-4];
+    ((unsigned char*)rawtile.data)[pos+1] = jpeg_tables[jpeg_tables_size-3];
+    
+    rawtile.dataLength = pos + length;
+    rawtile.compressionType = ImageEncoding::JPEG;
   }
 
 #ifdef COMPRESSION_WEBP
@@ -608,7 +703,7 @@ RawTile TPTImage::getTile( int x, int y, unsigned int res, int layers, unsigned 
     rawtile.allocate( bytes );
 
     // Copy compressed tile directly into buffer
-    int length = TIFFReadRawTile( tiff, (ttile_t) tile, (tdata_t) rawtile.data, bytes );
+    tsize_t length = TIFFReadRawTile( tiff, (ttile_t) tile, (tdata_t) rawtile.data, bytes );
     if( length == -1 ){
       throw file_error( "TPTImage :: TIFFReadRawTile() failed for WebP-encoded tile for " + getFileName( x, y ) );
     }
@@ -624,11 +719,11 @@ RawTile TPTImage::getTile( int x, int y, unsigned int res, int layers, unsigned 
     rawtile.allocate( bytes );
 
     // Copy decoded tile into buffer as raw pixel values
-    int length = TIFFReadEncodedTile( tiff, (ttile_t) tile, (tdata_t) rawtile.data, bytes );
+    tsize_t length = TIFFReadEncodedTile( tiff, (ttile_t) tile, (tdata_t) rawtile.data, bytes );
     if( length == -1 ){
       throw file_error( "TPTImage :: TIFFReadEncodedTile() failed for " + getFileName( x, y ) );
     }
-    rawtile.dataLength = length;
+    rawtile.dataLength = (uint32_t) length;
     rawtile.compressionType = ImageEncoding::RAW;
   }
 

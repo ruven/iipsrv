@@ -5,7 +5,7 @@
     * (www.oldmapsonline.org) from Ministry of Culture of the Czech Republic      *
 
 
-    Copyright (C) 2008-2025 Ruven Pillay.
+    Copyright (C) 2008-2026 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -131,6 +131,13 @@ void Zoomify::run( Session* session, const std::string& argument ){
 
   // Bump up to take account of any levels too small for Zoomify
   resolution += discard;
+
+  // Reject invalid resolution levels
+  if( resolution < 0 || (unsigned int) resolution >= numResolutions ){
+    ostringstream error;
+    error << "Zoomify :: Invalid resolution: " << resolution;
+    throw invalid_argument( error.str() );
+  }
 
   if( session->loglevel >= 2 ){
     *(session->logfile) << "Zoomify :: Tile request for resolution:"

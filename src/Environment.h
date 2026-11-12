@@ -32,6 +32,7 @@
 #define JPEG_QUALITY 75
 #define PNG_QUALITY 1
 #define WEBP_QUALITY 50
+#define JXL_QUALITY 50
 #define AVIF_QUALITY 50
 #define AVIF_CODEC 0  // 0 = auto, 1 = aom, 2 = rav2e, 3 = svt
 #define TIFF_COMPRESSION 2  // 0=None, 1=LZW, 2=Deflate, 3=JPEG, 4=WebP, 5=ZStandard
@@ -43,7 +44,6 @@
 #define WATERMARK ""
 #define WATERMARK_PROBABILITY 1.0
 #define WATERMARK_OPACITY 1.0
-#define LIBMEMCACHED_SERVERS "localhost"
 #define LIBMEMCACHED_TIMEOUT 86400  // 24 hours
 #define INTERPOLATION 1  // 1: Bilinear
 #define CORS "";
@@ -159,6 +159,20 @@ class Environment {
       if( quality < -1 ) quality = -1;  // Allow -1 = lossless
     }
     else quality = WEBP_QUALITY;
+
+    return quality;
+  }
+
+
+  static int getJXLQuality(){
+    const char* envpara = getenv( "JXL_QUALITY" );
+    int quality;
+    if( envpara ){
+      quality = atoi( envpara );
+      if( quality > 100 ) quality = 100;
+      if( quality < -1 ) quality = -1;  // Allow -1 = lossless
+    }
+    else quality = JXL_QUALITY;
 
     return quality;
   }
@@ -309,13 +323,7 @@ class Environment {
 
   static std::string getMemcachedServers(){
     const char* envpara = getenv( "MEMCACHED_SERVERS" );
-    std::string memcached_servers;
-    if( envpara ){
-      memcached_servers = std::string( envpara );
-    }
-    else memcached_servers = LIBMEMCACHED_SERVERS;
-
-    return memcached_servers;
+    return envpara ? std::string( envpara ) : std::string();
   }
 
 

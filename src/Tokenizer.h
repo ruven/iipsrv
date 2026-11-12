@@ -1,7 +1,7 @@
 /*
     Simple String Tokenizer Class
 
-    Copyright (C) 2000-2013 Ruven Pillay.
+    Copyright (C) 2000-2026 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -36,45 +36,42 @@ class Tokenizer{
 
  public:
 
+  /// Default constructor: empty tokenizer
+  Tokenizer() : arg(), delim() {}
+
   /// Constructor
-  /** \param s string to be split
-      \param d delimitter
+  /** @param s string to be split
+      @param d delimitter
    */
-  Tokenizer( const std::string& s, const std::string& d );
+  Tokenizer( const std::string& s, const std::string& d ) : arg( s ), delim( d ) {}
 
   /// Return the next token
+  /** @return next token */
   std::string nextToken();
 
   /// Indicate whether there are any tokens remaining
-  int hasMoreTokens();
+  /** @return whether there are more tokens */
+  bool hasMoreTokens() const;
 
 };
 
 
 
-inline Tokenizer::Tokenizer( const std::string& s, const std::string& t )
-{
-  arg = s;
-  delim = t;
-}
-
-
-
 inline std::string Tokenizer::_nextToken()
 {
-  int n;
+  size_t n;
   std::string result;
 
   n = arg.find( delim );
 
   // No token in string, so return original
-  if( n < 0 ){
+  if( n == std::string::npos ){
     result = arg;
     arg = std::string();
   }
   else{
     result = arg.substr( 0, n );
-    arg = arg.substr( n + delim.length(), arg.length() );
+    arg = arg.substr( n + delim.length() );
   }
 
   return result;
@@ -95,11 +92,9 @@ inline std::string Tokenizer::nextToken()
 }
 
 
-inline int Tokenizer::hasMoreTokens()
+inline bool Tokenizer::hasMoreTokens() const
 {
-  int n = arg.find_first_not_of( delim, 0 );
-  if( n >= 0 ) return 1;
-  else return 0;
+  return arg.find_first_not_of( delim ) != std::string::npos;
 }
 
 

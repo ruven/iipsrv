@@ -1,7 +1,7 @@
 /*  IIP WebP Compressor Class:
     Handles alpha channels, ICC profiles and XMP metadata
 
-    Copyright (C) 2022-2024 Ruven Pillay
+    Copyright (C) 2022-2026 Ruven Pillay
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -36,7 +36,7 @@ void WebPCompressor::InitCompression( const RawTile& rawtile, unsigned int strip
   tile.bpc = rawtile.bpc;
   tile.data = rawtile.data;
   tile.dataLength = rawtile.dataLength;
-  tile.memoryManaged = 0;   // We don't want the RawTile destructor to free this memory
+  tile.memoryManaged = false;   // We don't want the RawTile destructor to free this memory
 
   // libwebp cannot handle strip or region-based encoding, so compress the entire image in one go
   this->Compress( tile );
@@ -70,9 +70,9 @@ unsigned int WebPCompressor::CompressStrip( unsigned char* source, unsigned char
 unsigned int WebPCompressor::Finish( unsigned char* output ){
 
   // Output any remaining bytes
-  if( current_chunk < tile.dataLength-1 ){
+  if( current_chunk < tile.dataLength ){
     unsigned char* data = (unsigned char*) tile.data;
-    chunk_size = tile.dataLength - current_chunk - 1;
+    chunk_size = tile.dataLength - current_chunk;
     memcpy( output, &data[current_chunk], chunk_size );
     return chunk_size;
   }
@@ -95,7 +95,8 @@ unsigned int WebPCompressor::Compress( RawTile& rawtile ){
   WebPPicture pic;
   WebPPictureInit( &pic );
 
-  pic.use_argb = false;
+  // Lossless WebP must use the ARGB path to preserve RGB exactly
+  pic.use_argb = ( config.lossless != 0 );
   pic.width = rawtile.width;
   pic.height = rawtile.height;
   //  WebPPictureAlloc( &pic );       // WebPPictureImport calls this itself

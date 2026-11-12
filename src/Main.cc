@@ -55,11 +55,7 @@
 #endif
 
 #ifdef HAVE_MEMCACHED
-//#ifdef WIN32
-//#include "../windows/MemcachedWindows.h"
-//#else
 #include "Memcached.h"
-//#endif
 #endif
 
 #ifdef ENABLE_DL
@@ -292,20 +288,31 @@ int main( int argc, char *argv[] )
   int jpeg_quality = Environment::getJPEGQuality();
 
 
+#ifdef HAVE_PNG
   // Get our default PNG compression level
   int png_quality = Environment::getPNGQuality();
+#endif
 
 
+#ifdef HAVE_WEBP
   // Get our default WebP compression level
   int webp_quality = Environment::getWebPQuality();
+#endif
 
 
+#ifdef HAVE_JXL
+  // Get our default JPEG-XL compression level
+  int jxl_quality = Environment::getJXLQuality();
+#endif
+
+
+#ifdef HAVE_AVIF
   // Get our default AVIF compression level
   int avif_quality = Environment::getAVIFQuality();
 
-
   // Get our requested AVIF codec
   unsigned int avif_codec = Environment::getAVIFCodec();
+#endif
 
 
   // Get our default TIFF compression scheme
@@ -423,6 +430,11 @@ int main( int argc, char *argv[] )
     if( webp_quality == -1 ) logfile << "lossless" << endl;
     else logfile << webp_quality << endl;
 #endif
+#ifdef HAVE_JXL
+    logfile << "Setting default JPEG-XL output compression level to ";
+    if( jxl_quality == -1 ) logfile << "lossless" << endl;
+    else logfile << jxl_quality << endl;
+#endif
 #ifdef HAVE_AVIF
     logfile << "Setting default AVIF compression level to ";
     if( avif_quality == -1 ) logfile << "lossless" << endl;
@@ -527,20 +539,29 @@ int main( int argc, char *argv[] )
   }
 
 
+  // Maximum size for network cache buffer
+  size_t memcached_maxsize = 0;
+
 #ifdef HAVE_MEMCACHED
 
   // Get our list of memcached servers if we have any and the timeout
   string memcached_servers = Environment::getMemcachedServers();
   unsigned int memcached_timeout = Environment::getMemcachedTimeout();
 
+
   // Create our memcached object
   Memcache memcached( memcached_servers, memcached_timeout );
+  memcached_maxsize = memcached.connected() ? memcached.maxItemSize() : 0;
+
   if( loglevel >= 1 ){
-    if( memcached.connected() ){
-      logfile << "Memcached support enabled. Connected to servers: '" << memcached_servers
-	      << "' with timeout " << memcached_timeout << endl;
+    logfile << "Memcached support enabled: ";
+    if( memcached_servers.empty() ){
+      logfile << "No servers set: support disabled" << endl;
     }
-    else logfile << "Unable to connect to Memcached servers: '" << memcached.error() << "'" << endl;
+    else if( memcached.connected() ){
+      logfile << "Connected to servers: '" << memcached_servers << "' with timeout " << memcached_timeout << " and max item size " << memcached_maxsize/1048576.0 << "MB" << endl;
+    }
+    else logfile << "Unable to connect to servers: '" << memcached.error() << "'" << endl;
   }
 
 #endif
@@ -651,7 +672,7 @@ int main( int argc, char *argv[] )
   // In FCGI mode, listen for FCGI requests
   while( FCGX_Accept_r( &request ) >= 0 ){
 
-    FCGIWriter writer( request.out );
+    FCGIWriter writer( request.out, memcached_maxsize );
     request_string.clear();
 
 #endif
@@ -675,6 +696,9 @@ int main( int argc, char *argv[] )
 #ifdef HAVE_AVIF
     AVIFCompressor avif( avif_quality );
     avif.setCodec( avif_codec );
+#endif
+#ifdef HAVE_JXL
+    JXLCompressor jxl( jxl_quality );
 #endif
 
     // View object for use with the CVT command etc
@@ -710,6 +734,9 @@ int main( int argc, char *argv[] )
 #endif
 #ifdef HAVE_AVIF
       session.avif = &avif;
+#endif
+#ifdef HAVE_JXL
+      session.jxl = &jxl;
 #endif
       session.loglevel = loglevel;
       session.logfile = &logfile;
@@ -944,7 +971,7 @@ int main( int argc, char *argv[] )
 
 #ifdef HAVE_MEMCACHED
 #ifndef DEBUG
-      if( response.cachable() && memcached.connected() ){
+      if( response.cachable() && memcached.connected() && (!writer.getError()) && writer.sz > 0){
 	Timer memcached_timer;
 	memcached_timer.start();
 	memcached.store( session.headers["QUERY_STRING"], writer.buffer, writer.sz );

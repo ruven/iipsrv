@@ -60,6 +60,9 @@ Task* Task::factory( const string& t ){
 #ifdef HAVE_AVIF
   else if( type == "atl" ) return new ATL;
 #endif
+#ifdef HAVE_JXL
+  else if( type == "jxtl" ) return new JXTL;
+#endif
   else if( type == "jtl" ) return new JTL;
   else if( type == "ttl" ) return new TTL;
   else if( type == "jtls" ) return new JTLS;
@@ -126,7 +129,7 @@ void QLT::run( Session* session, const string& argument ){
   if( factor < 0 || factor > 100 ){
     if( session->loglevel >= 2 ){
       *(session->logfile) << "QLT :: Warning: quality factor of " << argument
-			  << " out of bounds. Must be 0-100 for JPEG and WebP and 1-9 for PNG" << endl;
+			  << " out of bounds. Must be 0-100 for JPEG, WebP, AVIF and JPEG-XL and 1-9 for PNG" << endl;
     }
   }
 
@@ -141,6 +144,9 @@ void QLT::run( Session* session, const string& argument ){
 #endif
 #ifdef HAVE_AVIF
   session->avif->setQuality( factor );
+#endif
+#ifdef HAVE_JXL
+  session->jxl->setQuality( factor );
 #endif
 
   if( session->loglevel >= 2 ) *(session->logfile) << "QLT :: Requested quality is " << factor << endl;
@@ -337,6 +343,12 @@ void CVT::run( Session* session, const string& src ){
   else if( argument == "avif" ){
     session->view->output_format = ImageEncoding::AVIF;
     if( session->loglevel >= 3 ) *(session->logfile) << "CVT :: AVIF output" << endl;
+  }
+#endif
+#ifdef HAVE_JXL
+  else if( argument == "jxl" ){
+    session->view->output_format = ImageEncoding::JXL;
+    if( session->loglevel >= 3 ) *(session->logfile) << "CVT :: JPEG-XL output" << endl;
   }
 #endif
   else{
@@ -597,21 +609,43 @@ void CTW::run( Session* session, const string& src ){
   // Tokenize on rows
   Tokenizer col_izer( line, ";" );
 
-  while( col_izer.hasMoreTokens() ){
+  // Limit the total number of matrix elements (up to a 256 element twist matrix)
+  const size_t MAX_CTW_ELEMENTS = 256;
+  size_t total = 0;
+  Tokenizer row_izer;
+
+  while( col_izer.hasMoreTokens() && total < MAX_CTW_ELEMENTS ){
 
     // Fill each row item
-    Tokenizer row_izer( col_izer.nextToken(), "," );
+    row_izer = Tokenizer( col_izer.nextToken(), "," );
     vector<float> row;
-    
-    while( row_izer.hasMoreTokens() ){
+
+    while( row_izer.hasMoreTokens() && total < MAX_CTW_ELEMENTS ){
       try{
 	row.push_back( atof( row_izer.nextToken().c_str() ) );
+	++total;
       }
       catch( const string& error ){
 	if( session->loglevel >= 1 ) *(session->logfile) << error << endl;
       }
     }
     session->view->ctw.push_back( std::move(row) );
+  }
+
+  // If either tokenizer still has tokens, the cap stopped us early
+  if( col_izer.hasMoreTokens() || row_izer.hasMoreTokens() ){
+    if( session->loglevel >= 1 )
+      *(session->logfile) << "CTW :: matrix too large, ignoring CTW" << endl;
+    session->view->ctw.clear();
+    return;
+  }
+
+  // Reject an empty matrix before logging or applying it
+  if( session->view->ctw.empty() || session->view->ctw[0].empty() ){
+    if( session->loglevel >= 1 )
+      *(session->logfile) << "CTW :: empty matrix, ignoring CTW" << endl;
+    session->view->ctw.clear();
+    return;
   }
 
   if( session->loglevel >= 3 ){
@@ -708,24 +742,30 @@ void CNV::run( Session* session, const string& src ){
 
     vector<float> kernel;
 
-    while( izer.hasMoreTokens() && kernel.size()<26 ){
+    // Cap the kernel at 5x5 (25 elements)
+    const size_t MAX_CNV_KERNEL = 25;
+
+    while( izer.hasMoreTokens() && kernel.size() < MAX_CNV_KERNEL ){
       try{
-       kernel.push_back( atof( izer.nextToken().c_str() ));
+	kernel.push_back( atof( izer.nextToken().c_str() ));
       }
       catch( const string& error ){
-       if( session->loglevel >= 1 ) *(session->logfile) << error << endl;
+	if( session->loglevel >= 1 ) *(session->logfile) << error << endl;
       }
     }
 
-    unsigned int dimension = (unsigned int) sqrtf( kernel.size() );
-
-    if( kernel.size() >= 26 ){
+    // If the tokenizer still has tokens, we stopped early -> input exceeded the cap
+    if( izer.hasMoreTokens() ){
       if( session->loglevel >= 2 ){
 	*(session->logfile) << "CNV :: Maximum convolution matrix size is 5x5. Supplied matrix: "
 			    << argument << " will be ignored" << endl;
       }
+      return;
     }
-    else if( dimension * dimension != kernel.size() ){
+
+    unsigned int dimension = (unsigned int) sqrtf( kernel.size() );
+
+    if( dimension * dimension != kernel.size() ){
       if( session->loglevel >= 2 ){
 	*(session->logfile) << "CNV :: Convolution matrix must be square. Supplied matrix: "
 			    << argument << " will be ignored" << endl;

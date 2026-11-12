@@ -1,8 +1,8 @@
-# Grok 20.4.19 for iipsrv
+# Grok 20.4.25 for iipsrv
 
 This repository includes an alternative Grok-based JPEG 2000 backend for
-iipsrv. The Docker test pins the official Grok release `v20.4.19` to commit
-`31ae6fa25be3747370b47a65d311e355f2adb33f`.
+iipsrv. The Docker test pins the official Grok release `v20.4.25` to commit
+`46ab34dee9590dcd97026e40e9ecd9383706bcad`.
 
 The Visual Studio project files list `GrokImage.cc` and `GrokImage.h`, but the
 implementation is excluded from default Windows builds because the projects
@@ -11,7 +11,7 @@ do not yet configure a Grok Windows SDK include path or import library.
 ## Building Grok
 
 ```sh
-git clone --branch v20.4.19 --depth 1 https://github.com/GrokImageCompression/grok.git
+git clone --branch v20.4.25 --depth 1 https://github.com/GrokImageCompression/grok.git
 cd grok
 git submodule update --init --recursive
 
@@ -38,7 +38,7 @@ make --parallel
 The configuration summary should contain:
 
 ```text
-JPEG2000    :  true (Grok)
+JPEG2000       :  true (Grok)
 ```
 
 If the `pkg-config` file is unavailable, specify the installation prefix
@@ -60,7 +60,7 @@ defaults to `2`; a value of `0` uses all available logical processors.
 
 ## Verified scenarios
 
-- building and linking iipsrv against Grok 20.4.19;
+- building and linking iipsrv against Grok 20.4.25;
 - automatic detection through `libgrokj2k.pc`;
 - manual detection through `--with-grok=/opt/grok`;
 - CVT region decoding of a multi-tile JP2 with TLM/PLT;
@@ -77,8 +77,8 @@ iipsrv is compiled with C++11.
 From the repository root:
 
 ```sh
-docker build -f docker/Dockerfile.grok-test -t iipsrv-grok-test:20.4.19 .
-docker run --rm -v "${PWD}:/repo:ro" iipsrv-grok-test:20.4.19 \
+docker build -f docker/Dockerfile.grok-test -t iipsrv-grok-test:20.4.25 .
+docker run --rm -v "${PWD}:/repo:ro" iipsrv-grok-test:20.4.25 \
   bash -c "tr -d '\r' < /repo/docker/test-grok.sh | bash"
 ```
 

@@ -37,17 +37,8 @@
 
 
 
-#ifdef HAVE_EXT_POOL_ALLOCATOR
-#include <ext/pool_allocator.h>
-typedef HASHMAP < std::string, IIPImage,
-			      __gnu_cxx::hash< const std::string >,
-			      std::equal_to< const std::string >,
-			      __gnu_cxx::__pool_alloc< std::pair<const std::string,IIPImage> >
-			      > imageCacheMapType;
-#else
-typedef HASHMAP <std::string,IIPImage> imageCacheMapType;
-#endif
-
+/// Define a cache map type for our image metadata cache
+typedef std::unordered_map <std::string,IIPImage> imageCacheMapType;
 
 
 
@@ -64,6 +55,9 @@ struct Session {
 #endif
 #ifdef HAVE_AVIF
   AVIFCompressor* avif;
+#endif
+#ifdef HAVE_JXL
+  JXLCompressor* jxl;
 #endif
   View* view;
   IIPResponse* response;
@@ -267,6 +261,17 @@ public:
   void run( Session* session, const std::string& argument ){
     // Set our encoding format and call JTL::run
     session->view->output_format = ImageEncoding::AVIF;
+    JTL::run( session, argument );
+  };
+};
+
+
+/// JPEG-XL Tile Command
+class JXTL : public JTL {
+public:
+  void run( Session* session, const std::string& argument ){
+    // Set our encoding format and call JTL::run
+    session->view->output_format = ImageEncoding::JXL;
     JTL::run( session, argument );
   };
 };

@@ -1,6 +1,6 @@
 /*  IIP Server: OpenJPEG JPEG2000 handler
 
-    Copyright (C) 2019-2024 Ruven Pillay.
+    Copyright (C) 2019-2026 Ruven Pillay.
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -46,8 +46,9 @@ class OpenJPEGImage : public IIPImage {
       @param w width of region
       @param h height of region
       @param d buffer to fill
+      @return number of bytes in JPEG2000
    */
-  void process( unsigned int r, int l, int x, int y, unsigned int w, unsigned int h, void* d );
+  size_t process( unsigned int r, int l, int x, int y, unsigned int w, unsigned int h, void* d );
 
 
 

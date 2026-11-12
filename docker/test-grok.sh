@@ -14,7 +14,7 @@ CXXFLAGS='-O2 -g -std=c++11 -Wall -Wextra -Wpedantic' \
 grep -F 'true (Grok)' /work/results/configure.log
 make -j3 > /work/results/build.log 2>&1
 make check > /work/results/check.log 2>&1
-[[ "$(pkg-config --modversion libgrokj2k)" == '20.4.19' ]]
+[[ "$(pkg-config --modversion libgrokj2k)" == '20.4.25' ]]
 
 python3 docker/grok-test-data.py generate /work/results
 for name in sample color gray16; do
@@ -79,7 +79,7 @@ request recovery 'FIF=/work/results/color.jp2&WID=100&CVT=JPEG'
 
 python3 docker/grok-test-data.py validate /work/results | tee /work/results/report.json
 for threads in 0 1 2; do
-  grep -F 'Setting up JPEG2000 support via Grok 20.4.19' "/work/results/server-$threads.log"
+  grep -F 'Setting up JPEG2000 support via Grok 20.4.25' "/work/results/server-$threads.log"
 done
 
 # Verify both the explicit prefix and the original OpenJPEG backend.
@@ -93,4 +93,4 @@ make distclean > /work/results/distclean-prefix.log 2>&1
 grep -F 'true (OpenJPEG)' /work/results/openjpeg-configure.log
 make -j3 > /work/results/openjpeg-build.log 2>&1
 make check > /work/results/openjpeg-check.log 2>&1
-echo 'Grok 20.4.19 E2E, explicit-prefix build and OpenJPEG fallback: PASS'
+echo 'Grok 20.4.25 E2E, explicit-prefix build and OpenJPEG fallback: PASS'

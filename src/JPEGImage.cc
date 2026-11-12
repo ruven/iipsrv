@@ -1,6 +1,6 @@
 /*  IIPImage Server: JPEG reader
 
-    Copyright (C) 2024-2025 Ruven Pillay.
+    Copyright (C) 2024-2026 Ruven Pillay.
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -244,7 +244,7 @@ RawTile JPEGImage::getTile( int seq, int ang, unsigned int res, int layers, unsi
   timer.start();
 #endif
 
-  if( res > numResolutions ){
+  if( res >= numResolutions ){
     ostringstream tile_no;
     tile_no << "JPEG :: Asked for non-existent resolution: " << res;
     throw file_error( tile_no.str() );
@@ -295,7 +295,8 @@ RawTile JPEGImage::getTile( int seq, int ang, unsigned int res, int layers, unsi
   rawtile.allocate();
 
   // Process the tile
-  process( res, layers, xoffset, yoffset, tw, th, rawtile.data );
+  size_t bytes = process( res, layers, xoffset, yoffset, tw, th, rawtile.data );
+  rawtile.dataLength = bytes;
 
 #ifdef JPEG_DEBUG
   logfile << "JPEG :: getTile() :: " << timer.getTime() << " microseconds" << endl;
@@ -319,7 +320,8 @@ RawTile JPEGImage::getRegion( int ha, int va, unsigned int res, int layers, int 
   rawtile.timestamp = timestamp;
   rawtile.allocate();
 
-  process( res, layers, x, y, w, h, rawtile.data );
+  size_t bytes = process( res, layers, x, y, w, h, rawtile.data );
+  rawtile.dataLength = bytes;
 
 #ifdef JPEG_DEBUG
   logfile << "JPEG :: getRegion() :: " << timer.getTime() << " microseconds" << endl;
@@ -331,7 +333,7 @@ RawTile JPEGImage::getRegion( int ha, int va, unsigned int res, int layers, int 
 
 
 // Main processing function for both tiles and regions
-void JPEGImage::process( unsigned int res, int layers, int xoffset, int yoffset, unsigned int tw, unsigned int th, void *d )
+size_t JPEGImage::process( unsigned int res, int layers, int xoffset, int yoffset, unsigned int tw, unsigned int th, void *d )
 {
   // Our effective position and size may not end up matching the requested values, so assign temporary variables
   unsigned int x0 = xoffset;
@@ -458,6 +460,7 @@ void JPEGImage::process( unsigned int res, int layers, int xoffset, int yoffset,
   // Finish our decompress
   jpeg_finish_decompress( &cinfo );
 
+  size_t bytes = tw * th * channels;
 
   // libjpeg can natively handle up to a 1/8 shrink (vipsres=3), so rescale down further manually
   if( factor > 1 ){
@@ -476,9 +479,11 @@ void JPEGImage::process( unsigned int res, int layers, int xoffset, int yoffset,
 	}
       }
     }
+    bytes = n;
 
     // Free temporary buffer we created for when factor > 1
     if( buffer ) free( buffer );
   }
 
+  return bytes;
 }

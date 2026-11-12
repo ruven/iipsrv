@@ -1,7 +1,7 @@
 /*
     IIP Generic Output Writer Classes
 
-    Copyright (C) 2006-2025 Ruven Pillay.
+    Copyright (C) 2006-2026 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -30,15 +30,24 @@
 #endif
 
 #include <cstdio>
+#include <cstdlib>
 #include <cstring>
 
 
 /// Virtual base class for various writers
 class Writer {
 
+ protected:
+  bool error;
+
  public:
 
-  virtual ~Writer() = 0;
+  Writer() : error(false) {};
+  virtual ~Writer() {};
+
+  /// Has an error occurred
+  /** @return error status */
+  bool getError() const { return error; };
 
   /// Write out a binary string
   /** @param msg message string
@@ -67,7 +76,7 @@ class Writer {
 
 
 /// FCGI Writer Class
-class FCGIWriter {
+class FCGIWriter : public Writer {
 
  private:
 
@@ -75,14 +84,22 @@ class FCGIWriter {
   FCGX_Stream *out;
 
   /// Buffer size
-  static const unsigned int bufsize = 65536;
+  size_t bufsize;
 
   /// Add the message to our buffer
   /** @param msg message string
       @param len message length in bytes
    */
   void cpy2buf( const char* msg, size_t len ){
-    if( sz+len > bufsize ) buffer = (char*) realloc( buffer, sz+len );
+
+    // Abort if an error has occurred or if no buffering has been disabled
+    if( error || bufsize==0 ) return;
+
+    // Abort buffer that cannot be handled by Memcached
+    if( sz+len > bufsize ){
+      error = true;
+      return;
+    }
     if( buffer ){
       memcpy( &buffer[sz], msg, len );
       sz += len;
@@ -92,19 +109,22 @@ class FCGIWriter {
 
  public:
 
-  char* buffer;        ///< Buffer
+  char* buffer;        ///< Buffer for network caches
   size_t sz;           ///< Size of buffer
 
   /// Constructor
-  /** @param o FCGI stream pointer */
-  FCGIWriter( FCGX_Stream* o ){
-    out = o;
-    buffer = (char*) malloc(bufsize);
-    sz = 0;
+  /** @param o FCGI stream pointer
+   *  @param bs max internal buffer size in bytes (default 1MB, 0 disables buffering)
+   */
+  FCGIWriter( FCGX_Stream* o, size_t bs = 1048576 ) : Writer(), out(o), bufsize(bs), buffer(NULL), sz(0) {
+    if( bufsize > 0 ) buffer = (char*) malloc(bufsize);
   };
 
   /// Destructor
-  ~FCGIWriter(){ if(buffer) free(buffer); };
+  ~FCGIWriter(){
+    if( buffer ) free(buffer);
+    sz = 0;
+  };
 
   /// Add the message to our buffer
   /** @param msg message string
@@ -147,7 +167,7 @@ class FCGIWriter {
 
 
 /// File Writer Class
-class FileWriter {
+class FileWriter : public Writer {
 
  private:
 

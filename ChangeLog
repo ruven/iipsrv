@@ -1,3 +1,90 @@
+10/11/2026:
+	- Various updates to Rawtile.h to correctly set buffer to NULL in deallocate() and switched
+	  memoryManaged variable to type bool
+
+
+09/11/2026:
+	- Modification to JXLCompressor to only initialize thread runner when required and not when constructor
+	  called.
+	- Updated AVIFCompressor to handle 16 bit input images. These are scaled down to the maximum bit depth
+	  supported by AVIF of 12 bits per channel.
+
+
+08/11/2026:
+	- Added TIFF EXIF handling for both reading (TPTImage) and writing (TIFFCompressor) through shared EXIF
+	  namespaced exif::extract() and exif::write() functions implemented in EXIF.cc. Handles both standard
+	  EXIF and GPS EXIF tags (GPS requires libtiff 4.2 or later). Extracted tags fully compatible with
+	  JPEG, AVIF, WebP, JXL and PNG output.
+
+
+06/11/2026:
+	- Improvements to URL class: hexToChar() now uses explicit digit handling instead of ASCII bit tricks
+
+
+04/11/2026:
+	- Added JPEG-XL output support. Both tile and region output are supported for both IIP and IIIF.
+	  Individual tiles can be requested with IIP using the JXTL parameter which works in the same way as PTL
+	  for PNG and JTL for JPEG. For IIIF, use .jxl suffix for format. CVT region requests can be made with
+	  CVT=jxl. The JXL encoder supports alpha channels and 8 or 16 bit integer images as well as 32 bit float.
+	  To compile, iipsrv automatically detects for the libjxl development headers and libraries.
+	  The JXL_QUALITY server environment variable sets the default encoding quality (0=most compression,
+	  100=best quality, default=50), -1 specifies lossless encoding.
+
+
+03/11/2026:
+	- Updated OpenJPEG, Kakadu and JPEG input image handlers to correctly set Rawtile dataLength value
+
+
+01/11/2026:
+	- Updated image reader classes to correctly check for valid resolutions, fixed allocation typo in Rawtile.h
+	  and updated default member constructor for AVIFCompressor class. Also updated avif and webp compressor
+	  classes to ensure full reversibility for lossless encoding and 1 byte under-run in CVT output.
+
+
+30/11/2026:
+	- Refactored and cleaned up configure.ac and m4 includes to better adhere to GNU standards and to
+	  correctly enable flags for OpenMP on Mac / ARM.
+	- Removed use of outdated ext/pool_allocator.h from Cache.h and Task.h
+
+
+29/10/2026:
+	- Fix to Cache.h to use Rawtile's capacity rather than its dataLength.
+	- Added guards to prevent over-sized user input in CTW color twist command, updated Tokenizer class and
+	  added extra resolution/tile user input validation and harmonized types for pixel counts to uint64_t
+	  to avoid overflow risk.
+
+
+28/10/2026:
+	- Update to TIFF passthrough mode to make it more robust and to directly inject missing JFIF for YCbCr
+	  or Adobe APP14 markers for RGB encoded images. injectMetadata() function also updated to work directly
+	  on the bit stream rather than by hacking libjpeg. Fixes issue https://github.com/ruven/iipsrv/issues/279.
+
+
+27/10/2026:
+	- Added SHA256 hashing for keys for Memcached: avoids problems with truncated keys with long URL requests.
+	  Keys also now include iipsrv version number. This adds new header SHA256.h for sha256 implementation
+	  (based on public domain https://github.com/B-Con/crypto-algorithms).
+	- Enabled more robust detection of Memcached server connection as well as better error reporting. The default
+	  connection to localhost is now disabled and connection is only attempted if MEMCACHED_SERVERS has been set.
+	- Added detection of max server cache item size to avoid unnecessary writes.
+	- Refactor of Writer.h to remove use of realloc() and align buffer size to max size reported by Memcached.
+
+
+26/10/2026:
+	- Optimized tile Cache.h by replacing string index with allocation-free compact non-owning TileKey struct.
+	  Redundant double hash lookup in _touch() on cache hits removed. ~5x faster for cache hits, ~3x for misses
+	  and ~1.22x for churn.
+	- Removed HASHMAP ifdefs and standardized on unordered_map in both Cach.h and Task.h.
+
+
+22/10/2026:
+	- Fix to FIF.cc to ensure that any previously allocated image instances are first freed before creating a new instance.
+	  A single request can include multiple FIF, Zoomify or IIIF commands, resulting in repeated allocation and memory leakage.
+	  Fixes issue raised in https://github.com/ruven/iipsrv/issues/295.
+	- Added guards to Zoomify.cc and Deepzoom.cc for invalid resolution numbers which can potentially cause out of bound
+	  reads on the IIPImage->image_widths vector. Fixes issue raised in https://github.com/ruven/iipsrv/issues/295.
+
+
 19/10/2026:
 	- Added ability to perform fast on-the-fly PCA and decorrelation stretch to N-band images. New IIP parameter
 	  TFM allows user to select a transform: pca for PCA and dstretch for decorrelation stretch. For example: TFM=PCA.
@@ -6,7 +93,7 @@
 	  from lowest resolution image and stored in cache. Eigenvector calculation requires the Eigen linear algebra library.
 
 
-18/20/2016:
+18/10/2026:
 	- Fix to incorrect shade() implementation in Transform class.
 	- Added OpenMP optimizations for cmp(), rotate() and interpolate_nearestneighbour() functions.
 

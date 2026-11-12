@@ -2,7 +2,7 @@
 
 /*  IIPImage Tiled Pyramidal TIFF Class
 
-    Copyright (C) 2000-2025 Ruven Pillay.
+    Copyright (C) 2000-2026 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -49,6 +49,9 @@ class TPTImage : public IIPImage {
 
   /// Load any stack metadata - name and scale
   void loadStackInfo();
+
+  /// Load EXIF metadata
+  void loadEXIFMetadata();
 
 
  public:

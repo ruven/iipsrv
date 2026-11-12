@@ -7,7 +7,7 @@
     Culture of the Czech Republic.
 
 
-    Copyright (C) 2009-2025 Ruven Pillay.
+    Copyright (C) 2009-2026 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -143,8 +143,13 @@ void DeepZoom::run( Session* session, const std::string& argument ){
 
   // Take into account the extra zoom levels required by the DeepZoom spec
   resolution = resolution - (dzi_res-numResolutions) - 1;
-  if( resolution < 0 ) resolution = 0;
-  if( (unsigned int)resolution > numResolutions-1 ) resolution = numResolutions-1;
+
+  // Reject invalid resolution levels
+  if( resolution < 0 || (unsigned int) resolution >= numResolutions ){
+    ostringstream error;
+    error << "Deepzoom :: Invalid resolution: " << resolution + (dzi_res-numResolutions) + 1;
+    throw invalid_argument( error.str() );
+  }
 
   if( session->loglevel >= 2 ){
     *(session->logfile) << "DeepZoom :: Tile request for resolution: "
