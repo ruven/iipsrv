@@ -1,3 +1,11 @@
+15/11/2026:
+	- Added bicubic and lanczos-2 / lanczos-3 interpolation for resizing and refactored existing nearest
+	  neighbour and bilinear implemenations into new templated and separable functions in Transforms_Resample.cc
+	  with per-thread weight and row buffers. Implementation handles multiple bit depths and are highly
+	  optimized. Threaded performance of nearest neighbour and bilinear now 3x faster. INTERPOLATION startup
+	  parameter now additionally accepts 2 for bicubic, 3 for lanczos2 and 4 for lanczos3.
+
+
 10/11/2026:
 	- Various updates to Rawtile.h to correctly set buffer to NULL in deallocate() and switched
 	  memoryManaged variable to type bool

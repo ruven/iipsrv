@@ -139,7 +139,9 @@ relevant to 3D image sequences. The default is "_pyr_".
 .IP INTERPOLATION
 Interpolation method to use for rescaling when using image export.
 Integer value. 0 for fastest nearest neighbour interpolation. 1 for bilinear
-interpolation (better quality but about 2.5x slower). Bilinear by default.
+interpolation (better quality but slightly slower). 2 for bicubic
+interpolation. 3 for Lanczos-2 interpolation. 4 for Lanczos-3 interpolation.
+Bilinear by default.
 .IP CORS
 Cross Origin Resource Sharing setting. Disabled by default.
 Set to "*" to enable for all domains or specify a single domain.

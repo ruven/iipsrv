@@ -275,6 +275,7 @@
     <ClCompile Include="..\..\src\TileManager.cc" />
     <ClCompile Include="..\..\src\TPTImage.cc" />
     <ClCompile Include="..\..\src\Transforms.cc" />
+    <ClCompile Include="..\..\src\Transforms_Resample.cc" />
     <ClCompile Include="..\..\src\View.cc" />
     <ClCompile Include="..\..\src\Watermark.cc" />
     <ClCompile Include="..\..\src\WebPCompressor.cc" />
@@ -304,6 +305,7 @@
     <ClInclude Include="..\..\src\Tokenizer.h" />
     <ClInclude Include="..\..\src\TPTImage.h" />
     <ClInclude Include="..\..\src\Transforms.h" />
+    <ClInclude Include="..\..\src\Transforms_Resample.h" />
     <ClInclude Include="..\..\src\View.h" />
     <ClInclude Include="..\..\src\Watermark.h" />
     <ClInclude Include="..\..\src\WebPCompressor.h" />

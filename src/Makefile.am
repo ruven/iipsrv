@@ -71,6 +71,8 @@ iipsrv_fcgi_SOURCES = \
 			View.cc \
 			Transforms.h \
 			Transforms.cc \
+			Transforms_Resample.h \
+			Transforms_Resample.cc \
 			Environment.h \
 			URL.h \
 			SHA256.h \

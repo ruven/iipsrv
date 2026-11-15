@@ -489,6 +489,18 @@ void CVT::send( Session* session ){
       interpolation_type = "nearest neighbour";
       session->processor->interpolate_nearestneighbour( complete_image, resampled_width, resampled_height );
       break;
+     case 2:
+      interpolation_type = "bicubic";
+      session->processor->interpolate_bicubic( complete_image, resampled_width, resampled_height );
+      break;
+     case 3:
+      interpolation_type = "lanczos-2";
+      session->processor->interpolate_lanczos2( complete_image, resampled_width, resampled_height );
+      break;
+     case 4:
+      interpolation_type = "lanczos-3";
+      session->processor->interpolate_lanczos3( complete_image, resampled_width, resampled_height );
+      break;
      default:
       interpolation_type = "bilinear";
       session->processor->interpolate_bilinear( complete_image, resampled_width, resampled_height );

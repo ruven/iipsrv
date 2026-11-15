@@ -45,7 +45,7 @@
 #define WATERMARK_PROBABILITY 1.0
 #define WATERMARK_OPACITY 1.0
 #define LIBMEMCACHED_TIMEOUT 86400  // 24 hours
-#define INTERPOLATION 1  // 1: Bilinear
+#define INTERPOLATION 1  // 0: Nearest, 1: Bilinear, 2: Bicubic, 3: Lanczos-2, 4: Lanczos-3
 #define CORS "";
 #define BASE_URL "";
 #define CACHE_CONTROL "max-age=86400";  // 24 hours

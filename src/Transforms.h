@@ -141,6 +141,30 @@ struct Transform {
   void interpolate_bilinear( RawTile& in, unsigned int w, unsigned int h );
 
 
+  /// Resize image using bicubic interpolation
+  /** @param in tile input data
+      @param w target width
+      @param h target height
+  */
+  void interpolate_bicubic( RawTile& in, unsigned int w, unsigned int h );
+
+
+  /// Resize image using Lanczos-2 interpolation
+  /** @param in tile input data
+      @param w target width
+      @param h target height
+  */
+  void interpolate_lanczos2( RawTile& in, unsigned int w, unsigned int h );
+
+
+  /// Resize image using Lanczos-3 interpolation
+  /** @param in tile input data
+      @param w target width
+      @param h target height
+  */
+  void interpolate_lanczos3( RawTile& in, unsigned int w, unsigned int h );
+
+
   /// Rotate image - currently only by 90, 180 or 270 degrees, other values will do nothing
   /** @param in tile input data
       @param angle angle of rotation - currently only rotations by 90, 180 and 270 degrees
@@ -236,15 +260,17 @@ struct Transform {
 
   /// Transform image
   /** @param in input image
-      @param vector of vectors containing the eigen values packed in the first row and vectors in the second
+      @param eigenvectors vector containing eigenvectors / eigenvalues of image: values packed in the first row and vectors in the second
+      @param mean vector containing mean for each channel
    */
   void pca( RawTile& in, const std::vector< std::vector<float> >& eigenvectors, const std::vector<float>& mean );
 
 
   /// Decorrelation stretch
   /** @param in input image
-      @param mean means for each band
-      @param covariance matrix
+      @param eigenvectors vector containing eigenvectors / eigenvalues of image: values packed in the first row and vectors in the second
+      @param mean vector of mean values for each channel
+      @param covariance covariance matrix
    */
   void decorrelation( RawTile& in, const std::vector< std::vector<float> >& eigenvectors, const std::vector<float>& mean, const std::vector<float>& covariance );
 
