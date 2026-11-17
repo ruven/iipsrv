@@ -529,6 +529,6 @@ size_t OpenJPEGImage::process( unsigned int res, int layers, int xoffset, int yo
   // stream or image structures multiple times in the same request pipeline
   closeImage();
 
-  // Return number of bytes
-  return n;
+  // Return number of bytes: need to scale by bits/pixel
+  return n * (obpc/8);
 }

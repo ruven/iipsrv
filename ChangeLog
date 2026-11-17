@@ -1,3 +1,7 @@
+17/11/2026:
+	- Corrected number of bytes encoded for 16 bit images for JPEG2000 decoders.
+
+
 15/11/2026:
 	- Added bicubic and lanczos-2 / lanczos-3 interpolation for resizing and refactored existing nearest
 	  neighbour and bilinear implemenations into new templated and separable functions in Transforms_Resample.cc

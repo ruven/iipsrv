@@ -804,7 +804,7 @@ size_t KakaduImage::process( unsigned int res, int layers, int xoffset, int yoff
 	  }
 	}
       }
-      bytes = n;
+      bytes = n * (obpc/8);
     }
     else memcpy( d, buffer, bytes );
 
