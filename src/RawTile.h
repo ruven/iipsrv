@@ -60,7 +60,7 @@ class RawTile {
   int channels;
 
   /// The number of bits per channel for this tile
-  int bpc;
+  unsigned int bpc;
 
   /// Sample format type (fixed or floating point)
   SampleType sampleType;
@@ -112,7 +112,7 @@ class RawTile {
       @param b bits per channel per sample
   */
   RawTile( int tn = 0, int res = 0, int hs = 0, int vs = 0,
-	   int w = 0, int h = 0, int c = 0, int b = 0 )
+	   int w = 0, int h = 0, int c = 0, unsigned int b = 0 )
     : width( w ),
       height( h ),
       channels( c ),
@@ -211,23 +211,28 @@ class RawTile {
    */
   void allocate( uint32_t size = 0 ) {
 
-    if( size == 0 ) size = (uint32_t) width * height * channels * (bpc/8);
+    if( size == 0 ) size = (uint32_t)( (uint64_t) width * height * channels * (bpc < 8 ? 1 : bpc / 8) );
+
+    // Round up to a whole number of storage elements: encoded data are byte
+    // streams of arbitrary length, so size/2 for 16 bit may truncate and under allocate
+    const uint32_t unit = ( bpc / 8 > 0 ) ? (uint32_t)( bpc / 8 ) : 1;
+    const uint32_t count = (uint32_t)( ( (uint64_t)size + unit - 1 ) / unit );
 
     switch( bpc ){
       case 32:
-	if( sampleType == SampleType::FLOATINGPOINT ) data = new float[size/4];
-	else data = new unsigned int[size/4];
+	if( sampleType == SampleType::FLOATINGPOINT ) data = new float[count];
+	else data = new unsigned int[count];
 	break;
       case 16:
-	data = new unsigned short[size/2];
+	data = new unsigned short[count];
 	break;
-      default:
-	data = new unsigned char[size];
+    default:
+	data = new unsigned char[count];
 	break;
     }
 
     memoryManaged = true;
-    capacity = size;
+    capacity = (uint32_t)( (uint64_t)count * unit );
   };
 
 

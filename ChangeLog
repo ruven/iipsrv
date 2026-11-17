@@ -1,6 +1,8 @@
 17/11/2026:
 	- Corrected number of bytes encoded for 16 bit images for JPEG2000 decoders.
 	- Removed unnecesary and exception-prone stream close() in Logger destructor.
+	- Updated RawTile to better allocate memory for cases where byte streams do not perfectly align
+	  with bit-depth boundaries.
 
 
 15/11/2026:
