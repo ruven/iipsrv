@@ -1,6 +1,6 @@
 /*  Generic compressor class - extended by JPEG and PNG Compressor classes
 
-    Copyright (C) 2017-2025 Ruven Pillay
+    Copyright (C) 2017-2026 Ruven Pillay
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -107,7 +107,10 @@ class Compressor {
     embedEXIF( false ) {};
 
 
-  virtual ~Compressor() {};
+  /// Destructor
+  virtual ~Compressor() {
+    if( header ) delete[] header;
+  };
 
 
   /// Return the image header size
@@ -227,6 +230,27 @@ class Compressor {
   /// Get compression type
   /** @return compressionType */
   virtual ImageEncoding getImageEncoding() const { return ImageEncoding::RAW; };
+
+
+  /// Determine whether encoder supports the given bit depth and sample type
+  /// Set default to support for only 8 bit fixed point integer
+  /** @param bpc bit depth
+      @param type sample type (FIXEDPOINT or FLOATINGPOINT)
+      @return whether or not bit depth and sample type is supported
+  */
+  virtual bool supportsBitDepth( unsigned int bpc, SampleType type = SampleType::FIXEDPOINT ) const {
+    return bpc == 8 && type == SampleType::FIXEDPOINT;
+  }
+
+
+  /// Determine whether encoder supports the given number of channels
+  /// Set default to support for 1 to 4 channels (greyscale/color + alpha)
+  /** @param channels number of channels
+      @return whether or not the channel count is supported
+  */
+  virtual bool supportsChannels( unsigned int channels ) const {
+    return channels >= 1 && channels <= 4;
+  }
 
 
   /// Inject metadata into raw bitstream

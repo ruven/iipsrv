@@ -29,6 +29,8 @@ using namespace std;
 /// Initialize chunk-based encoding for the CVT handler
 void WebPCompressor::InitCompression( const RawTile& rawtile, unsigned int strip_height ){
 
+  if( rawtile.bpc != 8 ) throw string( "WebPCompressor: WebP can only handle 8 bit images" );
+
   // Manually set up the correct width and height for this particular tile and point to the existing data buffer
   tile.width = rawtile.width;
   tile.height = rawtile.height;
@@ -84,6 +86,8 @@ unsigned int WebPCompressor::Finish( unsigned char* output ){
 
 /// Compress a single tile of data
 unsigned int WebPCompressor::Compress( RawTile& rawtile ){
+
+  if( rawtile.bpc != 8 ) throw string( "WebPCompressor: WebP can only handle 8 bit images" );
 
   // WebP cannot handle greyscale, so duplicate our data to 3 bands
   if( rawtile.channels == 1 ) rawtile.triplicate();

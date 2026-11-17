@@ -45,13 +45,13 @@ class JXLCompressor : public Compressor {
   uint64_t current_chunk;             ///< Index of current byte
 
   /// Write ICC profile
-  void writeICCProfile();
+  void writeICCProfile() override;
 
   /// Write XMP metadata
-  void writeXMPMetadata();
+  void writeXMPMetadata() override;
 
   /// Write EXIF metadata
-  void writeExifMetadata();
+  void writeExifMetadata() override;
 
   /// Configure encoding parameters
   void configure( const RawTile& );
@@ -63,11 +63,11 @@ class JXLCompressor : public Compressor {
   /** JXL encodes the whole image as a single frame, so we feed all input at once
       and drain the full compressed codestream. The input buffer is not modified.
       @param rawtile image to encode
-      @param dataLength set to the number of valid bytes in the returned buffer
-      @param capacity set to the allocated size of the returned buffer
-      @return newly allocated buffer containing the compressed frame (caller owns)
+      @return tile owning the compressed frame. The buffer is allocated using
+      the input bpc and sampleType so that RawTile::deallocate() uses the
+      matching element type.
    */
-  unsigned char* encode( const RawTile& rawtile, size_t& dataLength, size_t& capacity );
+  RawTile encode( const RawTile& rawtile );
 
 
  public:
@@ -79,7 +79,7 @@ class JXLCompressor : public Compressor {
 
 
   /// Destructor
-  ~JXLCompressor();
+  ~JXLCompressor() override;
 
 
   /// Initialize strip based compression
@@ -88,7 +88,7 @@ class JXLCompressor : public Compressor {
       @param rawtile RawTile object containing the image to be compressed
       @param strip_height height in pixels of the strip we want to compress
    */
-  void InitCompression( const RawTile& rawtile, unsigned int strip_height );
+  void InitCompression( const RawTile& rawtile, unsigned int strip_height ) override;
 
 
   /// Compress a strip of image data
@@ -97,53 +97,51 @@ class JXLCompressor : public Compressor {
       @param output output_buffer
       @return size of compressed strip
    */
-  unsigned int CompressStrip( unsigned char* source, unsigned char* output, unsigned int tile_height );
+  unsigned int CompressStrip( unsigned char* source, unsigned char* output, unsigned int tile_height ) override;
 
 
   /// Finish the strip based compression and free memory
   /** @param output Output buffer
       @return size of output generated
    */
-  unsigned int Finish( unsigned char* output );
+  unsigned int Finish( unsigned char* output ) override;
 
 
   /// Compress an entire buffer of image data at once in one command
   /** @param t tile of image data
       @return size of compressed data
    */
-  unsigned int Compress( RawTile& t );
+  unsigned int Compress( RawTile& t ) override;
 
-
-  /// Return the JXL header size
-  /** @return header size */
-  inline unsigned int getHeaderSize() const { return header_size; }
-
-  /// Return a pointer to the header itself
-  /** @return pointer to header buffer */
-  inline unsigned char* getHeader() { return header; }
 
   /// Return the JXL mime type
   /** @return mime type */
-  inline const char* getMimeType() const { return "image/jxl"; }
+  inline const char* getMimeType() const override { return "image/jxl"; }
 
   /// Return the image filename suffix
   /** @return file suffix */
-  inline const char* getSuffix() const { return "jxl"; }
+  inline const char* getSuffix() const override { return "jxl"; }
 
   /// Get compression type
   /** @return compression type */
-  inline ImageEncoding getImageEncoding() const { return ImageEncoding::JXL; };
+  inline ImageEncoding getImageEncoding() const override { return ImageEncoding::JXL; };
 
 
-  /// Get the current compression level
-  /** @return compresson level */
-  inline int getQuality() const { return Q; }
+  /// Determine whether encoder supports the given bit depth and sample type
+  /** @param bpc bit depth
+      @param type sample type (FIXEDPOINT or FLOATINGPOINT)
+      @return whether or not bit depth and sample type is supported
+  */
+  bool supportsBitDepth( unsigned int bpc, SampleType type = SampleType::FIXEDPOINT ) const override {
+    return ( type == SampleType::FIXEDPOINT && ( bpc == 8 || bpc == 16 ) ) ||
+           ( type == SampleType::FLOATINGPOINT && bpc == 32 );
+  }
 
 
   /// Set the compression level
   /** @param quality compression level: 0-100 with (0 = highest compression). -1 = lossless
    */
-  inline void setQuality( int quality ){
+  inline void setQuality( int quality ) override {
 
     // Flag that user has manually changed quality level
     default_quality = false;

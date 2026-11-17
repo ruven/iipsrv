@@ -18,6 +18,7 @@
 */
 
 
+#include <new>
 #include <cmath>
 #include <limits>
 #include "JPEGCompressor.h"
@@ -53,7 +54,7 @@ inline double round(double r) { return (r > 0.0) ? floor(r + 0.5) : ceil(r - 0.5
 
 
 // XMP definitions
-#define XMP_PREFIX "http://ns.adobe.com/xap/1.0/%c%s"
+#define XMP_PREFIX "http://ns.adobe.com/xap/1.0/"
 #define XMP_PREFIX_SIZE 29
 
 // EXIF definitions
@@ -71,10 +72,8 @@ METHODDEF(void) iip_error_exit( j_common_ptr cinfo )
   // Create the message
   (*cinfo->err->format_message) ( cinfo, buffer );
 
-  // Let the memory manager delete any temp files before we die
-  jpeg_destroy( cinfo );
-
-  // Throw an exception rather than print out a message and exit
+  // Throw an exception rather than print out a message and exit.
+  // Any memory is released by the JPEGCompressor destructor (RAII).
   throw string( buffer );
 }
 
@@ -115,9 +114,16 @@ iip_empty_output_buffer( j_compress_ptr cinfo )
 {
   iip_destination_mgr* dest = (iip_destination_mgr*) cinfo->dest;
 
+  // If the destination buffer is not owned by us, we must not grow it:
+  // freeing a caller-owned buffer would corrupt memory. Signal an error
+  // instead, which libjpeg reports via error_exit.
+  if( !dest->owns_source ) return FALSE;
+
   // If we reach here, our output tile buffer must be too small, so reallocate
-  unsigned int new_size = dest->source_size*2;
-  unsigned char *source = new unsigned char[new_size];
+  size_t new_size = dest->source_size*2;
+  if( new_size <= dest->source_size ) return FALSE;   // size_t overflow guard
+  unsigned char *source = new(std::nothrow) unsigned char[new_size];
+  if( source == NULL ) return FALSE;
   memcpy( source, dest->source, dest->source_size );
 
   // Swap buffers
@@ -187,16 +193,15 @@ void JPEGCompressor::InitCompression( const RawTile& rawtile, unsigned int strip
   channels = rawtile.channels;
 
   // Calculate our metadata storage requirements
-  unsigned int metadata_size =
-    (icc.size()>0 ? (icc.size()+ICC_OVERHEAD_LEN) : 0) +
-    (xmp.size()>0 ? (xmp.size()+XMP_PREFIX_SIZE) : 0) +
-    (exif.size()>0 ? (exif.size()+EXIF_PREFIX_SIZE) : 0);
+  unsigned long metadata_size = metadataSize();
 
   // Allocate enough memory for our header and metadata
   unsigned long output_size = metadata_size + MX;
-  header = new unsigned char[output_size];
-  dest->source = header;
+  if( header ){ delete[] header; header = NULL; }
+  header_size = 0;
+  dest->source = new unsigned char[output_size];
   dest->source_size = output_size;
+  dest->owns_source = true;
 
   cinfo.image_width = width;
   cinfo.image_height = height;
@@ -207,15 +212,8 @@ void JPEGCompressor::InitCompression( const RawTile& rawtile, unsigned int strip
   // Add DPI
   writeResolution();
 
-  // Set compression point quality (highest, but possibly slower depending
-  //  on hardware) - must do this after we've set the defaults!
+  // Set DCT method to fastest - must do this after we've set the defaults!
   cinfo.dct_method = JDCT_FASTEST;
-
-  // If our image is already JPEG encoded, then we are transcoding, so disable JFIF
-  // as this won't work with JPEG/RGB encoded bitstreams
-  if( rawtile.compressionType ==  ImageEncoding::JPEG ){
-    cinfo.write_JFIF_header = FALSE;
-  }
 
   jpeg_set_quality( &cinfo, Q, TRUE );
 
@@ -234,10 +232,16 @@ void JPEGCompressor::InitCompression( const RawTile& rawtile, unsigned int strip
   const char *comment = "iipsrv/" VERSION;
   jpeg_write_marker( &cinfo, JPEG_COM, (const JOCTET*) comment, strlen(comment) );
 
-  // Copy the encoded JPEG header data to a separate buffer
+  // Copy the encoded JPEG header data into our own independent buffer
   size_t datacount = dest->source_size - dest->pub.free_in_buffer;
+  header = new unsigned char[datacount];
+  memcpy( header, dest->source, datacount );
   header_size = datacount;
 
+  // The scratch buffer is no longer needed
+  delete[] dest->source;
+  dest->source = NULL;
+  dest->owns_source = false;
 }
 
 
@@ -260,6 +264,7 @@ unsigned int JPEGCompressor::CompressStrip( unsigned char* input, unsigned char*
   // Setup our destination manager
   dest->source = output;
   dest->source_size = tile_height*width*channels + MX;
+  dest->owns_source = false;
   dest->pub.next_output_byte = output;
   dest->pub.free_in_buffer = dest->source_size;
 
@@ -284,6 +289,7 @@ unsigned int JPEGCompressor::Finish( unsigned char* output )
 {
   // Reset pointers
   dest->source = output;
+  dest->owns_source = false;
   dest->pub.next_output_byte = dest->source;
   dest->pub.free_in_buffer = dest->source_size;
 
@@ -294,7 +300,7 @@ unsigned int JPEGCompressor::Finish( unsigned char* output )
   jpeg_finish_compress( &cinfo );
 
   // Calculate size of final data to be written before destroying our compression structures
-  unsigned long dataLength = dest->source_size - dest->pub.free_in_buffer;
+  uint32_t dataLength = dest->source_size - dest->pub.free_in_buffer;
 
   // Destroy our compression structure
   jpeg_destroy_compress( &cinfo );
@@ -315,6 +321,9 @@ unsigned int JPEGCompressor::Compress( RawTile& rawtile )
 
   // JPEG can only handle 8 bit data
   if( rawtile.bpc != 8 ) throw string( "JPEGCompressor: JPEG can only handle 8 bit images" );
+
+  // Make sure we actually have some data to compress
+  if( rawtile.data == NULL ) throw string( "JPEGCompressor: no image data to compress" );
 
 
   // Initialize our destination manager
@@ -343,16 +352,14 @@ unsigned int JPEGCompressor::Compress( RawTile& rawtile )
 
 
   // Calculate our metadata storage requirements
-  unsigned int metadata_size =
-    (icc.size()>0 ? (icc.size()+ICC_OVERHEAD_LEN) : 0) +
-    (xmp.size()>0 ? (xmp.size()+XMP_PREFIX_SIZE) : 0) +
-    (exif.size()>0 ? (exif.size()+EXIF_PREFIX_SIZE) : 0);
+  unsigned long metadata_size = metadataSize();
 
   // Allocate enough memory for our compressed output data
   // - compressed images at overly high quality factors can be larger than raw data
-  unsigned long output_size = (unsigned long)( (unsigned int)(width*height*channels*1.5) + metadata_size );
+  unsigned long output_size = (unsigned long)( (uint64_t)width * height * channels *1.5 ) + metadata_size;
   dest->source = new unsigned char[output_size]; // Add some extra buffering
   dest->source_size = output_size;
+  dest->owns_source = true;
 
   // Set image information
   cinfo.image_width = width;
@@ -397,20 +404,24 @@ unsigned int JPEGCompressor::Compress( RawTile& rawtile )
   // Tidy up, get the compressed data size and de-allocate memory
   jpeg_finish_compress( &cinfo );
 
+  if( dest->written > std::numeric_limits<uint32_t>::max() ){
+    throw string( "JPEGCompressor :: Output too large" );
+  }
+
   // Check that we have enough memory in our Rawtile for the JPEG data.
   // This can happen on small tiles with high quality factors. If so delete and reallocate memory.
-  unsigned long dataLength;
-  dataLength = dest->written;
+  uint32_t dataLength = static_cast<uint32_t>( dest->written );
 
   if( dataLength > rawtile.capacity ){
-    if( rawtile.memoryManaged ) delete[] (unsigned char*) rawtile.data;
-    rawtile.data = new unsigned char[dataLength];
-    rawtile.capacity = dataLength;
+    if( rawtile.memoryManaged ) rawtile.deallocate( rawtile.data );
+    rawtile.allocate( dataLength );
   }
   
   // Copy memory back to the tile
   memcpy( rawtile.data, dest->source, dataLength );
   delete[] dest->source;
+  dest->source = NULL;
+  dest->owns_source = false;
   jpeg_destroy_compress( &cinfo );
 
 
@@ -430,10 +441,47 @@ unsigned int JPEGCompressor::Compress( RawTile& rawtile )
 // Write DPI information
 void JPEGCompressor::writeResolution()
 {
-  // Set our physical output resolution (JPEG only supports integers)
-  if( dpi_x ) cinfo.X_density = round( dpi_x );
-  if( dpi_y ) cinfo.Y_density = round( dpi_y );
-  if( dpi_x || dpi_y ) cinfo.density_unit = dpi_units;
+  // Set our physical output resolution (JPEG only supports integers in the
+  // range 0-65535). Mirror the validation used in injectMetadata() so that
+  // malformed values (e.g. NaN or out-of-range) cannot be truncated.
+  if( dpi_x > 0.0 || dpi_y > 0.0 ){
+    const double rounded_x = round( dpi_x );
+    const double rounded_y = round( dpi_y );
+    const bool valid_x = dpi_x <= 0.0 || (isfinite( rounded_x ) && rounded_x <= 65535.0);
+    const bool valid_y = dpi_y <= 0.0 || (isfinite( rounded_y ) && rounded_y <= 65535.0);
+    cinfo.X_density = (dpi_x > 0.0 && valid_x) ? (UINT16) rounded_x : (valid_x ? 1 : 0);
+    cinfo.Y_density = (dpi_y > 0.0 && valid_y) ? (UINT16) rounded_y : (valid_y ? 1 : 0);
+    cinfo.density_unit = (dpi_units >= 0 && dpi_units <= 2) ? (UINT8) dpi_units : 0;
+  }
+}
+
+
+
+// Calculate the number of bytes the embedded metadata segments will occupy,
+// including the 2-byte marker code and 2-byte length field of each segment
+unsigned long JPEGCompressor::metadataSize() const
+{
+  unsigned long size = 0;
+
+  // ICC: split into APP2 markers, each with ICC_OVERHEAD_LEN bytes of overhead
+  if( embedICC && !icc.empty() ){
+    size_t num_markers = 1 + (icc.size() - 1) / MAX_DATA_BYTES_IN_MARKER;
+    // Profiles requiring more than 255 markers cannot be represented and are skipped
+    if( num_markers <= 255 ) size += icc.size() + num_markers * (4 + ICC_OVERHEAD_LEN);
+  }
+
+  // XMP: single APP1 marker
+  if( embedXMP && !xmp.empty() && xmp.size() <= (MAX_BYTES_IN_MARKER - XMP_PREFIX_SIZE) )
+    size += 4 + xmp.size() + XMP_PREFIX_SIZE;
+
+  // EXIF: single APP1 marker
+  if( embedEXIF && !exif.empty() && exif.size() <= (MAX_BYTES_IN_MARKER - EXIF_PREFIX_SIZE) )
+    size += 4 + exif.size() + EXIF_PREFIX_SIZE;
+
+  // Identifying comment marker
+  size += 4 + strlen( "iipsrv/" VERSION );
+
+  return size;
 }
 
 
@@ -443,19 +491,16 @@ void JPEGCompressor::writeResolution()
 // the first call to jpeg_write_scanlines().
 // (This ordering ensures that the APP2 marker(s) will appear after the
 // SOI and JFIF or Adobe markers, but before all else.)
-//
-// The ICC write function is based on an implementation by the Independent JPEG Group
-// See the copyright notice in COPYING.ijg for details
 void JPEGCompressor::writeICCProfile()
 {
   // Skip if profile embedding disabled
   if( !embedICC || icc.empty() ) return;
 
-  unsigned int num_markers;     // total number of markers we'll write
+  size_t num_markers;           // total number of markers we'll write
   int cur_marker = 1;           // per spec, counting starts at 1
-  unsigned int length;          // number of bytes to write in this marker
+  size_t length;                // number of bytes to write in this marker
 
-  unsigned int icc_data_len = icc.size();
+  size_t icc_data_len = icc.size();
   const char* icc_data_ptr = icc.c_str();
   
   // Calculate the number of markers we'll need, rounding up of course
@@ -464,44 +509,34 @@ void JPEGCompressor::writeICCProfile()
     num_markers++;
   }
 
+  // The sequence and total-count fields are each a single byte, so a profile
+  // requiring more than 255 APP2 markers cannot be represented. Skip it rather
+  // than emit a stream with wrapped sequence/count values (matches injectMetadata()).
+  if( num_markers > 255 ) return;
+
+  // Marker payload: "ICC_PROFILE\0" id (12) + sequence (1) + total (1) + chunk
+  static const char icc_id[12] = "ICC_PROFILE";
+  unsigned char* payload = markerBuffer();   // max = ICC_OVERHEAD_LEN (14) + MAX_DATA_BYTES_IN_MARKER (65519)
+
   while( icc_data_len > 0 ){
 
-    // Length of profile to put in this marker
     length = icc_data_len;
     if( length > MAX_DATA_BYTES_IN_MARKER ){
       length = MAX_DATA_BYTES_IN_MARKER;
     }
     icc_data_len -= length;
-    
-    // Write the JPEG marker header (APP2 code and marker length)
-    jpeg_write_m_header( &cinfo, ICC_MARKER,
-			 (unsigned int) (length + ICC_OVERHEAD_LEN) );
 
-    // Write the marker identifying string "ICC_PROFILE" (null-terminated).
-    // We code it in this less-than-transparent way so that the code works
-    // even if the local character set is not ASCII.
-    jpeg_write_m_byte(&cinfo, 0x49);
-    jpeg_write_m_byte(&cinfo, 0x43);
-    jpeg_write_m_byte(&cinfo, 0x43);
-    jpeg_write_m_byte(&cinfo, 0x5F);
-    jpeg_write_m_byte(&cinfo, 0x50);
-    jpeg_write_m_byte(&cinfo, 0x52);
-    jpeg_write_m_byte(&cinfo, 0x4F);
-    jpeg_write_m_byte(&cinfo, 0x46);
-    jpeg_write_m_byte(&cinfo, 0x49);
-    jpeg_write_m_byte(&cinfo, 0x4C);
-    jpeg_write_m_byte(&cinfo, 0x45);
-    jpeg_write_m_byte(&cinfo, 0x0);
+    // Assemble the full marker payload and write it in a single call,
+    // rather than emitting one byte at a time via jpeg_write_m_byte.
+    unsigned int payload_len = (unsigned int)( ICC_OVERHEAD_LEN + length );
+    memcpy( payload, icc_id, 12 );
+    payload[12] = (unsigned char) cur_marker;
+    payload[13] = (unsigned char) num_markers;
+    memcpy( payload + ICC_OVERHEAD_LEN, icc_data_ptr, length );
 
-    // Add the sequencing info
-    jpeg_write_m_byte( &cinfo, cur_marker );
-    jpeg_write_m_byte( &cinfo, (int) num_markers );
+    jpeg_write_marker( &cinfo, ICC_MARKER, (const JOCTET*) payload, payload_len );
 
-    // Write the profile data byte by byte
-    while( length-- ){
-      jpeg_write_m_byte(&cinfo, *icc_data_ptr);
-      icc_data_ptr++;
-    }
+    icc_data_ptr += length;
     cur_marker++;
   }
 }
@@ -515,11 +550,14 @@ void JPEGCompressor::writeXMPMetadata()
 
   // The XMP data in a JPEG stream needs to be prefixed with a zero-terminated ID string
   // ref http://www.adobe.com/content/dam/Adobe/en/devnet/xmp/pdfs/cs6/XMPSpecificationPart3.pdf (pp13-14)
-  // so have to copy it into a larger buffer
-  char xmpstr[65536];	// per spec, XMP max size is 65502; namespace prefix/id is 29 bytes
+  unsigned char* xmpstr = markerBuffer();      // per spec, XMP max size is 65502; namespace prefix/id is 29 bytes
 
-  // '0' should be 0, but snprintf is too smart...
-  snprintf( xmpstr, 65536, XMP_PREFIX, '\0', xmp.c_str() );
+  // Build the 29-byte prefix (28-byte namespace id + null terminator) followed by
+  // the XMP packet itself. Use memcpy rather than snprintf so that any embedded
+  // null bytes within the XMP data are preserved.
+  memcpy( xmpstr, XMP_PREFIX, XMP_PREFIX_SIZE - 1 );
+  xmpstr[XMP_PREFIX_SIZE - 1] = '\0';
+  memcpy( xmpstr + XMP_PREFIX_SIZE, xmp.c_str(), xmp.size() );
 
   // Can't use regular addMetadata, because of the zero term after the namespace id; and the APP1 marker
   jpeg_write_marker( &cinfo, JPEG_APP0+1, (const JOCTET*) xmpstr, XMP_PREFIX_SIZE + xmp.size() );
@@ -540,7 +578,7 @@ void JPEGCompressor::writeExifMetadata()
   if( len > (MAX_BYTES_IN_MARKER - EXIF_PREFIX_SIZE) ) return;
 
   // Need to add prefix (need do this with memcpy because of null bytes)
-  char exifstr[65536];
+  unsigned char* exifstr = markerBuffer();
   memcpy( exifstr, EXIF_PREFIX, EXIF_PREFIX_SIZE );
   memcpy( exifstr+EXIF_PREFIX_SIZE, exif.c_str(), len );
 
@@ -550,6 +588,11 @@ void JPEGCompressor::writeExifMetadata()
 
 
 
+// Inject metadata into an already-encoded JPEG bitstream. This modifies
+// rawtile.data in place (for the physical resolution) and, when metadata
+// segments are added, replaces the buffer with a newly allocated one. The tile
+// must therefore own a writable buffer (memoryManaged == true) and must not be
+// shared with the cache or another tile.
 void JPEGCompressor::injectMetadata( RawTile& rawtile )
 {
   unsigned char* data = (unsigned char*) rawtile.data;
@@ -648,12 +691,11 @@ void JPEGCompressor::injectMetadata( RawTile& rawtile )
 
   // Write our XMP APP1 segment: XMP_PREFIX (incl. null terminator) + XMP data
   if( embedXMP && !xmp.empty() && xmp.size() <= (MAX_BYTES_IN_MARKER - XMP_PREFIX_SIZE) ){
-    static const unsigned char prefix[] = "http://ns.adobe.com/xap/1.0/";
     size_t seg_len = 2 + XMP_PREFIX_SIZE + xmp.size();
     buffer[offset] = 0xFF; buffer[offset+1] = 0xE1;
     buffer[offset+2] = (seg_len >> 8) & 0xFF; buffer[offset+3] = seg_len & 0xFF;
     offset += 4;
-    memcpy( &buffer[offset], prefix, XMP_PREFIX_SIZE - 1 );
+    memcpy( &buffer[offset], XMP_PREFIX, XMP_PREFIX_SIZE - 1 );
     buffer[offset + XMP_PREFIX_SIZE - 1] = 0x00;
     offset += XMP_PREFIX_SIZE;
     memcpy( &buffer[offset], xmp.c_str(), xmp.size() );
@@ -691,11 +733,10 @@ void JPEGCompressor::injectMetadata( RawTile& rawtile )
   memcpy( &buffer[offset], &data[pos], dlen - pos );
 
   // Delete our original data buffer and re-assign our new buffer
-  if( rawtile.memoryManaged ) delete[] (unsigned char*) rawtile.data;
-  rawtile.memoryManaged = true;
-  rawtile.capacity = (uint32_t) new_length;
+  if( rawtile.memoryManaged ) rawtile.deallocate( rawtile.data );
   rawtile.data = buffer;
-
+  rawtile.capacity = (uint32_t) new_length;
   rawtile.dataLength = (uint32_t) new_length;
+  rawtile.memoryManaged = true;
 
 }

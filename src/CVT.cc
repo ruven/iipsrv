@@ -514,14 +514,8 @@ void CVT::send( Session* session ){
   }
 
 
-  // Reduce to 1 or 3 bands if we have an alpha channel or a multi-band image and have requested a JPEG tile
-  // For PNG and WebP, strip extra bands if we have more than 4 present
-  if( ( (session->view->output_format == ImageEncoding::JPEG) && (complete_image.channels == 2 || complete_image.channels > 3) ) ||
-      ( (session->view->output_format == ImageEncoding::PNG)  && (complete_image.channels  > 4) ) ||
-      ( (session->view->output_format == ImageEncoding::WEBP) && (complete_image.channels  > 4) ) ||
-      ( (session->view->output_format == ImageEncoding::AVIF) && (complete_image.channels  > 4) ) ||
-      ( (session->view->output_format == ImageEncoding::JXL)  && (complete_image.channels  > 4) ) ){
-
+  // Reduce to 1 or 3 bands if the output encoder does not support this channel count
+  if( !compressor->supportsChannels( complete_image.channels ) ){
     int output_channels = (complete_image.channels==2)? 1 : 3;
     if( session->loglevel >= 5 ) function_timer.start();
 

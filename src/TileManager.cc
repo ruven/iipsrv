@@ -30,6 +30,23 @@
 using namespace std;
 
 
+/// Return a human-readable name for an image encoding
+static const std::string compressionName( ImageEncoding encoding ){
+  switch( encoding ){
+    case ImageEncoding::JPEG:     return "JPEG";
+    case ImageEncoding::TIFF:     return "TIFF";
+    case ImageEncoding::JPEG2000: return "JPEG2000";
+    case ImageEncoding::PNG:      return "PNG";
+    case ImageEncoding::WEBP:     return "WebP";
+    case ImageEncoding::AVIF:     return "AVIF";
+    case ImageEncoding::JXL:      return "JPEG-XL";
+    case ImageEncoding::DEFLATE:  return "DEFLATE";
+    case ImageEncoding::RAW:      return "RAW";
+    default:                      return "UNKNOWN";
+  }
+}
+
+
 
 RawTile TileManager::getNewTile( int resolution, int tile, int xangle, int yangle, int layers, ImageEncoding ctype ){
 
@@ -39,8 +56,7 @@ RawTile TileManager::getNewTile( int resolution, int tile, int xangle, int yangl
   // Get a tile from the IIPImage image object
   if( loglevel >= 2 ) insert_timer.start();
   RawTile ttt = image->getTile( xangle, yangle, resolution, layers, tile, source_encoding );
-  if( loglevel >= 2 ) *logfile << "TileManager :: Tile decoding time: " << insert_timer.getTime()
-			       << " microseconds" << endl;
+  if( loglevel >= 2 ) *logfile << "TileManager :: Tile decoding time: " << insert_timer.getTime() << " microseconds" << endl;
 
   // If our tile is already correctly encoded, no need to re-encode, but may need to inject metadata
   if( (ttt.compressionType == ctype) && (ctype != ImageEncoding::RAW) ){
@@ -53,73 +69,22 @@ RawTile TileManager::getNewTile( int resolution, int tile, int xangle, int yangl
     // Note that injection only implemented for WebP and JPEG
     if( loglevel >= 4 ) compression_timer.start();
     compressor->injectMetadata( ttt );
-    if( loglevel >= 4 ) *logfile << "TileManager :: Metadata injection time: "
-				 << compression_timer.getTime() << " microseconds" << endl;
+    if( loglevel >= 4 ) *logfile << "TileManager :: Metadata injection time: " << compression_timer.getTime() << " microseconds" << endl;
   }
+
   // Encode our tile
   else{
 
-    switch( ctype ){
+    // Compress if the requested format matches our encoder and the encoder supports the data
+    if( ctype != ImageEncoding::RAW && compressor->getImageEncoding() == ctype &&
+	compressor->supportsBitDepth( ttt.bpc, ttt.sampleType ) && compressor->supportsChannels( ttt.channels ) ){
 
-      case ImageEncoding::RAW:
-	// Nothing to do
-	break;
-
-
-      case ImageEncoding::JPEG:
-	// Do our JPEG compression iff we have an 8 bit per channel image
-	if( ttt.bpc == 8 && (ttt.channels==1 || ttt.channels==3) ){
-	  if( loglevel >= 2 ) compression_timer.start();
-	  compressor->Compress( ttt );
-	  if( loglevel >= 2 ) *logfile << "TileManager :: JPEG compression time: "
-				       << compression_timer.getTime() << " microseconds" << endl;
-	}
-	break;
-
-
-      case ImageEncoding::TIFF:
-	if( loglevel >= 2 ) compression_timer.start();
-	compressor->Compress( ttt );
-	if( loglevel >= 2 ) *logfile << "TileManager :: TIFF compression time: "
-				     << compression_timer.getTime() << " microseconds" << endl;
-	break;
-
-
-      case ImageEncoding::PNG:
-	if( loglevel >= 2 ) compression_timer.start();
-	compressor->Compress( ttt );
-	if( loglevel >= 2 ) *logfile << "TileManager :: PNG compression time: "
-				     << compression_timer.getTime() << " microseconds" << endl;
-	break;
-
-
-      case ImageEncoding::WEBP:
-	if( loglevel >= 2 ) compression_timer.start();
-	compressor->Compress( ttt );
-	if( loglevel >= 2 ) *logfile << "TileManager :: WebP compression time: "
-				     << compression_timer.getTime() << " microseconds" << endl;
-	break;
-
-
-      case ImageEncoding::AVIF:
-	if( loglevel >= 2 ) compression_timer.start();
-	compressor->Compress( ttt );
-	if( loglevel >= 2 ) *logfile << "TileManager :: AVIF compression time: "
-				     << compression_timer.getTime() << " microseconds" << endl;
-	break;
-
-
-      case ImageEncoding::JXL:
-	if( loglevel >= 2 ) compression_timer.start();
-	compressor->Compress( ttt );
-	if( loglevel >= 2 ) *logfile << "TileManager :: JPEG-XL compression time: "
-				     << compression_timer.getTime() << " microseconds" << endl;
-	break;
-
-
-      default:
-	break;
-
+      if( loglevel >= 2 ) compression_timer.start();
+      compressor->Compress( ttt );
+      if( loglevel >= 2 ){
+	const string compName = compressionName( ctype );
+	*logfile << "TileManager :: " << compName << " compression time: " << compression_timer.getTime() << " microseconds" << endl;
+      }
     }
 
   }
@@ -128,8 +93,7 @@ RawTile TileManager::getNewTile( int resolution, int tile, int xangle, int yangl
   // Add to our tile cache
   if( loglevel >= 4 ) insert_timer.start();
   tileCache->insert( ttt );
-  if( loglevel >= 4 ) *logfile << "TileManager :: Tile cache insertion time: " << insert_timer.getTime()
-			       << " microseconds" << endl;
+  if( loglevel >= 4 ) *logfile << "TileManager :: Tile cache insertion time: " << insert_timer.getTime() << " microseconds" << endl;
 
 
   return ttt;
@@ -142,7 +106,7 @@ RawTile TileManager::getTile( int resolution, int tile, int xangle, int yangle, 
 
   RawTile* rawtile = NULL;
   string tileCompression;
-  string compName;
+  const string compName = compressionName( ctype );
 
 
   // Time the tile retrieval
@@ -216,22 +180,6 @@ RawTile TileManager::getTile( int resolution, int tile, int xangle, int yangle, 
 
 
 
-  if( loglevel >= 3 ){
-    // Define our compression names for logging purposes
-    switch( ctype ){
-      case ImageEncoding::JPEG:    compName = "JPEG";    break;
-      case ImageEncoding::TIFF:    compName = "TIFF";    break;
-      case ImageEncoding::PNG:     compName = "PNG";     break;
-      case ImageEncoding::WEBP:    compName = "WebP";    break;
-      case ImageEncoding::AVIF:    compName = "AVIF";    break;
-      case ImageEncoding::JXL:     compName = "JXL";     break;
-      case ImageEncoding::DEFLATE: compName = "DEFLATE"; break;
-      case ImageEncoding::RAW:     compName = "RAW";     break;
-      default: break;
-    }
-  }
-
-
   // If we haven't been able to get a tile, get a raw one
   if( !rawtile || (rawtile && (rawtile->timestamp != image->timestamp)) ){
 
@@ -251,8 +199,8 @@ RawTile TileManager::getTile( int resolution, int tile, int xangle, int yangle, 
 
     RawTile newtile = this->getNewTile( resolution, tile, xangle, yangle, layers, ctype );
 
-    if( loglevel >= 3 ) *logfile << "TileManager :: Total tile access time: "
-				 << tile_timer.getTime() << " microseconds" << endl;
+    if( loglevel >= 3 ) *logfile << "TileManager :: Total tile access time: " << tile_timer.getTime() << " microseconds" << endl;
+
     return newtile;
   }
 
@@ -268,21 +216,18 @@ RawTile TileManager::getTile( int resolution, int tile, int xangle, int yangle, 
 			       << tileCache->getMemorySize() << " MB" << endl;
 
 
-  // Check whether the compression used for out tile matches our requested compression type. If not, we must convert
-  // Perform JPEG compression iff we have an 8 bit per channel image and either 1 or 3 bands
-  // PNG compression can have 8 or 16 bits and alpha channels
-  if( (rawtile->compressionType == ImageEncoding::RAW) &&
-      ( ( ctype==ImageEncoding::JPEG && rawtile->bpc==8 && (rawtile->channels==1 || rawtile->channels==3) ) ||
-	ctype==ImageEncoding::PNG || ctype==ImageEncoding::WEBP || ctype==ImageEncoding::AVIF ||
-	ctype==ImageEncoding::JXL ) ){
+  // Check whether the compression used for our tile matches our requested compression type. If not, we must convert.
+  // Only compress if the encoder supports the bit depth and sample type of our raw tile.
+  if( ( rawtile->compressionType == ImageEncoding::RAW ) && ( compressor->getImageEncoding() == ctype ) &&
+      ( compressor->supportsBitDepth( rawtile->bpc, rawtile->sampleType ) && compressor->supportsChannels( rawtile->channels ) ) ){
 
     // Rawtile is a pointer to the cache data, so we need to create a copy of it in case we compress it
     RawTile ttt( *rawtile );
 
-    if( loglevel >=2 ) compression_timer.start();
+    if( loglevel >= 2 ) compression_timer.start();
     unsigned int oldlen = rawtile->dataLength;
     unsigned int newlen = compressor->Compress( ttt );
-    if( loglevel >= 3 ) *logfile << "TileManager :: " << compName << " requested, but RAW data found in cache." << endl
+    if( loglevel >= 2 ) *logfile << "TileManager :: " << compName << " requested, but RAW data found in cache." << endl
 				 << "TileManager :: " << compName << " Compression Time: "
 				 << compression_timer.getTime() << " microseconds" << endl
 				 << "TileManager :: Compression Ratio: " << newlen << "/" << oldlen << " = "
@@ -304,7 +249,6 @@ RawTile TileManager::getTile( int resolution, int tile, int xangle, int yangle, 
 			       << tile_timer.getTime() << " microseconds" << endl;
 
   return RawTile( *rawtile );
-
 
 }
 

@@ -335,6 +335,18 @@ RawTile JPEGImage::getRegion( int ha, int va, unsigned int res, int layers, int 
 // Main processing function for both tiles and regions
 size_t JPEGImage::process( unsigned int res, int layers, int xoffset, int yoffset, unsigned int tw, unsigned int th, void *d )
 {
+  // libjpeg cannot be reused after jpeg_finish_decompress() without re-reading the image header,
+  // so reopen or rewind the input and read the header again
+  if( _input == NULL ){
+    openImage();
+  }
+  else{
+    jpeg_abort_decompress( &cinfo );
+    rewind( _input );
+    jpeg_stdio_src( &cinfo, _input );
+    jpeg_read_header( &cinfo, TRUE );
+  }
+
   // Our effective position and size may not end up matching the requested values, so assign temporary variables
   unsigned int x0 = xoffset;
   unsigned int y0 = yoffset;

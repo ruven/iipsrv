@@ -1,7 +1,7 @@
 /*  IIP TIFF Compressor Class:
     Handles alpha channels, 8 or 16 bit data, ICC profiles and XMP metadata
 
-    Copyright (C) 2024-2025 Ruven Pillay
+    Copyright (C) 2024-2026 Ruven Pillay
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -57,19 +57,19 @@ class TIFFCompressor: public Compressor {
   uint16_t compression;
   
   /// Write metadata
-  void writeMetadata();
+  void writeMetadata() override;
 
   /// Write DPI information
-  void writeResolution();
+  void writeResolution() override;
 
   /// Write ICC profile
-  void writeICCProfile();
+  void writeICCProfile() override;
 
   /// Write XMP metadata
-  void writeXMPMetadata();
+  void writeXMPMetadata() override;
 
   /// Write EXIF metadata
-  void writeExifMetadata();
+  void writeExifMetadata() override;
 
   /// Configure encoding parameters
   void configure( const RawTile& );
@@ -109,7 +109,7 @@ class TIFFCompressor: public Compressor {
   /// Set the compression level
   /** @param quality compression level for JPEG or WebP (both 0-100)
    */
-  inline void setQuality( int quality )
+  inline void setQuality( int quality ) override
   {
     // Flag that user has manually changed quality level
     default_quality = false;
@@ -135,7 +135,7 @@ class TIFFCompressor: public Compressor {
       @param rawtile RawTile object containing the image to be compressed
       @param strip_height height in pixels of the strip we want to compress
    */
-  void InitCompression( const RawTile& rawtile, unsigned int strip_height );
+  void InitCompression( const RawTile& rawtile, unsigned int strip_height ) override;
 
 
   /// Compress a strip of image data
@@ -144,7 +144,7 @@ class TIFFCompressor: public Compressor {
       @param output output_buffer
       @return size of compressed strip
    */
-  unsigned int CompressStrip( unsigned char* source, unsigned char* output, unsigned int tile_height );
+  unsigned int CompressStrip( unsigned char* source, unsigned char* output, unsigned int tile_height ) override;
 
 
 
@@ -152,24 +152,51 @@ class TIFFCompressor: public Compressor {
   /** @param output Output buffer
       @return size of output generated
    */
-  unsigned int Finish( unsigned char* output );
+  unsigned int Finish( unsigned char* output ) override;
 
 
   /// Compress an entire buffer of image data at once in one command
   /** @param t tile of image data
       @return size of compressed data
    */
-  unsigned int Compress( RawTile& t );
+  unsigned int Compress( RawTile& t ) override;
 
 
   /// Return the TIFF mime type
-  inline const char* getMimeType() const { return "image/tiff"; };
+  inline const char* getMimeType() const override { return "image/tiff"; };
 
   /// Return the image filename suffix
-  inline const char* getSuffix() const { return "tif"; };
+  inline const char* getSuffix() const override { return "tif"; };
 
   /// Get compression type
-  inline ImageEncoding getImageEncoding() const { return ImageEncoding::TIFF; };
+  inline ImageEncoding getImageEncoding() const override { return ImageEncoding::TIFF; };
+
+
+  /// Determine whether encoder supports the given bit depth and sample type
+  /** @param bpc bit depth
+      @param type sample type (FIXEDPOINT or FLOATINGPOINT)
+      @return whether or not bit depth and sample type is supported
+  */
+  inline bool supportsBitDepth( unsigned int bpc, SampleType type = SampleType::FIXEDPOINT ) const override {
+    // JPEG and WebP compressed TIFF only support 8 bit fixed point data
+    if( compression == COMPRESSION_JPEG || compression == COMPRESSION_WEBP ){
+      return type == SampleType::FIXEDPOINT && bpc == 8;
+    }
+    // Other compression types can handle 8, 16 and 32 bit fixed point or 32 bit floating point data
+    return ( type == SampleType::FIXEDPOINT && ( bpc == 8 || bpc == 16 || bpc == 32 ) ) ||
+           ( type == SampleType::FLOATINGPOINT && bpc == 32 );
+  }
+
+
+  /// Determine whether encoder supports the given number of channels
+  /** @param channels number of channels
+      @return whether or not the channel count is supported
+  */
+  inline bool supportsChannels( unsigned int channels ) const override {
+    if( compression == COMPRESSION_JPEG ) return channels == 1 || channels == 3;
+    if( compression == COMPRESSION_WEBP ) return channels == 3 || channels == 4;
+    return channels >= 1;
+  }
 
 
   /// Static utility function to get compression in human-readable form

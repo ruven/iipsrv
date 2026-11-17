@@ -114,7 +114,7 @@ void PNGCompressor::InitCompression( const RawTile& rawtile, unsigned int strip_
   dest.output = header;
   dest.output_size = output_size;     
   dest.written = 0;
-  dest.bytes_per_pixel = (unsigned int) (rawtile.bpc/8);
+  dest.bytes_per_pixel = rawtile.bpc/8;
 
 
   // Make sure we only try to compress images with 1 or 3 channels with ir without alpha
@@ -145,7 +145,7 @@ void PNGCompressor::InitCompression( const RawTile& rawtile, unsigned int strip_
   png_set_IHDR(
 	       dest.png_ptr, dest.info_ptr,
 	       width, height,
-	       rawtile.bpc,
+	       (int)rawtile.bpc,
 	       ( (channels<3) ? ( (channels==2) ? PNG_COLOR_TYPE_GRAY_ALPHA : PNG_COLOR_TYPE_GRAY): ( (channels==4) ? PNG_COLOR_TYPE_RGB_ALPHA : PNG_COLOR_TYPE_RGB)),
 	       PNG_INTERLACE_NONE,
 	       PNG_COMPRESSION_TYPE_BASE, 
@@ -249,7 +249,7 @@ unsigned int PNGCompressor::Compress( RawTile& rawtile )
 
   // Allocate enough memory for our compressed output data - make sure there is extra buffering
   // Note that compressed images at overly high quality factors can be larger than raw data
-  dest.bytes_per_pixel = (unsigned int) (rawtile.bpc/8);
+  dest.bytes_per_pixel = rawtile.bpc/8;
   unsigned long output_size = (unsigned long)( (unsigned long)(width*height*channels*1.5*dest.bytes_per_pixel) + metadata_size + MX);
   dest.output = new unsigned char[output_size];
   dest.output_size = output_size;
@@ -326,9 +326,8 @@ unsigned int PNGCompressor::Compress( RawTile& rawtile )
  
   // Allocate the appropriate amount of memory if the encoded PNG is larger than the raw image buffer
   if( dest.written > rawtile.capacity ){
-    if( rawtile.memoryManaged ) delete[] (unsigned char*) rawtile.data;
-    rawtile.data = new unsigned char[dest.written];
-    rawtile.capacity = dest.written;
+    if( rawtile.memoryManaged ) rawtile.deallocate( rawtile.data );
+    rawtile.allocate( dest.written );
   }
 
   rawtile.dataLength = dest.written;

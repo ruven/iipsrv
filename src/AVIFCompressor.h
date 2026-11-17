@@ -47,13 +47,13 @@ class AVIFCompressor : public Compressor {
 
 
   /// Write ICC profile
-  void writeICCProfile();
+  void writeICCProfile() override;
 
   /// Write XMP metadata
-  void writeXMPMetadata();
+  void writeXMPMetadata() override;
 
   /// Write EXIF metadata
-  void writeExifMetadata();
+  void writeExifMetadata() override;
 
 
  public:
@@ -64,7 +64,7 @@ class AVIFCompressor : public Compressor {
   AVIFCompressor( int quality ) : Compressor(quality), codec(AVIF_CODEC_CHOICE_AUTO) {};
 
   /// Destructor
-  ~AVIFCompressor(){};
+  ~AVIFCompressor() override {};
 
 
   /// Initialize strip based compression
@@ -73,7 +73,7 @@ class AVIFCompressor : public Compressor {
       @param rawtile RawTile object containing the image to be compressed
       @param strip_height height in pixels of the strip we want to compress
    */
-  void InitCompression( const RawTile& rawtile, unsigned int strip_height );
+  void InitCompression( const RawTile& rawtile, unsigned int strip_height ) override;
 
 
   /// Compress a strip of image data
@@ -82,48 +82,50 @@ class AVIFCompressor : public Compressor {
       @param output output_buffer
       @return size of compressed strip
    */
-  unsigned int CompressStrip( unsigned char* source, unsigned char* output, unsigned int tile_height );
+  unsigned int CompressStrip( unsigned char* source, unsigned char* output, unsigned int tile_height ) override;
 
 
   /// Finish the strip based compression and free memory
   /** @param output Output buffer
       @return size of output generated
    */
-  unsigned int Finish( unsigned char* output );
+  unsigned int Finish( unsigned char* output ) override;
 
 
   /// Compress an entire buffer of image data at once in one command
   /** @param t tile of image data
       @return size of compressed data
    */
-  unsigned int Compress( RawTile& t );
+  unsigned int Compress( RawTile& t ) override;
 
-
-  /// Return the AVIF header size
-  inline unsigned int getHeaderSize() const { return header_size; }
-
-  /// Return a pointer to the header itself
-  inline unsigned char* getHeader() { return header; }
 
   /// Return the AVIF mime type
-  inline const char* getMimeType() const { return "image/avif"; }
+  inline const char* getMimeType() const override { return "image/avif"; }
 
   /// Return the image filename suffix
-  inline const char* getSuffix() const { return "avif"; }
+  inline const char* getSuffix() const override { return "avif"; }
 
   /// Get compression type
-  inline ImageEncoding getImageEncoding() const { return ImageEncoding::AVIF; };
+  inline ImageEncoding getImageEncoding() const override { return ImageEncoding::AVIF; };
 
 
-  /// Get the current compression level
-  /** @return compresson level */
-  inline int getQuality() const { return Q; }
+  /// Determine whether encoder supports the given bit depth and sample type
+  /** @param bpc bit depth
+      @param type sample type (FIXEDPOINT or FLOATINGPOINT)
+      @return whether or not bit depth and sample type is supported
+  */
+  bool supportsBitDepth( unsigned int bpc, SampleType type = SampleType::FIXEDPOINT ) const override {
+    return type == SampleType::FIXEDPOINT && ( bpc == 8 || bpc == 16 );
+  }
 
 
   /// Set the compression level
   /** @param quality compression level: 0-100 with (0 = highest compression). -1 = lossless
    */
-  inline void setQuality( int quality ){
+  inline void setQuality( int quality ) override{
+
+    // Flag that user has manually changed quality level
+    default_quality = false;
 
     // AVIF quality ranges from 0 (best compression - smallest size) to 100 (worst compression - largest size)
     this->Q = quality;
@@ -132,6 +134,15 @@ class AVIFCompressor : public Compressor {
     if( Q < -1 ) Q = -1;         // Lossless
     else if( Q > 100 ) Q = 100;
 
+  }
+
+
+  /// Determine whether encoder supports the given number of channels
+  /** @param channels number of channels
+      @return whether or not the channel count is supported
+   */
+  inline bool supportsChannels( unsigned int channels ) const override {
+    return channels == 1 || channels == 3 || channels == 4;
   }
 
 

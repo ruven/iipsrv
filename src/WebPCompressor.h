@@ -1,7 +1,7 @@
 /*  WebP Compressor Class:
     Handles alpha channels, ICC profiles and XMP metadata
 
-    Copyright (C) 2022-2024 Ruven Pillay
+    Copyright (C) 2022-2026 Ruven Pillay
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -48,13 +48,13 @@ class WebPCompressor : public Compressor {
 
 
   /// Write ICC profile
-  void writeICCProfile();
+  void writeICCProfile() override;
 
   /// Write XMP metadata
-  void writeXMPMetadata();
+  void writeXMPMetadata() override;
 
   /// Write EXIF metadata
-  void writeExifMetadata();
+  void writeExifMetadata() override;
 
 
  public:
@@ -84,7 +84,7 @@ class WebPCompressor : public Compressor {
   };
 
 
-  ~WebPCompressor(){
+  ~WebPCompressor() override {
     // Delete our muxer object
     WebPMuxDelete( mux );
   };
@@ -96,7 +96,7 @@ class WebPCompressor : public Compressor {
       @param rawtile RawTile object containing the image to be compressed
       @param strip_height height in pixels of the strip we want to compress
    */
-  void InitCompression( const RawTile& rawtile, unsigned int strip_height );
+  void InitCompression( const RawTile& rawtile, unsigned int strip_height ) override;
 
 
   /// Compress a strip of image data
@@ -105,37 +105,37 @@ class WebPCompressor : public Compressor {
       @param output output_buffer
       @return size of compressed strip
    */
-  unsigned int CompressStrip( unsigned char* source, unsigned char* output, unsigned int tile_height );
+  unsigned int CompressStrip( unsigned char* source, unsigned char* output, unsigned int tile_height ) override;
 
 
   /// Finish the strip based compression and free memory
   /** @param output Output buffer
       @return size of output generated
    */
-  unsigned int Finish( unsigned char* output );
+  unsigned int Finish( unsigned char* output ) override;
 
 
   /// Compress an entire buffer of image data at once in one command
   /** @param t tile of image data
       @return size of compressed data
    */
-  unsigned int Compress( RawTile& t );
+  unsigned int Compress( RawTile& t ) override;
 
 
   /// Return the WebP mime type
-  inline const char* getMimeType() const { return "image/webp"; }
+  inline const char* getMimeType() const override { return "image/webp"; }
 
   /// Return the image filename suffix
-  inline const char* getSuffix() const { return "webp"; }
+  inline const char* getSuffix() const override { return "webp"; }
 
   /// Get compression type
-  inline ImageEncoding getImageEncoding() const { return ImageEncoding::WEBP; };
+  inline ImageEncoding getImageEncoding() const override { return ImageEncoding::WEBP; };
 
 
   /// Set the compression level
   /** @param quality compression level: 0-100 with (0 = highest compression)
    */
-  inline void setQuality( int quality ){
+  inline void setQuality( int quality ) override {
 
     // Flag that user has manually changed quality level
     default_quality = false;
@@ -158,10 +158,19 @@ class WebPCompressor : public Compressor {
   }
 
 
+  /// Determine whether encoder supports the given number of channels
+  /** @param channels number of channels
+      @return whether or not the channel count is supported
+   */
+  inline bool supportsChannels( unsigned int channels ) const override {
+    return channels == 1 || channels == 3 || channels == 4;
+  }
+
+
   /// Inject metadata into raw WebP bitstream
   /** @param r image tile
    */
-  void injectMetadata( RawTile& r );
+  void injectMetadata( RawTile& r ) override;
 
 
 };

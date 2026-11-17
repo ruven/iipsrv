@@ -3,6 +3,9 @@
 	- Removed unnecesary and exception-prone stream close() in Logger destructor.
 	- Updated RawTile to better allocate memory for cases where byte streams do not perfectly align
 	  with bit-depth boundaries.
+	- Harmonization of Compressor child classes and addition of helper functions for determining bit
+	  depth and channel support. Allows simplification of JTL.cc, CVT.cc and TileManager.cc. Also
+	  improved memory management and metadata handling in JPEGCompressor.
 
 
 15/11/2026:

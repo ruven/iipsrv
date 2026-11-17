@@ -475,14 +475,8 @@ void JTL::send( Session* session, int resolution, int tile ){
   } 
 
 
-  // Reduce to 1 or 3 bands if we have an alpha channel or a multi-band image and have requested a JPEG tile
-  // For PNG and WebP, strip extra bands if we have more than 4 present
-  if( ( (session->view->output_format == ImageEncoding::JPEG) && (rawtile.channels == 2 || rawtile.channels > 3) ) ||
-      ( (session->view->output_format == ImageEncoding::PNG)  && (rawtile.channels  > 4) ) ||
-      ( (session->view->output_format == ImageEncoding::WEBP) && (rawtile.channels  > 4) ) ||
-      ( (session->view->output_format == ImageEncoding::AVIF) && (rawtile.channels  > 4) ) ||
-      ( (session->view->output_format == ImageEncoding::JXL)  && (rawtile.channels  > 4) ) ){
-
+  // Reduce to 1 or 3 bands if the output encoder does not support this channel count
+  if( !compressor->supportsChannels( rawtile.channels ) ){
     unsigned int bands = (rawtile.channels==2) ? 1 : 3;
     if( session->loglevel >= 4 ){
       *(session->logfile) << "JTL :: Flattening channels to " << bands;

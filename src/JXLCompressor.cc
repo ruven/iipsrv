@@ -23,7 +23,7 @@
 #include "JXLCompressor.h"
 #include <jxl/version.h>
 #include <cstdint>
-#include <climits>
+#include <limits>
 #include <new>
 
 
@@ -222,7 +222,7 @@ void JXLCompressor::configure( const RawTile& rawtile ){
     codec like JPEG or PNG), so we feed the entire input in one go and then drain
     the full compressed codestream into a buffer. The input buffer is not modified.
  */
-unsigned char* JXLCompressor::encode( const RawTile& rawtile, size_t& dataLength, size_t& capacity ){
+RawTile JXLCompressor::encode( const RawTile& rawtile ){
 
   // Validate input before reading from the buffer to avoid out-of-bounds access
   if( rawtile.data == NULL ) throw string( "JXLCompressor :: NULL input data" );
@@ -232,7 +232,7 @@ unsigned char* JXLCompressor::encode( const RawTile& rawtile, size_t& dataLength
   unsigned int bytes_per_pixel = (unsigned int) rawtile.channels * (rawtile.bpc / 8);
   if( bytes_per_pixel == 0 ) throw string( "JXLCompressor :: Invalid bit depth" );
   size_t bytes = (size_t) rawtile.width * (size_t) rawtile.height;
-  if( bytes > SIZE_MAX / bytes_per_pixel ) throw string( "JXLCompressor :: Input too large" );
+  if( bytes > std::numeric_limits<size_t>::max() / bytes_per_pixel ) throw string( "JXLCompressor :: Input too large" );
   bytes *= bytes_per_pixel;
 
   // Make sure we don't read beyond the valid data
@@ -295,23 +295,28 @@ unsigned char* JXLCompressor::encode( const RawTile& rawtile, size_t& dataLength
     throw string( "JXLCompressor :: JxlEncoderProcessOutput failed: status " + std::to_string(status) );
   }
 
-  dataLength = next_out - temp_buffer;
+  const size_t dataLength = next_out - temp_buffer;
+  if( dataLength > std::numeric_limits<uint32_t>::max() ){
+    free( temp_buffer );
+    throw string( "JXLCompressor :: Output too large" );
+  }
 
-  // Allocate exact output buffer
-  unsigned char* buffer = NULL;
+  // Allocate the exact output buffer using RawTile's allocator so that the
+  // buffer element type matches the tile's bpc and sampleType
+  RawTile output( 0, 0, 0, 0, rawtile.width, rawtile.height, rawtile.channels, rawtile.bpc );
+  output.sampleType = rawtile.sampleType;
   try {
-    buffer = new unsigned char[dataLength];
+    output.allocate( (uint32_t) dataLength );
   }
   catch( const std::bad_alloc& ){
     free( temp_buffer );
     throw string( "JXLCompressor :: Out of memory allocating output buffer" );
   }
-  memcpy( buffer, temp_buffer, dataLength );
+  memcpy( output.data, temp_buffer, dataLength );
   free( temp_buffer );
+  output.dataLength = (uint32_t) dataLength;
 
-  capacity = dataLength;
-
-  return buffer;
+  return output;
 }
 
 
@@ -323,20 +328,7 @@ void JXLCompressor::InitCompression( const RawTile& rawtile, unsigned int strip_
   if( tile.data != NULL ) tile.deallocate( tile.data );
 
   // JXL encodes the whole region as a single frame, so compress the entire buffer in one go
-  size_t dataLength, capacity;
-  unsigned char* buffer = this->encode( rawtile, dataLength, capacity );
-
-  // Store the compressed data for chunked output. Set memoryManaged so the buffer
-  // is freed when the local tile object is destroyed
-  tile.width = rawtile.width;
-  tile.height = rawtile.height;
-  tile.channels = rawtile.channels;
-  tile.bpc = 8;
-  tile.sampleType = SampleType::FIXEDPOINT;
-  tile.data = buffer;
-  tile.capacity = capacity;
-  tile.dataLength = dataLength;
-  tile.memoryManaged = true;
+  tile = encode( rawtile );
 
   current_chunk = 0;
 }
@@ -386,20 +378,18 @@ unsigned int JXLCompressor::Finish( unsigned char* output ){
 unsigned int JXLCompressor::Compress( RawTile& rawtile ){
 
   // Encode the entire tile into a newly allocated buffer without touching the input
-  size_t dataLength, capacity;
-  unsigned char* buffer = this->encode( rawtile, dataLength, capacity );
+  RawTile encoded = encode( rawtile );
 
-  // Swap encoded buffer with Rawtile buffer
+  // Adopt the encoded payload, preserving the source tile's metadata
   // Only free the original input buffer if we own it, otherwise
   // leave the caller's externally-managed buffer intact
   if( rawtile.memoryManaged ) rawtile.deallocate( rawtile.data );
 
-  rawtile.capacity = capacity;
-  rawtile.dataLength = dataLength;
-  rawtile.data = buffer;
-  rawtile.bpc = 8;
-  rawtile.sampleType = SampleType::FIXEDPOINT;
+  rawtile.data = encoded.data;
+  rawtile.capacity = encoded.capacity;
+  rawtile.dataLength = encoded.dataLength;
   rawtile.memoryManaged = true;
+  encoded.data = NULL;   // Ownership transferred to rawtile
 
   rawtile.quality = this->Q;
   rawtile.compressionType = ImageEncoding::JXL;

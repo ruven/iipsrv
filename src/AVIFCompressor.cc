@@ -21,6 +21,7 @@
 
 
 #include "AVIFCompressor.h"
+#include <limits>
 
 #if HAVE_STL_THREAD
 #include <thread>
@@ -32,18 +33,14 @@ using namespace std;
 /// Initialize chunk-based encoding for the CVT handler
 void AVIFCompressor::InitCompression( const RawTile& rawtile, unsigned int strip_height ){
 
-  // Manually set up the correct width and height for this particular tile and point to the existing data buffer
-  tile.width = rawtile.width;
-  tile.height = rawtile.height;
-  tile.channels = rawtile.channels;
-  tile.bpc = rawtile.bpc;
-  tile.data = rawtile.data;
-  tile.dataLength = rawtile.dataLength;
-  tile.capacity = rawtile.capacity;
-  tile.memoryManaged = false;   // We don't want the RawTile destructor to free this memory
+  // Free any previously compressed output buffer from an earlier request
+  if( tile.memoryManaged ) tile.deallocate( tile.data );
 
-  // libavif cannot handle strip or region-based encoding, so compress the entire image in one go
-  this->Compress( tile );
+  // Compress into a temporary tile copy so we never mutate the const input rawtile
+  RawTile copy( rawtile );
+  this->Compress( copy );
+
+  tile = std::move( copy );
 
   current_chunk = 0;
 }
@@ -197,24 +194,27 @@ unsigned int AVIFCompressor::Compress( RawTile& rawtile ){
   }
 
 
-  // The encoded AVIF is always byte data. If the input buffer was allocated
-  // for 16 bit samples, or if the output does not fit, swap in a byte buffer
-  // so that RawTile::deallocate() uses the correct element type.
+  // Make sure encoded size is not too large for RawTile
+  if( output.size > std::numeric_limits<uint32_t>::max() ){
+    if( avif ) avifImageDestroy( avif );
+    if( encoder ) avifEncoderDestroy( encoder );
+    avifRWDataFree( &output );
+    throw string( "AVIFCompressor :: Output too large" );
+  }
+
+
+  // If the input buffer was allocated for 16 bit samples, or if the output
+  // does not fit, allocate a correctly sized buffer using RawTile::allocate()
+  // so that deallocate() uses the matching element type. The source bpc and
+  // sampleType are retained so that cache keys stay consistent.
   if( rawtile.bpc != 8 || output.size > rawtile.capacity ){
-    unsigned char* buffer = new unsigned char[output.size];
-    memcpy( buffer, output.data, output.size );
     if( rawtile.memoryManaged ) rawtile.deallocate( rawtile.data );
-    rawtile.data = buffer;
-    rawtile.capacity = output.size;
-    rawtile.memoryManaged = true;
+    rawtile.allocate( (uint32_t) output.size );
+    memcpy( rawtile.data, output.data, output.size );
   }
   else{
     memcpy( rawtile.data, output.data, output.size );
   }
-
-  // The compressed data is byte-oriented, regardless of the input depth
-  rawtile.bpc = 8;
-  rawtile.sampleType = SampleType::FIXEDPOINT;
 
   if( avif ){
     avifImageDestroy( avif );
@@ -223,8 +223,9 @@ unsigned int AVIFCompressor::Compress( RawTile& rawtile ){
     avifEncoderDestroy( encoder );
   }
 
+
   // Return our compressed tile
-  rawtile.dataLength = output.size;
+  rawtile.dataLength = (uint32_t) output.size;
 
   // Free our output structure
   avifRWDataFree( &output );

@@ -1,7 +1,7 @@
 /*  IIP TIFF Compressor Class:
     Handles 8, 16 or 32 bit data, alpha channels, ICC profiles and XMP metadata
 
-    Copyright (C) 2024-2025 Ruven Pillay
+    Copyright (C) 2024-2026 Ruven Pillay
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -110,9 +110,17 @@ void TIFFCompressor::configure( const RawTile &rawtile )
   TIFFSetField( tiff, TIFFTAG_IMAGEWIDTH, rawtile.width );              // width of the image
   TIFFSetField( tiff, TIFFTAG_IMAGELENGTH, rawtile.height );            // height of the image
   TIFFSetField( tiff, TIFFTAG_SAMPLESPERPIXEL, rawtile.channels );      // number of channels per pixel
-  TIFFSetField( tiff, TIFFTAG_BITSPERSAMPLE, rawtile.bpc );             // bits per channel
+  TIFFSetField( tiff, TIFFTAG_BITSPERSAMPLE, (uint16_t) rawtile.bpc );  // bits per channel
   TIFFSetField( tiff, TIFFTAG_ORIENTATION, ORIENTATION_TOPLEFT );       // origin of the image.
-  TIFFSetField( tiff, TIFFTAG_PHOTOMETRIC, PHOTOMETRIC_RGB );           // output in RGB
+
+  // Set photometric interpretation. For color images, specify RGB
+  // Otherwise for greyscale or multispectral specify greyscale
+  if( rawtile.channels == 3 || rawtile.channels == 4 ){
+    TIFFSetField( tiff, TIFFTAG_PHOTOMETRIC, PHOTOMETRIC_RGB );
+  }
+  else{
+    TIFFSetField( tiff, TIFFTAG_PHOTOMETRIC, PHOTOMETRIC_MINISBLACK );
+  }
 
   // Assume 2 or 4 band images contain alpha channels
   if( rawtile.channels == 2 || rawtile.channels == 4 ){
