@@ -1,7 +1,7 @@
 /*
     Basic Header-Only Logging Class
 
-    Copyright (C) 2019-2023 Ruven Pillay
+    Copyright (C) 2019-2026 Ruven Pillay
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -102,10 +102,6 @@ class Logger : public std::ostream {
 
   /// Constructor - derived from std::ostream
   Logger() : std::ostream( NULL ) {};
-
-
-  /// Destructor - close our logging stream
-  ~Logger() { this->close(); };
 
 
   /// Open our logging output
