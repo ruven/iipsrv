@@ -109,6 +109,7 @@ AS_IF([test "x$enable_debug_mode" = "xyes"],
   [AC_DEFINE([DEBUG], [1], [Define to enable debug mode])
    AC_DEFINE([KAKADU_DEBUG], [1], [Define to enable Kakadu debug output])
    AC_DEFINE([OPENJPEG_DEBUG], [1], [Define to enable OpenJPEG debug output])
+   AC_DEFINE([GROK_DEBUG], [1], [Define to enable Grok debug output])
    AC_DEFINE([JPEG_DEBUG], [1], [Define to enable libjpeg debug output])
    DEBUG=true
    AC_MSG_NOTICE([configure: enabling debug mode])])
@@ -303,7 +304,7 @@ AC_SUBST(DL_LIBS)
 
 
 #************************************************************
-# Check for JPEG2000 support from either Kakadu or OpenJPEG
+# Check for JPEG2000 support from either Kakadu or OpenJPEG or Grok
 #************************************************************
 
 JPEG2000_CODEC=false
@@ -393,59 +394,97 @@ fi
 
 
 
-# Check for OpenJPEG if no Kakadu support has been found
+# Check for Grok or OpenJPEG if no Kakadu support has been found
 
+GROK=false
 OPENJPEG=false
 
-AC_ARG_ENABLE(openjpeg,
-    [AS_HELP_STRING([--disable-openjpeg], [disable OpenJPEG])] )
+AC_ARG_ENABLE([grok],
+    AS_HELP_STRING([--disable-grok], [disable Grok JPEG2000 support]))
+AC_ARG_ENABLE([openjpeg],
+    AS_HELP_STRING([--disable-openjpeg], [disable OpenJPEG support]))
 
-AC_ARG_WITH( openjpeg,
-   [AS_HELP_STRING([--with-openjpeg=DIR], [location of OpenJPEG source files])],
-   openjpeg_path=$withval )
+AC_ARG_WITH([grok],
+    AS_HELP_STRING([--with-grok=DIR], [location of an installed Grok prefix]),
+    [grok_path=$withval],
+    [grok_path=])
+AC_ARG_WITH([openjpeg],
+    AS_HELP_STRING([--with-openjpeg=DIR], [location of OpenJPEG source files]),
+    [openjpeg_path=$withval],
+    [openjpeg_path=])
 
 
 
-# Only check for OpenJPEG if Kakadu has not been enabled
-if test "x${KAKADU}" = xtrue; then
-	AM_CONDITIONAL([ENABLE_OPENJPEG], [false])
-else
-
-	if test "x$enable_openjpeg" = "xno"; then
-		AC_MSG_NOTICE([disabling OpenJPEG support])
-		AM_CONDITIONAL([ENABLE_OPENJPEG], [false])
+# Grok takes precedence over OpenJPEG.  Its pkg-config module is
+# "libgrokj2k" (not "libopenjp2").
+if test "x${KAKADU}" != xtrue; then
+	if test "x$enable_grok" = xno; then
+		AC_MSG_RESULT([configure: disabling Grok support])
+	elif test -n "$grok_path"; then
+		AC_MSG_CHECKING([for Grok headers below $grok_path])
+		if test -f "$grok_path/include/grok-20.4/grok.h"; then
+			GROK_CFLAGS="-I$grok_path/include/grok-20.4"
+			GROK=true
+		elif test -f "$grok_path/include/grok-20.3/grok.h"; then
+			GROK_CFLAGS="-I$grok_path/include/grok-20.3"
+			GROK=true
+		elif test -f "$grok_path/include/grok-20/grok.h"; then
+			GROK_CFLAGS="-I$grok_path/include/grok-20"
+			GROK=true
+		elif test -f "$grok_path/include/grok/grok.h"; then
+			GROK_CFLAGS="-I$grok_path/include/grok"
+			GROK=true
+		elif test -f "$grok_path/include/grok.h"; then
+			GROK_CFLAGS="-I$grok_path/include"
+			GROK=true
+		fi
+		if test "x$GROK" = xtrue; then
+			GROK_LIBS="-L$grok_path/lib -L$grok_path/lib64 -lgrokj2k"
+			AC_MSG_RESULT([yes])
+		else
+			AC_MSG_RESULT([no])
+		fi
 	else
+		PKG_CHECK_MODULES([GROK], [libgrokj2k], [GROK=true], [GROK=false])
+	fi
 
-		if test -n "$openjpeg_path"; then
-		    AS_IF([test -f "$openjpeg_path/src/lib/openjp2/openjpeg.h"],
-		        [AC_MSG_NOTICE([configure: Using specified OpenJPEG sources])
-		         OPENJPEG=true],
-		        [AC_MSG_NOTICE([configure: No OpenJPEG sources found])
-		         OPENJPEG=false])
-		    if test "x$OPENJPEG" = xtrue; then
-		        AM_CPPFLAGS="-I\"$openjpeg_path/src/lib/openjp2/\" ${AM_CPPFLAGS}"
-		        LIBS="$LIBS \"$openjpeg_path/bin/libopenjp2.so\""
-		    fi
-		else
-		    PKG_CHECK_MODULES([OPENJPEG], [libopenjp2], [OPENJPEG=true], [OPENJPEG=false])
-		    if test "x$OPENJPEG" = xtrue; then
-		        AM_CPPFLAGS="${OPENJPEG_CFLAGS} ${AM_CPPFLAGS}"
-		        LIBS="$LIBS ${OPENJPEG_LIBS}"
-		    else
-			AC_MSG_NOTICE([configure: Unable to find OpenJPEG development files])
-		    fi
-		fi
-
+	if test "x$GROK" = xtrue; then
+		AM_CPPFLAGS="${GROK_CFLAGS} ${AM_CPPFLAGS}"
+		LIBS="$LIBS ${GROK_LIBS}"
+		AC_DEFINE([HAVE_GROK], [1], [Define to 1 when Grok JPEG2000 support is enabled])
+		JPEG2000_CODEC="true (Grok)"
+	elif test "x$enable_openjpeg" = xno; then
+		AC_MSG_RESULT([configure: disabling OpenJPEG support])
+	elif test -n "$openjpeg_path"; then
+		AS_IF([test -f "$openjpeg_path/src/lib/openjp2/openjpeg.h"],
+			[AC_MSG_NOTICE([configure: Using specified OpenJPEG sources])
+			 OPENJPEG=true],
+			[AC_MSG_NOTICE([configure: No OpenJPEG sources found])
+			 OPENJPEG=false])
 		if test "x$OPENJPEG" = xtrue; then
-		    AC_DEFINE([HAVE_OPENJPEG], [1], [Define if OpenJPEG JPEG2000 codec is available])
-		    JPEG2000_CODEC="true (OpenJPEG)"
-		    AM_CONDITIONAL([ENABLE_OPENJPEG], [test x$OPENJPEG = xtrue])
-		else
-		    AM_CONDITIONAL([ENABLE_OPENJPEG], [false])
+			AM_CPPFLAGS="-I\"$openjpeg_path/src/lib/openjp2/\" ${AM_CPPFLAGS}"
+			LIBS="$LIBS \"$openjpeg_path/bin/libopenjp2.so\""
 		fi
+	else
+		PKG_CHECK_MODULES([OPENJPEG], [libopenjp2], [OPENJPEG=true], [OPENJPEG=false])
+		if test "x$OPENJPEG" = xtrue; then
+			AM_CPPFLAGS="${OPENJPEG_CFLAGS} ${AM_CPPFLAGS}"
+			LIBS="$LIBS ${OPENJPEG_LIBS}"
+		else
+			AC_MSG_RESULT([configure: Unable to find Grok or OpenJPEG development files])
+		fi
+	fi
 
+	if test "x$OPENJPEG" = xtrue; then
+		AC_DEFINE([HAVE_OPENJPEG], [1], [Define to 1 when OpenJPEG support is enabled])
+		JPEG2000_CODEC="true (OpenJPEG)"
 	fi
 fi
+
+AC_SUBST([GROK_CFLAGS])
+AC_SUBST([GROK_LIBS])
+AM_CONDITIONAL([ENABLE_GROK], [test "x$GROK" = xtrue])
+AM_CONDITIONAL([ENABLE_OPENJPEG], [test "x$OPENJPEG" = xtrue])
 
 
 
