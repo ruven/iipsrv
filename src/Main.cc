@@ -926,6 +926,9 @@ int main( int argc, char *argv[] )
 	  task = NULL;
 	}
 
+	// A command that has sent image data terminates the request: avoids multiple costly calls to JTL, CVT etc
+	if( response.imageSent() ) break;
+
       }
 
 
