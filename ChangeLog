@@ -1,6 +1,8 @@
 22/11/2026:
 	- Updates to WebPCompressor class to include exif check when freeing WebPData object. Also add
 	  missing rawtile metadata update and improve setQuality handling.
+	- Corrected mode for TIFF opening and added missing TIFFFreeDirectory calls to ensure no memory
+	  leaks in EXIF.cc.
 
 
 17/11/2026:

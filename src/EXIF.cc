@@ -430,6 +430,7 @@ bool exif::extract( TIFF* source, vector<unsigned char>& data,
   // Copy the GPS IFD, if present.  GPS is best effort: if it cannot be read we
   // still return any EXIF data that was successfully copied.
   if( gps_offset != 0 && TIFFReadGPSDirectory( source, gps_offset ) == 1 ){
+    TIFFFreeDirectory( destination );
     TIFFCreateGPSDirectory( destination );
     copyDirectoryTags( source, destination );
     if( TIFFWriteCustomDirectory( destination, &dest_gps_offset ) != 1 ){
@@ -439,6 +440,7 @@ bool exif::extract( TIFF* source, vector<unsigned char>& data,
 #endif
 
   // Build an IFD0 that references the copied sub-IFDs
+  TIFFFreeDirectory( destination );
   TIFFCreateDirectory( destination );
   if( dest_exif_offset != 0 ) TIFFSetField( destination, TIFFTAG_EXIFIFD, dest_exif_offset );
 #ifdef HAVE_TIFF_GPS
@@ -451,6 +453,7 @@ bool exif::extract( TIFF* source, vector<unsigned char>& data,
     return false;
   }
 
+  TIFFFreeDirectory( destination );
   TIFFCreateDirectory( destination );
   closeTIFF( destination );
   data = memory.data;
@@ -474,10 +477,14 @@ bool exif::write( TIFF* destination, const string& data,
   Memory memory;
   memory.data.assign( data.begin() + start, data.end() );
 
-  TIFF* source = TIFFClientOpen( "iipsrv-exif-source", "rhm", &memory,
+  TIFF* source = TIFFClientOpen( "iipsrv-exif-source", "rh", &memory,
                                  memoryRead, memoryWrite, memorySeek,
                                  memoryClose, memorySize, memoryMap, memoryUnmap );
   if( source == NULL ) return false;
+
+  // 'h' skips TIFFDefaultDirectory(); create the default directory to install
+  // the tag methods needed by TIFFReadEXIFDirectory()/TIFFReadGPSDirectory().
+  TIFFCreateDirectory( source );
 
   const toff_t ifd_offset = headerOffset( memory.data );
   SubIFDOffsets offsets = resolveSubIFDs( memory.data, ifd_offset );
@@ -504,6 +511,7 @@ bool exif::write( TIFF* destination, const string& data,
     copyDirectoryTags( source, destination );
     if( TIFFWriteCustomDirectory( destination, &exif_offset ) != 1 ){
       closeTIFF( source );
+      TIFFFreeDirectory( destination );
       TIFFCreateDirectory( destination );
       return false;
     }
@@ -513,6 +521,7 @@ bool exif::write( TIFF* destination, const string& data,
   // GPS is best effort: if it cannot be read or written we still keep the EXIF IFD
 #ifdef HAVE_TIFF_GPS
   if( offsets.gps != 0 && TIFFReadGPSDirectory( source, offsets.gps ) == 1 ){
+    TIFFFreeDirectory( destination );
     TIFFCreateGPSDirectory( destination );
     copyDirectoryTags( source, destination );
     if( TIFFWriteCustomDirectory( destination, &gps_offset ) == 1 ){
@@ -525,6 +534,7 @@ bool exif::write( TIFF* destination, const string& data,
 #endif
 
   closeTIFF( source );
+  TIFFFreeDirectory( destination );
   TIFFCreateDirectory( destination );
   return wrote_exif || wrote_gps;
 }
