@@ -38,6 +38,7 @@ void WebPCompressor::InitCompression( const RawTile& rawtile, unsigned int strip
   tile.bpc = rawtile.bpc;
   tile.data = rawtile.data;
   tile.dataLength = rawtile.dataLength;
+  tile.capacity = rawtile.capacity;
   tile.memoryManaged = false;   // We don't want the RawTile destructor to free this memory
 
   // libwebp cannot handle strip or region-based encoding, so compress the entire image in one go
@@ -174,7 +175,7 @@ unsigned int WebPCompressor::Compress( RawTile& rawtile ){
   // Free allocated structures
   WebPPictureFree( &pic );
   WebPMemoryWriterClear( &writer );
-  if( icc.size() > 0 || xmp.size() > 0 ) WebPDataClear( &output );
+  if( icc.size() > 0 || xmp.size() > 0 || exif.size() > 0 ) WebPDataClear( &output );
 
 
   // Return our compressed tile

@@ -1,3 +1,8 @@
+22/11/2026:
+	- Updates to WebPCompressor class to include exif check when freeing WebPData object. Also add
+	  missing rawtile metadata update and improve setQuality handling.
+
+
 17/11/2026:
 	- Corrected number of bytes encoded for 16 bit images for JPEG2000 decoders.
 	- Removed unnecesary and exception-prone stream close() in Logger destructor.

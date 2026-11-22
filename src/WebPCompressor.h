@@ -133,28 +133,26 @@ class WebPCompressor : public Compressor {
 
 
   /// Set the compression level
-  /** @param quality compression level: 0-100 with (0 = highest compression)
+  /** @param quality compression level: 0-100 with (0 = highest compression, -1 = lossless)
    */
   inline void setQuality( int quality ) override {
 
     // Flag that user has manually changed quality level
     default_quality = false;
 
-    // WebP quality ranges from 0 (best compression - smallest size) to 100 (worst compression - largest size)
-    this->Q = quality;
-
-    // Limit to WebP quality range - negative values indicate lossless
-    if( this->Q < 1 ) Q = -1;
-    else if( Q > 100 ) Q = 100;
-
-    // Update our WebP config structure depending on whether lossless or lossy compression requested
-    if( this->Q == -1 ){
-      // -1 indicates lossless
+    // Lossless compression
+    if( quality < 0 ){
+      this->Q = -1;
       config.lossless = 1;
-      config.quality = 0;      // Zero means fastest for lossless
+      config.quality = 0;      // Fastest for lossless
     }
-    // WebP's lossy quality range is 0-100
-    else config.quality = this->Q;
+    // Lossy: 0-100, clamped (0 is lossy minimum, not lossless)
+    else {
+      this->Q = (quality > 100) ? 100 : quality;
+      config.lossless = 0;
+      config.quality = this->Q;
+    }
+
   }
 
 
