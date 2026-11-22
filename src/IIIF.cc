@@ -263,7 +263,7 @@ void IIIF::run( Session* session, const string& src )
                      << ", \"scaleFactors\" : [ 1"; // Scale 1 is original image
 
     for( unsigned int i = 1; i < numResolutions; i++ ){
-      infoStringStream << ", " << (int)( width / (*session->image)->image_widths[i] );
+      infoStringStream << ", " << (int) roundf( (float) width / (*session->image)->image_widths[i] );
     }
 
     infoStringStream << " ] }" << endl

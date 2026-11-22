@@ -1,3 +1,10 @@
+23/11/2026:
+	- Added parseFloat() and parseInt() functions to Task class to better and uniformly handle
+	  numerical input parsing for all commands. Input string parsing generally now much stricter
+	  with validation and bounds checking applied. This modifies how input is handled in most Task
+	  sub-classes as well as IIIF request parsing. Fixes number of issues detected during fuzzing.
+
+
 22/11/2026:
 	- Updates to WebPCompressor class to include exif check when freeing WebPData object. Also add
 	  missing rawtile metadata update and improve setQuality handling.
@@ -8,6 +15,8 @@
 	- Updates to Transforms.cc to ensure all RawTile metadata fields correctly updated after buffer
 	  allocation and that memory is only deleted if the RawTile is memoryManaged. Also various other
 	  fixes and improvements to code consistency.
+	- Updated IIIF.cc to properly round the scaleFactors calculation and avoid truncation. Fixes issue
+	  https://github.com/ruven/iipsrv/issues/297
 
 
 17/11/2026:
