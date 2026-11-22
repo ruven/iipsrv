@@ -5,6 +5,9 @@
 	  leaks in EXIF.cc.
 	- Added break in Main.cc request parsing loop when an image has been sent. Avoids multiple
 	  costly calls to JTL, CVT etc.
+	- Updates to Transforms.cc to ensure all RawTile metadata fields correctly updated after buffer
+	  allocation and that memory is only deleted if the RawTile is memoryManaged. Also various other
+	  fixes and improvements to code consistency.
 
 
 17/11/2026:

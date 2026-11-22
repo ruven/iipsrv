@@ -79,7 +79,10 @@ using namespace std;
 void Transform::normalize( RawTile& in, const vector<float>& max, const vector<float>& min ) {
 
   float *normdata;
-  uint64_t np = (uint64_t) in.width * in.height * in.channels;
+
+  const uint64_t np = (uint64_t) in.width * in.height * in.channels;
+  if( np > (std::numeric_limits<uint32_t>::max() / sizeof(float)) ) return;
+
   unsigned int nc = in.channels;
 
   // Type pointers
@@ -158,22 +161,19 @@ void Transform::normalize( RawTile& in, const vector<float>& max, const vector<f
   }
 
   // Delete our original buffers, unless we already had floats
-  if( in.bpc == 32 && in.sampleType == SampleType::FIXEDPOINT ){
-    delete[] (unsigned int*) in.data;
-  }
-  else if( in.bpc == 16 ){
-    delete[] (unsigned short*) in.data;
-  }
-  else if( in.bpc == 8 ){
-    delete[] (unsigned char*) in.data;
+  if( in.memoryManaged && in.sampleType == SampleType::FIXEDPOINT ){
+    in.deallocate( in.data );
   }
 
-  // Assign our new buffer and modify some info
+  // Assign our buffer
   in.data = normdata;
+
+  // Update metadata
+  in.memoryManaged = true;
   in.bpc = 32;
   in.sampleType = SampleType::FLOATINGPOINT;
-  in.dataLength = (uint32_t)( np << 2 );
-  in.capacity = in.dataLength;
+  in.capacity = (uint32_t)( np << 2 );  // Multiply by 4 for float
+  in.dataLength = in.capacity;
 
 }
 
@@ -182,15 +182,15 @@ void Transform::normalize( RawTile& in, const vector<float>& max, const vector<f
 // Hillshading function - input data is a normalized floating-point 3-band normal map
 void Transform::shade( RawTile& in, int h_angle, int v_angle ){
 
-  // Incident light angle
-  float a = (h_angle * 2 * M_PI) / 360.0;
+  // Incident light angle. Convert to radians in floating point
+  float a = ((float)h_angle * M_PI) / 180.0;
 
   // We assume a hypotenous of 1.0
   float s_y = cos(a);
   float s_x = sqrt( 1.0 - s_y*s_y );
   if( h_angle > 180 ) s_x = -s_x;
 
-  a = (v_angle * 2 * M_PI) / 360.0;
+  a = ((float)v_angle * M_PI) / 180.0;
   float s_z = - sin(a);
 
   float s_norm = sqrt( s_x*s_x + s_y*s_y + s_z*s_z );
@@ -205,7 +205,7 @@ void Transform::shade( RawTile& in, int h_angle, int v_angle ){
   const float c = 0.5 + 0.5 * ( s_x + s_y + s_z );
 
   // Number of pixels
-  uint64_t np = (uint64_t) in.width * in.height;
+  const uint64_t np = (uint64_t) in.width * in.height;
 
   float *infptr = (float*) in.data;
 
@@ -237,7 +237,7 @@ void Transform::shade( RawTile& in, int h_angle, int v_angle ){
   }
 
   // Delete old data buffer
-  delete[] (float*) in.data;
+  if( in.memoryManaged ) delete[] (float*) in.data;
 
   in.data = buffer;
   in.channels = 1;
@@ -376,7 +376,8 @@ void Transform::sRGB2LAB( const float *in, float *out ){
 // Convert whole image from CIELAB to sRGB. Input data can be in 8 bit, 16 bit or floating point form
 void Transform::LAB2sRGB( RawTile& in ){
 
-  uint64_t np = (uint64_t) in.width * in.height * in.channels;
+  const uint64_t np = (uint64_t) in.width * in.height * in.channels;
+  if( np > (std::numeric_limits<uint32_t>::max() / sizeof(float)) ) return;
 
   // Output data should always be floating point
   float *output;
@@ -433,13 +434,13 @@ void Transform::LAB2sRGB( RawTile& in ){
 
   // If input was not floating point, update image metadata
   if( in.sampleType == SampleType::FIXEDPOINT ){
-    if( in.bpc == 8 ) delete[] (unsigned char*) in.data;
-    else if( in.bpc == 16 ) delete[] (unsigned short*) in.data;
+    if( in.memoryManaged ) in.deallocate( in.data );
     in.data = (void*) output;
     in.memoryManaged = true;
     in.bpc = 32;
     in.sampleType = SampleType::FLOATINGPOINT;
-    in.dataLength = (uint32_t)( np << 2 ); // Multiply by 4 for float
+    in.capacity = (uint32_t)( np << 2 ); // Multiply by 4 for float
+    in.dataLength = in.capacity;
   }
 }
 
@@ -448,7 +449,7 @@ void Transform::LAB2sRGB( RawTile& in ){
 // Convert whole image from sRGB to CIELAB - input should be normalized and in floating point format
 void Transform::sRGB2LAB( RawTile& in ){
 
-  uint64_t np = (uint64_t) in.width * in.height * in.channels;
+  const uint64_t np = (uint64_t) in.width * in.height * in.channels;
 
   // Parallelize code using OpenMP
 #if defined(__ICC) || defined(__INTEL_COMPILER)
@@ -482,8 +483,8 @@ void Transform::cmap( RawTile& in, enum cmap_type cmap ){
 
   unsigned in_chan = in.channels;
   unsigned out_chan = 3;
-  uint64_t np = (uint64_t) in.width * in.height;               // pixels in input image
-  uint64_t onp = (uint64_t) in.width * in.height * out_chan;   // pixels*channels in output image
+  const uint64_t np = (uint64_t) in.width * in.height;               // pixels in input image
+  const uint64_t onp = (uint64_t) in.width * in.height * out_chan;   // pixels*channels in output image
 
   const float max3 = 1.0/3.0;
   const float max8 = 1.0/8.0;
@@ -612,8 +613,9 @@ void Transform::cmap( RawTile& in, enum cmap_type cmap ){
   };
 
   // Delete old data buffer
-  delete[] (float*) in.data;
+  if( in.memoryManaged ) delete[] (float*) in.data;
   in.data = outptr;
+  in.memoryManaged = true;
   in.channels = out_chan;
   in.dataLength = (uint32_t)( onp * (in.bpc/8) );
   in.capacity = in.dataLength;
@@ -696,7 +698,7 @@ void Transform::scale_to_8bit( RawTile& in ){
     for( uint64_t n=0; n<np; n++ ){
       buffer[n] = (unsigned char)(((unsigned int*)in.data)[n] >> 16);
     }
-    delete[] (unsigned int*) in.data;
+    if( in.memoryManaged ) delete[] (unsigned int*) in.data;
   }
 
   // 16 bit unsigned short
@@ -709,25 +711,27 @@ void Transform::scale_to_8bit( RawTile& in ){
     for( uint64_t n=0; n<np; n++ ){
       buffer[n] = (unsigned char)(((unsigned short*)in.data)[n] >> 8);
     }
-    delete[] (unsigned short*) in.data;
+    if( in.memoryManaged ) delete[] (unsigned short*) in.data;
   }
 
-  // Replace original buffer with new 8 bit data
+  // Replace original buffer with new 8 bit data and update metadata
   in.data = buffer;
+  in.memoryManaged = true;
   in.bpc = 8;
   in.sampleType = SampleType::FIXEDPOINT;
-  in.dataLength = (uint32_t) np;
   in.capacity = (uint32_t) np;
+  in.dataLength = in.capacity;
 }
 
 
 
-// Function to apply a contrast adjustment and convert to 8 bit
+// Function to apply a contrast adjustment to data in floating point and convert to 8 bit
 void Transform::contrast( RawTile& in, float contrast ){
 
-  uint64_t np = (uint64_t) in.width * in.height * in.channels;
+  const uint64_t np = (uint64_t) in.width * in.height * in.channels;
   if( np > std::numeric_limits<uint32_t>::max() ) return;
   unsigned char* buffer = new unsigned char[np];
+
   float* infptr = (float*)in.data;
   const float max8 = 255.0;     // Max pixel value for 8 bit data
   float cmax = max8 * contrast; // Set variable to avoid loop multiplication
@@ -743,8 +747,9 @@ void Transform::contrast( RawTile& in, float contrast ){
   }
 
   // Replace original buffer with new
-  delete[] (float*) in.data;
+  if( in.memoryManaged ) delete[] (float*) in.data;
   in.data = buffer;
+  in.memoryManaged = true;
   in.bpc = 8;
   in.sampleType = SampleType::FIXEDPOINT;
   in.dataLength = (uint32_t) np;
@@ -758,7 +763,7 @@ void Transform::gamma( RawTile& in, float g ){
 
   if( g == 1.0 ) return;
 
-  uint64_t np = (uint64_t) in.width * in.height * in.channels;
+  const uint64_t np = (uint64_t) in.width * in.height * in.channels;
   float* infptr = (float*)in.data;
 
   // Loop through our pixels for floating values
@@ -785,7 +790,7 @@ void Transform::log( RawTile& in ){
   // Scale factor
   float scale = 1.0 / logf( max + 1.0 );
 
-  uint64_t np = (uint64_t) in.width * in.height * in.channels;
+  const uint64_t np = (uint64_t) in.width * in.height * in.channels;
 
 #if defined(__ICC) || defined(__INTEL_COMPILER)
 #pragma ivdep
@@ -803,14 +808,26 @@ void Transform::log( RawTile& in ){
 // Rotation function
 void Transform::rotate( RawTile& in, float angle=0.0 ){
 
+  // Normalize to [0,360] before converting to int
+  if( !isfinite(angle) ) return;
+  float normalized = fmodf( angle, 360.0f );
+  if( normalized < 0.0f ) normalized += 360.0f;
+  const float nearest = roundf( normalized / 90.0f ) * 90.0f;
+
+  // Reject non-square values outside of a float precision tolerance
+  const float tolerance = 4.0f * std::numeric_limits<float>::epsilon() * 360.0f;
+  if( fabsf( normalized - nearest ) > tolerance ) return;
+
+  const int rotation = (int) nearest % 360;
+
   // Currently implemented only for rectangular rotations
-  if( (int)angle % 90 == 0 && (int)angle % 360 != 0 ){
+  if( rotation % 90 == 0 && rotation % 360 != 0 ){
 
     // Allocate memory for our temporary buffer - rotate function only ever operates on 8bit data
     void *buffer = new unsigned char[(uint64_t)in.width*in.height*in.channels];
 
     // Rotate 90
-    if( (int) angle % 360 == 90 ){
+    if( rotation % 360 == 90 ){
 #if defined(__ICC) || defined(__INTEL_COMPILER)
 #pragma ivdep
 #elif defined(_OPENMP)
@@ -828,7 +845,7 @@ void Transform::rotate( RawTile& in, float angle=0.0 ){
     }
 
     // Rotate 270
-    else if( (int) angle % 360 == 270 ){
+    else if( rotation % 360 == 270 ){
 #if defined(__ICC) || defined(__INTEL_COMPILER)
 #pragma ivdep
 #elif defined(_OPENMP)
@@ -846,7 +863,7 @@ void Transform::rotate( RawTile& in, float angle=0.0 ){
     }
 
     // Rotate 180
-    else if( (int) angle % 360 == 180 ){
+    else if( rotation % 360 == 180 ){
 #if defined(__ICC) || defined(__INTEL_COMPILER)
 #pragma ivdep
 #elif defined(_OPENMP)
@@ -862,13 +879,18 @@ void Transform::rotate( RawTile& in, float angle=0.0 ){
     }
 
     // Delete old data buffer
-    delete[] (unsigned char*) in.data;
+    if( in.memoryManaged ) in.deallocate( in.data );
 
     // Assign new data to Rawtile
     in.data = buffer;
 
+    // Update RawTile metadata
+    in.memoryManaged = true;
+    in.capacity = (uint32_t)( (uint64_t) in.width * in.height * in.channels );
+    in.dataLength = in.capacity;
+
     // For 90 and 270 rotation swap width and height
-    if( (int)angle % 180 == 90 ){
+    if( rotation % 180 == 90 ){
       unsigned int tmp = in.height;
       in.height = in.width;
       in.width = tmp;
@@ -885,9 +907,9 @@ void Transform::greyscale( RawTile& rawtile ){
 
   if( rawtile.bpc != 8 || rawtile.channels != 3 ) return;
 
-  uint64_t np = (uint64_t) rawtile.width * rawtile.height;
+  const uint64_t np = (uint64_t) rawtile.width * rawtile.height;
   if( np > std::numeric_limits<uint32_t>::max() ) return;
-  unsigned char* buffer = new unsigned char[(uint64_t) rawtile.width * rawtile.height];
+  unsigned char* buffer = new unsigned char[np];
 
   // Calculate using fixed-point arithmetic
   //  - benchmarks to around 25% faster than floating point
@@ -905,13 +927,14 @@ void Transform::greyscale( RawTile& rawtile ){
   }
 
   // Delete our old data buffer and instead point to our grayscale data
-  delete[] (unsigned char*) rawtile.data;
+  if( rawtile.memoryManaged ) rawtile.deallocate( rawtile.data );
   rawtile.data = (void*) buffer;
 
   // Update our number of channels and data length
+  rawtile.memoryManaged = true;
   rawtile.channels = 1;
-  rawtile.dataLength = (uint32_t) np;
   rawtile.capacity = (uint32_t) np;
+  rawtile.dataLength = rawtile.capacity;
 }
 
 
@@ -923,7 +946,7 @@ void Transform::greyscale( RawTile& rawtile ){
 // values as there are channels in the raw input data
 void Transform::twist( RawTile& rawtile, const vector< vector<float> >& matrix ){
 
-  uint64_t np = (uint64_t) rawtile.width * rawtile.height;
+  const uint64_t np = (uint64_t) rawtile.width * rawtile.height;
 
   // Determine the number of rows and, therefore, output channels (this can be different to the number of input channels)
   int output_channels = matrix.size();
@@ -981,7 +1004,8 @@ void Transform::twist( RawTile& rawtile, const vector< vector<float> >& matrix )
 
   // If we have a different number of output channels, swap our buffer and update our rawtile parameters
   if( output_channels != rawtile.channels ){
-    delete[] (float*) rawtile.data;
+    if( rawtile.memoryManaged ) delete[] (float*) rawtile.data;
+    rawtile.memoryManaged = true;
     rawtile.data = output;
     rawtile.channels = output_channels;
     rawtile.dataLength = (uint32_t)( np * rawtile.channels * (rawtile.bpc/8) );
@@ -999,7 +1023,7 @@ void Transform::flatten( RawTile& in, int bands ){
   // We cannot increase the number of channels
   if( bands >= in.channels ) return;
 
-  uint64_t np = (uint64_t) in.width * in.height;
+  const uint64_t np = (uint64_t) in.width * in.height;
   uint64_t ni = 0;
   uint64_t no = 0;
   unsigned int gap = in.channels - bands;
@@ -1022,7 +1046,9 @@ void Transform::flatten( RawTile& in, int bands ){
 // Flip image in horizontal or vertical direction (0=horizontal,1=vertical)
 void Transform::flip( RawTile& rawtile, int orientation ){
 
-  unsigned char* buffer = new unsigned char[(uint64_t) rawtile.width * rawtile.height * rawtile.channels];
+  const uint64_t np = (uint64_t) rawtile.width * rawtile.height * rawtile.channels;
+  if( np > std::numeric_limits<uint32_t>::max() ) return;
+  unsigned char* buffer = new unsigned char[np];
 
   // Vertical
   if( orientation == 2 ){
@@ -1059,9 +1085,14 @@ void Transform::flip( RawTile& rawtile, int orientation ){
     }
   }
 
-  // Delete our old data buffer and instead point to our grayscale data
-  delete[] (unsigned char*) rawtile.data;
+  // Delete our old data buffer and instead point to our new buffer
+  if( rawtile.memoryManaged ) rawtile.deallocate( rawtile.data );
   rawtile.data = (void*) buffer;
+
+  // Update metadata
+  rawtile.memoryManaged = true;
+  rawtile.capacity = (uint32_t) np;
+  rawtile.dataLength = rawtile.capacity;
 }
 
 
@@ -1080,7 +1111,7 @@ vector<unsigned int> Transform::histogram( RawTile& in, const vector<float>& max
   vector<unsigned int> histogram( (1<<in.bpc), 0 );
 
   // Fill our histogram - for color or multiband images, use channel average
-  uint64_t np = (uint64_t) in.width * in.height;
+  const uint64_t np = (uint64_t) in.width * in.height;
   for( uint64_t n=0; n<np; n++ ){
     float value = 0.0f;
 
@@ -1146,7 +1177,7 @@ void Transform::binary( RawTile &in, unsigned char threshold ){
   // First make sure our image is greyscale
   this->greyscale( in );
 
-  uint64_t np = (uint64_t) in.width * in.height;
+  const uint64_t np = (uint64_t) in.width * in.height;
 
 #if defined(__ICC) || defined(__INTEL_COMPILER)
 #pragma ivdep
@@ -1211,8 +1242,12 @@ void Transform::equalize( RawTile& in, vector<unsigned int>& histogram ){
 // Apply convolution kernel to image
 void Transform::convolution( RawTile& in, const vector<float>& kernel ){
 
-  float* data = (float*)in.data;
-  float* buffer = new float[(uint64_t) in.width * in.height * in.channels];
+  float* data = (float*) in.data;
+
+  // Assign new buffer (note that np is pixels not bytes)
+  const uint64_t np = (uint64_t) in.width * in.height * in.channels;
+  if( np > (std::numeric_limits<uint32_t>::max() / sizeof(float)) ) return;
+  float* buffer = new float[np];
 
   unsigned int ksize = kernel.size();
   unsigned int side = (unsigned int) sqrtf( ksize );
@@ -1256,8 +1291,14 @@ void Transform::convolution( RawTile& in, const vector<float>& kernel ){
     }
   }
 
-  delete[] (float*) in.data;
+  // Delete our old data buffer and instead point to our new buffer
+  if( in.memoryManaged) in.deallocate( in.data );
   in.data = (void*) buffer;
+
+  // Update metadata
+  in.memoryManaged = true;
+  in.capacity = (uint32_t) ( np << 2 );  // Multiply by 4 for float
+  in.dataLength = in.capacity;
 }
 
 
@@ -1268,8 +1309,8 @@ vector<float> Transform::mean( const RawTile& in ){
   // Create vector and initialize values to zero
   vector<float> mean( in.channels, 0 );
 
-  uint64_t np = (uint64_t) in.width * in.height * in.channels;
-  uint64_t pixels = (uint64_t) in.width * in.height;
+  const uint64_t np = (uint64_t) in.width * in.height * in.channels;
+  const uint64_t pixels = (uint64_t) in.width * in.height;
 
   // Sum the pixel values for each channel
   /*#if defined(__ICC) || defined(__INTEL_COMPILER)
@@ -1462,7 +1503,7 @@ void Transform::decorrelation( RawTile& in, const vector<vector<float>>& eigenve
     bias[j] = mean[j] - dot;
   }
 
-  uint64_t np = (uint64_t) in.width * in.height * channels;
+  const uint64_t np = (uint64_t) in.width * in.height * channels;
   float *data = (float*) in.data;
 
   // Fast path for 3-channel RGB: eliminates inner loops and enables SIMD vectorization
@@ -1559,7 +1600,7 @@ void Transform::pca( RawTile& in, const vector<vector<float>>& eigenvectors, con
     bias[j] = 0.5f - dot_mean * scale;
   }
 
-  uint64_t np = (uint64_t) in.width * in.height * channels;
+  const uint64_t np = (uint64_t) in.width * in.height * channels;
   float *data = (float*) in.data;
 
   // Fast path for 3-channel RGB: eliminates inner loops and enables SIMD vectorization
