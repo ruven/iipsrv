@@ -42,35 +42,65 @@ void PFL::run( Session* session, const std::string& argument ){
   int resolution, x1, y1, x2, y2, width, height;
 
 
+  // Make sure we have set our image
+  this->session = session;
+  checkImage();
+
+
   // Time this command
   if( session->loglevel >= 2 ) command_timer.start();
 
 
-  // Parse the argument list
-  string arg = argument;
-  int delimitter = arg.find( ":" );
-  resolution = atoi( arg.substr(0,delimitter).c_str() );
+  // Parse the argument list: <resolution>:<x1>,<y1> or <resolution>:<x1>,<y1>-<x2>,<y2>
+  size_t colon = argument.find( ":" );
+  if( colon == string::npos ){
+    if( session->loglevel >= 1 ) *(session->logfile) << "PFL :: Invalid argument format: " << argument << endl;
+    return;
+  }
 
-  arg = arg.substr( delimitter + 1, arg.length() );
-  delimitter = arg.find( "," );
-  x1 = atoi( arg.substr(0,delimitter).c_str() );
+  string res_str = argument.substr( 0, colon );
+  if( !parseInt( res_str, resolution ) || resolution < 0 ){
+    if( session->loglevel >= 1 ) *(session->logfile) << "PFL :: Invalid resolution: " << res_str << endl;
+    return;
+  }
 
-  arg = arg.substr( delimitter + 1, arg.length() );
-  delimitter = arg.find( "-" );
-  y1 = atoi( arg.substr(0,delimitter).c_str() );
+  string coords = argument.substr( colon + 1 );
+  size_t dash = coords.find( "-" );
 
-  if( delimitter == -1 ){
-    (*session->logfile) << "PFL :: Single point requested" << endl;
+  if( dash == string::npos ){
+    size_t comma = coords.find( "," );
+    if( comma == string::npos ){
+      if( session->loglevel >= 1 ) *(session->logfile) << "PFL :: Invalid coordinates format: " << coords << endl;
+      return;
+    }
+    string x1_str = coords.substr( 0, comma );
+    string y1_str = coords.substr( comma + 1 );
+    if( !parseInt( x1_str, x1 ) || !parseInt( y1_str, y1 ) ){
+      if( session->loglevel >= 1 ) *(session->logfile) << "PFL :: Invalid coordinate values: " << coords << endl;
+      return;
+    }
     x2 = x1;
     y2 = y1;
+    if( session->loglevel >= 3 ) (*session->logfile) << "PFL :: Single point requested" << endl;
   }
   else{
-    arg = arg.substr( delimitter + 1, arg.length() );
-    delimitter = arg.find( "," );
-    x2 = atoi( arg.substr(0,delimitter).c_str() );
-
-    arg = arg.substr( delimitter + 1, arg.length() );
-    y2 = atoi( arg.substr(0,arg.length()).c_str() );
+    string pt1 = coords.substr( 0, dash );
+    string pt2 = coords.substr( dash + 1 );
+    size_t comma1 = pt1.find( "," );
+    size_t comma2 = pt2.find( "," );
+    if( comma1 == string::npos || comma2 == string::npos ){
+      if( session->loglevel >= 1 ) *(session->logfile) << "PFL :: Invalid line coordinates format: " << coords << endl;
+      return;
+    }
+    string x1_str = pt1.substr( 0, comma1 );
+    string y1_str = pt1.substr( comma1 + 1 );
+    string x2_str = pt2.substr( 0, comma2 );
+    string y2_str = pt2.substr( comma2 + 1 );
+    if( !parseInt( x1_str, x1 ) || !parseInt( y1_str, y1 ) ||
+        !parseInt( x2_str, x2 ) || !parseInt( y2_str, y2 ) ){
+      if( session->loglevel >= 1 ) *(session->logfile) << "PFL :: Invalid line coordinate values: " << coords << endl;
+      return;
+    }
   }
 
 
@@ -82,7 +112,7 @@ void PFL::run( Session* session, const std::string& argument ){
 
 
   // Make sure we don't request impossible resolutions
-  if( resolution<0 || resolution>=(int)(*session->image)->getNumResolutions() ){
+  if( resolution >= (int)(*session->image)->getNumResolutions() ){
     ostringstream error;
     error << "PFL :: Invalid resolution number: " << resolution;
     throw error.str();
@@ -93,10 +123,15 @@ void PFL::run( Session* session, const std::string& argument ){
   int im_width = (int)(*session->image)->image_widths[num_res-resolution-1];
   int im_height = (int)(*session->image)->image_heights[num_res-resolution-1];
 
-  // Check for impossible coordinates
-  if( x1<0 || x2<0 || y1<0 || y2<0 || x1>im_width || x2>im_width || y1>im_height || y2>im_height ){
+  // Check for impossible coordinates: origin is always read so must be
+  // strictly inside the image; endpoint is an exclusive bound for lines
+  // (and equals the origin for single points) so may equal but not exceed
+  // the image extent
+  if( x1<0 || y1<0 || x2<0 || y2<0 ||
+      x1>=im_width || y1>=im_height ||
+      x2>im_width  || y2>im_height ){
     ostringstream error;
-    error << "PFL :: Invalid coordinates: " << x1 << "," << y1 << "-" << x2 << "," << y2 << endl;
+    error << "PFL :: Invalid coordinates: " << x1 << "," << y1 << "-" << x2 << "," << y2;
     throw error.str();
   }
 

@@ -23,11 +23,43 @@
 #include "Tokenizer.h"
 #include "URL.h"
 #include <cstdlib>
+#include <cerrno>
 #include <cmath>
+#include <limits>
 #include <algorithm>
 
 
 using namespace std;
+
+
+// Parse string to validated float
+bool Task::parseFloat( const string& s, float& value ){
+
+  const char* p = s.c_str();
+  char* end = NULL;
+  float v = strtof( p, &end );
+  if( end == p ) return false;
+  while( *end == ' ' || *end == '\t' ) ++end;
+  if( *end != '\0' || !std::isfinite(v) ) return false;
+  value = v;
+  return true;
+}
+
+
+// Parse string to validated int
+bool Task::parseInt( const string& s, int& value ){
+
+  const char* p = s.c_str();
+  char* end = NULL;
+  errno = 0;
+  long v = strtol( p, &end, 10 );
+  if( end == p ) return false;
+  while( *end == ' ' || *end == '\t' ) ++end;
+  if( *end != '\0' || errno == ERANGE ) return false;
+  if( v < numeric_limits<int>::min() || v > numeric_limits<int>::max() ) return false;
+  value = (int) v;
+  return true;
+}
 
 
 
@@ -123,14 +155,10 @@ void QLT::run( Session* session, const string& argument ){
   }
 
   // Get the quality factor
-  int factor = atoi( arg.c_str() );
-
-  // Check the value is realistic
-  if( factor < 0 || factor > 100 ){
-    if( session->loglevel >= 2 ){
-      *(session->logfile) << "QLT :: Warning: quality factor of " << argument
-			  << " out of bounds. Must be 0-100 for JPEG, WebP, AVIF and JPEG-XL and 1-9 for PNG" << endl;
-    }
+  int factor;
+  if( !parseInt( arg, factor ) ){
+    if( session->loglevel >= 1 ) *(session->logfile) << "QLT :: Invalid quality: " << argument << endl;
+    return;
   }
 
   session->tiff->setQuality( factor );
@@ -158,18 +186,31 @@ void SDS::run( Session* session, const string& argument ){
 
   if( session->loglevel >= 3 ) *(session->logfile) << "SDS handler reached" << endl;
 
-  // Parse the argument - check whether we have a single value or 2 separated by a camma
-  std::string::size_type delimitter = argument.find( "," );
-  if( delimitter != string::npos ){
-    string arg1 = argument.substr( 0, delimitter );
-    session->view->xangle = atoi( arg1.c_str() );
-    string arg2 = argument.substr( delimitter + 1, argument.length() );
-    session->view->yangle = atoi( arg2.c_str() );
+  // Parse one or two comma separated values (yangle defaults to 0)
+  Tokenizer izer( argument, "," );
+  int values[2] = { 0, 0 };
+  for( int n=0; n<2; n++ ){
+    if( !izer.hasMoreTokens() ){
+      if( n == 0 ){
+        if( session->loglevel >= 1 ) *(session->logfile) << "SDS :: Too few values:" << argument << endl;
+        return;
+      }
+      break;
+    }
+    string token = izer.nextToken();
+    if( !parseInt( token, values[n] ) || values[n] < 0 ){
+      if( session->loglevel >= 1 ) *(session->logfile) << "SDS :: Invalid value: " << token << endl;
+      return;
+    }
   }
-  else{
-    session->view->xangle = atoi( argument.c_str() );
-    session->view->yangle = 0;
+  if( izer.hasMoreTokens() ){
+    if( session->loglevel >= 1 )
+      *(session->logfile) << "SDS :: Too many values: " << argument << endl;
+    return;
   }
+
+  session->view->xangle = values[0];
+  session->view->yangle = values[1];
 
   if( session->loglevel >= 2 ) *(session->logfile) << "SDS :: set to " << session->view->xangle << ", "
 						   << session->view->yangle << endl;
@@ -189,11 +230,20 @@ void MINMAX::run( Session* session, const string& argument ){
 
   // Parse the argument and extract our channel index first
   int delimitter = argument.find( ":" );
+  if( delimitter == string::npos ){
+    if( session->loglevel >= 1 ) *(session->logfile) << "MINMAX :: Invalid argument format (missing ':'): " << argument << endl;
+    return;
+  }
   string tmp = argument.substr( 0, delimitter );
 
   if( tmp == "-" ) all = true;
-  else channel = atoi( tmp.c_str() );
+  else if( !parseInt( tmp, channel ) ){
+    if( session->loglevel >= 1 ) *(session->logfile) << "MINMAX :: Invalid channel: " << tmp << endl;
+    return;
+  }
 
+  this->session = session;
+  this->checkImage();
   unsigned int nc = (*session->image)->getNumChannels();
 
   // Sanity check for channel index
@@ -203,14 +253,14 @@ void MINMAX::run( Session* session, const string& argument ){
     return;
   }
 
-  // Parse our min
+  // Parse our min and max - ignore the request if either is malformed
   string arg2 = argument.substr( delimitter + 1, string::npos );
   delimitter = arg2.find( "," );
-  min = atof( arg2.substr( 0, delimitter ).c_str() );
-
-  // Parse our max
   string arg3 = arg2.substr( delimitter + 1, string::npos );
-  max = atof( arg3.c_str() );
+  if( !parseFloat( arg2.substr( 0, delimitter ), min ) || !parseFloat( arg3, max ) ){
+    if( session->loglevel >= 1 ) *(session->logfile) << "MINMAX :: Invalid min/max values: " << argument << endl;
+    return;
+  }
 
   // Indicate that we have a user-defined min/max
   session->view->minmax = true;
@@ -264,18 +314,15 @@ void CNT::run( Session* session, const string& argument ){
     // If colon found, try to parse percentile
     if( pos != std::string::npos ){
       string percentile_str = arg.substr( pos + 1 );
-      float percentile = atof( percentile_str.c_str() );
+      float percentile;
 
-      // Validate range (0-100)
-      if( percentile >= 0 && percentile <= 100 ){
-	session->view->clip = percentile;
-	if( session->loglevel >= 3 ){
-	  *(session->logfile) << " with clipping percentile " << percentile;
-	}
+      // Validate a finite value and range (0-100)
+      if( !parseFloat( percentile_str, percentile ) || percentile < 0 || percentile > 100 ){
+	if( session->loglevel >= 1 ) *(session->logfile) << " but invalid percentile: " << percentile_str;
       }
       else {
-	// Handle invalid values
-	if( session->loglevel >= 3 ) *(session->logfile) << " but invalid percentile value " << percentile_str << ": ignoring";
+	session->view->clip = percentile;
+	if( session->loglevel >= 3 ) *(session->logfile) << " with clipping percentile " << percentile;
       }
     }
 
@@ -284,7 +331,11 @@ void CNT::run( Session* session, const string& argument ){
 
   // Contrast adjustment by pixel multiplication
   else{
-    float contrast = (float) atof( argument.c_str() );
+    float contrast;
+    if( !parseFloat( argument, contrast ) ){
+      if( session->loglevel >= 1 ) *(session->logfile) << "CNT :: Invalid contrast: " << argument << endl;
+      return;
+    }
     session->view->contrast = contrast;
     if( session->loglevel >= 3 ) *(session->logfile) << "CNT :: requested contrast adjustment is " << contrast << endl;
   }
@@ -306,7 +357,11 @@ void GAM::run( Session* session, const string& argument ){
   }
   // Exponential transform
   else{
-    float gamma = (float) atof( argument.c_str() );
+    float gamma;
+    if( !parseFloat( argument, gamma ) ){
+      if( session->loglevel >= 1 ) *(session->logfile) << "GAM :: Invalid gamma: " << argument << endl;
+      return;
+    }
     session->view->gamma = gamma;
     if( session->loglevel >= 3 ) *(session->logfile) << "GAM :: requested gamma adjustment is " << gamma << endl;
   }
@@ -362,7 +417,11 @@ void CVT::run( Session* session, const string& src ){
 
 void WID::run( Session* session, const string& argument ){
 
-  int requested_width = atoi( argument.c_str() );
+  int requested_width;
+  if( !parseInt( argument, requested_width ) || requested_width < 0 ){
+    if( session->loglevel >= 1 ) *(session->logfile) << "WID :: Invalid width: " << argument << endl;
+    return;
+  }
 
   if( session->loglevel >= 2 ) *(session->logfile) << "WID handler reached" << endl;
   if( session->loglevel >= 3 ) *(session->logfile) << "WID :: requested width is " << requested_width << endl;
@@ -374,7 +433,11 @@ void WID::run( Session* session, const string& argument ){
 
 void HEI::run( Session* session, const string& argument ){
 
-  int requested_height = atoi( argument.c_str() );
+  int requested_height;
+  if( !parseInt( argument, requested_height ) || requested_height < 0 ){
+    if( session->loglevel >= 1 ) *(session->logfile) << "HEI :: Invalid height: " << argument << endl;
+    return;
+  }
 
   if( session->loglevel >= 2 ) *(session->logfile) << "HEI handler reached" << endl;
   if( session->loglevel >= 3 ) *(session->logfile) << "HEI :: requested height is " << requested_height << endl;
@@ -393,22 +456,26 @@ void RGN::run( Session* session, const string& argument ){
 
   float region[4];
   while( izer.hasMoreTokens() && i<4 ){
-    try{
-      region[i++] = atof( izer.nextToken().c_str() );
+    string token = izer.nextToken();
+    float value;
+    if( !parseFloat( token, value ) ){
+      if( session->loglevel >= 1 ) *(session->logfile) << "RGN :: Invalid region value: " << token << endl;
+      return;
     }
-    catch( const string& error ){
-      if( session->loglevel >= 1 ) *(session->logfile) << error << endl;
-    }
+    region[i++] = value;
   }
 
   // Only load this information if our argument was correctly parsed to
   // give 4 values and that we have a width and height greater than zero
-  if( i == 4 && region[2]>0 && region[3]>0){
-    session->view->setViewLeft( region[0] );
-    session->view->setViewTop( region[1] );
-    session->view->setViewWidth( region[2] );
-    session->view->setViewHeight( region[3] );
+  if( i < 4 || izer.hasMoreTokens() || region[2] <= 0 || region[3] <= 0 ){
+    if( session->loglevel >= 1 ) *(session->logfile) << "RGN :: Invalid region: " << argument << endl;
+    return;
   }
+
+  session->view->setViewLeft( region[0] );
+  session->view->setViewTop( region[1] );
+  session->view->setViewWidth( region[2] );
+  session->view->setViewHeight( region[3] );
 
   if( session->loglevel >= 3 ){
     *(session->logfile) << "RGN :: requested region is x:" << region[0] << ", y:"
@@ -425,7 +492,14 @@ void ROT::run( Session* session, const string& argument ){
     session->view->flip = 1;
     rotationString.erase(0,1);
   }
-  float rotation = (float) atof( rotationString.c_str() );
+
+  float rotation;
+  if( !parseFloat( rotationString, rotation ) ){
+    if( session->loglevel >= 1 ) *(session->logfile) << "ROT :: Invalid rotation: " << rotationString << endl;
+    return;
+  }
+  rotation = fmodf( rotation, 360.0f );
+  if( rotation < 0.0f ) rotation += 360.0f;
 
   if( session->loglevel >= 2 ) *(session->logfile) << "ROT handler reached" << endl;
   if( session->loglevel >= 3 ) *(session->logfile) << "ROT :: requested rotation is " << rotation << " degrees" << endl;
@@ -448,28 +522,34 @@ void JTLS::run( Session* session, const string& argument ){
   */
 
   Tokenizer izer( argument, "," );
-  int i = 0;
 
   if( session->loglevel >= 2 ) *(session->logfile) << "JTLS handler reached" << endl;
 
   int values[4];
-  while( izer.hasMoreTokens() && i<4 ){
-    try{
-      values[i++] = atoi( izer.nextToken().c_str() );
+  for( int n=0; n<4; n++ ){
+    if( !izer.hasMoreTokens() ){
+      if( session->loglevel >= 1 )
+        *(session->logfile) << "JTLS :: too few values, ignoring" << endl;
+      return;
     }
-    catch( const string& error ){
-      if( session->loglevel >= 1 ) *(session->logfile) << error << endl;
+    string token = izer.nextToken();
+    if( !parseInt( token, values[n] ) || ((n == 1 || n == 2) && values[n] < 0) ){
+      if( session->loglevel >= 1 ) *(session->logfile) << "JTLS :: Invalid value: " << token << endl;
+      return;
     }
   }
-
-  if( i == 4 ){
-    session->view->xangle = values[0];
-    session->view->yangle = values[3];
-
-    // Simply pass this on to our JTL send command
-    JTL jtl;
-    jtl.send( session, values[1], values[2] );
+  if( izer.hasMoreTokens() ){
+    if( session->loglevel >= 1 )
+      *(session->logfile) << "JTLS :: Too many values: " << argument << endl;
+    return;
   }
+
+  session->view->xangle = values[0];
+  session->view->yangle = values[3];
+
+  // Simply pass this on to our JTL send command
+  JTL jtl;
+  jtl.send( session, values[1], values[2] );
 
 }
 
@@ -482,12 +562,26 @@ void JTL::run( Session* session, const string& argument ){
   */
 
   // Parse the argument list
-  int delimitter = argument.find( "," );
-  int resolution = atoi( argument.substr( 0, delimitter ).c_str() );
-  int tile = atoi( argument.substr( delimitter + 1, argument.length() ).c_str() );
+  Tokenizer izer( argument, "," );
+  int values[2];
+  for( int n=0; n<2; n++ ){
+    if( !izer.hasMoreTokens() ){
+      if( session->loglevel >= 1 ) *(session->logfile) << "JTL :: Too few values: " << argument << endl;
+      return;
+    }
+    string token = izer.nextToken();
+    if( !parseInt( token, values[n] ) || values[n] < 0 ){
+      if( session->loglevel >= 1 ) *(session->logfile) << "JTL :: Invalid value: " << token << endl;
+      return;
+    }
+  }
+  if( izer.hasMoreTokens() ){
+    if( session->loglevel >= 1 ) *(session->logfile) << "JTL :: Too many values: " << argument << endl;
+    return;
+  }
 
   // Send out the requested tile
-  this->send( session, resolution, tile );
+  this->send( session, values[0], values[1] );
 }
 
 
@@ -500,25 +594,30 @@ void SHD::run( Session* session, const string& argument ){
   */
 
   Tokenizer izer( argument, "," );
-  int i = 0;
 
   if( session->loglevel >= 2 ) *(session->logfile) << "SHD handler reached" << endl;
 
   int values[2];
-  while( izer.hasMoreTokens() && i<2 ){
-    try{
-      values[i++] = atoi( izer.nextToken().c_str() );
+  for( int n=0; n<2; n++ ){
+    if( !izer.hasMoreTokens() ){
+      if( session->loglevel >= 1 )
+        *(session->logfile) << "SHD :: too few values, ignoring" << endl;
+      return;
     }
-    catch( const string& error ){
-      if( session->loglevel >= 1 ) *(session->logfile) << error << endl;
+    string token = izer.nextToken();
+    if( !parseInt( token, values[n] ) ){
+      if( session->loglevel >= 1 ) *(session->logfile) << "SHD :: invalid value: " << token << endl;
+      return;
     }
+  }
+  if( izer.hasMoreTokens() ){
+    if( session->loglevel >= 1 ) *(session->logfile) << "SHD :: Too many values: " << argument << endl;
+    return;
   }
 
-  if( i == 2 ){
-    session->view->shaded = true;
-    session->view->shade[0] = values[0];
-    session->view->shade[1] = values[1];
-  }
+  session->view->shaded = true;
+  session->view->shade[0] = values[0];
+  session->view->shade[1] = values[1];
 
   if( session->loglevel >= 3 ) *(session->logfile) << "SHD :: requested shade incidence angle is "
 						   << values[0] << "," << values[1]  << endl;
@@ -560,18 +659,14 @@ void LYR::run( Session* session, const string& argument ){
 
   if( argument.length() ){
 
-    int layer = atoi( argument.c_str() );
-
     if( session->loglevel >= 2 ) *(session->logfile) << "LYR handler reached" << endl;
-    if( session->loglevel >= 3 ) *(session->logfile) << "LYR :: requested layer is " << layer << endl;
 
-    // Check the value is realistic
-    if( layer < 1 || layer > 256 ){
-      if( session->loglevel >= 2 ){
-        *(session->logfile) << "LYR :: Number of quality layers " << argument
-                            << " out of bounds. Must be 1-256" << endl;
-      }
+    int layer;
+    if( !parseInt( argument, layer ) || layer < 1 || layer > 256 ){
+      if( session->loglevel >= 1 ) *(session->logfile) << "LYR :: Invalid layer: " << argument << endl;
+      return;
     }
+    if( session->loglevel >= 3 ) *(session->logfile) << "LYR :: requested layer is " << layer << endl;
 
     session->view->setLayers( layer );
   }
@@ -600,8 +695,13 @@ void CTW::run( Session* session, const string& src ){
     if( session->loglevel >= 2 ) *(session->logfile) << "CTW handler reached" << endl;
   }
 
-  int pos1 = argument.find("[");
-  int pos2 = argument.find("]");
+  size_t pos1 = argument.find("[");
+  size_t pos2 = argument.find("]");
+
+  if( pos1 == string::npos || pos2 == string::npos || pos2 <= pos1 ){
+    if( session->loglevel >= 1 ) *(session->logfile) << "CTW :: Invalid or missing matrix brackets: " << argument << endl;
+    return;
+  }
 
   // Extract the contents of the array
   string line = argument.substr( pos1+1, pos2-pos1-1 );
@@ -613,40 +713,43 @@ void CTW::run( Session* session, const string& src ){
   const size_t MAX_CTW_ELEMENTS = 256;
   size_t total = 0;
   Tokenizer row_izer;
+  vector< vector<float> > matrix;
+  bool valid = true;
 
-  while( col_izer.hasMoreTokens() && total < MAX_CTW_ELEMENTS ){
+  while( valid && col_izer.hasMoreTokens() && total < MAX_CTW_ELEMENTS ){
 
     // Fill each row item
     row_izer = Tokenizer( col_izer.nextToken(), "," );
     vector<float> row;
 
     while( row_izer.hasMoreTokens() && total < MAX_CTW_ELEMENTS ){
-      try{
-	row.push_back( atof( row_izer.nextToken().c_str() ) );
-	++total;
+      string token = row_izer.nextToken();
+      float value;
+      if( !parseFloat( token, value ) ){
+        valid = false;
+        break;
       }
-      catch( const string& error ){
-	if( session->loglevel >= 1 ) *(session->logfile) << error << endl;
-      }
+      row.push_back( value );
+      ++total;
     }
-    session->view->ctw.push_back( std::move(row) );
+    if( valid ) matrix.push_back( std::move(row) );
   }
 
   // If either tokenizer still has tokens, the cap stopped us early
-  if( col_izer.hasMoreTokens() || row_izer.hasMoreTokens() ){
-    if( session->loglevel >= 1 )
-      *(session->logfile) << "CTW :: matrix too large, ignoring CTW" << endl;
+  if( !valid || col_izer.hasMoreTokens() || row_izer.hasMoreTokens() ){
+    if( session->loglevel >= 1 ) *(session->logfile) << "CTW :: Invalid or oversized matrix: " << argument << endl;
     session->view->ctw.clear();
     return;
   }
 
   // Reject an empty matrix before logging or applying it
-  if( session->view->ctw.empty() || session->view->ctw[0].empty() ){
-    if( session->loglevel >= 1 )
-      *(session->logfile) << "CTW :: empty matrix, ignoring CTW" << endl;
+  if( matrix.empty() || matrix[0].empty() ){
+    if( session->loglevel >= 1 ) *(session->logfile) << "CTW :: Empty matrix: " << argument << endl;
     session->view->ctw.clear();
     return;
   }
+
+  session->view->ctw = std::move(matrix);
 
   if( session->loglevel >= 3 ){
     *(session->logfile) << "CTW :: " << session->view->ctw[0].size() << "x" << session->view->ctw.size() << " matrix: " << endl;
@@ -693,13 +796,14 @@ void CNV::run( Session* session, const string& src ){
   URL url( src );
   string argument = url.decode();
 
-  int pos1 = argument.find("[");
-  int pos2 = argument.find("]");
-  string matrix = argument.substr( pos1+1, pos2-pos1-1 );
-
-  // Extract the contents of the array and convert to lower-case if necessary
-  string ctype = matrix;
+  // Predefined kernel names may be given with or without brackets
+  string ctype = argument;
   transform( ctype.begin(), ctype.end(), ctype.begin(), ::tolower );
+
+  // Strip any surrounding brackets, e.g. "[sobel]", before matching
+  if( ctype.size() >= 2 && ctype[0] == '[' && ctype[ctype.size()-1] == ']' ){
+    ctype = ctype.substr( 1, ctype.size()-2 );
+  }
 
   if( ctype == "sobel" ){
     session->view->convolution = { -1, 0, +1,
@@ -738,6 +842,16 @@ void CNV::run( Session* session, const string& src ){
   }
   else{
 
+    // Numeric kernel matrices must be given in brackets
+    size_t pos1 = argument.find("[");
+    size_t pos2 = argument.find("]");
+    if( pos1 == string::npos || pos2 == string::npos || pos2 <= pos1 ){
+      if( session->loglevel >= 1 ) *(session->logfile) << "CNV :: Invalid or missing matrix brackets: " << argument << endl;
+      return;
+    }
+
+    string matrix = argument.substr( pos1+1, pos2-pos1-1 );
+
     Tokenizer izer( matrix, "," );
 
     vector<float> kernel;
@@ -745,19 +859,21 @@ void CNV::run( Session* session, const string& src ){
     // Cap the kernel at 5x5 (25 elements)
     const size_t MAX_CNV_KERNEL = 25;
 
-    while( izer.hasMoreTokens() && kernel.size() < MAX_CNV_KERNEL ){
-      try{
-	kernel.push_back( atof( izer.nextToken().c_str() ));
+    bool valid = true;
+    while( valid && izer.hasMoreTokens() && kernel.size() < MAX_CNV_KERNEL ){
+      string token = izer.nextToken();
+      float value;
+      if( !parseFloat( token, value ) ){
+        valid = false;
+        break;
       }
-      catch( const string& error ){
-	if( session->loglevel >= 1 ) *(session->logfile) << error << endl;
-      }
+      kernel.push_back( value );
     }
 
     // If the tokenizer still has tokens, we stopped early -> input exceeded the cap
-    if( izer.hasMoreTokens() ){
-      if( session->loglevel >= 2 ){
-	*(session->logfile) << "CNV :: Maximum convolution matrix size is 5x5. Supplied matrix: "
+    if( !valid || izer.hasMoreTokens() ){
+      if( session->loglevel >= 1 ){
+	*(session->logfile) << "CNV :: Invalid value or matrix larger than 5x5. Supplied matrix: "
 			    << argument << " will be ignored" << endl;
       }
       return;

@@ -1,7 +1,7 @@
 /*
     IIP SPECTRA Command Handler Class Member Function
 
-    Copyright (C) 2009-2025 Ruven Pillay.
+    Copyright (C) 2009-2026 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -19,6 +19,7 @@
 */
 
 #include "Task.h"
+#include "Tokenizer.h"
 #include <cmath>
 #include <sstream>
 
@@ -48,23 +49,35 @@ void SPECTRA::run( Session* session, const std::string& argument ){
 
 
   // Parse the argument list
-  string arg = argument;
-  int delimitter = arg.find( "," );
-  int resolution = atoi( arg.substr(0,delimitter).c_str() );
+  Tokenizer izer( argument, "," );
+  int values[4];
+  for( int n=0; n<4; n++ ){
+    if( !izer.hasMoreTokens() ){
+      if( session->loglevel >= 1 ) *(session->logfile) << "SPECTRA :: Too few values: '" << argument << "'" << endl;
+      return;
+    }
+    string token = izer.nextToken();
+    if( !parseInt( token, values[n] ) || values[n] < 0 ){
+      if( session->loglevel >= 1 ) *(session->logfile) << "SPECTRA :: Invalid value: '" << token << "'" << endl;
+      return;
+    }
+  }
+  if( izer.hasMoreTokens() ){
+    if( session->loglevel >= 1 ) *(session->logfile) << "SPECTRA :: Too many values: '" << argument << "'" << endl;
+    return;
+  }
+  int resolution = values[0];
+  int tile = values[1];
+  int x = values[2];
+  int y = values[3];
 
-  arg = arg.substr( delimitter + 1, arg.length() );
-  delimitter = arg.find( "," );
-  int tile = atoi( arg.substr(0,delimitter).c_str() );
-
-  arg = arg.substr( delimitter + 1, arg.length() );
-  delimitter = arg.find( "," );
-  int x = atoi( arg.substr(0,delimitter).c_str() );
-
-  arg = arg.substr( delimitter + 1, arg.length() );
-  int y = atoi( arg.substr(0,arg.length()).c_str() );
+  if( resolution >= (int)(*session->image)->getNumResolutions() ){
+    if( session->loglevel >= 1 ) *(session->logfile) << "SPECTRA :: Invalid resolution: " << resolution << endl;
+    return;
+  }
 
   if( session->loglevel >= 5 ){ 
-    (*session->logfile) << "SPECTRA :: resolution: " << resolution
+    (*session->logfile) << "SPECTRA :: Resolution: " << resolution
 			<< ", tile: " << tile
 			<< ", x: " << x
 			<< ", y: " << y << endl;
@@ -73,7 +86,7 @@ void SPECTRA::run( Session* session, const std::string& argument ){
   // Make sure our x,y coordinates are within the tile dimensions
   if( x < 0 || x >= (int)(*session->image)->getTileWidth(resolution) ||
       y < 0 || y >= (int)(*session->image)->getTileHeight(resolution) ){
-    throw invalid_argument( "SPECTRA :: Error: x,y coordinates outside of tile boundaries" );
+    throw invalid_argument( "SPECTRA :: Coordinates outside of tile boundaries: " + to_string(x) + "," + to_string(y) );
   }
   
 

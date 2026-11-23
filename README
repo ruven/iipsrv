@@ -386,7 +386,7 @@ A fully configured iipsrv Docker container is available from Docker Hub. To use,
     docker pull iipsrv/iipsrv
     docker run -it -p 9000:9000 -p 8080:80 -v /home/images/:/images iipsrv/iipsrv
 
-Images can be made available to the container by binding to a folder on the host machine, In this example, the folder `/home/images/`. Detailed instructions on how to build the Docker image and run the container can be found in ihe README in the `docker/` sub-directory.
+Images can be made available to the container by binding to a folder on the host machine, In this example, the folder `/home/images/`. Detailed instructions on how to build the Docker image and run the container can be found in ihe [Docker README](docker/README.md) in the `docker/` sub-directory.
 
 
 

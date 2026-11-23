@@ -1,7 +1,7 @@
 /*
     IIP TIL Command Handler Class Member Function
 
-    Copyright (C) 2006-2025 Ruven Pillay.
+    Copyright (C) 2006-2026 Ruven Pillay.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -43,28 +43,42 @@ void TIL::run( Session* session, const std::string& a ){
 
   /* Parse the argument list of the form 'resolution,range'
    */
-  string argument = a;
-  int delimitter = argument.find( "," );
-  string tmp = argument.substr( 0, delimitter );
-  resolution = atoi( tmp.c_str() );
-  argument = argument.substr( delimitter + 1, argument.length() );
-
-  delimitter = argument.find( "-" );
-  tmp = argument.substr( 0, delimitter );
-  start_tile = atoi( tmp.c_str() );
-  argument = argument.substr( delimitter + 1, argument.length() );
-	  
-  if( argument.length() ){
-    tmp = argument.substr( 0, argument.length() );
-    end_tile = atoi( tmp.c_str() );
+  size_t delimitter = a.find( "," );
+  if( delimitter == string::npos ){
+    if( session->loglevel >= 1 ) *(session->logfile) << "TIL :: Invalid argument format: " << a << endl;
+    return;
   }
-  else end_tile = start_tile;
+
+  string res_str = a.substr( 0, delimitter );
+  if( !parseInt( res_str, resolution ) || resolution < 0 ){
+    if( session->loglevel >= 1 ) *(session->logfile) << "TIL :: Invalid resolution: " << res_str << endl;
+    return;
+  }
+
+  string range = a.substr( delimitter + 1 );
+  delimitter = range.find( "-" );
+  if( delimitter != string::npos ){
+    string start_str = range.substr( 0, delimitter );
+    string end_str = range.substr( delimitter + 1 );
+    if( !parseInt( start_str, start_tile ) || start_tile < 0 ||
+        !parseInt( end_str, end_tile ) || end_tile < 0 ){
+      if( session->loglevel >= 1 ) *(session->logfile) << "TIL :: Invalid tile range: " << range << endl;
+      return;
+    }
+  }
+  else{
+    if( !parseInt( range, start_tile ) || start_tile < 0 ){
+      if( session->loglevel >= 1 ) *(session->logfile) << "TIL :: Invalid tile: " << range << endl;
+      return;
+    }
+    end_tile = start_tile;
+  }
 
   // Make sure our range is logical
   if( end_tile < start_tile ) end_tile = start_tile;
 
   // Check that the requested resolution exists
-  if( resolution < 0 || resolution >= (int)(*session->image)->getNumResolutions() ){
+  if( resolution >= (int)(*session->image)->getNumResolutions() ){
     ostringstream error;
     error << "TIL :: Invalid resolution: " << resolution;
     throw error.str();
@@ -78,16 +92,21 @@ void TIL::run( Session* session, const std::string& a ){
   // Calculate the number of tiles at the requested resolution
 
   // Get the image width and height for this resolution
-  int vipsres = (*session->image)->getNativeResolution( resolution );
-  unsigned int im_width = (*session->image)->image_widths[vipsres];
-  unsigned int im_height = (*session->image)->image_heights[vipsres];
+  unsigned int im_width = (*session->image)->getImageWidth( resolution );
+  unsigned int im_height = (*session->image)->getImageHeight( resolution );
 
-  unsigned int tile_width = (*session->image)->tile_widths[vipsres];
-  unsigned int tile_height = (*session->image)->tile_heights[vipsres];
+  unsigned int tile_width = (*session->image)->getTileWidth( resolution );
+  unsigned int tile_height = (*session->image)->getTileHeight( resolution );
   unsigned int rem_x = im_width % tile_width;
   unsigned int rem_y = im_height % tile_height;
   int ntlx = (im_width / tile_width) + (rem_x == 0 ? 0 : 1);
   int ntly = (im_height / tile_height) + (rem_y == 0 ? 0 : 1);
+
+  if( start_tile >= (ntlx * ntly) || end_tile >= (ntlx * ntly) ){
+    ostringstream error;
+    error << "TIL :: Tile number out of range: " << start_tile << "-" << end_tile;
+    throw error.str();
+  }
 
   int startx = start_tile % ntlx;
   int starty = (int) start_tile / ntlx;

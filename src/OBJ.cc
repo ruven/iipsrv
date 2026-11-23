@@ -358,7 +358,7 @@ void OBJ::colorspace( std::string arg ){
 }
 
 
-void OBJ::metadata( string field ){
+void OBJ::metadata( const string& field ){
 
   checkImage();
 

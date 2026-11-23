@@ -146,7 +146,7 @@ void Zoomify::run( Session* session, const std::string& argument ){
 
 
   // Get the width for the requested resolution
-  width = (*session->image)->getImageWidth(numResolutions-resolution-1);
+  width = (*session->image)->getImageWidth(resolution);
 
 
   // Get the width of the tiles and calculate the number

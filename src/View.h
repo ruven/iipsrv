@@ -105,7 +105,6 @@ class View{
     equalization = false;
     pca = false;
     decorrelation = false;
-
     minmax = false;
   };
 

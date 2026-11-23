@@ -1,6 +1,4 @@
-
 // Member functions for TileManager.h
-
 
 /*  IIP Server: Tile Cache Handler
 
@@ -262,13 +260,11 @@ RawTile TileManager::getRegion( unsigned int res, int seq, int ang, int layers, 
     }
     return image->getRegion( seq, ang, res, layers, x, y, width, height );
   }
-
   // Otherwise do the compositing ourselves
-  int vipsres = image->getNativeResolution( res );
 
   // The tile size of the source tile
-  unsigned int src_tile_width = image->tile_widths[vipsres];
-  unsigned int src_tile_height = image->tile_heights[vipsres];
+  unsigned int src_tile_width = image->getTileWidth( res );
+  unsigned int src_tile_height = image->getTileHeight( res );
 
   // The tile size of the destination tile
   unsigned int dst_tile_width = src_tile_width;
@@ -278,8 +274,8 @@ RawTile TileManager::getRegion( unsigned int res, int seq, int ang, int layers, 
   unsigned int basic_tile_width = src_tile_width;
   unsigned int basic_tile_height = src_tile_height;
 
-  unsigned int im_width = image->image_widths[vipsres];
-  unsigned int im_height = image->image_heights[vipsres];
+  unsigned int im_width = image->getImageWidth( res );
+  unsigned int im_height = image->getImageHeight( res );
 
   unsigned int rem_x = im_width % src_tile_width;
   unsigned int rem_y = im_height % src_tile_height;
@@ -413,6 +409,33 @@ RawTile TileManager::getRegion( unsigned int res, int seq, int ang, int layers, 
 		   << ", tile height: " << dst_tile_height << endl;
 	}
       }
+
+      // xoffset/yoffset and the remainder calculation are based on the *nominal* tile size,
+      // but getTile() crops edge tiles to the real image remainder. For such a tile an offset can
+      // be >= the cropped width/height, which would make `inx` point past the end of the tile
+      // buffer. Therefore, clamp to actual tile dimensions
+      if( xf > rawtile.width  ) xf = rawtile.width;
+      if( yf > rawtile.height ) yf = rawtile.height;
+      if( dst_tile_width  > rawtile.width  - xf ) dst_tile_width  = rawtile.width  - xf;
+      if( dst_tile_height > rawtile.height - yf ) dst_tile_height = rawtile.height - yf;
+
+      // Also never write past the destination region buffer.
+      if( current_width >= width ){
+        dst_tile_width = 0;
+      }
+      else if( dst_tile_width > width - current_width ){
+        dst_tile_width = width - current_width;
+      }
+
+      if( current_height >= height ){
+        dst_tile_height = 0;
+      }
+      else if( dst_tile_height > height - current_height ){
+        dst_tile_height = height - current_height;
+      }
+
+      // Skip tiles that contribute no pixels to the requested region
+      if( dst_tile_width == 0 || dst_tile_height == 0 ) continue;
 
       // Copy our tile data into the appropriate part of the strip memory
       // one whole tile width at a time

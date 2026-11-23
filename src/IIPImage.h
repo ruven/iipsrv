@@ -358,14 +358,28 @@ class IIPImage {
   SampleType getSampleType() const { return sampleType; };
 
   /// Return the image width in pixels for a given resolution
-  /** @param n resolution number (0 is default and full size image)
+  /** @param n IIP resolution (full resolution image by default)
    */
-  unsigned int getImageWidth( int n=0 ) const { return image_widths[n]; };
+  unsigned int getImageWidth( int n=-1 ) const {
+    if( n == -1 ) n = 0;
+    else {
+      n = getNativeResolution( n );
+      if( image_widths.size() < (size_t) n+1 ) n = 0;
+    }
+    return image_widths[n];
+  };
 
   /// Return the image height in pixels for a given resolution
-  /** @param n resolution number (0 is default and full size image)
+  /** @param n IIP resolution (full resolution image by default)
    */
-  unsigned int getImageHeight( int n=0 ) const { return image_heights[n]; };
+  unsigned int getImageHeight( int n=-1 ) const {
+    if( n == -1 ) n = 0;
+    else {
+      n = getNativeResolution( n );
+      if( image_heights.size() < (size_t) n+1 ) n = 0;
+    }
+    return image_heights[n];
+  };
 
   /// Return the tile width in pixels for a given resolution
   /** @param n IIP resolution (tile size for full resolution image by default)

@@ -707,6 +707,16 @@ void CVT::send( Session* session ){
   // data is greater than uncompressed
   unsigned int strip_height = 128;
   unsigned int channels = complete_image.channels;
+
+  // AVIF and WebP compress the whole image in InitCompression() and triplicate
+  // monochrome data to 3 channels on their private copy, so the caller's tile
+  // still reports 1 channel while the streamed chunks hold 3-channel data.
+  // Both codecs' CompressStrip() ignore the source pointer, so only the buffer
+  // sizing is affected here.
+  ImageEncoding encoding = compressor->getImageEncoding();
+  if( channels == 1 && (encoding == ImageEncoding::AVIF || encoding == ImageEncoding::WEBP) ) channels = 3;
+
+  // Allocate buffer for a single strip
   unsigned char* output = new unsigned char[(uint64_t) resampled_width*channels*strip_height+65536];
   int strips = (resampled_height/strip_height) + (resampled_height%strip_height == 0 ? 0 : 1);
 

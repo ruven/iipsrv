@@ -96,6 +96,20 @@ class Task {
   /// Argument supplied to the task
   std::string argument;
 
+  /// Parse a string to a validated float
+  /** @param s input string
+      @param value output float after validation
+      @return whether parsing was successful
+   */
+  static bool parseFloat( const std::string& s, float& value );
+
+  /// Parse a string to a validated int
+  /** @param s input string
+      @param value output int after validation
+      @return whether parsing was successful
+   */
+  static bool parseInt( const std::string& s, int& value );
+
 
  public:
 
@@ -103,6 +117,9 @@ class Task {
   virtual ~Task() {};
 
   /// Main public function
+  /** @param session Session instance
+      @param argument string value passed to task
+   */
   virtual void run( Session* session, const std::string& argument ) {};
 
   /// Factory function
@@ -138,7 +155,7 @@ class OBJ : public Task {
   void min_max_values();
   void resolutions();
   void dpi();
-  void metadata( std::string field );
+  void metadata( const std::string& field );
   void stack();
 
 };

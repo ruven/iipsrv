@@ -22,6 +22,7 @@
 #include <algorithm>
 #include <sstream>
 #include <cmath>
+#include <limits>
 #include <cstdlib>
 #include "Task.h"
 #include "Tokenizer.h"
@@ -46,6 +47,7 @@
 
 
 using namespace std;
+
 
 
 // Need to initialize static members
@@ -97,7 +99,7 @@ void IIIF::run( Session* session, const string& src )
       for ( int i = 0; i < 3; i++ ){
         positionTmp = argument.find_last_of("/", positionTmp - 1);
         if ( positionTmp == string::npos ){
-          throw invalid_argument( "IIIF: Not enough parameters" );
+          throw invalid_argument( "IIIF :: Not enough parameters: " + argument );
         }
       }
       filename = argument.substr(0, positionTmp);
@@ -135,11 +137,17 @@ void IIIF::run( Session* session, const string& src )
   // Extract any meta-identifier in the file name that may refer to a page within an image stack or multi-page image
   // These consist of a semi-colon and a page or stack index of the form <image>;<index> For example: image.tif;3
   if( IIIF::delimiter.size() && ( (pos=filename.rfind(IIIF::delimiter)) != string::npos ) ){
-    int page = atoi( filename.substr(pos+1).c_str() );
-    session->view->xangle = page;
-    filename = filename.substr(0,pos);
-    if ( session->loglevel >= 3 ){
-      *(session->logfile) << "IIIF :: Requested stack or page index: " << page << endl;
+    int page = 0;
+    string pageString = filename.substr(pos+1);
+    if( parseInt( pageString, page ) ){
+      session->view->xangle = page;
+      filename = filename.substr(0,pos);
+      if ( session->loglevel >= 3 ){
+	*(session->logfile) << "IIIF :: Requested stack or page index: " << page << endl;
+      }
+    }
+    else{
+      if( session->loglevel >= 1 ) *(session->logfile) << "IIIF :: Invalid page index: " << pageString << endl;
     }
   }
 
@@ -207,7 +215,7 @@ void IIIF::run( Session* session, const string& src )
       string scheme = session->headers["HTTPS"].empty() ? "http://" : "https://";
 
       if (request_uri.empty()){
-        throw invalid_argument( "IIIF: REQUEST_URI was not set in FastCGI request, so the ID parameter cannot be set" );
+        throw invalid_argument( "IIIF :: REQUEST_URI was not set in FastCGI request, so the ID parameter cannot be set" );
       }
 
       // Need to decode in case URL is encoded
@@ -370,7 +378,7 @@ void IIIF::run( Session* session, const string& src )
     int numOfTokens = 0;
 
     // Our region parameters (always between 0 and 1)
-    double region[4] = {0.0, 0.0, 1.0, 1.0};
+    float region[4] = {0.0f, 0.0f, 1.0f, 1.0f};
 
     // Region Parameter: { "full"; "square"; "x,y,w,h"; "pct:x,y,w,h" }
     if ( izer.hasMoreTokens() ){
@@ -413,7 +421,9 @@ void IIIF::run( Session* session, const string& src )
 
         // Extract our region values
         while ( regionIzer.hasMoreTokens() && n < 4 ){
-          region[n++] = atof( regionIzer.nextToken().c_str() );
+          string token = regionIzer.nextToken();
+          if( !parseFloat( token, region[n] ) ) throw invalid_argument( "IIIF :: Incorrect region format: " + regionString );
+          n++;
         }
 
         // Define our denominators as our session view expects a ratio, not pixel values
@@ -436,7 +446,7 @@ void IIIF::run( Session* session, const string& src )
 
         // Incorrect region request
         if ( region[2] <= 0.0 || region[3] <= 0.0 || regionIzer.hasMoreTokens() || n < 4 ){
-          throw invalid_argument( "IIIF: incorrect region format: " + regionString );
+          throw invalid_argument( "IIIF :: Incorrect region format: " + regionString );
         }
 
       } // end of else - end of parsing x,y,w,h
@@ -491,12 +501,17 @@ void IIIF::run( Session* session, const string& src )
       // "pct:n" request
       else if ( sizeString.substr(0, 4) == "pct:" ){
 
+        string scaleString = sizeString.substr( sizeString.find_first_of(":") + 1, string::npos );
         float scale;
-        istringstream i( sizeString.substr( sizeString.find_first_of(":") + 1, string::npos ) );
-        if ( !(i >> scale) ) throw invalid_argument( "invalid size" );
+        if( !parseFloat( scaleString, scale ) || scale <= 0.0f ) throw invalid_argument( "IIIF :: Invalid percentage: " + scaleString );
 
-        requested_width = round( requested_width * scale / 100.0 );
-        requested_height = round( requested_height * scale / 100.0 );
+        double w = (double)requested_width * scale / 100.0;
+        double h = (double)requested_height * scale / 100.0;
+        if( w > (double)numeric_limits<unsigned int>::max() || h > (double)numeric_limits<unsigned int>::max() ){
+          throw invalid_argument( "IIIF :: Requested percentage size exceeds maximum limits: " + scaleString );
+        }
+        requested_width = std::max( 1u, static_cast<unsigned int>( round( w ) ) );
+        requested_height = std::max( 1u, static_cast<unsigned int>( round( h ) ) );
       }
 
       // "w,h", "w,", ",h", "!w,h" requests
@@ -513,41 +528,54 @@ void IIIF::run( Session* session, const string& src )
 
         // If no comma, size is invalid
         if ( pos == string::npos ){
-          throw invalid_argument( "invalid size: no comma found" );
+          throw invalid_argument( "IIIF :: Invalid size: no comma found: " + sizeString );
         }
 
         // If comma is at the beginning, we have a ",height" request
         else if ( pos == 0 ){
-          istringstream i( sizeString.substr( 1, string::npos ) );
-          if ( !(i >> requested_height) ) throw invalid_argument( "invalid height" );
-	  requested_width = round( (float)requested_height * ratio );
+          string heightString = sizeString.substr( 1 );
+          int h;
+          if( !parseInt( heightString, h ) || h <= 0 ){
+            throw invalid_argument( "IIIF :: Invalid height: " + heightString );
+          }
+          requested_height = h;
+          requested_width = std::max( 1u, static_cast<unsigned int>( round( (double)requested_height * ratio ) ) );
 	  // Maintain aspect ratio in this case
  	  session->view->maintain_aspect = true;
         }
 
-        // If comma is not at the beginning, we must have a "width,height" or "width," request
-        // Test first for the "width," request
+        // If comma is at the end, we have a "width," request
         else if ( pos == sizeString.length() - 1 ){
-          istringstream i( sizeString.substr( 0, string::npos - 1 ) );
-          if ( !(i >> requested_width ) ) throw invalid_argument( "invalid width" );
-	  requested_height = round( (float)requested_width / ratio );
+          string widthString = sizeString.substr( 0, pos );
+          int w;
+          if( !parseInt( widthString, w ) || w <= 0 ){
+            throw invalid_argument( "IIIF :: Invalid width: " + widthString );
+          }
+          requested_width = w;
+          requested_height = std::max( 1u, static_cast<unsigned int>( round( (double)requested_width / ratio ) ) );
 	  // Maintain aspect ratio in this case
  	  session->view->maintain_aspect = true;
         }
 
         // Remaining case is "width,height"
         else{
-          istringstream i( sizeString.substr( 0, pos ) );
-          if ( !(i >> requested_width) ) throw invalid_argument( "invalid width" );
-          i.clear();
-          i.str( sizeString.substr( pos + 1, string::npos ) );
-          if ( !(i >> requested_height) ) throw invalid_argument( "invalid height" );
+          string widthString = sizeString.substr( 0, pos );
+          string heightString = sizeString.substr( pos + 1 );
+          int w, h;
+          if( !parseInt( widthString, w ) || w <= 0 ){
+            throw invalid_argument( "IIIF :: Invalid width: " + widthString );
+          }
+          if( !parseInt( heightString, h ) || h <= 0 ){
+            throw invalid_argument( "IIIF :: Invalid height: " + heightString );
+          }
+          requested_width = w;
+          requested_height = h;
 	}
       }
 
 
       if ( requested_width <= 0 || requested_height <= 0 ){
-        throw invalid_argument( "IIIF: invalid size: requested width or height < 0" );
+        throw invalid_argument( "IIIF :: Invalid size: " + sizeString );
       }
 
       // Check for upscaling request. A confined "!w,h" request that exceeds the
@@ -564,18 +592,18 @@ void IIIF::run( Session* session, const string& src )
 	requested_height = (requested_height > region_height) ? region_height : requested_height;
       }
       else if( over_region ){
-	throw invalid_argument( "IIIF: upscaling should be prefixed with ^" );
+	throw invalid_argument( "IIIF :: Upscaling should be prefixed with ^: " + sizeString );
       }
 
       // Limit our requested size to the maximum allowable size if necessary
-      if( requested_width > max_size || requested_height > max_size ){
+      if( max_size > 0 && ( requested_width > max_size || requested_height > max_size ) ){
 	if( ratio > 1.0 ){
 	  requested_width = max_size;
-	  requested_height = session->view->maintain_aspect ? round(max_size*ratio) : max_size;
+	  requested_height = session->view->maintain_aspect ? std::max( 1u, static_cast<unsigned int>( round( (double)max_size / ratio ) ) ) : max_size;
 	}
 	else{
 	  requested_height = max_size;
-	  requested_width = session->view->maintain_aspect ? round(max_size/ratio) : max_size;
+	  requested_width = session->view->maintain_aspect ? std::max( 1u, static_cast<unsigned int>( round( (double)max_size * ratio ) ) ) : max_size;
 	}
       }
 
@@ -603,13 +631,12 @@ void IIIF::run( Session* session, const string& src )
 
       // Convert our string to a float
       float rotation = 0;
-      istringstream i( rotationString );
-      if ( !(i >> rotation) ) throw invalid_argument( "IIIF: invalid rotation" );
+      if ( !parseFloat( rotationString, rotation ) ) throw invalid_argument( "IIIF :: Invalid rotation: " + rotationString );
 
 
       // Check if converted value is supported
       if (!( rotation == 0 || rotation == 90 || rotation == 180 || rotation == 270 || rotation == 360 )){
-        throw invalid_argument( "IIIF: currently implemented rotation angles are 0, 90, 180 and 270 degrees" );
+        throw invalid_argument( "IIIF :: Currently implemented rotation angles are 0, 90, 180 and 270 degrees: " + rotationString );
       }
 
       // Set rotation - watch for a '!180' request, which is simply a vertical flip
@@ -658,7 +685,7 @@ void IIIF::run( Session* session, const string& src )
 #ifdef HAVE_JXL
 	else if( format == "jxl" ) session->view->output_format = ImageEncoding::JXL;
 #endif
-	else throw invalid_argument( "IIIF :: unsupported output format" );
+	else throw invalid_argument( "IIIF :: Unsupported output format: " + format );
       }
 
 
@@ -692,7 +719,7 @@ void IIIF::run( Session* session, const string& src )
 	session->view->decorrelation = true;
       }
       else{
-        throw invalid_argument( "unsupported quality parameter: " + quality );
+        throw invalid_argument( "IIIF :: Unsupported quality parameter: " + quality );
       }
 
       numOfTokens++;
@@ -704,12 +731,12 @@ void IIIF::run( Session* session, const string& src )
 
     // Too many parameters
     if( izer.hasMoreTokens() ){
-      throw invalid_argument( "IIIF: Query has too many parameters. " IIIF_SYNTAX );
+      throw invalid_argument( "IIIF :: Query has too many parameters. " IIIF_SYNTAX );
     }
 
     // Not enough parameters
     if( numOfTokens < 4 ){
-      throw invalid_argument( "IIIF: Query has too few parameters. " IIIF_SYNTAX );
+      throw invalid_argument( "IIIF :: Query has too few parameters. " IIIF_SYNTAX );
     }
 
   }

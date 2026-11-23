@@ -63,11 +63,10 @@ void JTL::send( Session* session, int resolution, int tile ){
 
   }
   else if( (int)((session->view)->getRotation()) % 360 == 180 ){
-    int vipsres = (*session->image)->getNativeResolution( resolution );
-    unsigned int im_width = (*session->image)->image_widths[vipsres];
-    unsigned int im_height = (*session->image)->image_heights[vipsres];
-    unsigned int tw = (*session->image)->tile_widths[vipsres];
-    unsigned int th = (*session->image)->tile_heights[vipsres];
+    unsigned int im_width = (*session->image)->getImageWidth( resolution );
+    unsigned int im_height = (*session->image)->getImageHeight( resolution );
+    unsigned int tw = (*session->image)->getTileWidth( resolution );
+    unsigned int th = (*session->image)->getTileHeight( resolution );
     int ntiles = (int) ceil( (double)im_width/tw ) * (int) ceil( (double)im_height/th );
     tile = ntiles - tile - 1;
   }
