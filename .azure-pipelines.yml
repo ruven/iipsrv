@@ -25,12 +25,12 @@ steps:
     cd vcpkg
     call .\bootstrap-vcpkg.bat
     call .\vcpkg integrate install
-    call .\vcpkg install tiff openjpeg fastcgi libpng libwebp libavif[aom] libjxl eigen3 --triplet x64-windows
+    call .\vcpkg install tiff openjpeg fastcgi libpng libwebp libavif[aom] libjxl eigen3 libmemcached-awesome --triplet x64-windows
   displayName: Install dependencies using vcpkg
 
 - task: MSBuild@1
   inputs:
-    solution: 'windows/Visual Studio 2022/iipsrv-MSVC2022.sln'
+    solution: 'windows/Visual Studio 2026/iipsrv-MSVC2026.sln'
     msbuildArchitecture: 'x64'
     platform: 'x64'
     configuration: 'Release'
