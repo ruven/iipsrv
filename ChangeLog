@@ -1,3 +1,8 @@
+24/11/2026:
+	- Added new sanitize() function to URL.h to strip '../', './' and duplicate slashes from input
+	  paths. Input path strings now bounded to 512 characters in size.
+
+
 23/11/2026:
 	- Added parseFloat() and parseInt() functions to Task class to better and uniformly handle
 	  numerical input parsing for all commands. Input string parsing generally now much stricter

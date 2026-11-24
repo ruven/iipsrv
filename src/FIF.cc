@@ -53,14 +53,9 @@ void FIF::run( Session* session, const string& src ){
   if( session->loglevel >= 2 ) command_timer.start();
 
 
-  // Decode any URL-encoded characters from our path
+  // Decode and sanitise any URL-encoded characters from our path
   URL url( src );
-  string argument = url.decode();
-
-
-  // Filter out any ../ to prevent users by-passing any file system prefix
-  unsigned int n;
-  while( (n=argument.find("../")) < argument.length() ) argument.erase(n,3);
+  string argument = url.decode( true );
 
   if( session->loglevel >=1 ){
     if( url.warning().length() > 0 ) *(session->logfile) << "FIF :: " << url.warning() << endl;
