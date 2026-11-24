@@ -198,7 +198,7 @@ class Environment {
     int compression;
     if( envpara ){
       compression = atoi( envpara );
-      if( compression < 0 || compression > 4 ) compression = 0;
+      if( compression < 0 || compression > 5 ) compression = 0;
     }
     else compression = TIFF_COMPRESSION;
 

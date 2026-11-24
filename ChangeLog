@@ -4,6 +4,7 @@
 	- Update to Transform::equalize() function to clamp -ve values as histogram may not correspond
 	  exactly to image if processing has taken place. Also several optimizations: switched cumulative
 	  distribution function container from float to uint32_t and added a LUT for faster processing.
+	- Fix to Environment.h to correctly set TIFF compression type.
 
 
 23/11/2026:
