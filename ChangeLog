@@ -1,6 +1,9 @@
 24/11/2026:
 	- Added new sanitize() function to URL.h to strip '../', './' and duplicate slashes from input
 	  paths. Input path strings now bounded to 512 characters in size.
+	- Update to Transform::equalize() function to clamp -ve values as histogram may not correspond
+	  exactly to image if processing has taken place. Also several optimizations: switched cumulative
+	  distribution function container from float to uint32_t and added a LUT for faster processing.
 
 
 23/11/2026:

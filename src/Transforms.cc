@@ -1198,25 +1198,34 @@ void Transform::equalize( RawTile& in, vector<unsigned int>& histogram ){
   // Number of levels in our histogram
   const unsigned int bits = histogram.size();
 
-  // Allocate and initialize our array to zero using std::fill
-  float *cdf = new float[bits];
-  fill( cdf, cdf+bits, 0.0f );
-
   // Find first non-zero bin
   unsigned int n0 = 0;
-  while( histogram[n0] == 0 ) ++n0;
+  while( n0 < bits && histogram[n0] == 0 ) ++n0;
 
-  // Calculate cumulative histogram
+  // Empty histogram - nothing to equalize
+  if( n0 == bits ) return;
+
+  // Calculate cumulative histogram using integer counts.
+  uint32_t *cdf = new uint32_t[bits];
   cdf[0] = histogram[0];
   for( unsigned int i=1; i<bits; i++ ){
-    cdf[i] = cdf[i-1] + histogram[i];
+    cdf[i] = cdf[i-1] + (uint32_t) histogram[i];
   }
 
-  // Scale our CDF
-  float scale = (float)(bits-1) / cdf[bits-1];
-  float cdfmin = cdf[n0] / (float)(in.width*in.height);
+  const uint32_t cdfmin = cdf[n0];
+  const uint32_t denominator = cdf[bits-1] - cdfmin;
+  const unsigned char grey = (unsigned char)( bits / 2 );
+
+  // Build the lookup table once rather than clamp each mapped pixel.
+  unsigned char *lut = new unsigned char[bits];
   for( unsigned int i=0; i<bits; i++ ){
-    cdf[i] = round( scale * (cdf[i]-cdfmin) );
+    // Constant-valued image: equalization is undefined, use grey
+    if( denominator == 0 ) lut[i] = grey;
+    else if( cdf[i] <= cdfmin ) lut[i] = 0;
+    else{
+      const double mapped = (double)(cdf[i] - cdfmin) * (bits - 1) / denominator;
+      lut[i] = (unsigned char) round( mapped );
+    }
   }
 
   // Map image through cumulative histogram
@@ -1229,12 +1238,12 @@ void Transform::equalize( RawTile& in, vector<unsigned int>& histogram ){
     for( int j=0; j<in.channels; j++ ){
       uint64_t index = (uint64_t) i*in.channels + j;
       unsigned int value = (unsigned int) (((unsigned char*)in.data)[index]);
-      ((unsigned char*)in.data)[index] = (unsigned char) cdf[value];
+      ((unsigned char*)in.data)[index] = lut[value];
     }
   }
 
-  // Free our dynamically allocated array
   delete[] cdf;
+  delete[] lut;
 }
 
 
